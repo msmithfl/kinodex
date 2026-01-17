@@ -8,13 +8,7 @@ import EmptyState from '../components/EmptyState'
 import { FaCheck, FaImage, FaEllipsisV } from 'react-icons/fa'
 import { FaTableList, FaChevronDown, FaChevronUp } from 'react-icons/fa6'
 import LoadingSpinner from '../components/LoadingSpinner'
-import type { Movie } from '../types'
-
-interface ShelfSection {
-  id: number;
-  name: string;
-  createdAt: string;
-}
+import type { Movie, ShelfSection } from '../types'
 
 function ShelfSectionDetail() {
   const { sectionName } = useParams<{ sectionName: string }>();

@@ -4,18 +4,7 @@ import Counter from '../components/Counter'
 import CollectionCard from '../components/CollectionCard'
 import EmptyState from '../components/EmptyState'
 import LoadingSpinner from '../components/LoadingSpinner'
-
-interface ShelfSection {
-  id: number;
-  name: string;
-  createdAt: string;
-}
-
-interface Movie {
-  id?: number;
-  title: string;
-  shelfSection: string;
-}
+import type { Movie, ShelfSection } from '../types'
 
 function ShelfSectionsView() {
   const [shelfSections, setShelfSections] = useState<ShelfSection[]>([]);

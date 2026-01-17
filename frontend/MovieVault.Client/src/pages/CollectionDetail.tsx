@@ -10,14 +10,7 @@ import { FaTrash, FaCheck, FaImage, FaEllipsisV  } from 'react-icons/fa'
 import { FaTableList, FaChevronDown, FaChevronUp } from "react-icons/fa6";
 import EmptyState from '../components/EmptyState'
 import LoadingSpinner from '../components/LoadingSpinner'
-import type { Movie } from '../types'
-
-interface Collection {
-  id: number;
-  name: string;
-  isDirectorCollection: boolean;
-  createdAt: string;
-}
+import type { Movie, Collection } from '../types'
 
 function CollectionDetail() {
   const { collectionName } = useParams<{ collectionName: string }>();

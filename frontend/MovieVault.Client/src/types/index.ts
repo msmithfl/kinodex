@@ -34,3 +34,16 @@ export interface CollectionListItem {
   tmdbId?: number;
   createdAt?: string;
 }
+
+export interface Collection {
+  id: number;
+  name: string;
+  isDirectorCollection: boolean;
+  createdAt: string;
+}
+
+export interface ShelfSection {
+  id: number;
+  name: string;
+  createdAt: string;
+}

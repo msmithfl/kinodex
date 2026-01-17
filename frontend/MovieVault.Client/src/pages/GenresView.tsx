@@ -3,12 +3,7 @@ import CollectionCard from '../components/CollectionCard'
 import Counter from '../components/Counter'
 import EmptyState from '../components/EmptyState'
 import LoadingSpinner from '../components/LoadingSpinner';
-
-interface Movie {
-  id?: number;
-  title: string;
-  genres: string[];
-}
+import type { Movie } from '../types'
 
 function GenresView() {
   const [genres, setGenres] = useState<string[]>([]);

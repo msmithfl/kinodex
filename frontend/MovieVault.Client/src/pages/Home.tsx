@@ -1,22 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import LoadingSpinner from '../components/LoadingSpinner'
-
-interface Movie {
-  id?: number;
-  title: string;
-  upcNumber: string;
-  formats: string[];
-  collections: string[];
-  condition: string;
-  rating: number;
-  review: string;
-  hdDriveNumber: number;
-  shelfNumber: number;
-  shelfSection: string;
-  isOnPlex: boolean;
-  createdAt?: string;
-}
+import type { Movie } from '../types'
 
 interface Stats {
   total: number;

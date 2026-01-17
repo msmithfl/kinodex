@@ -4,19 +4,7 @@ import type { CollectionListItem } from '../types'
 import CollectionCard from '../components/CollectionCard'
 import EmptyState from '../components/EmptyState'
 import LoadingSpinner from '../components/LoadingSpinner'
-
-interface Collection {
-  id: number;
-  name: string;
-  isDirectorCollection: boolean;
-  createdAt: string;
-}
-
-interface Movie {
-  id?: number;
-  title: string;
-  collections: string[];
-}
+import type { Movie, Collection } from '../types'
 
 function CollectionsView() {
   const [collections, setCollections] = useState<Collection[]>([]);
