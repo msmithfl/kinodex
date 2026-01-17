@@ -7,6 +7,7 @@ import Counter from '../components/Counter'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { FaCheck, FaImage } from 'react-icons/fa'
 import { FaTableList, FaChevronDown, FaChevronUp } from 'react-icons/fa6'
+import SubNavigation from '../components/SubNavigation'
 import type { Movie } from '../types'
 
 function GenreDetail() {
@@ -71,12 +72,17 @@ function GenreDetail() {
 
   if (loading) {
     return (
-      <LoadingSpinner />
+      <>
+        <SubNavigation />
+        <LoadingSpinner />
+      </>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <>
+      <SubNavigation />
+      <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
         <div className='flex items-center gap-4'>
           <h1 className="text-3xl font-bold mb-2">{genreName}</h1>
@@ -143,6 +149,7 @@ function GenreDetail() {
         )}
       </div>
     </div>
+    </>
   );
 }
 

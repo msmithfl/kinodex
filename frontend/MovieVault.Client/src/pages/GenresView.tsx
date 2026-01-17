@@ -3,6 +3,7 @@ import CollectionCard from '../components/CollectionCard'
 import Counter from '../components/Counter'
 import EmptyState from '../components/EmptyState'
 import LoadingSpinner from '../components/LoadingSpinner';
+import SubNavigation from '../components/SubNavigation'
 import type { Movie } from '../types'
 
 function GenresView() {
@@ -53,7 +54,9 @@ function GenresView() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <>
+      <SubNavigation />
+      <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center mb-4 gap-4">
         <h1 className="text-3xl font-bold">Genres</h1>
         <Counter count={genres.length} />
@@ -78,6 +81,7 @@ function GenresView() {
         </div>
       )}
     </div>
+    </>
   );
 }
 

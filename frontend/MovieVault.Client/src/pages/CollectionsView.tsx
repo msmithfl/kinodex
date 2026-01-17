@@ -4,6 +4,7 @@ import type { CollectionListItem } from '../types'
 import CollectionCard from '../components/CollectionCard'
 import EmptyState from '../components/EmptyState'
 import LoadingSpinner from '../components/LoadingSpinner'
+import SubNavigation from '../components/SubNavigation'
 import type { Movie, Collection } from '../types'
 
 function CollectionsView() {
@@ -108,7 +109,9 @@ function CollectionsView() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <>
+      <SubNavigation />
+      <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex items-center mb-4 gap-4">
         <h1 className="text-3xl font-bold">Collections</h1>
         <Counter count={collections.filter(c => !c.isDirectorCollection).length} />
@@ -218,6 +221,7 @@ function CollectionsView() {
         </div>
       )}
     </div>
+    </>
   );
 }
 

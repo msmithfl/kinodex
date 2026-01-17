@@ -6,6 +6,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import SortableTableHeader from '../components/SortableTableHeader';
 import FilterDropdown from '../components/FilterDropdown';
 import ConfirmDialog from '../components/ConfirmDialog';
+import SubNavigation from '../components/SubNavigation';
 import { FaSortAmountDown, FaPencilAlt, FaTrash, FaRegCircle, FaCheckCircle } from "react-icons/fa";
 import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
 import { IoMdCloseCircle } from "react-icons/io";
@@ -404,30 +405,27 @@ function MovieList() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {loading ? (
-        <LoadingSpinner />
+    <>
+      <SubNavigation />
+      <div className="max-w-6xl mx-auto px-2 py-2">
+        {loading ? (
+          <LoadingSpinner />
       ) : (
         <>
-      <div className="flex justify-between items-center mb-8">
-        <div className='flex items-center gap-4'>
-          <h2 className="text-3xl font-bold">Library</h2>
-          {/* <Counter count={filteredMovies.length} /> */}
-        </div>
-        
-        {/* Mobile Sort and Column Buttons */}
-        {movies.length > 0 && (
-          <div className="md:hidden flex gap-2">
-            <button
-              onClick={() => setShowSortMenu(!showSortMenu)}
-              className="p-2 text-gray-300 hover:text-white transition-colors"
-              aria-label="Sort options"
-            >
-              <FaSortAmountDown className="w-6 h-6" />
-            </button>
+          <div className="flex justify-between items-center mb-8">
+            {/* Mobile Sort and Column Buttons */}
+            {movies.length > 0 && (
+              <div className="md:hidden flex gap-2">
+                <button
+                  onClick={() => setShowSortMenu(!showSortMenu)}
+                  className="p-2 text-gray-300 hover:text-white transition-colors"
+                  aria-label="Sort options"
+                >
+                  <FaSortAmountDown className="w-6 h-6" />
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
       {movies.length > 0 && (
         <div className="mb-4 space-y-4">
@@ -921,6 +919,7 @@ function MovieList() {
         </>
       )}
     </div>
+    </>
   )
 }
 

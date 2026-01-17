@@ -25,30 +25,6 @@ function Header() {
               Dashboard
             </Link>
             <Link 
-              to="/library" 
-              className="text-gray-300 hover:text-white transition-colors font-medium"
-            >
-              Library
-            </Link>
-            <Link 
-              to="/collections" 
-              className="text-gray-300 hover:text-white transition-colors font-medium"
-            >
-              Collections
-            </Link>
-            <Link 
-              to="/genres" 
-              className="text-gray-300 hover:text-white transition-colors font-medium"
-            >
-              Genres
-            </Link>
-            <Link 
-              to="/shelfsections" 
-              className="text-gray-300 hover:text-white transition-colors font-medium"
-            >
-              Shelf
-            </Link>
-            <Link 
               to="/add" 
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200"
             >
@@ -84,34 +60,6 @@ function Header() {
               className="text-gray-300 hover:text-white transition-colors font-medium py-2"
             >
               Dashboard
-            </Link>
-            <Link 
-              to="/library" 
-              onClick={() => setIsMenuOpen(false)}
-              className="text-gray-300 hover:text-white transition-colors font-medium py-2"
-            >
-              Library
-            </Link>
-            <Link 
-              to="/collections" 
-              onClick={() => setIsMenuOpen(false)}
-              className="text-gray-300 hover:text-white transition-colors font-medium py-2"
-            >
-              Collections
-            </Link>
-            <Link 
-              to="/genres" 
-              onClick={() => setIsMenuOpen(false)}
-              className="text-gray-300 hover:text-white transition-colors font-medium py-2"
-            >
-              Genres
-            </Link>
-            <Link 
-              to="/shelfsections" 
-              onClick={() => setIsMenuOpen(false)}
-              className="text-gray-300 hover:text-white transition-colors font-medium py-2"
-            >
-              Shelf
             </Link>
           </nav>
         )}

@@ -8,6 +8,7 @@ import EmptyState from '../components/EmptyState'
 import { FaCheck, FaImage, FaEllipsisV } from 'react-icons/fa'
 import { FaTableList, FaChevronDown, FaChevronUp } from 'react-icons/fa6'
 import LoadingSpinner from '../components/LoadingSpinner'
+import SubNavigation from '../components/SubNavigation'
 import type { Movie, ShelfSection } from '../types'
 
 function ShelfSectionDetail() {
@@ -169,12 +170,17 @@ function ShelfSectionDetail() {
 
   if (loading) {
     return (
-      <LoadingSpinner />
+      <>
+        <SubNavigation />
+        <LoadingSpinner />
+      </>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <>
+      <SubNavigation />
+      <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex-1">
@@ -305,6 +311,7 @@ function ShelfSectionDetail() {
         onCancel={handleDeleteCancel}
       />
     </div>
+    </>
   );
 }
 
