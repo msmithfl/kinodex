@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
-import Footer from './components/Footer'
+// import Footer from './components/Footer'
 import Sidebar from './components/Sidebar'
 import Home from './pages/Home'
 import MovieList from './pages/MovieList'
@@ -37,7 +37,7 @@ function App() {
             </Routes>
           </main>
         </div>
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </Router>
   )

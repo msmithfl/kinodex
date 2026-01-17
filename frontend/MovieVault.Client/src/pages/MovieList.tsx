@@ -416,7 +416,7 @@ function MovieList() {
   return (
     <>
       <SubNavigation />
-      <div className="max-w-6xl mx-auto px-2 py-2">
+      <div className="mx-auto">
           <div className="flex justify-between items-center mb-8">
             {/* Mobile Sort and Column Buttons */}
             {movies.length > 0 && (
@@ -433,7 +433,7 @@ function MovieList() {
           </div>
 
       {movies.length > 0 && (
-        <div className="mb-4 space-y-4">
+        <div className="mb-4 mx-8 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <input

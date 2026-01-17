@@ -9,7 +9,7 @@ function Header() {
 
   return (
     <header className="bg-gray-800 border-b border-gray-700 relative">
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-1 hover:opacity-80 transition-opacity">
             <PiFilmReel className="w-11 h-11 text-white" />
