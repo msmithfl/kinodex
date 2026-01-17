@@ -221,10 +221,10 @@ function MovieList() {
   });
   
   // Pagination calculations
-  const totalPages = Math.ceil(filteredMovies.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentMovies = filteredMovies.slice(startIndex, endIndex);
+  //const totalPages = Math.ceil(filteredMovies.length / itemsPerPage);
+  //const startIndex = (currentPage - 1) * itemsPerPage;
+  //const endIndex = startIndex + itemsPerPage;
+  //const currentMovies = filteredMovies.slice(startIndex, endIndex);
   
   // Reset to page 1 when changing items per page or sort
   const handleItemsPerPageChange = (value: number) => {
@@ -490,7 +490,7 @@ function MovieList() {
                 </div>
                 <Counter count={filteredMovies.length} />
               </div>
-              <div className="flex items-center gap-3">
+              {/* <div className="flex items-center gap-3">
                 <label htmlFor="itemsPerPage" className="text-sm font-medium text-gray-300">
                   Per page:
                 </label>
@@ -504,7 +504,7 @@ function MovieList() {
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-              </div>
+              </div> */}
             </div>
           ) : (
             <div className="hidden md:flex items-center justify-between py-1 px-6 bg-yellow-900/30 border border-yellow-600 rounded-lg">
@@ -685,7 +685,7 @@ function MovieList() {
                 </tr>
               </thead>
               <tbody>
-              {currentMovies.map((movie, index) => (
+              {filteredMovies.map((movie, index) => (
                 <tr 
                   key={movie.id}
                   className={`text-sm group ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-900'} hover:bg-gray-700 transition-colors duration-150 focus:outline-none focus-within:outline-none`}
@@ -762,7 +762,7 @@ function MovieList() {
           </div>
           
           {/* Fixed pagination at bottom */}
-          {totalPages > 1 && (
+          {/* {totalPages > 1 && (
             <div className="shrink-0 px-6 py-4 bg-gray-700 border-t border-gray-600 flex items-center justify-between">
               <div className="text-sm text-gray-300">
                 Showing {startIndex + 1} to {Math.min(endIndex, sortedMovies.length)} of {sortedMovies.length} movies
@@ -817,7 +817,7 @@ function MovieList() {
                 </button>
               </div>
             </div>
-          )}
+          )} */}
         </div>
         )}
       </div>
