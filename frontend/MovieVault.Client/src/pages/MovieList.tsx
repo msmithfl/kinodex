@@ -433,7 +433,7 @@ function MovieList() {
           </div>
 
       {movies.length > 0 && (
-        <div className="mb-4 mx-8 space-y-4">
+        <div className="mb-4 mx-12 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <input
