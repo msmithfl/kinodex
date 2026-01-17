@@ -25,34 +25,25 @@ function CollectionsView() {
 
   const fetchData = async () => {
     try {
-      const [collectionsRes, moviesRes] = await Promise.all([
+      const [collectionsRes, moviesRes, listItemsRes] = await Promise.all([
         fetch(COLLECTIONS_URL),
-        fetch(MOVIES_URL)
+        fetch(MOVIES_URL),
+        fetch(`${API_BASE}/api/collections/items/all`)
       ]);
 
       if (collectionsRes.ok) {
         const collectionsData = await collectionsRes.json();
         setCollections(collectionsData);
-        
-        // Fetch list items for all collections in parallel
-        const listItemsPromises = collectionsData.map((collection: Collection) =>
-          fetch(`${API_BASE}/api/collections/${collection.id}/items`)
-            .then(res => res.ok ? res.json() : [])
-            .then(items => ({ collectionId: collection.id, items }))
-            .catch(() => ({ collectionId: collection.id, items: [] }))
-        );
-        
-        const listItemsResults = await Promise.all(listItemsPromises);
-        const listItemsMap: Record<number, CollectionListItem[]> = {};
-        listItemsResults.forEach(result => {
-          listItemsMap[result.collectionId] = result.items;
-        });
-        setCollectionListItems(listItemsMap);
       }
 
       if (moviesRes.ok) {
         const moviesData = await moviesRes.json();
         setMovies(moviesData);
+      }
+
+      if (listItemsRes.ok) {
+        const listItemsData = await listItemsRes.json();
+        setCollectionListItems(listItemsData);
       }
     } catch (error) {
       console.error('Error fetching data:', error);

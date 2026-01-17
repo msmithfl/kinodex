@@ -10,6 +10,31 @@ public static class CollectionListItemEndpoints
     {
         var group = routes.MapGroup("/api/collections/{collectionId}/items");
 
+        // GET ALL: Get items for all collections (bulk endpoint)
+        routes.MapGet("/api/collections/items/all", async (MovieDbContext db) =>
+        {
+            try
+            {
+                var items = await db.CollectionListItems
+                    .OrderBy(i => i.CollectionId)
+                    .ThenBy(i => i.Year)
+                    .ThenBy(i => i.Title)
+                    .ToListAsync();
+                
+                // Group by collection ID for easier frontend consumption
+                var grouped = items.GroupBy(i => i.CollectionId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+                
+                return Results.Ok(grouped);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching all collection items: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return Results.Ok(new Dictionary<int, List<CollectionListItem>>());
+            }
+        });
+
         // GET: Get all items for a collection
         group.MapGet("/", async (int collectionId, MovieDbContext db) =>
         {

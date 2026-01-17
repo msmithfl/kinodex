@@ -25,9 +25,9 @@ if (string.IsNullOrEmpty(connectionString))
     {
         try
         {
-            // Convert postgresql:// URL to Npgsql format
+            // Convert postgresql:// URL to Npgsql format with connection pooling
             var uri = new Uri(databaseUrl);
-            connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={uri.UserInfo.Split(':')[0]};Password={uri.UserInfo.Split(':')[1]};SSL Mode=Require;Trust Server Certificate=true";
+            connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={uri.UserInfo.Split(':')[0]};Password={uri.UserInfo.Split(':')[1]};SSL Mode=Require;Trust Server Certificate=true;Minimum Pool Size=0;Maximum Pool Size=10;Connection Idle Lifetime=60;Connection Pruning Interval=10";
         }
         catch (Exception ex)
         {
@@ -45,7 +45,11 @@ if (string.IsNullOrEmpty(connectionString))
 Console.WriteLine($"Connection String: SET");
 
 builder.Services.AddDbContext<MovieDbContext>(options =>
-    options.UseNpgsql(connectionString));
+{
+    options.UseNpgsql(connectionString);
+    // Enable connection resiliency
+    options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
+}, ServiceLifetime.Scoped);
 
 // Add CORS - reads from environment variable or appsettings.{Environment}.json
 var corsOriginsEnv = Environment.GetEnvironmentVariable("CORS_ORIGINS");
