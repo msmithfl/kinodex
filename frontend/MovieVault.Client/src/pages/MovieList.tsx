@@ -404,14 +404,19 @@ function MovieList() {
     }
   ];
 
+  if (loading) {
+    return (
+      <>
+        <SubNavigation />
+        <LoadingSpinner />
+      </>
+    );
+  }
+
   return (
     <>
       <SubNavigation />
       <div className="max-w-6xl mx-auto px-2 py-2">
-        {loading ? (
-          <LoadingSpinner />
-      ) : (
-        <>
           <div className="flex justify-between items-center mb-8">
             {/* Mobile Sort and Column Buttons */}
             {movies.length > 0 && (
@@ -916,8 +921,6 @@ function MovieList() {
         onConfirm={handleBulkDelete}
         onCancel={() => setShowDeleteConfirm(false)}
       />
-        </>
-      )}
     </div>
     </>
   )

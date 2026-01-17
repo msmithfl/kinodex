@@ -50,7 +50,12 @@ function GenresView() {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <>
+        <SubNavigation />
+        <LoadingSpinner />
+      </>
+    );
   }
 
   return (

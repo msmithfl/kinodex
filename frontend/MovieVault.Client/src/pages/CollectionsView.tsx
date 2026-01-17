@@ -105,7 +105,12 @@ function CollectionsView() {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <>
+        <SubNavigation />
+        <LoadingSpinner />
+      </>
+    );
   }
 
   return (

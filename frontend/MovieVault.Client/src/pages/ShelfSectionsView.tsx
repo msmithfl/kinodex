@@ -79,7 +79,12 @@ function ShelfSectionsView() {
   };
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <>
+        <SubNavigation />
+        <LoadingSpinner />
+      </>
+    );
   }
 
   return (
