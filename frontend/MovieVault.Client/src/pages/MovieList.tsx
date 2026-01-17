@@ -416,8 +416,10 @@ function MovieList() {
   return (
     <>
       <SubNavigation />
-      <div className="mx-auto">
-          <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col h-[calc(100vh-9rem)]">
+        {/* Fixed header section */}
+        <div className="shrink-0">
+          <div className="flex justify-between items-center mb-8 px-4">
             {/* Mobile Sort and Column Buttons */}
             {movies.length > 0 && (
               <div className="md:hidden flex gap-2">
@@ -560,14 +562,18 @@ function MovieList() {
           )}
         </div>
       )}
+        </div>
 
-      {movies.length === 0 ? (
-        <EmptyState message="No movies in your collection yet." />
-      ) : (
-        <div className="bg-gray-900 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-700">
+        {/* Scrollable table section - takes remaining height */}
+        <div className="flex-1 min-h-0">
+          {movies.length === 0 ? (
+            <EmptyState message="No movies in your collection yet." />
+          ) : (
+            <div className="h-full bg-gray-900 overflow-hidden flex flex-col">
+              {/* Scrollable table body */}
+              <div className="flex-1 overflow-y-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-700 sticky top-0 z-10">
                 <tr>
                   <th className="px-3 py-2 w-12 border-r border-gray-600">
                     <div className="relative">
@@ -755,8 +761,9 @@ function MovieList() {
           </table>
           </div>
           
+          {/* Fixed pagination at bottom */}
           {totalPages > 1 && (
-            <div className="px-6 py-4 bg-gray-700 border-t border-gray-600 flex items-center justify-between">
+            <div className="shrink-0 px-6 py-4 bg-gray-700 border-t border-gray-600 flex items-center justify-between">
               <div className="text-sm text-gray-300">
                 Showing {startIndex + 1} to {Math.min(endIndex, sortedMovies.length)} of {sortedMovies.length} movies
               </div>
@@ -812,7 +819,9 @@ function MovieList() {
             </div>
           )}
         </div>
-      )}
+        )}
+      </div>
+    </div>
 
       {showScanner && (
         <BarcodeScanner
@@ -921,7 +930,6 @@ function MovieList() {
         onConfirm={handleBulkDelete}
         onCancel={() => setShowDeleteConfirm(false)}
       />
-    </div>
     </>
   )
 }
