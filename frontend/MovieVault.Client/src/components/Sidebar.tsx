@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { FaHome, FaFilm, FaLayerGroup, FaTags, FaThLarge, FaChartBar, FaCog, FaBookmark } from 'react-icons/fa'
+import { FaHome, FaTv, FaFilm, FaChartBar, FaCog, FaBookmark } from 'react-icons/fa'
 
 function Sidebar() {
   const location = useLocation();
@@ -8,19 +8,17 @@ function Sidebar() {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  const navItems = [
-    { path: '/', label: 'Dashboard', icon: FaHome },
-    { path: '/library', label: 'Library', icon: FaFilm },
-    { path: '/collections', label: 'Collections', icon: FaLayerGroup },
-    { path: '/genres', label: 'Genres', icon: FaTags },
-    { path: '/shelfsections', label: 'Shelf', icon: FaThLarge },
-  ];
-
-  const utilityItems = [
-    { path: '/stats', label: 'Statistics', icon: FaChartBar },
-    { path: '/watchlist', label: 'Watchlist', icon: FaBookmark },
-    { path: '/settings', label: 'Settings', icon: FaCog },
-  ];
+    const navItems = [
+      { path: '/library', label: 'Movies', icon: FaFilm },
+      { path: '/tvshows', label: 'TV Shows', icon: FaTv },
+    ];
+    
+    const utilityItems = [
+        { path: '/', label: 'Dashboard', icon: FaHome },
+        { path: '/stats', label: 'Statistics', icon: FaChartBar },
+        { path: '/watchlist', label: 'Watchlist', icon: FaBookmark },
+        { path: '/settings', label: 'Settings', icon: FaCog },
+    ];
 
   return (
     <aside className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
@@ -33,14 +31,14 @@ function Sidebar() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-md transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 transition-colors border-l-4 hover:text-white ${
                   isActive(item.path)
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                    ? 'border-indigo-500 hover:border-white text-indigo-400'
+                    : 'border-transparent text-gray-300'
                 }`}
               >
                 <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
+                <span>{item.label}</span>
               </Link>
             );
           })}
@@ -55,14 +53,14 @@ function Sidebar() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-md transition-colors ${
+                  className={`flex items-center gap-3 px-4 py-3 transition-colors border-l-4 hover:text-white ${
                     isActive(item.path)
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                      ? 'border-indigo-500 hover:border-white text-indigo-500'
+                      : 'border-transparent text-gray-300'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
