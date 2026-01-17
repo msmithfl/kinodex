@@ -310,7 +310,7 @@ function CollectionDetail() {
   return (
     <>
       <SubNavigation />
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="mx-auto px-8 py-8">
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex-1">

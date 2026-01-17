@@ -116,7 +116,7 @@ function CollectionsView() {
   return (
     <>
       <SubNavigation />
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="mx-auto px-8 py-8">
       <div className="flex items-center mb-4 gap-4">
         <h1 className="text-3xl font-bold">Collections</h1>
         <Counter count={collections.filter(c => !c.isDirectorCollection).length} />
