@@ -80,7 +80,7 @@ function FilterDropdown({ categories, selectedFilters, onFilterChange }: FilterD
       </button>
 
       {isOpen && (
-        <div className="text-sm absolute left-0 mt-2 w-46 bg-gray-800 border border-gray-600 rounded-md shadow-lg z-10">
+        <div className="text-sm absolute left-0 mt-2 w-46 bg-gray-800 border border-gray-600 rounded-md shadow-lg z-20">
           {currentLevel === 'root' ? (
             // Root level - show categories
             <div className="">
