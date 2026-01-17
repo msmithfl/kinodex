@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import Sidebar from './components/Sidebar'
 import Home from './pages/Home'
 import MovieList from './pages/MovieList'
 import AddMovie from './pages/AddMovie'
@@ -18,21 +19,24 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-900 text-white flex flex-col">
         <Header />
-        <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/library" element={<MovieList />} />
-            <Route path="/collections" element={<CollectionsView />} />
-            <Route path="/collections/:collectionName" element={<CollectionDetail />} />
-            <Route path="/shelfsections" element={<ShelfSectionsView />} />
-            <Route path="/shelfsections/:sectionName" element={<ShelfSectionDetail />} />
-            <Route path="/genres" element={<GenresView />} />
-            <Route path="/genres/:genreName" element={<GenreDetail />} />
-            <Route path="/add" element={<AddMovie />} />
-            <Route path="/movie/:id" element={<MovieDetail />} />
-            <Route path="/edit/:id" element={<EditMovie />} />
-          </Routes>
-        </main>
+        <div className="flex flex-1">
+          <Sidebar />
+          <main className="flex-1 overflow-x-hidden">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/library" element={<MovieList />} />
+              <Route path="/collections" element={<CollectionsView />} />
+              <Route path="/collections/:collectionName" element={<CollectionDetail />} />
+              <Route path="/shelfsections" element={<ShelfSectionsView />} />
+              <Route path="/shelfsections/:sectionName" element={<ShelfSectionDetail />} />
+              <Route path="/genres" element={<GenresView />} />
+              <Route path="/genres/:genreName" element={<GenreDetail />} />
+              <Route path="/add" element={<AddMovie />} />
+              <Route path="/movie/:id" element={<MovieDetail />} />
+              <Route path="/edit/:id" element={<EditMovie />} />
+            </Routes>
+          </main>
+        </div>
         <Footer />
       </div>
     </Router>
