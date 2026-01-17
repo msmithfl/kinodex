@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
 import MovieDetailCard from '../components/MovieCardDetail'
 import MoviePosterCard from '../components/MovieCardPoster'
@@ -29,7 +29,6 @@ interface Movie {
 
 function GenreDetail() {
   const { genreName } = useParams<{ genreName: string }>();
-  const navigate = useNavigate();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -97,14 +96,6 @@ function GenreDetail() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => navigate('/genres')}
-            className="text-indigo-400 hover:text-indigo-300 flex items-center gap-2 cursor-pointer"
-          >
-            ← Back to Genres
-          </button>
-        </div>
         <div className='flex items-center gap-4'>
           <h1 className="text-3xl font-bold mb-2">{genreName}</h1>
           <Counter count={movies.length} className="mb-2" />

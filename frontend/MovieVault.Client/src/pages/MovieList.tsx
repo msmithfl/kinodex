@@ -428,7 +428,7 @@ function MovieList() {
       <div className="flex justify-between items-center mb-8">
         <div className='flex items-center gap-4'>
           <h2 className="text-3xl font-bold">Library</h2>
-          <Counter count={filteredMovies.length} />
+          {/* <Counter count={filteredMovies.length} /> */}
         </div>
         
         {/* Mobile Sort and Column Buttons */}
@@ -480,23 +480,26 @@ function MovieList() {
           {/* Desktop Sort Controls - Conditionally Visible */}
           {selectedMovieIds.size === 0 ? (
             <div className="hidden md:flex items-center justify-between gap-6">
-              <div className="relative">
-                {Object.values(selectedFilters).some(arr => arr.length > 0) && (
-                  <button
+              <div className='flex items-center gap-4'>
+                <div className="relative">
+                  {Object.values(selectedFilters).some(arr => arr.length > 0) && (
+                    <button
                     onClick={handleClearFilters}
                     className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-5 h-5 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center transition-colors cursor-pointer"
                     title="Clear filters"
-                  >
-                    <IoMdCloseCircle className="w-2.5 h-2.5 text-white" />
-                  </button>
-                )}
-                <div onClick={() => setShowColumnMenu(false)}>
-                  <FilterDropdown
-                    categories={filterCategories}
-                    selectedFilters={selectedFilters}
-                    onFilterChange={handleFilterChange}
-                  />
+                    >
+                      <IoMdCloseCircle className="w-2.5 h-2.5 text-white" />
+                    </button>
+                  )}
+                  <div onClick={() => setShowColumnMenu(false)}>
+                    <FilterDropdown
+                      categories={filterCategories}
+                      selectedFilters={selectedFilters}
+                      onFilterChange={handleFilterChange}
+                      />
+                  </div>
                 </div>
+                <Counter count={filteredMovies.length} />
               </div>
               <div className="flex items-center gap-3">
                 <label htmlFor="itemsPerPage" className="text-sm font-medium text-gray-300">

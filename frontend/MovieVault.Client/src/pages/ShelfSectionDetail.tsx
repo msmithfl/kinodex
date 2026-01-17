@@ -5,7 +5,7 @@ import Counter from '../components/Counter'
 import MovieDetailCard from '../components/MovieCardDetail'
 import MoviePosterCard from '../components/MovieCardPoster'
 import EmptyState from '../components/EmptyState'
-import { FaEdit, FaTrash, FaCheck, FaImage } from 'react-icons/fa'
+import { FaCheck, FaImage, FaEllipsisV } from 'react-icons/fa'
 import { FaTableList, FaChevronDown, FaChevronUp } from 'react-icons/fa6'
 import LoadingSpinner from '../components/LoadingSpinner'
 
@@ -50,6 +50,10 @@ function ShelfSectionDetail() {
   const [isViewDropdownOpen, setIsViewDropdownOpen] = useState(false);
   const viewDropdownRef = useRef<HTMLDivElement>(null);
   
+  // Actions dropdown state
+  const [isActionsDropdownOpen, setIsActionsDropdownOpen] = useState(false);
+  const actionsDropdownRef = useRef<HTMLDivElement>(null);
+  
   const handleViewModeChange = (mode: 'detail' | 'poster') => {
     setViewMode(mode);
     localStorage.setItem('movieViewMode', mode);
@@ -70,20 +74,24 @@ function ShelfSectionDetail() {
       if (viewDropdownRef.current && !viewDropdownRef.current.contains(event.target as Node)) {
         setIsViewDropdownOpen(false);
       }
+      if (actionsDropdownRef.current && !actionsDropdownRef.current.contains(event.target as Node)) {
+        setIsActionsDropdownOpen(false);
+      }
     };
 
-    if (isViewDropdownOpen) {
+    if (isViewDropdownOpen || isActionsDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
-  }, [isViewDropdownOpen]);
+  }, [isViewDropdownOpen, isActionsDropdownOpen]);
 
   // Close dropdown when editing starts
   useEffect(() => {
     if (isEditing) {
       setIsViewDropdownOpen(false);
+      setIsActionsDropdownOpen(false);
     }
   }, [isEditing]);
 
@@ -126,6 +134,7 @@ function ShelfSectionDetail() {
   const handleEditClick = () => {
     setIsEditing(true);
     setEditedName(sectionName || '');
+    setIsActionsDropdownOpen(false);
   };
 
   const handleSaveEdit = async () => {
@@ -155,6 +164,7 @@ function ShelfSectionDetail() {
 
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
+    setIsActionsDropdownOpen(false);
   };
 
   const handleDeleteConfirm = async () => {
@@ -188,32 +198,6 @@ function ShelfSectionDetail() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => navigate('/shelfsections')}
-            className="text-indigo-400 hover:text-indigo-300 flex items-center gap-2 cursor-pointer"
-          >
-            ← Back to Shelf Sections
-          </button>
-          {!isEditing && section && sectionName !== 'Unshelved' && (
-            <div className="flex gap-2">
-              <button
-                onClick={handleEditClick}
-                className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                aria-label="Edit shelf section"
-              >
-                <FaEdit className="w-5 h-5" />
-              </button>
-              <button
-                onClick={handleDeleteClick}
-                className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                aria-label="Delete shelf section"
-              >
-                <FaTrash className="w-5 h-5" />
-              </button>
-            </div>
-          )}
-        </div>
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex-1">
             {isEditing ? (
@@ -245,6 +229,33 @@ function ShelfSectionDetail() {
                 <div className='flex items-center gap-4'>
                   <h1 className="text-3xl font-bold mb-2">{sectionName}</h1>
                   <Counter count={movies.length} className="mb-2" />
+                  {!isEditing && section && sectionName !== 'Unshelved' && (
+                    <div ref={actionsDropdownRef} className="relative mb-2">
+                      <button
+                        onClick={() => setIsActionsDropdownOpen(!isActionsDropdownOpen)}
+                        className="text-gray-400 hover:text-gray-300 hover:bg-gray-700 px-2 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+                        aria-label="Actions"
+                      >
+                        <FaEllipsisV className="w-4 h-4" />
+                      </button>
+                      {isActionsDropdownOpen && (
+                        <div className="text-sm absolute left-0 mt-2 w-32 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10">
+                          <button
+                            onClick={handleEditClick}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-600 transition-colors flex items-center gap-3 cursor-pointer"
+                          >
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={handleDeleteClick}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-600 transition-colors flex items-center gap-3 text-red-400 hover:text-red-300 cursor-pointer"
+                          >
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div ref={viewDropdownRef} className="ml-auto relative mb-2">
                     <button
                       onClick={() => setIsViewDropdownOpen(!isViewDropdownOpen)}
