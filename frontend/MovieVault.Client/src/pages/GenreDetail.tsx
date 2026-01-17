@@ -7,25 +7,7 @@ import Counter from '../components/Counter'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { FaCheck, FaImage } from 'react-icons/fa'
 import { FaTableList, FaChevronDown, FaChevronUp } from 'react-icons/fa6'
-
-interface Movie {
-  id?: number;
-  title: string;
-  upcNumber: string;
-  formats: string[];
-  collections: string[];
-  condition: string;
-  rating: number;
-  review: string;
-  year: number;
-  posterPath: string;
-  hdDriveNumber: number;
-  shelfNumber: number;
-  shelfSection: string;
-  isOnPlex: boolean;
-  genres: string[];
-  createdAt?: string;
-}
+import type { Movie } from '../types'
 
 function GenreDetail() {
   const { genreName } = useParams<{ genreName: string }>();

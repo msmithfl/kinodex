@@ -8,28 +8,12 @@ import EmptyState from '../components/EmptyState'
 import { FaCheck, FaImage, FaEllipsisV } from 'react-icons/fa'
 import { FaTableList, FaChevronDown, FaChevronUp } from 'react-icons/fa6'
 import LoadingSpinner from '../components/LoadingSpinner'
+import type { Movie } from '../types'
 
 interface ShelfSection {
   id: number;
   name: string;
   createdAt: string;
-}
-
-interface Movie {
-  id?: number;
-  title: string;
-  upcNumber: string;
-  formats: string[];
-  collections: string[];
-  condition: string;
-  rating: number;
-  review: string;
-  posterPath: string;
-  hdDriveNumber: number;
-  shelfNumber: number;
-  shelfSection: string;
-  isOnPlex: boolean;
-  createdAt?: string;
 }
 
 function ShelfSectionDetail() {

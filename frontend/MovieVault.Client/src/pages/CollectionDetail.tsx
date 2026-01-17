@@ -10,30 +10,13 @@ import { FaTrash, FaCheck, FaImage, FaEllipsisV  } from 'react-icons/fa'
 import { FaTableList, FaChevronDown, FaChevronUp } from "react-icons/fa6";
 import EmptyState from '../components/EmptyState'
 import LoadingSpinner from '../components/LoadingSpinner'
+import type { Movie } from '../types'
 
 interface Collection {
   id: number;
   name: string;
   isDirectorCollection: boolean;
   createdAt: string;
-}
-
-interface Movie {
-  id?: number;
-  title: string;
-  upcNumber: string;
-  formats: string[];
-  collections: string[];
-  condition: string;
-  rating: number;
-  review: string;
-  year: number;
-  posterPath: string;
-  hdDriveNumber: number;
-  shelfNumber: number;
-  shelfSection: string;
-  isOnPlex: boolean;
-  createdAt?: string;
 }
 
 function CollectionDetail() {
