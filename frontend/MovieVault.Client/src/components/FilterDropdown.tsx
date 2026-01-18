@@ -117,7 +117,7 @@ function FilterDropdown({ categories, selectedFilters, onFilterChange }: FilterD
                   <span className="text-white font-medium">{currentCategory?.label}</span>
                 </button>
               </div>
-              <div className="max-h-80 overflow-y-auto">
+              <div className="max-h-80 overflow-y-auto truncate">
                 {currentCategory?.options.map(option => {
                   const isSelected = (selectedFilters[currentLevel] || []).includes(option.value);
                   return (

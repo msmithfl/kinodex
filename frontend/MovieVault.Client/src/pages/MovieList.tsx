@@ -210,6 +210,29 @@ function MovieList() {
       );
     }
     
+    // OnPlex filter
+    if (selectedFilters.onPlex && selectedFilters.onPlex.length > 0) {
+      filtered = filtered.filter(movie => {
+        const isOnPlex = movie.isOnPlex ? 'true' : 'false';
+        return selectedFilters.onPlex.includes(isOnPlex);
+      });
+    }
+    
+    // Shelf Section filter
+    if (selectedFilters.shelfSection && selectedFilters.shelfSection.length > 0) {
+      filtered = filtered.filter(movie => 
+        movie.shelfSection && selectedFilters.shelfSection.includes(movie.shelfSection)
+      );
+    }
+    
+    // Shelf Number filter
+    if (selectedFilters.shelfNumber && selectedFilters.shelfNumber.length > 0) {
+      filtered = filtered.filter(movie => {
+        const shelfValue = movie.shelfNumber.toString();
+        return selectedFilters.shelfNumber.includes(shelfValue);
+      });
+    }
+    
     return filtered;
   };
   
@@ -401,6 +424,27 @@ function MovieList() {
       id: 'collection',
       label: 'Collection',
       options: collections.map(collection => ({ label: collection, value: collection }))
+    },
+    {
+      id: 'onPlex',
+      label: 'On Plex',
+      options: [
+        { label: 'On Plex', value: 'true' },
+        { label: 'Not on Plex', value: 'false' },
+      ]
+    },
+    {
+      id: 'shelfSection',
+      label: 'Shelf Section',
+      options: shelfSections.map(section => ({ label: section, value: section }))
+    },
+    {
+      id: 'shelfNumber',
+      label: 'Shelf Number',
+      options: Array.from(new Set(movies.map(m => m.shelfNumber)))
+        .filter(num => num > 0)
+        .sort((a, b) => a - b)
+        .map(num => ({ label: `Shelf ${num}`, value: num.toString() }))
     }
   ];
 
