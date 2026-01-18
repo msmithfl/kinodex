@@ -21,7 +21,7 @@ function Sidebar() {
     ];
 
   return (
-    <aside className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+    <aside className="hidden md:flex w-64 bg-gray-800 border-r border-gray-700 flex-col">
       {/* Main Navigation */}
       <nav className="flex-1 px-3 py-6">
         <div className="space-y-1">
