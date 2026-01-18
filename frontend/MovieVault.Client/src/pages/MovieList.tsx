@@ -233,6 +233,13 @@ function MovieList() {
       });
     }
     
+    // Condition filter
+    if (selectedFilters.condition && selectedFilters.condition.length > 0) {
+      filtered = filtered.filter(movie => 
+        selectedFilters.condition.includes(movie.condition)
+      );
+    }
+    
     return filtered;
   };
   
@@ -408,6 +415,13 @@ function MovieList() {
         { label: 'DVD', value: 'DVD' },
         { label: 'VHS', value: 'VHS' },
       ]
+    },
+    {
+      id: 'condition',
+      label: 'Condition',
+      options: Array.from(new Set(movies.map(m => m.condition)))
+        .sort()
+        .map(condition => ({ label: condition, value: condition }))
     },
     {
       id: 'hdd',
