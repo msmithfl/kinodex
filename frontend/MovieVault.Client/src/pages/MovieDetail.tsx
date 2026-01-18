@@ -132,9 +132,13 @@ function MovieDetail() {
                 {movie.genres && movie.genres.length > 0 ? (
                   <div className="flex flex-wrap gap-1 lg:gap-2">
                     {movie.genres.map((genre, idx) => (
-                      <span key={idx} className="bg-purple-600 px-2 py-1 lg:px-3 lg:py-2 rounded-md text-white text-xs lg:text-sm">
+                      <Link 
+                        key={idx} 
+                        to={`/genres/${encodeURIComponent(genre)}`}
+                        className="bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded-md text-white transition-colors cursor-pointer"
+                      >
                         {genre}
-                      </span>
+                      </Link>
                     ))}
                   </div>
                 ) : (
