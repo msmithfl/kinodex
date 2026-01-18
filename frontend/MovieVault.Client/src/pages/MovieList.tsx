@@ -572,7 +572,7 @@ function MovieList() {
             <div className="h-full bg-gray-900 overflow-hidden flex flex-col">
               {/* Scrollable table body */}
               <div className="flex-1 overflow-y-auto">
-                <table className="w-full">
+                <table className="w-full border-separate border-spacing-0">
                   <thead className="bg-gray-700 sticky top-0 z-10">
                 <tr>
                   <th className="px-3 py-2 w-12 border-r border-gray-600">
@@ -585,39 +585,39 @@ function MovieList() {
                         <LuTable2 className="w-5 h-5" />
                       </button>
                       {showColumnMenu && (
-                        <div className="text-sm absolute -left-1 mt-2 w-40 bg-gray-800 border border-gray-600 rounded-md shadow-lg z-10">
+                        <div className="text-sm absolute -left-1 mt-2 w-40 bg-gray-800 shadow-lg z-10">
                           <div className="">
                             <button
                               onClick={() => toggleColumn('year')}
-                              className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-3 py-2 rounded"
+                              className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
                             >
                               <span className={`font-normal ${visibleColumns.year ? 'text-indigo-400' : 'text-white'}`}>Year</span>
                               {visibleColumns.year && <FaCheck className="w-5 h-5 text-indigo-400" />}
                             </button>
                             <button
                               onClick={() => toggleColumn('format')}
-                              className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-3 py-2 rounded"
+                              className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
                             >
                               <span className={`font-normal ${visibleColumns.format ? 'text-indigo-400' : 'text-white'}`}>Format</span>
                               {visibleColumns.format && <FaCheck className="w-5 h-5 text-indigo-400" />}
                             </button>
                             <button
                               onClick={() => toggleColumn('condition')}
-                              className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-3 py-2 rounded"
+                              className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
                             >
                               <span className={`font-normal ${visibleColumns.condition ? 'text-indigo-400' : 'text-white'}`}>Condition</span>
                               {visibleColumns.condition && <FaCheck className="w-5 h-5 text-indigo-400" />}
                             </button>
                             <button
                               onClick={() => toggleColumn('rating')}
-                              className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-3 py-2 rounded"
+                              className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
                             >
                               <span className={`font-normal ${visibleColumns.rating ? 'text-indigo-400' : 'text-white'}`}>Rating</span>
                               {visibleColumns.rating && <FaCheck className="w-5 h-5 text-indigo-400" />}
                             </button>
                             <button
                               onClick={() => toggleColumn('dateAdded')}
-                              className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-3 py-2 rounded"
+                              className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
                             >
                               <span className={`font-normal ${visibleColumns.dateAdded ? 'text-indigo-400' : 'text-white'}`}>Date Added</span>
                               {visibleColumns.dateAdded && <FaCheck className="w-5 h-5 text-indigo-400" />}
@@ -669,7 +669,6 @@ function MovieList() {
                       currentSortBy={sortBy}
                       sortDirection={sortDirection}
                       onClick={handleColumnClick}
-                      className="pl-6"
                     />
                   )}
                   {visibleColumns.dateAdded && (
@@ -679,7 +678,6 @@ function MovieList() {
                       currentSortBy={sortBy}
                       sortDirection={sortDirection}
                       onClick={handleColumnClick}
-                      className="pr-10"
                     />
                   )}
                 </tr>
