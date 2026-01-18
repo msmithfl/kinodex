@@ -585,7 +585,7 @@ function MovieList() {
                         <LuTable2 className="w-5 h-5" />
                       </button>
                       {showColumnMenu && (
-                        <div className="text-sm absolute -left-1 mt-2 w-40 bg-gray-800 shadow-lg z-10">
+                        <div className="text-sm absolute -left-1 mt-2 w-40 border border-gray-600 rounded-md bg-gray-800 shadow-lg z-10">
                           <div className="">
                             <button
                               onClick={() => toggleColumn('year')}
