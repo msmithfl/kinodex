@@ -74,33 +74,8 @@ function MovieDetail() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="mb-6 flex justify-between items-center">
-        <button
-          onClick={() => navigate('/library')}
-          className="text-indigo-400 hover:text-indigo-300 flex items-center gap-2 transition-colors cursor-pointer"
-        >
-          ← Back to Library
-        </button>
-        <div className="flex gap-2">
-          <Link
-            to={`/edit/${movie.id}`}
-            className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200"
-            aria-label="Edit movie"
-          >
-            <FaEdit className="w-5 h-5" />
-          </Link>
-          <button
-            onClick={handleDeleteClick}
-            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-            aria-label="Delete movie"
-          >
-            <FaTrash className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="overflow-hidden">
         {/* Movie Details Header */}
         <div className="p-8 border-b border-gray-700">
           <div className="grid grid-cols-12 gap-4 lg:gap-6">
@@ -166,6 +141,22 @@ function MovieDetail() {
                   <p className="text-gray-500 italic text-sm lg:text-base">No genres</p>
                 )}
               </div>
+              <div className="flex gap-2">
+          <Link
+            to={`/edit/${movie.id}`}
+            className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200"
+            aria-label="Edit movie"
+          >
+            <FaEdit className="w-5 h-5" />
+          </Link>
+          <button
+            onClick={handleDeleteClick}
+            className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+            aria-label="Delete movie"
+          >
+            <FaTrash className="w-5 h-5" />
+          </button>
+        </div>
             </div>
 
             {/* Product Image & eBay Button - Right */}
