@@ -110,7 +110,7 @@ function MovieDetail() {
                     title={movie.tmdbId ? 'View on TMDB' : 'Search on TMDB'}
                   >
                     <img 
-                      src="/src/assets/tmdb-icon.png" 
+                      src="/tmdb-icon.png" 
                       alt="TMDB"
                       className="w-8 h-8 lg:w-10 lg:h-10 hover:opacity-80 transition-opacity"
                     />
