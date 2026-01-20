@@ -120,19 +120,33 @@ function MatchMovies() {
           ) : (
             <>
               <div className="bg-gray-800 rounded-lg p-6 mb-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                  <div className="flex-1">
                     <h2 className="text-xl font-semibold mb-1">
                       {unmatchedMovies.length} Unmatched {unmatchedMovies.length === 1 ? 'Movie' : 'Movies'}
                     </h2>
                     <p className="text-gray-400 text-sm">
                       Click "Find Matches" to search TMDB for suggestions
                     </p>
+                    {matching && (
+                      <div className="mt-4 bg-blue-900/30 border border-blue-700 rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <FaSync className="animate-spin text-blue-400" />
+                          <p className="text-blue-400 font-medium">Searching TMDB...</p>
+                        </div>
+                        <p className="text-sm text-gray-400">
+                          Processing {unmatchedMovies.length} movies (Rate-limited to prevent API throttling)
+                        </p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          Estimated time: ~{Math.ceil(unmatchedMovies.length * 0.25 / 60)} minute{Math.ceil(unmatchedMovies.length * 0.25 / 60) === 1 ? '' : 's'}. Please wait...
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={runMatching}
                     disabled={matching}
-                    className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-6 rounded-md transition flex items-center gap-2 cursor-pointer"
+                    className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-6 rounded-md transition flex items-center gap-2 cursor-pointer whitespace-nowrap h-fit"
                   >
                     <FaSync className={matching ? 'animate-spin' : ''} />
                     {matching ? 'Searching...' : 'Find Matches'}
