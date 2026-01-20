@@ -64,50 +64,50 @@ function Home() {
 
   return (
     <div className='flex h-[calc(100vh-9rem)] pt-2'>
-      <div className="flex-1 mx-auto px-8">
+      <div className="flex-1 mx-auto px-8 w-full max-w-7xl">
         {loading ? (
           <LoadingSpinner />
         ) : (
           <>
         {/* Stats Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6 mb-12">
-          <div className="bg-linear-to-br from-indigo-600 to-indigo-700 rounded-lg shadow-lg p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mt-6 mb-12">
+          <div className="bg-linear-to-br from-indigo-600 to-indigo-700 rounded-lg shadow-lg p-3 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-indigo-200 text-sm font-medium">Total Movies</p>
-                <p className="text-4xl font-bold text-white mt-2">{stats.total}</p>
+                <p className="text-indigo-200 text-xs md:text-sm font-medium">Total Movies</p>
+                <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">{stats.total}</p>
               </div>
-              <div className="text-5xl">🎬</div>
+              <div className="text-3xl md:text-5xl">🎬</div>
             </div>
           </div>
 
-          <div className="bg-linear-to-br from-purple-600 to-purple-700 rounded-lg shadow-lg p-6">
+          <div className="bg-linear-to-br from-purple-600 to-purple-700 rounded-lg shadow-lg p-3 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-200 text-sm font-medium">DVD</p>
-                <p className="text-4xl font-bold text-white mt-2">{stats.dvd}</p>
+                <p className="text-purple-200 text-xs md:text-sm font-medium">DVD</p>
+                <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">{stats.dvd}</p>
               </div>
-              <div className="text-5xl">💿</div>
+              <div className="text-3xl md:text-5xl">💿</div>
             </div>
           </div>
 
-          <div className="bg-linear-to-br from-blue-600 to-blue-700 rounded-lg shadow-lg p-6">
+          <div className="bg-linear-to-br from-blue-600 to-blue-700 rounded-lg shadow-lg p-3 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-200 text-sm font-medium">Blu-ray</p>
-                <p className="text-4xl font-bold text-white mt-2">{stats.bluray}</p>
+                <p className="text-blue-200 text-xs md:text-sm font-medium">Blu-ray</p>
+                <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">{stats.bluray}</p>
               </div>
-              <div className="text-5xl">📀</div>
+              <div className="text-3xl md:text-5xl">📀</div>
             </div>
           </div>
 
-          <div className="bg-linear-to-br from-cyan-600 to-cyan-700 rounded-lg shadow-lg p-6">
+          <div className="bg-linear-to-br from-cyan-600 to-cyan-700 rounded-lg shadow-lg p-3 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-cyan-200 text-sm font-medium">4K Ultra HD</p>
-                <p className="text-4xl font-bold text-white mt-2">{stats.fourK}</p>
+                <p className="text-cyan-200 text-xs md:text-sm font-medium">4K Ultra HD</p>
+                <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">{stats.fourK}</p>
               </div>
-              <div className="text-5xl">💎</div>
+              <div className="text-3xl md:text-5xl">💎</div>
             </div>
           </div>
         </div>
@@ -143,7 +143,7 @@ function Home() {
 
         {/* Recently Added */}
         {recentMovies.length > 0 && (
-          <div>
+          <div className='pb-10 md:pb-0'>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Recently Added</h2>
               <Link to="/library" className="text-indigo-400 hover:text-indigo-300 transition-colors">
