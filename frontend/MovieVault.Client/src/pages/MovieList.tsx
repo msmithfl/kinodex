@@ -7,7 +7,7 @@ import SortableTableHeader from '../components/SortableTableHeader';
 import FilterDropdown from '../components/FilterDropdown';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SubNavigation from '../components/SubNavigation';
-import { FaSortAmountDown, FaPencilAlt, FaTrash, FaRegCircle, FaCheckCircle } from "react-icons/fa";
+import { FaPencilAlt, FaTrash, FaRegCircle, FaCheckCircle } from "react-icons/fa";
 import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
 import { IoMdCloseCircle } from "react-icons/io";
 import { LuTable2 } from "react-icons/lu";
@@ -43,10 +43,10 @@ function MovieList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [upcSearchQuery, setUpcSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(100);
+  //const [itemsPerPage, setItemsPerPage] = useState(100);
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
-  const [showSortMenu, setShowSortMenu] = useState(false);
+  //const [showSortMenu, setShowSortMenu] = useState(false);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState<VisibleColumns>(() => {
     const saved = localStorage.getItem('movieListColumns');
@@ -257,10 +257,10 @@ function MovieList() {
   //const currentMovies = filteredMovies.slice(startIndex, endIndex);
   
   // Reset to page 1 when changing items per page or sort
-  const handleItemsPerPageChange = (value: number) => {
-    setItemsPerPage(value);
-    setCurrentPage(1);
-  };
+  // const handleItemsPerPageChange = (value: number) => {
+  //   setItemsPerPage(value);
+  //   setCurrentPage(1);
+  // };
 
   const handleColumnClick = (sortKey: string) => {
     const column = sortKey as SortOption;
