@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
 import MovieDetailCard from '../components/MovieCardDetail'
 import MoviePosterCard from '../components/MovieCardPoster'
-import Counter from '../components/Counter'
+//import Counter from '../components/Counter'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { FaCheck, FaImage } from 'react-icons/fa'
 import { FaTableList, FaChevronDown, FaChevronUp } from 'react-icons/fa6'
@@ -82,73 +82,75 @@ function GenreDetail() {
   return (
     <>
       <SubNavigation />
-      <div className="mx-auto px-8 py-8">
-      <div className="mb-8">
-        <div className='flex items-center gap-4'>
-          <h1 className="text-3xl font-bold mb-2">{genreName}</h1>
-          <Counter count={movies.length} className="mb-2" />
-          <div ref={viewDropdownRef} className="ml-auto relative mb-2">
-            <button
-              onClick={() => setIsViewDropdownOpen(!isViewDropdownOpen)}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm font-medium flex items-center gap-2 cursor-pointer"
-            >
-              {viewMode === 'poster' ? (
-                <FaImage className="w-5 h-5" />
-              ) : (
-                <FaTableList className="w-5 h-5" />
-              )}
-              {isViewDropdownOpen ? (
-                <FaChevronUp className="w-3 h-3" />
-              ) : (
-                <FaChevronDown className="w-3 h-3" />
-              )}
-            </button>
-            {isViewDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-36 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10">
+      <div className="flex h-[calc(100vh-9rem)] pt-2">
+        <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
+          <div className="mt-4 mb-8">
+            <div className='flex items-center gap-4'>
+              <h1 className="text-3xl font-bold mb-2">{genreName}</h1>
+              {/* <Counter count={movies.length} className="mb-2" /> */}
+              <div ref={viewDropdownRef} className="ml-auto relative mb-2">
                 <button
-                  onClick={() => handleViewModeChange('poster')}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-600 transition-colors flex items-center justify-between border-b border-gray-600 cursor-pointer"
+                  onClick={() => setIsViewDropdownOpen(!isViewDropdownOpen)}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm font-medium flex items-center gap-2 cursor-pointer"
                 >
-                  <div className="flex items-center gap-3">
-                    <span>Poster View</span>
-                  </div>
-                  {viewMode === 'poster' && <FaCheck className="w-4 h-4 text-white" />}
+                  {viewMode === 'poster' ? (
+                    <FaImage className="w-5 h-5" />
+                  ) : (
+                    <FaTableList className="w-5 h-5" />
+                  )}
+                  {isViewDropdownOpen ? (
+                    <FaChevronUp className="w-3 h-3" />
+                  ) : (
+                    <FaChevronDown className="w-3 h-3" />
+                  )}
                 </button>
-                <button
-                  onClick={() => handleViewModeChange('detail')}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-600 transition-colors flex items-center justify-between cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <span>Detail View</span>
+                {isViewDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-36 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10">
+                    <button
+                      onClick={() => handleViewModeChange('poster')}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-600 transition-colors flex items-center justify-between border-b border-gray-600 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span>Poster View</span>
+                      </div>
+                      {viewMode === 'poster' && <FaCheck className="w-4 h-4 text-white" />}
+                    </button>
+                    <button
+                      onClick={() => handleViewModeChange('detail')}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-600 transition-colors flex items-center justify-between cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span>Detail View</span>
+                      </div>
+                      {viewMode === 'detail' && <FaCheck className="w-4 h-4 text-white" />}
+                    </button>
                   </div>
-                  {viewMode === 'detail' && <FaCheck className="w-4 h-4 text-white" />}
-                </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Movies Section */}
+          <div>
+            {movies.length === 0 ? (
+              <EmptyState message="No movies in this genre yet." />
+            ) : (
+              <div className={viewMode === 'poster' 
+                ? "grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4" 
+                : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              }>
+                {movies.map((movie) => (
+                  viewMode === 'poster' ? (
+                    <MoviePosterCard key={movie.id} movie={movie} />
+                  ) : (
+                    <MovieDetailCard key={movie.id} movie={movie} showYear />
+                  )
+                ))}
               </div>
             )}
           </div>
         </div>
       </div>
-
-      {/* Movies Section */}
-      <div>
-        {movies.length === 0 ? (
-          <EmptyState message="No movies in this genre yet." />
-        ) : (
-          <div className={viewMode === 'poster' 
-            ? "grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4" 
-            : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          }>
-            {movies.map((movie) => (
-              viewMode === 'poster' ? (
-                <MoviePosterCard key={movie.id} movie={movie} />
-              ) : (
-                <MovieDetailCard key={movie.id} movie={movie} showYear />
-              )
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
     </>
   );
 }
