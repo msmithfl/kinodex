@@ -552,7 +552,7 @@ function CollectionDetail() {
                 <h3 className="text-lg font-semibold mb-3">
                   Checklist ({listItems.filter(item => isMovieOwned(item.title, item.year)).length} of {listItems.length})
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-2 overflow-y-auto max-h-96">
                   {listItems.sort((a, b) => a.year - b.year).map((item) => {
                     const owned = isMovieOwned(item.title, item.year);
                     
