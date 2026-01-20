@@ -311,7 +311,7 @@ function CollectionDetail() {
     <>
       <SubNavigation />
       <div className="flex h-[calc(100vh-9rem)] pt-2">
-        <div className="flex-1 min-h-0 overflow-y-auto px-12 pt-8">
+        <div className="flex-1 min-h-0 overflow-y-auto px-8 md:px-12 pt-8">
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="flex-1">
@@ -441,7 +441,7 @@ function CollectionDetail() {
             <EmptyState message="No movies in this collection yet." />
           ) : (
             <div className={viewMode === 'poster' 
-              ? "grid grid-cols-3 min-[400px]:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-4 gap-y-10" 
+              ? "grid grid-cols-3 min-[400px]:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-4 md:gap-y-10" 
               : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
             }>
             {movies.sort((a, b) => a.year - b.year).map((movie) => (
