@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import Counter from '../components/Counter'
+//import Counter from '../components/Counter'
 import type { CollectionListItem } from '../types'
 import CollectionCard from '../components/CollectionCard'
 import EmptyState from '../components/EmptyState'
@@ -107,14 +107,14 @@ function CollectionsView() {
   return (
     <>
       <SubNavigation />
-      <div className="flex flex-col h-[calc(100vh-9rem)]">
+      <div className="flex flex-col h-[calc(100vh-9rem)] pt-2">
         {/* Fixed header section */}
-        <div className="shrink-0 px-8 pt-8 pb-4">
+        {/* <div className="shrink-0 px-8 pt-8 pb-4">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold">Collections</h1>
             <Counter count={collections.filter(c => !c.isDirectorCollection).length} />
           </div>
-        </div>
+        </div> */}
 
         {/* Scrollable content section */}
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
@@ -159,7 +159,7 @@ function CollectionsView() {
                 <div>
                   <div className='flex mb-4 gap-4'>
                     <h2 className="text-2xl font-bold">Director Collections</h2>
-                    <Counter count={collections.filter(c => c.isDirectorCollection).length} />
+                    {/* <Counter count={collections.filter(c => c.isDirectorCollection).length} /> */}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {collections
