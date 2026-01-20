@@ -16,6 +16,16 @@ public class TmdbMatchingService
         _db = db;
         _httpClient = httpClientFactory.CreateClient();
         _apiKey = configuration["TMDB_API_KEY"];
+        
+        // Log API key status (without revealing the key)
+        if (string.IsNullOrEmpty(_apiKey))
+        {
+            Console.WriteLine("WARNING: TMDB_API_KEY is not configured!");
+        }
+        else
+        {
+            Console.WriteLine($"TMDB_API_KEY loaded: {_apiKey.Substring(0, Math.Min(4, _apiKey.Length))}...{_apiKey.Substring(Math.Max(0, _apiKey.Length - 4))}");
+        }
     }
 
     public async Task<MatchingResult> MatchMoviesWithTmdb()
@@ -69,6 +79,28 @@ public class TmdbMatchingService
                 result.Errors.Add($"Error matching '{movie.Title}': {ex.Message}");
             }
         }
+        
+        // Add specific message if all searches failed
+        if (result.Suggestions.Count == 0 && unmatchedMovies.Count > 0 && result.NoMatchesFound == 0)
+        {
+            result.Success = false;
+            result.Message = "All TMDB searches failed. This usually means the API key is invalid or not configured. Check server logs for details.";
+        }
+        else if (result.Suggestions.Count == 0 && result.NoMatchesFound > 0)
+        {
+            result.Message = $"No suggestions found. {result.NoMatchesFound} movies had no TMDB matches.";
+        }
+        
+        if (!result.Success)
+        {
+            return result;
+        }
+        
+        // Remove the duplicate else block below
+        if (result.Suggestions.Count > 0)
+        {
+            result.Message = $"Found suggestions for {result.Suggestions.Count} of {unmatchedMovies.Count} unmatched movies.";
+        }
 
         result.Message = $"Found suggestions for {result.Suggestions.Count} of {unmatchedMovies.Count} unmatched movies.";
         return result;
@@ -82,12 +114,37 @@ public class TmdbMatchingService
         }
 
         var yearParam = year.HasValue ? $"&year={year}" : "";
-        var url = $"https://api.themoviedb.org/3/search/movie?api_key={_apiKey}&query={Uri.EscapeDataString(title)}{yearParam}";
+        var url = $"https://api.themoviedb.org/3/search/movie?query={Uri.EscapeDataString(title)}{yearParam}";
 
         try
         {
-            var response = await _httpClient.GetAsync(url);
-            response.EnsureSuccessStatusCode();
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            
+            // Support both API Key and Bearer Token
+            if (_apiKey.StartsWith("eyJ")) // JWT Bearer token
+            {
+                request.Headers.Add("Authorization", $"Bearer {_apiKey}");
+            }
+            else // API Key
+            {
+                url += $"&api_key={_apiKey}";
+                request.RequestUri = new Uri(url);
+            }
+            
+            var response = await _httpClient.SendAsync(request);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"TMDB API Error [{response.StatusCode}]: {errorContent}");
+                
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    Console.WriteLine("TMDB API returned 401 Unauthorized. Check your API key.");
+                }
+                
+                return new List<TmdbSearchResult>();
+            }
 
             var json = await response.Content.ReadAsStringAsync();
             var searchResponse = JsonSerializer.Deserialize<TmdbResponse>(json, new JsonSerializerOptions
@@ -108,8 +165,9 @@ public class TmdbMatchingService
                 })
                 .ToList() ?? new List<TmdbSearchResult>();
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"Exception in TMDB search: {ex.Message}");
             return new List<TmdbSearchResult>();
         }
     }
