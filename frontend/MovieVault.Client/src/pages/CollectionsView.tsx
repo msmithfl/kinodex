@@ -107,77 +107,84 @@ function CollectionsView() {
   return (
     <>
       <SubNavigation />
-      <div className="mx-auto px-8 py-8">
-      <div className="flex items-center mb-4 gap-4">
-        <h1 className="text-3xl font-bold">Collections</h1>
-        <Counter count={collections.filter(c => !c.isDirectorCollection).length} />
-      </div>
+      <div className="flex flex-col h-[calc(100vh-9rem)]">
+        {/* Fixed header section */}
+        <div className="shrink-0 px-8 pt-8 pb-4">
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold">Collections</h1>
+            <Counter count={collections.filter(c => !c.isDirectorCollection).length} />
+          </div>
+        </div>
 
-      {collections.length === 0 ? (
-        <EmptyState message="No collections yet." />
-      ) : (
-        <>
-          {/* Standard Collections Section */}
-          {collections.filter(c => !c.isDirectorCollection).length > 0 && (
-            <div className="mb-12">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                <button
-                  onClick={() => setShowCreateInput(true)}
-                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 border-2 border-dashed border-gray-600 hover:border-indigo-500 flex items-center justify-center cursor-pointer"
-                >
-                  <div className="text-center">
-                    <div className="text-5xl text-gray-500 mb-2">+</div>
+        {/* Scrollable content section */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
+          {collections.length === 0 ? (
+            <EmptyState message="No collections yet." />
+          ) : (
+            <>
+              {/* Standard Collections Section */}
+              {collections.filter(c => !c.isDirectorCollection).length > 0 && (
+                <div className="mb-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <button
+                      onClick={() => setShowCreateInput(true)}
+                      className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 border-2 border-dashed border-gray-600 hover:border-indigo-500 flex items-center justify-center cursor-pointer"
+                    >
+                      <div className="text-center">
+                        <div className="text-5xl text-gray-500 mb-2">+</div>
+                      </div>
+                    </button>
+                    {collections
+                      .filter(c => !c.isDirectorCollection)
+                      .map((collection) => {
+                        const movieCount = getMovieCount(collection.name);
+                        const completionPercentage = getCompletionPercentage(collection.id, collection.name);
+                        
+                        return (
+                          <CollectionCard
+                            key={collection.id}
+                            collection={collection}
+                            movieCount={movieCount}
+                            completionPercentage={completionPercentage}
+                            urlPath='collections'
+                          />
+                        );
+                      })}
                   </div>
-                </button>
-                {collections
-                  .filter(c => !c.isDirectorCollection)
-                  .map((collection) => {
-                    const movieCount = getMovieCount(collection.name);
-                    const completionPercentage = getCompletionPercentage(collection.id, collection.name);
-                    
-                    return (
-                      <CollectionCard
-                        key={collection.id}
-                        collection={collection}
-                        movieCount={movieCount}
-                        completionPercentage={completionPercentage}
-                        urlPath='collections'
-                      />
-                    );
-                  })}
-              </div>
-            </div>
-          )}
+                </div>
+              )}
 
-          {/* Director Collections Section */}
-          {collections.filter(c => c.isDirectorCollection).length > 0 && (
-            <div>
-              <div className='flex mb-4 gap-4'>
-                <h2 className="text-2xl font-bold">Director Collections</h2>
-                <Counter count={collections.filter(c => c.isDirectorCollection).length} />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {collections
-                  .filter(c => c.isDirectorCollection)
-                  .map((collection) => {
-                    const movieCount = getMovieCount(collection.name);
-                    const completionPercentage = getCompletionPercentage(collection.id, collection.name);
-                    
-                    return (
-                      <CollectionCard
-                        key={collection.id}
-                        collection={collection}
-                        movieCount={movieCount}
-                        completionPercentage={completionPercentage}
-                        urlPath='collections'
-                      />
-                    );
-                  })}
-              </div>
-            </div>
+              {/* Director Collections Section */}
+              {collections.filter(c => c.isDirectorCollection).length > 0 && (
+                <div>
+                  <div className='flex mb-4 gap-4'>
+                    <h2 className="text-2xl font-bold">Director Collections</h2>
+                    <Counter count={collections.filter(c => c.isDirectorCollection).length} />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {collections
+                      .filter(c => c.isDirectorCollection)
+                      .map((collection) => {
+                        const movieCount = getMovieCount(collection.name);
+                        const completionPercentage = getCompletionPercentage(collection.id, collection.name);
+                        
+                        return (
+                          <CollectionCard
+                            key={collection.id}
+                            collection={collection}
+                            movieCount={movieCount}
+                            completionPercentage={completionPercentage}
+                            urlPath='collections'
+                          />
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
 
       {/* Create Collection Modal */}
       {showCreateInput && (
@@ -216,7 +223,7 @@ function CollectionsView() {
           </div>
         </div>
       )}
-    </div>
+    
     </>
   );
 }

@@ -23,7 +23,7 @@ function Sidebar() {
   return (
     <aside className="hidden md:flex w-64 bg-gray-800 border-r border-gray-700 flex-col">
       {/* Main Navigation */}
-      <nav className="flex-1 px-3 py-6">
+      <nav className="flex-1 px-3 py-4">
         <div className="space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -31,13 +31,13 @@ function Sidebar() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 transition-colors border-l-4 hover:text-white ${
+                className={`flex items-center gap-3 px-4 py-2 transition-colors border-l-2 hover:text-white ${
                   isActive(item.path)
                     ? 'border-indigo-500 hover:border-white text-indigo-400'
                     : 'border-transparent text-gray-300'
                 }`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-6 h-6" />
                 <span>{item.label}</span>
               </Link>
             );
@@ -53,13 +53,13 @@ function Sidebar() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 transition-colors border-l-4 hover:text-white ${
+                  className={`flex items-center gap-3 px-4 py-2 transition-colors border-l-2 hover:text-white ${
                     isActive(item.path)
                       ? 'border-indigo-500 hover:border-white text-indigo-500'
                       : 'border-transparent text-gray-300'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className="w-6 h-6" />
                   <span>{item.label}</span>
                 </Link>
               );
