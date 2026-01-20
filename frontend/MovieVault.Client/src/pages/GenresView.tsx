@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import CollectionCard from '../components/CollectionCard'
-import Counter from '../components/Counter'
+//import Counter from '../components/Counter'
 import EmptyState from '../components/EmptyState'
 import LoadingSpinner from '../components/LoadingSpinner';
 import SubNavigation from '../components/SubNavigation'
@@ -61,31 +61,33 @@ function GenresView() {
   return (
     <>
       <SubNavigation />
-      <div className="mx-auto px-8 py-8">
-      <div className="flex items-center mb-4 gap-4">
-        <h1 className="text-3xl font-bold">Genres</h1>
-        <Counter count={genres.length} />
-      </div>
+      <div className="flex h-[calc(100vh-9rem)] pt-2">
+        <div className="flex-1 min-h-0 overflow-y-auto px-8 pt-8">
+          {/* <div className="flex items-center mb-4 gap-4">
+            <h1 className="text-3xl font-bold">Genres</h1>
+            <Counter count={genres.length} />
+          </div> */}
 
-      {genres.length === 0 ? (
-        <EmptyState message="No genres yet." />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {genres.map((genre) => {
-            const movieCount = getMovieCount(genre);
-            return (
-              <CollectionCard
-                key={genre}
-                collection={{ id: 0, name: genre }}
-                movieCount={movieCount}
-                completionPercentage={null}
-                urlPath='genres'
-              />
-            );
-          })}
+          {genres.length === 0 ? (
+            <EmptyState message="No genres yet." />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {genres.map((genre) => {
+                const movieCount = getMovieCount(genre);
+                return (
+                  <CollectionCard
+                    key={genre}
+                    collection={{ id: 0, name: genre }}
+                    movieCount={movieCount}
+                    completionPercentage={null}
+                    urlPath='genres'
+                  />
+                );
+              })}
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
     </>
   );
 }
