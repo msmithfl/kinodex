@@ -27,6 +27,7 @@ function AddMovie() {
     genres: [],
     posterPath: '',
     productPosterPath: '',
+    tmdbId: undefined,
     hdDriveNumber: 0,
     shelfNumber: 1,
     shelfSection: '',
@@ -211,13 +212,14 @@ function AddMovie() {
     // Construct poster URL
     const posterPath = movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '';
 
-    // Update form data with TMDB info
+    // Update form data with TMDB info including TMDB ID
     setFormData({
       ...formData,
       title: movie.title,
       year,
       genres,
-      posterPath
+      posterPath,
+      tmdbId: movie.id
     });
 
     // Switch to manual entry mode

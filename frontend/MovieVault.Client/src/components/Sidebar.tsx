@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { FaHome, FaTv, FaFilm, FaChartBar, FaCog, FaBookmark } from 'react-icons/fa'
+import { FaHome, FaTv, FaFilm, FaChartBar, FaCog, FaBookmark, FaLink } from 'react-icons/fa'
 
 function Sidebar() {
   const location = useLocation();
@@ -15,6 +15,7 @@ function Sidebar() {
     
     const utilityItems = [
         { path: '/', label: 'Dashboard', icon: FaHome },
+        { path: '/match-movies', label: 'Match Movies', icon: FaLink },
         { path: '/stats', label: 'Statistics', icon: FaChartBar },
         { path: '/watchlist', label: 'Watchlist', icon: FaBookmark },
         { path: '/settings', label: 'Settings', icon: FaCog },

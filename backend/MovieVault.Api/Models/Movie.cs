@@ -14,6 +14,7 @@ public class Movie
     public List<string> Genres { get; set; } = new List<string>();
     public string PosterPath { get; set; } = string.Empty;
     public string ProductPosterPath { get; set; } = string.Empty;
+    public int? TmdbId { get; set; }
     public int HDDriveNumber { get; set; }
     public int ShelfNumber { get; set; }
     public string ShelfSection { get; set; } = string.Empty;

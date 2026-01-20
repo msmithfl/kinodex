@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MovieVault.Api.Data;
 using MovieVault.Api.Endpoints;
+using MovieVault.Api.Services;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// Add HttpClient for TMDB service
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<TmdbMatchingService>();
 
 // Configure JSON serialization to use camelCase
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -108,6 +113,7 @@ app.MapCollectionEndpoints();
 app.MapShelfSectionEndpoints();
 app.MapUpcEndpoints();
 app.MapCollectionListItemEndpoints();
+app.MapTmdbMatchingEndpoints();
 
 // Use PORT from Railway if available, bind to all interfaces
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5156";

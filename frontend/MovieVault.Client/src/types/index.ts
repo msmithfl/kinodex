@@ -11,6 +11,7 @@ export interface Movie {
     genres: string[];
     posterPath: string;
     productPosterPath: string;
+    tmdbId?: number;
     hdDriveNumber: number;
     shelfNumber: number;
     shelfSection: string;
@@ -46,4 +47,28 @@ export interface ShelfSection {
   id: number;
   name: string;
   createdAt: string;
+}
+
+export interface TmdbSearchResult {
+  tmdbId: number;
+  title: string;
+  year?: number;
+  posterPath?: string;
+  overview?: string;
+}
+
+export interface MatchSuggestion {
+  movieId: number;
+  movieTitle: string;
+  movieYear: number;
+  suggestedMatches: TmdbSearchResult[];
+}
+
+export interface MatchingResult {
+  success: boolean;
+  message: string;
+  totalUnmatched: number;
+  noMatchesFound: number;
+  suggestions: MatchSuggestion[];
+  errors: string[];
 }

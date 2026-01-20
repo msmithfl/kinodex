@@ -13,6 +13,7 @@ import ShelfSectionsView from './pages/ShelfSectionsView'
 import ShelfSectionDetail from './pages/ShelfSectionDetail'
 import GenresView from './pages/GenresView'
 import GenreDetail from './pages/GenreDetail'
+import MatchMovies from './pages/MatchMovies'
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
               <Route path="/shelfsections/:sectionName" element={<ShelfSectionDetail />} />
               <Route path="/genres" element={<GenresView />} />
               <Route path="/genres/:genreName" element={<GenreDetail />} />
+              <Route path="/match-movies" element={<MatchMovies />} />
               <Route path="/add" element={<AddMovie />} />
               <Route path="/movie/:id" element={<MovieDetail />} />
               <Route path="/edit/:id" element={<EditMovie />} />
