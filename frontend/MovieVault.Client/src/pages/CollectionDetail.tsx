@@ -441,7 +441,7 @@ function CollectionDetail() {
             <EmptyState message="No movies in this collection yet." />
           ) : (
             <div className={viewMode === 'poster' 
-              ? "grid grid-cols-3 min-[400px]:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-4" 
+              ? "grid grid-cols-3 min-[400px]:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-4 gap-y-10" 
               : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
             }>
             {movies.sort((a, b) => a.year - b.year).map((movie) => (
