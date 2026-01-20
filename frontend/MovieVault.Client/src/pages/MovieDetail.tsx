@@ -100,7 +100,22 @@ function MovieDetail() {
 
               {/* Title, Year, Rating, Genres - Center */}
               <div className="col-span-8 lg:col-span-6 flex flex-col justify-center space-y-2 lg:space-y-4">
-                <h1 className="text-2xl lg:text-4xl font-bold text-white">{movie.title}</h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl lg:text-4xl font-bold text-white">{movie.title}</h1>
+                  <a
+                    href={movie.tmdbId ? `https://www.themoviedb.org/movie/${movie.tmdbId}` : 'https://www.themoviedb.org/'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0"
+                    title={movie.tmdbId ? 'View on TMDB' : 'Search on TMDB'}
+                  >
+                    <img 
+                      src="/src/assets/tmdb-icon.png" 
+                      alt="TMDB"
+                      className="w-8 h-8 lg:w-10 lg:h-10 hover:opacity-80 transition-opacity"
+                    />
+                  </a>
+                </div>
                 
                 <div>
                   <p className="text-lg lg:text-xl text-white">
