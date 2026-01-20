@@ -476,10 +476,10 @@ function MovieList() {
       <SubNavigation />
       <div className="flex flex-col h-[calc(100vh-9rem)]">
         {/* Fixed header section */}
-        <div className="shrink-0">
+        <div className="shrink-0 mx-12">
           <div className="flex justify-between items-center mb-8 px-4">
             {/* Mobile Sort and Column Buttons */}
-            {movies.length > 0 && (
+            {/* {movies.length > 0 && (
               <div className="md:hidden flex gap-2">
                 <button
                   onClick={() => setShowSortMenu(!showSortMenu)}
@@ -489,12 +489,12 @@ function MovieList() {
                   <FaSortAmountDown className="w-6 h-6" />
                 </button>
               </div>
-            )}
+            )} */}
           </div>
 
       {movies.length > 0 && (
         <div className="mb-4 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mx-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <input
                 type="text"
@@ -526,7 +526,7 @@ function MovieList() {
           
           {/* Desktop Sort Controls - Conditionally Visible */}
           {selectedMovieIds.size === 0 ? (
-            <div className="hidden md:flex items-center justify-between ml-12 gap-6">
+            <div className="items-center justify-between gap-6">
               <div className='flex items-center gap-4'>
                 <div className="relative">
                   {Object.values(selectedFilters).some(arr => arr.length > 0) && (
@@ -599,7 +599,7 @@ function MovieList() {
           )}
 
           {/* Mobile Sort Controls - Toggle Visibility */}
-          {showSortMenu && (
+          {/* {showSortMenu && (
             <div className="md:hidden space-y-3 p-4 bg-gray-700 rounded-lg">
               <div className="flex flex-col gap-2">
                 <label htmlFor="itemsPerPage-mobile" className="text-sm font-medium text-gray-300">
@@ -617,7 +617,7 @@ function MovieList() {
                 </select>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       )}
         </div>
