@@ -493,8 +493,8 @@ function MovieList() {
           </div>
 
       {movies.length > 0 && (
-        <div className="mb-4 mx-12 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="mb-4 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mx-12">
             <div className="relative">
               <input
                 type="text"
@@ -526,16 +526,16 @@ function MovieList() {
           
           {/* Desktop Sort Controls - Conditionally Visible */}
           {selectedMovieIds.size === 0 ? (
-            <div className="hidden md:flex items-center justify-between gap-6">
+            <div className="hidden md:flex items-center justify-between ml-12 gap-6">
               <div className='flex items-center gap-4'>
                 <div className="relative">
                   {Object.values(selectedFilters).some(arr => arr.length > 0) && (
                     <button
                     onClick={handleClearFilters}
-                    className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-5 h-5 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center transition-colors cursor-pointer"
+                    className="absolute -left-8.5 top-1/2 -translate-y-1/2 z-10 w-5 h-5  rounded-full flex items-center justify-center transition-colors cursor-pointer"
                     title="Clear filters"
                     >
-                      <IoMdCloseCircle className="w-2.5 h-2.5 text-white" />
+                      <IoMdCloseCircle className="w-5 h-5 text-white" />
                     </button>
                   )}
                   <div onClick={() => setShowColumnMenu(false)}>
