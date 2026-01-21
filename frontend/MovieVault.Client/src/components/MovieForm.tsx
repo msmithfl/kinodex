@@ -51,13 +51,15 @@ function MovieForm({
   const [yearInput, setYearInput] = useState<string>(formData.year.toString());
   const [shelfInput, setShelfInput] = useState<string>(formData.shelfNumber.toString());
   const [hddInput, setHddInput] = useState<string>(formData.hdDriveNumber.toString());
+  const [tmdbInput, setTmdbInput] = useState<string>(formData.tmdbId?.toString() || '');
 
   // Sync local state when formData changes (e.g., from TMDB search or editing different movie)
   useEffect(() => {
     setYearInput(formData.year.toString());
     setShelfInput(formData.shelfNumber.toString());
     setHddInput(formData.hdDriveNumber.toString());
-  }, [formData.year, formData.shelfNumber, formData.hdDriveNumber]);
+    setTmdbInput(formData.tmdbId?.toString() || '');
+  }, [formData.year, formData.shelfNumber, formData.hdDriveNumber, formData.tmdbId]);
 
   const handleYearChange = (value: string) => {
     setYearInput(value);
@@ -80,6 +82,18 @@ function MovieForm({
     const num = parseInt(value);
     if (!isNaN(num)) {
       setFormData({ ...formData, hdDriveNumber: num });
+    }
+  };
+
+  const handleTmdbChange = (value: string) => {
+    setTmdbInput(value);
+    if (value === '') {
+      setFormData({ ...formData, tmdbId: undefined });
+    } else {
+      const num = parseInt(value);
+      if (!isNaN(num)) {
+        setFormData({ ...formData, tmdbId: num });
+      }
     }
   };
 
@@ -209,6 +223,20 @@ function MovieForm({
             value={yearInput}
             onChange={(e) => handleYearChange(e.target.value)}
             placeholder="Release year"
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="tmdbId" className="block text-sm font-medium text-gray-300 mb-2">
+            TMDB ID
+          </label>
+          <input
+            type="text"
+            id="tmdbId"
+            value={tmdbInput}
+            onChange={(e) => handleTmdbChange(e.target.value)}
+            placeholder="The Movie Database ID (optional)"
             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
           />
         </div>
