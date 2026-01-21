@@ -67,6 +67,7 @@ function MovieList() {
     shelfSection: '',
     hdDriveNumber: '',
     isOnPlex: '',
+    condition: '',
   });
   const [shelfSections, setShelfSections] = useState<string[]>([]);
   const [collections, setCollections] = useState<string[]>([]);
@@ -353,6 +354,9 @@ function MovieList() {
       if (bulkEditData.isOnPlex !== '') {
         updates.isOnPlex = bulkEditData.isOnPlex === 'true';
       }
+      if (bulkEditData.condition !== '') {
+        updates.condition = bulkEditData.condition;
+      }
 
       // Update each selected movie
       const updatePromises = Array.from(selectedMovieIds).map(async (movieId) => {
@@ -377,7 +381,7 @@ function MovieList() {
       // Reset state
       setShowBulkEditModal(false);
       setSelectedMovieIds(new Set());
-      setBulkEditData({ shelfNumber: '', shelfSection: '', hdDriveNumber: '', isOnPlex: '' });
+      setBulkEditData({ shelfNumber: '', shelfSection: '', hdDriveNumber: '', isOnPlex: '', condition: '' });
     } catch (error) {
       console.error('Error updating movies:', error);
       alert('Failed to update movies. Please try again.');
@@ -974,13 +978,31 @@ function MovieList() {
                     <option value="false">No</option>
                   </select>
                 </div>
+                <div>
+                  <label htmlFor="bulk-condition" className="block text-sm font-medium text-gray-300 mb-2">
+                    Condition
+                  </label>
+                  <select
+                    id="bulk-condition"
+                    value={bulkEditData.condition}
+                    onChange={(e) => setBulkEditData(prev => ({ ...prev, condition: e.target.value }))}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
+                  >
+                    <option value="">-- Keep Current --</option>
+                    <option value="Sealed">Sealed</option>
+                    <option value="Like New">Like New</option>
+                    <option value="Good">Good</option>
+                    <option value="Poor">Poor</option>
+                    <option value="Damaged">Damaged</option>
+                  </select>
+                </div>
               </div>
               
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={() => {
                     setShowBulkEditModal(false);
-                    setBulkEditData({ shelfNumber: '', shelfSection: '', hdDriveNumber: '', isOnPlex: '' });
+                    setBulkEditData({ shelfNumber: '', shelfSection: '', hdDriveNumber: '', isOnPlex: '', condition: '' });
                   }}
                   className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-md transition cursor-pointer"
                 >
