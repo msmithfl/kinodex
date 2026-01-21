@@ -459,10 +459,13 @@ function MovieList() {
     {
       id: 'shelfNumber',
       label: 'Shelf Number',
-      options: Array.from(new Set(movies.map(m => m.shelfNumber)))
-        .filter(num => num > 0)
-        .sort((a, b) => a - b)
-        .map(num => ({ label: `Shelf ${num}`, value: num.toString() }))
+      options: [
+        { label: 'Unshelved', value: '0' },
+        ...Array.from(new Set(movies.map(m => m.shelfNumber)))
+          .filter(num => num > 0)
+          .sort((a, b) => a - b)
+          .map(num => ({ label: `Shelf ${num}`, value: num.toString() }))
+      ]
     }
   ];
 
