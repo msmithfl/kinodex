@@ -93,11 +93,18 @@ function CheckoutsView() {
     }
 
     try {
+      // Convert date string to end of day in ISO format
+      let dueDateISO = null
+      if (formData.dueDate) {
+        const dueDate = new Date(formData.dueDate + 'T23:59:59')
+        dueDateISO = dueDate.toISOString()
+      }
+      
       const checkoutData = {
         movieId: formData.movieId,
         customerId: formData.customerId,
         checkedOutDate: new Date().toISOString(),
-        dueDate: formData.dueDate ? formData.dueDate : null,
+        dueDate: dueDateISO,
         notes: formData.notes,
       }
       
