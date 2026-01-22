@@ -13,4 +13,6 @@ public class MovieDbContext : DbContext
     public DbSet<Collection> Collections => Set<Collection>();
     public DbSet<ShelfSection> ShelfSections => Set<ShelfSection>();
     public DbSet<CollectionListItem> CollectionListItems => Set<CollectionListItem>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Checkout> Checkouts => Set<Checkout>();
 }
