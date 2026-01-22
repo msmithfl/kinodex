@@ -5,9 +5,9 @@ public class Movie
     public int Id { get; set; }
     public required string Title { get; set; }
     public required string UpcNumber { get; set; }
-    public List<string> Formats { get; set; } = new List<string>(); // DVD, Blu-ray, 4K
-    public List<string> Collections { get; set; } = new List<string>(); // Jurassic Park, Criterion, Star Wars
-    public required string Condition { get; set; } // New, Good, Skips, Poor
+    public List<string> Formats { get; set; } = new List<string>();
+    public List<string> Collections { get; set; } = new List<string>();
+    public required string Condition { get; set; }
     public float Rating { get; set; }
     public string Review { get; set; } = string.Empty;
     public int Year { get; set; }
@@ -20,4 +20,7 @@ public class Movie
     public string ShelfSection { get; set; } = string.Empty;
     public bool IsOnPlex { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    // Navigation property
+    public List<Checkout> Checkouts { get; set; } = new();
 }
