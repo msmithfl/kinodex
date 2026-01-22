@@ -14,6 +14,8 @@ import ShelfSectionDetail from './pages/ShelfSectionDetail'
 import GenresView from './pages/GenresView'
 import GenreDetail from './pages/GenreDetail'
 import MatchMovies from './pages/MatchMovies'
+import CustomersView from './pages/CustomersView'
+import CheckoutsView from './pages/CheckoutsView'
 
 function App() {
   return (
@@ -33,6 +35,8 @@ function App() {
               <Route path="/genres" element={<GenresView />} />
               <Route path="/genres/:genreName" element={<GenreDetail />} />
               <Route path="/match-movies" element={<MatchMovies />} />
+              <Route path="/checkout" element={<CheckoutsView />} />
+              <Route path="/customer" element={<CustomersView />} />
               <Route path="/add" element={<AddMovie />} />
               <Route path="/movie/:id" element={<MovieDetail />} />
               <Route path="/edit/:id" element={<EditMovie />} />

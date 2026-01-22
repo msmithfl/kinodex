@@ -1,6 +1,8 @@
 import { Link, useLocation } from 'react-router-dom'
-import { FaHome, FaTv, FaFilm, FaCog, FaLink } from 'react-icons/fa'
+import { FaHome, FaTv, FaFilm, FaCog, FaLink, } from 'react-icons/fa'
 import { LuClipboardPen } from "react-icons/lu";
+import { IoPersonCircleSharp } from "react-icons/io5";
+
 
 function Sidebar() {
   const location = useLocation();
@@ -17,7 +19,8 @@ function Sidebar() {
     const utilityItems = [
         { path: '/', label: 'Dashboard', icon: FaHome },
         { path: '/match-movies', label: 'Match Movies', icon: FaLink },
-        { path: '/checkout', label: 'Checkout', icon: LuClipboardPen },
+        { path: '/checkout', label: 'Checkouts', icon: LuClipboardPen },
+        { path: '/customer', label: 'Customers', icon: IoPersonCircleSharp },
         { path: '/settings', label: 'Settings', icon: FaCog },
     ];
 

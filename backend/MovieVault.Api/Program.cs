@@ -3,6 +3,7 @@ using MovieVault.Api.Data;
 using MovieVault.Api.Endpoints;
 using MovieVault.Api.Services;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,10 +15,11 @@ builder.Services.AddOpenApi();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<TmdbMatchingService>();
 
-// Configure JSON serialization to use camelCase
+// Configure JSON serialization to use camelCase and handle circular references
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
 
 // Database - handle both Railway URL format and standard connection string
@@ -70,7 +72,7 @@ else
     // Fallback to JSON configuration
     var corsOriginsSection = builder.Configuration.GetSection("CorsOrigins");
     corsOrigins = corsOriginsSection.Get<string[]>() 
-        ?? new[] { "http://localhost:5173", "https://localhost:5173" }; // Final fallback for local dev
+        ?? new[] { "http://localhost:5173", "https://localhost:5173", "http://localhost:5174", "https://localhost:5174" }; // Final fallback for local dev
 }
 
 Console.WriteLine($"Environment: {builder.Environment.EnvironmentName}");
@@ -114,6 +116,8 @@ app.MapShelfSectionEndpoints();
 app.MapUpcEndpoints();
 app.MapCollectionListItemEndpoints();
 app.MapTmdbMatchingEndpoints();
+app.MapCustomerEndpoints();
+app.MapCheckoutEndpoints();
 
 // Use PORT from Railway if available, bind to all interfaces
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5156";

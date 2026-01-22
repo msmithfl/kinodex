@@ -72,3 +72,26 @@ export interface MatchingResult {
   suggestions: MatchSuggestion[];
   errors: string[];
 }
+
+export interface Customer {
+  id?: number;
+  name: string;
+  email: string;
+  phone: string;
+  createdAt?: string;
+  checkouts?: Checkout[];
+}
+
+export interface Checkout {
+  id?: number;
+  movieId: number;
+  customerId: number;
+  checkedOutDate: string;
+  dueDate?: string;
+  returnedDate?: string;
+  notes: string;
+  movie?: Movie;
+  customer?: Customer;
+  isOverdue?: boolean;
+  isActive?: boolean;
+}
