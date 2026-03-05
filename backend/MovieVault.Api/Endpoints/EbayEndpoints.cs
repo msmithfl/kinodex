@@ -1,4 +1,7 @@
 using HtmlAgilityPack;
+using Microsoft.EntityFrameworkCore;
+using MovieVault.Api.Data;
+using MovieVault.Api.Models;
 using System.Globalization;
 
 namespace MovieVault.Api.Endpoints;
@@ -12,12 +15,19 @@ public static class EbayEndpoints
         "su-styled-text",
     ];
 
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
+
     public static void MapEbayEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/ebay");
 
-        group.MapGet("/sold-average/{upc}", async (string upc) =>
+        group.MapGet("/sold-average/{upc}", async (string upc, MovieDbContext db) =>
         {
+            // Return cached result from Products if fresh
+            var cached = await db.Products.FindAsync(upc);
+            if (cached?.EbayCachedAt != null && DateTimeOffset.UtcNow - cached.EbayCachedAt < CacheDuration)
+                return Results.Ok(new { average = cached.EbayAveragePrice, count = cached.EbayPriceCount });
+
             using var httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
@@ -61,7 +71,30 @@ public static class EbayEndpoints
                     return Results.Ok(new { average = (decimal?)null, count = 0 });
 
                 var average = Math.Round(prices.Average(), 2);
-                return Results.Ok(new { average, count = prices.Count });
+                var count = prices.Count;
+
+                // Upsert into Products cache
+                if (cached == null)
+                {
+                    // Create new cache entry
+                    db.Products.Add(new Product
+                    {
+                        Upc = upc,
+                        EbayAveragePrice = average,
+                        EbayPriceCount = count,
+                        EbayCachedAt = DateTimeOffset.UtcNow
+                    });
+                }
+                else
+                {
+                    // Update existing cache entry
+                    cached.EbayAveragePrice = average;
+                    cached.EbayPriceCount = count;
+                    cached.EbayCachedAt = DateTimeOffset.UtcNow;
+                }
+                await db.SaveChangesAsync();
+
+                return Results.Ok(new { average, count });
             }
             catch (Exception ex)
             {
