@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Header from './components/Header'
 // import Footer from './components/Footer'
 import Sidebar from './components/Sidebar'
-import Home from './pages/Home'
+import Dashboard from './pages/Dashboard'
 import MovieList from './pages/MovieList'
 import AddMovie from './pages/AddMovie'
 import EditMovie from './pages/EditMovie'
@@ -27,7 +27,7 @@ function App() {
           <main className="flex-1 overflow-x-hidden">
             <Routes>
               <Route path="/" element={<MovieList />} />
-              <Route path="/dashboard" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/collections" element={<CollectionsView />} />
               <Route path="/collections/:collectionName" element={<CollectionDetail />} />
               <Route path="/shelfsections" element={<ShelfSectionsView />} />

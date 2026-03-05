@@ -10,7 +10,7 @@ export function MobileOnlyMessage({ setShowMobileOnlyMessage }: MobileOnlyMessag
               <h3 className="text-xl font-bold text-white">Mobile Only Feature</h3>
               <button
                 onClick={() => setShowMobileOnlyMessage(false)}
-                className="text-gray-400 hover:text-white text-2xl font-bold"
+                className="text-gray-400 hover:text-white text-2xl font-bold cursor-pointer"
               >
                 ×
               </button>
@@ -20,7 +20,7 @@ export function MobileOnlyMessage({ setShowMobileOnlyMessage }: MobileOnlyMessag
             </p>
             <button
               onClick={() => setShowMobileOnlyMessage(false)}
-              className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition"
+              className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
             >
               OK
             </button>
