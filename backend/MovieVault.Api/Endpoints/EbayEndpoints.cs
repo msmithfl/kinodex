@@ -15,7 +15,7 @@ public static class EbayEndpoints
         "su-styled-text",
     ];
 
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(24);
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromDays(30);
 
     public static void MapEbayEndpoints(this IEndpointRouteBuilder app)
     {
