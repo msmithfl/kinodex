@@ -181,7 +181,7 @@ function MovieDetail() {
               </div>
 
               {/* Product Image & eBay Button - Right */}
-              <div className="col-span-12 lg:col-span-3 flex lg:flex-col items-end gap-4">
+              <div className="col-span-12 lg:col-span-3 flex lg:flex-col items-end justify-end gap-4">
                 {movie.productPosterPath && (
                   <img 
                     src={movie.productPosterPath} 

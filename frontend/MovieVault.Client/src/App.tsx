@@ -16,6 +16,7 @@ import GenreDetail from './pages/GenreDetail'
 import MatchMovies from './pages/MatchMovies'
 import CustomersView from './pages/CustomersView'
 import CheckoutsView from './pages/CheckoutsView'
+import MyShelf from './pages/MyShelf'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           <main className="flex-1 overflow-x-hidden">
             <Routes>
               <Route path="/" element={<MovieList />} />
+              <Route path="/my-shelf" element={<MyShelf />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/collections" element={<CollectionsView />} />
               <Route path="/collections/:collectionName" element={<CollectionDetail />} />

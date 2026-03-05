@@ -20,6 +20,14 @@ function SubNavigation() {
             Library
           </Link>
           <Link 
+            to="/my-shelf" 
+            className={`text-gray-300 hover:text-white transition-colors font-medium pb-1 ${
+              isActive('/my-shelf') ? 'border-b-2 hover:border-white border-indigo-500 text-indigo-500' : ''
+            }`}
+          >
+            My Shelf
+          </Link>
+          <Link 
             to="/collections" 
             className={`text-gray-300 hover:text-white transition-colors font-medium pb-1 ${
               isActive('/collections') ? 'border-b-2 hover:border-white border-indigo-500 text-indigo-500' : ''
