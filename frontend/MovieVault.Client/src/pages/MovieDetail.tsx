@@ -13,25 +13,6 @@ function MovieDetail() {
   const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [ebayPrice, setEbayPrice] = useState<{ average: number | null; count: number } | null>(null);
-  const [ebayLoading, setEbayLoading] = useState(false);
-
-  const API_EBAY = `${import.meta.env.VITE_API_URL || 'http://localhost:5156'}/api/ebay`;
-
-  const fetchEbayAverage = async (upc: string) => {
-    setEbayLoading(true);
-    try {
-      const response = await fetch(`${API_EBAY}/sold-average/${encodeURIComponent(upc)}`);
-      if (response.ok) {
-        const data = await response.json();
-        setEbayPrice(data);
-      }
-    } catch (error) {
-      console.error('Error fetching eBay data:', error);
-    } finally {
-      setEbayLoading(false);
-    }
-  };
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5156';
   const API_URL = `${API_BASE}/api/movies`;
@@ -221,27 +202,6 @@ function MovieDetail() {
                 >
                   🔍 Search on eBay
                 </button>
-
-                {/* <button
-                  onClick={() => fetchEbayAverage(movie.upcNumber)}
-                  disabled={ebayLoading}
-                  className="bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white font-semibold py-2 px-4 rounded-md transition duration-200 text-xs lg:text-sm cursor-pointer w-auto lg:w-full"
-                >
-                  {ebayLoading ? '⏳ Fetching...' : '💰 Avg Sold Price'}
-                </button> */}
-
-                {ebayPrice !== null && (
-                  <div className="text-center w-full">
-                    {ebayPrice.average !== null ? (
-                      <>
-                        <p className="text-green-400 font-bold text-sm lg:text-base">${ebayPrice.average.toFixed(2)}</p>
-                        <p className="text-gray-500 text-xs">avg of {ebayPrice.count} sold</p>
-                      </>
-                    ) : (
-                      <p className="text-gray-500 text-xs">No results found</p>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
           </div>
