@@ -12,9 +12,9 @@ function SubNavigation() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-center gap-8 pt-6">
           <Link 
-            to="/library" 
+            to="/" 
             className={`text-gray-300 hover:text-white transition-colors font-medium pb-1 ${
-              isActive('/library') ? 'border-b-2 hover:border-white border-indigo-500 text-indigo-500' : ''
+              isActive('/') ? 'border-b-2 hover:border-white border-indigo-500 text-indigo-500' : ''
             }`}
           >
             Library

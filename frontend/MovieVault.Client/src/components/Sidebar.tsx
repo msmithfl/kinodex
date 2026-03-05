@@ -12,12 +12,12 @@ function Sidebar() {
   };
 
     const navItems = [
-      { path: '/library', label: 'Movies', icon: FaFilm },
+      { path: '/', label: 'Movies', icon: FaFilm },
       { path: '/tvshows', label: 'TV Shows', icon: FaTv },
     ];
     
     const utilityItems = [
-        { path: '/', label: 'Dashboard', icon: FaHome },
+        { path: '/dashboard', label: 'Dashboard', icon: FaHome },
         { path: '/match-movies', label: 'Match Movies', icon: FaLink },
         { path: '/checkout', label: 'Checkouts', icon: LuClipboardPen },
         { path: '/customer', label: 'Customers', icon: IoPersonCircleSharp },
