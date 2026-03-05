@@ -4,6 +4,7 @@ using MovieVault.Api.Data;
 using MovieVault.Api.Models;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Net;
 
 namespace MovieVault.Api.Endpoints;
 
@@ -31,17 +32,9 @@ public static class EbayEndpoints
             if (cached?.EbayCachedAt != null && DateTimeOffset.UtcNow - cached.EbayCachedAt < CacheDuration)
                 return Results.Ok(new { average = cached.EbayAveragePrice, count = cached.EbayPriceCount });
 
-            using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Add("User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
-            httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
-            httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-
             try
             {
-                var url = $"https://www.ebay.com/sch/i.html?_nkw={Uri.EscapeDataString(upc)}&LH_Sold=1&rt=nc&LH_ItemCondition=4";
-                var html = await httpClient.GetStringAsync(url);
-
+                var html = await FetchEbayHtml(upc);
                 var prices = ExtractPricesFromHtml(html);
 
                 if (prices.Count == 0)
@@ -80,16 +73,39 @@ public static class EbayEndpoints
         // Debug endpoint — returns matched prices so you can verify extraction
         group.MapGet("/debug/{upc}", async (string upc) =>
         {
-            using var httpClient = new HttpClient();
-            httpClient.DefaultRequestHeaders.Add("User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
-            httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
-
-            var url = $"https://www.ebay.com/sch/i.html?_nkw={Uri.EscapeDataString(upc)}&LH_Sold=1&rt=nc&LH_ItemCondition=4";
-            var html = await httpClient.GetStringAsync(url);
-            var prices = ExtractPricesFromHtml(html);
-            return Results.Ok(new { prices, count = prices.Count, average = prices.Count > 0 ? Math.Round(prices.Average(), 2) : (decimal?)null });
+            try
+            {
+                var html = await FetchEbayHtml(upc);
+                var prices = ExtractPricesFromHtml(html);
+                return Results.Ok(new
+                {
+                    prices,
+                    count = prices.Count,
+                    average = prices.Count > 0 ? Math.Round(prices.Average(), 2) : (decimal?)null
+                });
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem($"Error fetching eBay data: {ex.Message}");
+            }
         });
+    }
+
+    // Each call gets its own cookie container so sessions are independent per request,
+    // avoiding shared state across users while still looking like a real browser visit
+    private static async Task<string> FetchEbayHtml(string upc)
+    {
+        var cookieContainer = new CookieContainer();
+        var handler = new HttpClientHandler { CookieContainer = cookieContainer };
+        using var httpClient = new HttpClient(handler);
+
+        httpClient.DefaultRequestHeaders.Add("User-Agent",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
+        httpClient.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.9");
+        httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+
+        var url = $"https://www.ebay.com/sch/i.html?_nkw={Uri.EscapeDataString(upc)}&LH_Sold=1&rt=nc&LH_ItemCondition=4";
+        return await httpClient.GetStringAsync(url);
     }
 
     private static List<decimal> ExtractPricesFromHtml(string html)
@@ -111,6 +127,7 @@ public static class EbayEndpoints
             foreach (var node in priceNodes)
             {
                 var text = node.InnerText.Trim();
+                // Handle ranges like "$10.00 to $15.00" — take both bounds and average them in
                 var parts = text.Split(" to ", StringSplitOptions.RemoveEmptyEntries);
                 foreach (var part in parts)
                 {
@@ -121,7 +138,7 @@ public static class EbayEndpoints
             }
         }
 
-        // Strategy 2: regex fallback — find all dollar amounts near sold-listing price markup
+        // Strategy 2: regex fallback — find all dollar amounts in raw HTML if class selectors failed
         if (prices.Count == 0)
         {
             foreach (Match m in PriceRegex.Matches(html))
