@@ -19,7 +19,7 @@ function Header() {
   ];
   
   const utilityItems = [
-    { path: '/', label: 'Dashboard', icon: FaHome },
+    { path: '/dashboard', label: 'Dashboard', icon: FaHome },
     { path: '/stats', label: 'Statistics', icon: FaChartBar },
     { path: '/watchlist', label: 'Watchlist', icon: FaBookmark },
     { path: '/settings', label: 'Settings', icon: FaCog },
@@ -37,7 +37,7 @@ function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <Link 
-              to="/" 
+              to="/dashboard" 
               className="text-gray-300 hover:text-white transition-colors font-medium"
             >
               Dashboard
