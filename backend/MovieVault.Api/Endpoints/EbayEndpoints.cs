@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MovieVault.Api.Data;
 using MovieVault.Api.Models;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace MovieVault.Api.Endpoints;
 
@@ -12,8 +13,10 @@ public static class EbayEndpoints
     [
         "s-item__price",
         "s-card__price",
-        "su-styled-text",
     ];
+
+    // Matches dollar amounts like $19.99 or $1,299.00
+    private static readonly Regex PriceRegex = new(@"\$\s*([\d]{1,4}(?:,\d{3})*\.\d{2})", RegexOptions.Compiled);
 
     private static readonly TimeSpan CacheDuration = TimeSpan.FromDays(30);
 
@@ -39,33 +42,7 @@ public static class EbayEndpoints
                 var url = $"https://www.ebay.com/sch/i.html?_nkw={Uri.EscapeDataString(upc)}&LH_Sold=1&rt=nc&LH_ItemCondition=4";
                 var html = await httpClient.GetStringAsync(url);
 
-                var doc = new HtmlDocument();
-                doc.LoadHtml(html);
-
-                // Try each known eBay price class selector until we find nodes
-                HtmlNodeCollection? priceNodes = null;
-                foreach (var cls in PriceClassSelectors)
-                {
-                    priceNodes = doc.DocumentNode.SelectNodes($"//span[contains(@class, '{cls}')]");
-                    if (priceNodes != null && priceNodes.Count > 0) break;
-                }
-
-                if (priceNodes == null || priceNodes.Count == 0)
-                    return Results.Ok(new { average = (decimal?)null, count = 0 });
-
-                var prices = new List<decimal>();
-                foreach (var node in priceNodes)
-                {
-                    var text = node.InnerText.Trim();
-                    // Handle ranges like "$10.00 to $15.00" — take the lower bound
-                    var parts = text.Split(" to ", StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var part in parts)
-                    {
-                        var clean = part.TrimStart('$', 'C', ' ').Replace(",", "").Trim();
-                        if (decimal.TryParse(clean, NumberStyles.Any, CultureInfo.InvariantCulture, out var price) && price > 0)
-                            prices.Add(price);
-                    }
-                }
+                var prices = ExtractPricesFromHtml(html);
 
                 if (prices.Count == 0)
                     return Results.Ok(new { average = (decimal?)null, count = 0 });
@@ -76,7 +53,6 @@ public static class EbayEndpoints
                 // Upsert into Products cache
                 if (cached == null)
                 {
-                    // Create new cache entry
                     db.Products.Add(new Product
                     {
                         Upc = upc,
@@ -87,7 +63,6 @@ public static class EbayEndpoints
                 }
                 else
                 {
-                    // Update existing cache entry
                     cached.EbayAveragePrice = average;
                     cached.EbayPriceCount = count;
                     cached.EbayCachedAt = DateTimeOffset.UtcNow;
@@ -102,7 +77,7 @@ public static class EbayEndpoints
             }
         });
 
-        // Debug endpoint — returns raw eBay HTML so you can inspect what's being returned
+        // Debug endpoint — returns matched prices so you can verify extraction
         group.MapGet("/debug/{upc}", async (string upc) =>
         {
             using var httpClient = new HttpClient();
@@ -112,7 +87,51 @@ public static class EbayEndpoints
 
             var url = $"https://www.ebay.com/sch/i.html?_nkw={Uri.EscapeDataString(upc)}&LH_Sold=1&rt=nc&LH_ItemCondition=4";
             var html = await httpClient.GetStringAsync(url);
-            return Results.Content(html, "text/html");
+            var prices = ExtractPricesFromHtml(html);
+            return Results.Ok(new { prices, count = prices.Count, average = prices.Count > 0 ? Math.Round(prices.Average(), 2) : (decimal?)null });
         });
+    }
+
+    private static List<decimal> ExtractPricesFromHtml(string html)
+    {
+        var prices = new List<decimal>();
+        var doc = new HtmlDocument();
+        doc.LoadHtml(html);
+
+        // Strategy 1: known eBay price class selectors
+        HtmlNodeCollection? priceNodes = null;
+        foreach (var cls in PriceClassSelectors)
+        {
+            priceNodes = doc.DocumentNode.SelectNodes($"//span[contains(@class, '{cls}')]");
+            if (priceNodes != null && priceNodes.Count > 0) break;
+        }
+
+        if (priceNodes != null)
+        {
+            foreach (var node in priceNodes)
+            {
+                var text = node.InnerText.Trim();
+                var parts = text.Split(" to ", StringSplitOptions.RemoveEmptyEntries);
+                foreach (var part in parts)
+                {
+                    var clean = part.TrimStart('$', 'C', ' ').Replace(",", "").Trim();
+                    if (decimal.TryParse(clean, NumberStyles.Any, CultureInfo.InvariantCulture, out var price) && price > 0)
+                        prices.Add(price);
+                }
+            }
+        }
+
+        // Strategy 2: regex fallback — find all dollar amounts near sold-listing price markup
+        if (prices.Count == 0)
+        {
+            foreach (Match m in PriceRegex.Matches(html))
+            {
+                var clean = m.Groups[1].Value.Replace(",", "");
+                if (decimal.TryParse(clean, NumberStyles.Any, CultureInfo.InvariantCulture, out var price) && price > 0 && price < 10000)
+                    prices.Add(price);
+            }
+        }
+
+        return prices;
     }
 }
