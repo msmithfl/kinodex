@@ -114,6 +114,7 @@ app.MapMovieEndpoints();
 app.MapCollectionEndpoints();
 app.MapShelfSectionEndpoints();
 app.MapUpcEndpoints();
+app.MapEbayEndpoints();
 app.MapCollectionListItemEndpoints();
 app.MapTmdbMatchingEndpoints();
 app.MapCustomerEndpoints();
