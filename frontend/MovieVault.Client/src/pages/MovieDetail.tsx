@@ -222,13 +222,13 @@ function MovieDetail() {
                   🔍 Search on eBay
                 </button>
 
-                <button
+                {/* <button
                   onClick={() => fetchEbayAverage(movie.upcNumber)}
                   disabled={ebayLoading}
                   className="bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white font-semibold py-2 px-4 rounded-md transition duration-200 text-xs lg:text-sm cursor-pointer w-auto lg:w-full"
                 >
                   {ebayLoading ? '⏳ Fetching...' : '💰 Avg Sold Price'}
-                </button>
+                </button> */}
 
                 {ebayPrice !== null && (
                   <div className="text-center w-full">
