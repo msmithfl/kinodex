@@ -12,6 +12,7 @@ function MovieDetail() {
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5156';
   const API_URL = `${API_BASE}/api/movies`;
@@ -240,9 +241,24 @@ function MovieDetail() {
 
                 <div className="col-span-2 md:col-span-1">
                   <h3 className="text-sm font-medium text-gray-400 mb-2">UPC Number</h3>
-                  <p className="text-base font-mono text-white bg-gray-700 px-3 py-2 rounded-md inline-block">
-                    {movie.upcNumber}
-                  </p>
+                  <div className="relative inline-block">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(movie.upcNumber);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 1500);
+                      }}
+                      title="Copy to clipboard"
+                      className="text-base font-mono text-white bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-md cursor-pointer transition-colors"
+                    >
+                      {movie.upcNumber}
+                    </button>
+                    {copied && (
+                      <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
+                        Copied!
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
