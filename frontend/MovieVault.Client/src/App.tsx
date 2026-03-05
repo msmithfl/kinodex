@@ -26,8 +26,8 @@ function App() {
           <Sidebar />
           <main className="flex-1 overflow-x-hidden">
             <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/library" element={<MovieList />} />
+              <Route path="/" element={<MovieList />} />
+              <Route path="/dashboard" element={<Home />} />
               <Route path="/collections" element={<CollectionsView />} />
               <Route path="/collections/:collectionName" element={<CollectionDetail />} />
               <Route path="/shelfsections" element={<ShelfSectionsView />} />

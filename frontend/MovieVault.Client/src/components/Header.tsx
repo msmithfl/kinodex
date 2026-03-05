@@ -14,7 +14,7 @@ function Header() {
   };
 
   const navItems = [
-    { path: '/library', label: 'Movies', icon: FaFilm },
+    { path: '/', label: 'Movies', icon: FaFilm },
     { path: '/tvshows', label: 'TV Shows', icon: FaTv },
   ];
   

@@ -98,7 +98,7 @@ function AddMovie() {
 
       if (response.ok) {
         // Navigate back to library page after successful add
-        navigate('/library');
+        navigate('/');
       }
     } catch (error) {
       console.error('Error adding movie:', error);
@@ -273,7 +273,7 @@ function AddMovie() {
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="mb-6">
         <button
-          onClick={() => navigate('/library')}
+          onClick={() => navigate('/')}
           className="text-indigo-400 hover:text-indigo-300 flex items-center gap-2 transition-colors cursor-pointer"
         >
           ← Back to Library
@@ -429,7 +429,7 @@ function AddMovie() {
             addCollection={addCollection}
             addShelfSection={addShelfSection}
             onSubmit={handleSubmit}
-            onCancel={() => navigate('/library')}
+            onCancel={() => navigate('/')}
             submitButtonText="Add to Collection"
             showScanButton={true}
             onScanClick={handleScanClick}

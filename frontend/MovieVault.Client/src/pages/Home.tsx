@@ -125,7 +125,7 @@ function Home() {
             </Link>
 
             <Link
-              to="/library"
+              to="/"
               className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-8 transition-all duration-200 transform hover:scale-105 text-center"
             >
               <div className="text-5xl mb-4">📚</div>
@@ -146,7 +146,7 @@ function Home() {
           <div className='pb-10 md:pb-0'>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Recently Added</h2>
-              <Link to="/library" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+              <Link to="/" className="text-indigo-400 hover:text-indigo-300 transition-colors">
                 View All →
               </Link>
             </div>
