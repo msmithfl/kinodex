@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MovieVault.Api.Data;
 using MovieVault.Api.Models;
+using System.Text;
 
 namespace MovieVault.Api.Endpoints;
 
@@ -70,6 +71,26 @@ public static class MovieEndpoints
             db.Movies.Remove(movie);
             await db.SaveChangesAsync();
             return Results.NoContent();
+        });
+
+        // GET export movies as CSV
+        group.MapGet("/export/csv", async (MovieDbContext db) =>
+        {
+            var movies = await db.Movies.OrderBy(m => m.Title).ToListAsync();
+
+            var csv = new StringBuilder();
+            csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Date Added");
+
+            foreach (var movie in movies)
+            {
+                var formats = string.Join("|", movie.Formats);
+                var genres = string.Join("|", movie.Genres);
+                var collections = string.Join("|", movie.Collections);
+                csv.AppendLine($"\"{movie.Title.Replace("\"", "\"\"")}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",{movie.Condition},{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},{movie.ShelfSection},{movie.HDDriveNumber},{movie.TmdbId},{movie.CreatedAt:yyyy-MM-dd}");
+            }
+
+            var bytes = Encoding.UTF8.GetBytes(csv.ToString());
+            return Results.File(bytes, "text/csv", "movie-vault-export.csv");
         });
     }
 }

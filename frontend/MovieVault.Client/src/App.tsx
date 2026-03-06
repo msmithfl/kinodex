@@ -18,6 +18,7 @@ import CustomersView from './pages/CustomersView'
 import CheckoutsView from './pages/CheckoutsView'
 import MyShelf from './pages/MyShelf'
 import Stats from './pages/Stats'
+import CsvExport from './pages/CsvExport'
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
               <Route path="/movie/:id" element={<MovieDetail />} />
               <Route path="/edit/:id" element={<EditMovie />} />
               <Route path="/stats" element={<Stats />} />
+              <Route path="/export" element={<CsvExport />} />
             </Routes>
           </main>
         </div>
