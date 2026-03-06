@@ -62,7 +62,7 @@ function GenresView() {
     <>
       <SubNavigation />
       <div className="flex h-[calc(100vh-9rem)] pt-2">
-        <div className="flex-1 min-h-0 overflow-y-auto px-8 pt-6">
+        <div className="flex-1 min-h-0 overflow-y-auto px-8 pt-2">
           {genres.length === 0 ? (
             <EmptyState message="No genres yet." />
           ) : (
