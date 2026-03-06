@@ -52,6 +52,7 @@ function MovieForm({
   const [shelfInput, setShelfInput] = useState<string>(formData.shelfNumber.toString());
   const [hddInput, setHddInput] = useState<string>(formData.hdDriveNumber.toString());
   const [tmdbInput, setTmdbInput] = useState<string>(formData.tmdbId?.toString() || '');
+  const [purchasePriceInput, setPurchasePriceInput] = useState<string>(formData.purchasePrice.toString());
 
   // Sync local state when formData changes (e.g., from TMDB search or editing different movie)
   useEffect(() => {
@@ -59,6 +60,7 @@ function MovieForm({
     setShelfInput(formData.shelfNumber.toString());
     setHddInput(formData.hdDriveNumber.toString());
     setTmdbInput(formData.tmdbId?.toString() || '');
+    setPurchasePriceInput(formData.purchasePrice.toString());
   }, [formData.year, formData.shelfNumber, formData.hdDriveNumber, formData.tmdbId]);
 
   const handleYearChange = (value: string) => {
@@ -97,6 +99,14 @@ function MovieForm({
     }
   };
 
+  const handlePurchasePriceChange = (value: string) => {
+    setPurchasePriceInput(value);
+    const num = parseFloat(value);
+    if (!isNaN(num)) {
+      setFormData({ ...formData, purchasePrice: num });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError('');
@@ -117,6 +127,12 @@ function MovieForm({
     const hddNum = parseInt(hddInput);
     if (isNaN(hddNum)) {
       setValidationError('HDD Number must be a valid number');
+      return;
+    }
+
+    const purchasePriceNum = parseFloat(purchasePriceInput);
+    if (isNaN(purchasePriceNum)) {
+      setValidationError('Purchase Price must be a valid number');
       return;
     }
 
@@ -239,6 +255,32 @@ function MovieForm({
             placeholder="The Movie Database ID (optional)"
             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
           />
+        </div>
+
+        <div>
+          <label htmlFor="purchasePrice" className="block text-sm font-medium text-gray-300 mb-2">
+            Purchase Price
+          </label>
+          <input
+            type="text"
+            id="purchasePrice"
+            value={purchasePriceInput}
+            onChange={(e) => handlePurchasePriceChange(e.target.value)}
+            placeholder="Purchase price"
+            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
+          />
+        </div>
+        
+        <div className="flex items-center">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.hasWatched}
+              onChange={(e) => setFormData({ ...formData, hasWatched: e.target.checked })}
+              className="w-5 h-5 bg-gray-700 border-gray-600 rounded focus:outline-none cursor-pointer"
+            />
+            <span className="text-sm font-medium text-gray-300">Watched</span>
+          </label>
         </div>
 
         <div>

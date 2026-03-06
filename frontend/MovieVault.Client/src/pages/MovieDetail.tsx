@@ -260,6 +260,18 @@ function MovieDetail() {
                     )}
                   </div>
                 </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">Purchase Price</h3>
+                  <p className="text-base text-white">
+                    {movie.purchasePrice > 0 ? `$${movie.purchasePrice.toFixed(2)}` : <span className="text-gray-500">Not set</span>}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">Watched</h3>
+                  <p className="text-base text-white">
+                    {movie.hasWatched ? '✅ Yes' : '❌ No'}
+                  </p>
+                </div>
               </div>
             </div>
 
