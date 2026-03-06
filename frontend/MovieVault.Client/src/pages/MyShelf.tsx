@@ -75,7 +75,7 @@ function MyShelf() {
                   const notchColor =
                     tier === '4k' ? '#111111' :
                     tier === 'bluray' ? '#1d4ed8' :
-                    tier === 'dvd' ? '#6b7280' :
+                    tier === 'dvd' ? '#242322' :
                     '#374151';
 
                   return (
@@ -83,16 +83,16 @@ function MyShelf() {
                       key={movie.id}
                       to={`/movie/${movie.id}`}
                       title={`${movie.title}${tier !== 'other' ? ` (${tier === 'bluray' ? 'Blu-ray' : tier.toUpperCase()})` : ''}`}
-                      style={{ flexBasis: `${95 / PER_ROW}%`, flexShrink: 0, flexGrow: 0, height: `${spineHeight + 6}px` }}
-                      className={`group relative flex flex-col rounded-t-sm ${getSpineColor(movie.title)} hover:brightness-125 hover:-translate-y-1 translate-y-1.5 transition-all duration-150 cursor-pointer`}
+                      style={{ flexBasis: `${95 / PER_ROW}%`, flexShrink: 0, flexGrow: 0, height: `${spineHeight + 30}px` }}
+                      className={`group relative flex flex-col rounded-md ${getSpineColor(movie.title)} hover:brightness-125 hover:-translate-y-1 translate-y-1.5 transition-all duration-150 cursor-pointer`}
                     >
                       {/* Format notch */}
                       <div
                         className="w-full rounded-t-sm shrink-0"
-                        style={{ height: '20px', backgroundColor: notchColor }}
+                        style={{ height: `${tier === 'dvd' ? '10px' : '20px'}`, backgroundColor: notchColor }}
                       />
                       {/* Spine body with title */}
-                      <div className="relative shrink-0 flex items-center justify-center overflow-hidden" style={{ height: `${spineHeight}px` }}>
+                      <div className="relative shrink-0 flex items-center justify-center overflow-hidden" style={{ height: `${spineHeight + (tier === 'dvd' ? 10 : 0)}px` }}>
                         <span
                           className="text-white font-semibold select-none whitespace-nowrap overflow-hidden text-ellipsis"
                           style={{
@@ -106,6 +106,10 @@ function MyShelf() {
                           {movie.title}
                         </span>
                       </div>
+                      <div
+                        className="w-full rounded-b-sm shrink-0"
+                        style={{ height: '10px', backgroundColor: notchColor }}
+                      />
                     </Link>
                   );
                 })}
