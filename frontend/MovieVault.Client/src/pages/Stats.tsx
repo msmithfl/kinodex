@@ -130,7 +130,7 @@ function Stats() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Watched / Not Watched donut */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">Watched vs Not Watched</h2>
+              <h2 className="text-xl font-semibold mb-4">Watched</h2>
               {movies.length === 0 ? (
                 <p className="text-gray-400 text-center py-12">No data yet.</p>
               ) : (
@@ -159,7 +159,7 @@ function Stats() {
                   </PieChart>
                 </ResponsiveContainer>
               )}
-              <div className="flex justify-around mt-2 text-center">
+              {/* <div className="flex justify-around mt-2 text-center">
                 <div>
                   <p className="text-2xl font-bold text-indigo-400">{watched}</p>
                   <p className="text-gray-400 text-sm">Watched</p>
@@ -168,7 +168,7 @@ function Stats() {
                   <p className="text-2xl font-bold text-gray-400">{notWatched}</p>
                   <p className="text-gray-400 text-sm">Not Watched</p>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Formats donut */}
