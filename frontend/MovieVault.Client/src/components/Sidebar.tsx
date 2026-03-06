@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { FaHome, FaTv, FaFilm, FaCog, FaLink, } from 'react-icons/fa'
+import { FaHome, FaTv, FaFilm, FaCog, FaLink, FaDownload } from 'react-icons/fa'
 import { LuClipboardPen } from "react-icons/lu";
 import { IoPersonCircleSharp } from "react-icons/io5";
 
@@ -21,6 +21,7 @@ function Sidebar() {
         { path: '/match-movies', label: 'Match Movies', icon: FaLink },
         { path: '/checkout', label: 'Checkouts', icon: LuClipboardPen },
         { path: '/customer', label: 'Customers', icon: IoPersonCircleSharp },
+        { path: '/export', label: 'CSV Export', icon: FaDownload },
         { path: '/settings', label: 'Settings', icon: FaCog },
     ];
 
