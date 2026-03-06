@@ -555,7 +555,7 @@ function MovieList() {
               </div>
             </div>
           ) : (
-            <div className="hidden md:flex items-center justify-between py-1 px-6 bg-yellow-900/30 border border-yellow-600 rounded-lg">
+            <div className="flex items-center justify-between py-1 px-3 md:px-6 bg-yellow-900/30 border border-yellow-600 rounded-lg">
               <span className="text-yellow-400 font-medium">
                 <FaCheck className="inline w-4 h-4 mr-1 -mt-1" /> 
                 {selectedMovieIds.size} selected
