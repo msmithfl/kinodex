@@ -944,6 +944,7 @@ function MovieList() {
                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
                   >
                     <option value="">-- Keep Current --</option>
+                    <option value="Unshelved">Unshelved</option>
                     {shelfSections.map(section => (
                       <option key={section} value={section}>{section}</option>
                     ))}

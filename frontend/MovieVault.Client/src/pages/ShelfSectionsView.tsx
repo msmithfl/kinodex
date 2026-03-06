@@ -52,7 +52,7 @@ function ShelfSectionsView() {
   };
 
   const getUnshelvedCount = () => {
-    return movies.filter(movie => !movie.shelfSection || movie.shelfSection.trim() === '').length;
+    return movies.filter(movie => !movie.shelfSection || movie.shelfSection.trim() === '' || movie.shelfSection === 'Unshelved').length;
   };
 
   const createShelfSection = async () => {

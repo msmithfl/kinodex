@@ -45,7 +45,7 @@ function MyShelf() {
     fetch(`${API_BASE}/api/movies`)
       .then(r => r.json())
       .then((data: Movie[]) => {
-        setMovies([...data].sort((a, b) => a.title.localeCompare(b.title)));
+        setMovies([...data].filter(m => m.shelfSection && m.shelfSection !== 'Unshelved').sort((a, b) => a.title.localeCompare(b.title)));
       })
       .catch(console.error)
       .finally(() => setLoading(false));
