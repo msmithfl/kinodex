@@ -67,6 +67,7 @@ function MovieList() {
     shelfSection: '',
     hdDriveNumber: '',
     isOnPlex: '',
+    hasWatched: '',
     condition: '',
   });
   const [shelfSections, setShelfSections] = useState<string[]>([]);
@@ -219,6 +220,14 @@ function MovieList() {
         return selectedFilters.onPlex.includes(isOnPlex);
       });
     }
+
+    // HasWatched filter
+    if (selectedFilters.hasWatched && selectedFilters.hasWatched.length > 0) {
+      filtered = filtered.filter(movie => {
+        const hasWatched = movie.hasWatched ? 'true' : 'false';
+        return selectedFilters.hasWatched.includes(hasWatched);
+      });
+    }
     
     // Shelf Section filter
     if (selectedFilters.shelfSection && selectedFilters.shelfSection.length > 0) {
@@ -354,6 +363,9 @@ function MovieList() {
       if (bulkEditData.isOnPlex !== '') {
         updates.isOnPlex = bulkEditData.isOnPlex === 'true';
       }
+      if (bulkEditData.hasWatched !== '') {
+        updates.hasWatched = bulkEditData.hasWatched === 'true';
+      }
       if (bulkEditData.condition !== '') {
         updates.condition = bulkEditData.condition;
       }
@@ -381,7 +393,7 @@ function MovieList() {
       // Reset state
       setShowBulkEditModal(false);
       setSelectedMovieIds(new Set());
-      setBulkEditData({ shelfNumber: '', shelfSection: '', hdDriveNumber: '', isOnPlex: '', condition: '' });
+      setBulkEditData({ shelfNumber: '', shelfSection: '', hdDriveNumber: '', isOnPlex: '', hasWatched: '', condition: '' });
     } catch (error) {
       console.error('Error updating movies:', error);
       alert('Failed to update movies. Please try again.');
@@ -453,6 +465,14 @@ function MovieList() {
       options: [
         { label: 'On Plex', value: 'true' },
         { label: 'Not on Plex', value: 'false' },
+      ]
+    },
+    {
+      id: 'hasWatched',
+      label: 'Has Watched',
+      options: [
+        { label: 'Watched', value: 'true' },
+        { label: 'Not Watched', value: 'false' },
       ]
     },
     {
@@ -980,6 +1000,21 @@ function MovieList() {
                   </select>
                 </div>
                 <div>
+                  <label htmlFor="bulk-has-watched" className="block text-sm font-medium text-gray-300 mb-2">
+                    Watched?
+                  </label>
+                  <select
+                    id="bulk-has-watched"
+                    value={bulkEditData.hasWatched}
+                    onChange={(e) => setBulkEditData(prev => ({ ...prev, hasWatched: e.target.value }))}
+                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  >
+                    <option value="">Don't change</option>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                </div>
+                <div>
                   <label htmlFor="bulk-condition" className="block text-sm font-medium text-gray-300 mb-2">
                     Condition
                   </label>
@@ -1003,7 +1038,7 @@ function MovieList() {
                 <button
                   onClick={() => {
                     setShowBulkEditModal(false);
-                    setBulkEditData({ shelfNumber: '', shelfSection: '', hdDriveNumber: '', isOnPlex: '', condition: '' });
+                    setBulkEditData({ shelfNumber: '', shelfSection: '', hdDriveNumber: '', isOnPlex: '', hasWatched: '', condition: '' });
                   }}
                   className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-md transition cursor-pointer"
                 >
