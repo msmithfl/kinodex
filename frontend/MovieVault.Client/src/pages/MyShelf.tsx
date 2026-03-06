@@ -88,7 +88,7 @@ function MyShelf() {
                       to={`/movie/${movie.id}`}
                       title={`${movie.title}${tier !== 'other' ? ` (${tier === 'bluray' ? 'Blu-ray' : tier.toUpperCase()})` : ''}`}
                       style={{ flexBasis: `${100 / PER_ROW}%`, flexShrink: 0, flexGrow: 0, height: `${spineHeight + 6}px` }}
-                      className={`group relative flex flex-col rounded-t-sm ${getSpineColor(movie.title)} hover:brightness-125 transition-all duration-150 cursor-pointer`}
+                      className={`group relative flex flex-col rounded-t-sm ${getSpineColor(movie.title)} hover:brightness-125 hover:-translate-y-2 transition-all duration-150 cursor-pointer`}
                     >
                       {/* Format notch */}
                       <div
