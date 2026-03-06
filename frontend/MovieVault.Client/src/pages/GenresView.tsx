@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import CollectionCard from '../components/CollectionCard'
-//import Counter from '../components/Counter'
 import EmptyState from '../components/EmptyState'
 import LoadingSpinner from '../components/LoadingSpinner';
 import SubNavigation from '../components/SubNavigation'
