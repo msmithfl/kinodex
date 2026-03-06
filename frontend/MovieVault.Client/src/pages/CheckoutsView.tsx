@@ -1,233 +1,257 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import LoadingSpinner from '../components/LoadingSpinner'
-import EmptyState from '../components/EmptyState'
-import ConfirmDialog from '../components/ConfirmDialog'
-import { FaPlus, FaUndo, FaTrash, FaClock, FaExclamationTriangle } from 'react-icons/fa'
-import { LuClipboardPen } from 'react-icons/lu'
-import { getRelativeTimeString } from '../utils/dateUtils'
-import type { Checkout, Customer, Movie } from '../types'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import LoadingSpinner from "../components/LoadingSpinner";
+import EmptyState from "../components/EmptyState";
+import ConfirmDialog from "../components/ConfirmDialog";
+import {
+  FaPlus,
+  FaUndo,
+  FaTrash,
+  FaClock,
+  FaExclamationTriangle,
+} from "react-icons/fa";
+import { LuClipboardPen } from "react-icons/lu";
+import { getRelativeTimeString } from "../utils/dateUtils";
+import type { Checkout, Customer, Movie } from "../types";
 
 function CheckoutsView() {
-  const [checkouts, setCheckouts] = useState<Checkout[]>([])
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [movies, setMovies] = useState<Movie[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [showReturnConfirm, setShowReturnConfirm] = useState<Checkout | null>(null)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<Checkout | null>(null)
-  const [filter, setFilter] = useState<'all' | 'active' | 'overdue' | 'returned'>('active')
-  const [searchQuery, setSearchQuery] = useState('')
-  
+  const [checkouts, setCheckouts] = useState<Checkout[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showReturnConfirm, setShowReturnConfirm] = useState<Checkout | null>(
+    null,
+  );
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<Checkout | null>(
+    null,
+  );
+  const [filter, setFilter] = useState<
+    "all" | "active" | "overdue" | "returned"
+  >("active");
+  const [searchQuery, setSearchQuery] = useState("");
+
   const getDefaultDueDate = () => {
-    const twoWeeks = new Date()
-    twoWeeks.setDate(twoWeeks.getDate() + 14)
-    return twoWeeks.toISOString().split('T')[0]
-  }
-  
+    const twoWeeks = new Date();
+    twoWeeks.setDate(twoWeeks.getDate() + 14);
+    return twoWeeks.toISOString().split("T")[0];
+  };
+
   const [formData, setFormData] = useState({
     movieId: 0,
     customerId: 0,
     dueDate: getDefaultDueDate(),
-    notes: '',
-  })
-  const [error, setError] = useState('')
+    notes: "",
+  });
+  const [error, setError] = useState("");
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5156'
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
 
   useEffect(() => {
-    fetchCheckouts()
-    fetchCustomers()
-    fetchMovies()
-  }, [])
+    fetchCheckouts();
+    fetchCustomers();
+    fetchMovies();
+  }, []);
 
   const fetchCheckouts = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/checkouts`)
+      const response = await fetch(`${API_BASE}/api/checkouts`);
       if (response.ok) {
-        const data = await response.json()
-        setCheckouts(data)
+        const data = await response.json();
+        setCheckouts(data);
       }
     } catch (error) {
-      console.error('Error fetching checkouts:', error)
+      console.error("Error fetching checkouts:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchCustomers = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/customers`)
+      const response = await fetch(`${API_BASE}/api/customers`);
       if (response.ok) {
-        const data = await response.json()
-        setCustomers(data)
+        const data = await response.json();
+        setCustomers(data);
       }
     } catch (error) {
-      console.error('Error fetching customers:', error)
+      console.error("Error fetching customers:", error);
     }
-  }
+  };
 
   const fetchMovies = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/movies`)
+      const response = await fetch(`${API_BASE}/api/movies`);
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json();
         // Only show movies that aren't currently checked out
         const checkedOutMovieIds = new Set(
-          checkouts.filter(ch => !ch.returnedDate).map(ch => ch.movieId)
-        )
-        setMovies(data.filter((m: Movie) => !checkedOutMovieIds.has(m.id!)))
+          checkouts.filter((ch) => !ch.returnedDate).map((ch) => ch.movieId),
+        );
+        setMovies(data.filter((m: Movie) => !checkedOutMovieIds.has(m.id!)));
       }
     } catch (error) {
-      console.error('Error fetching movies:', error)
+      console.error("Error fetching movies:", error);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
 
     if (!formData.movieId || !formData.customerId) {
-      setError('Please select both a movie and a customer')
-      return
+      setError("Please select both a movie and a customer");
+      return;
     }
 
     try {
       // Convert date string to end of day in ISO format
-      let dueDateISO = null
+      let dueDateISO = null;
       if (formData.dueDate) {
-        const dueDate = new Date(formData.dueDate + 'T23:59:59')
-        dueDateISO = dueDate.toISOString()
+        const dueDate = new Date(formData.dueDate + "T23:59:59");
+        dueDateISO = dueDate.toISOString();
       }
-      
+
       const checkoutData = {
         movieId: formData.movieId,
         customerId: formData.customerId,
         checkedOutDate: new Date().toISOString(),
         dueDate: dueDateISO,
         notes: formData.notes,
-      }
-      
-      console.log('Sending checkout data:', checkoutData)
+      };
+
+      console.log("Sending checkout data:", checkoutData);
 
       const response = await fetch(`${API_BASE}/api/checkouts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(checkoutData),
-      })
+      });
 
       if (response.ok) {
-        await fetchCheckouts()
-        await fetchMovies()
-        handleCloseModal()
+        await fetchCheckouts();
+        await fetchMovies();
+        handleCloseModal();
       } else {
-        let errorMessage = 'Failed to create checkout'
-        const text = await response.text()
+        let errorMessage = "Failed to create checkout";
+        const text = await response.text();
         try {
-          const data = JSON.parse(text)
-          errorMessage = data.message || errorMessage
+          const data = JSON.parse(text);
+          errorMessage = data.message || errorMessage;
         } catch {
-          console.error('Backend error:', text)
-          errorMessage = `Server error (${response.status})`
+          console.error("Backend error:", text);
+          errorMessage = `Server error (${response.status})`;
         }
-        setError(errorMessage)
+        setError(errorMessage);
       }
     } catch (error) {
-      console.error('Error creating checkout:', error)
-      setError('An error occurred while creating checkout')
+      console.error("Error creating checkout:", error);
+      setError("An error occurred while creating checkout");
     }
-  }
+  };
 
   const handleReturn = async () => {
-    if (!showReturnConfirm?.id) return
+    if (!showReturnConfirm?.id) return;
 
     try {
-      const response = await fetch(`${API_BASE}/api/checkouts/${showReturnConfirm.id}/return`, {
-        method: 'POST',
-      })
+      const response = await fetch(
+        `${API_BASE}/api/checkouts/${showReturnConfirm.id}/return`,
+        {
+          method: "POST",
+        },
+      );
 
       if (response.ok) {
-        await fetchCheckouts()
-        await fetchMovies()
-        setShowReturnConfirm(null)
+        await fetchCheckouts();
+        await fetchMovies();
+        setShowReturnConfirm(null);
       } else {
-        setError('Failed to return movie')
+        setError("Failed to return movie");
       }
     } catch (error) {
-      console.error('Error returning movie:', error)
-      setError('An error occurred while returning movie')
+      console.error("Error returning movie:", error);
+      setError("An error occurred while returning movie");
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!showDeleteConfirm?.id) return
+    if (!showDeleteConfirm?.id) return;
 
     try {
-      const response = await fetch(`${API_BASE}/api/checkouts/${showDeleteConfirm.id}`, {
-        method: 'DELETE',
-      })
+      const response = await fetch(
+        `${API_BASE}/api/checkouts/${showDeleteConfirm.id}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       if (response.ok) {
-        await fetchCheckouts()
-        setShowDeleteConfirm(null)
+        await fetchCheckouts();
+        setShowDeleteConfirm(null);
       } else {
-        setError('Failed to delete checkout')
+        setError("Failed to delete checkout");
       }
     } catch (error) {
-      console.error('Error deleting checkout:', error)
-      setError('An error occurred while deleting')
+      console.error("Error deleting checkout:", error);
+      setError("An error occurred while deleting");
     }
-  }
+  };
 
   const handleCloseModal = () => {
-    setShowAddModal(false)
-    setFormData({ movieId: 0, customerId: 0, dueDate: getDefaultDueDate(), notes: '' })
-    setError('')
-  }
+    setShowAddModal(false);
+    setFormData({
+      movieId: 0,
+      customerId: 0,
+      dueDate: getDefaultDueDate(),
+      notes: "",
+    });
+    setError("");
+  };
 
   const isOverdue = (checkout: Checkout) => {
-    if (checkout.returnedDate || !checkout.dueDate) return false
-    return new Date(checkout.dueDate) < new Date()
-  }
+    if (checkout.returnedDate || !checkout.dueDate) return false;
+    return new Date(checkout.dueDate) < new Date();
+  };
 
   const getFilteredCheckouts = () => {
-    let filtered = checkouts
+    let filtered = checkouts;
 
     // Apply status filter
     switch (filter) {
-      case 'active':
-        filtered = filtered.filter(ch => !ch.returnedDate)
-        break
-      case 'overdue':
-        filtered = filtered.filter(ch => isOverdue(ch))
-        break
-      case 'returned':
-        filtered = filtered.filter(ch => ch.returnedDate)
-        break
+      case "active":
+        filtered = filtered.filter((ch) => !ch.returnedDate);
+        break;
+      case "overdue":
+        filtered = filtered.filter((ch) => isOverdue(ch));
+        break;
+      case "returned":
+        filtered = filtered.filter((ch) => ch.returnedDate);
+        break;
     }
 
     // Apply search filter
     if (searchQuery) {
-      filtered = filtered.filter(ch =>
-        ch.movie?.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ch.customer?.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      filtered = filtered.filter(
+        (ch) =>
+          ch.movie?.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          ch.customer?.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
     }
 
-    return filtered
-  }
+    return filtered;
+  };
 
-  const filteredCheckouts = getFilteredCheckouts()
-  const activeCount = checkouts.filter(ch => !ch.returnedDate).length
-  const overdueCount = checkouts.filter(ch => isOverdue(ch)).length
+  const filteredCheckouts = getFilteredCheckouts();
+  const activeCount = checkouts.filter((ch) => !ch.returnedDate).length;
+  const overdueCount = checkouts.filter((ch) => isOverdue(ch)).length;
 
   const getTodayDate = () => {
-    const today = new Date()
-    return today.toISOString().split('T')[0]
-  }
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
 
   if (loading) {
-    return <LoadingSpinner />
+    return <LoadingSpinner />;
   }
 
   return (
@@ -240,9 +264,7 @@ function CheckoutsView() {
             Checkouts
           </h1>
           <div className="flex gap-4 mt-2 text-sm">
-            <p className="text-gray-400">
-              {activeCount} active
-            </p>
+            <p className="text-gray-400">{activeCount} active</p>
             {overdueCount > 0 && (
               <p className="text-red-400 flex items-center gap-1">
                 <FaExclamationTriangle />
@@ -263,14 +285,14 @@ function CheckoutsView() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="flex gap-2 flex-wrap">
-          {(['all', 'active', 'overdue', 'returned'] as const).map((f) => (
+          {(["all", "active", "overdue", "returned"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-lg capitalize transition-colors ${
                 filter === f
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-800 text-gray-400 hover:bg-gray-700"
               }`}
             >
               {f}
@@ -296,22 +318,26 @@ function CheckoutsView() {
       {/* Checkouts List */}
       {filteredCheckouts.length === 0 ? (
         <EmptyState
-          message={searchQuery ? "No checkouts found. Try adjusting your search." : "No checkouts yet. Start checking out movies to your customers."}
+          message={
+            searchQuery
+              ? "No checkouts found. Try adjusting your search."
+              : "No checkouts yet. Start checking out movies to your customers."
+          }
           showAddButton={false}
         />
       ) : (
         <div className="space-y-4">
           {filteredCheckouts.map((checkout) => {
-            const overdue = isOverdue(checkout)
+            const overdue = isOverdue(checkout);
             return (
               <div
                 key={checkout.id}
                 className={`bg-gray-800 border rounded-lg p-6 ${
                   overdue
-                    ? 'border-red-500'
+                    ? "border-red-500"
                     : checkout.returnedDate
-                    ? 'border-gray-700'
-                    : 'border-indigo-500/50'
+                      ? "border-gray-700"
+                      : "border-indigo-500/50"
                 }`}
               >
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
@@ -331,31 +357,40 @@ function CheckoutsView() {
                               to={`/movie/${checkout.movieId}`}
                               className="text-xl font-semibold text-white hover:text-indigo-400 transition-colors"
                             >
-                              {checkout.movie?.title || 'Unknown Movie'}
+                              {checkout.movie?.title || "Unknown Movie"}
                             </Link>
                             {checkout.movie?.year && (
-                              <span className="text-gray-400 ml-2">({checkout.movie.year})</span>
+                              <span className="text-gray-400 ml-2">
+                                ({checkout.movie.year})
+                              </span>
                             )}
                           </div>
                         </div>
                         <p className="text-gray-400 mt-1">
-                          Checked out to: <span className="text-white">{checkout.customer?.name || 'Unknown'}</span>
+                          Checked out to:{" "}
+                          <span className="text-white">
+                            {checkout.customer?.name || "Unknown"}
+                          </span>
                         </p>
-                        
+
                         <div className="flex flex-wrap gap-4 mt-3 text-sm">
                           <div className="flex items-center gap-1 text-gray-400">
                             <FaClock />
-                            Checked out {getRelativeTimeString(checkout.checkedOutDate)}
+                            Checked out{" "}
+                            {getRelativeTimeString(checkout.checkedOutDate)}
                           </div>
                           {checkout.dueDate && (
-                            <div className={`flex items-center gap-1 ${overdue ? 'text-red-400' : 'text-gray-400'}`}>
+                            <div
+                              className={`flex items-center gap-1 ${overdue ? "text-red-400" : "text-gray-400"}`}
+                            >
                               {overdue && <FaExclamationTriangle />}
                               Due {getRelativeTimeString(checkout.dueDate)}
                             </div>
                           )}
                           {checkout.returnedDate && (
                             <div className="flex items-center gap-1 text-green-400">
-                              ✓ Returned {getRelativeTimeString(checkout.returnedDate)}
+                              ✓ Returned{" "}
+                              {getRelativeTimeString(checkout.returnedDate)}
                             </div>
                           )}
                         </div>
@@ -389,7 +424,7 @@ function CheckoutsView() {
                   </div>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
@@ -399,7 +434,7 @@ function CheckoutsView() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-bold text-white mb-4">New Checkout</h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -407,7 +442,12 @@ function CheckoutsView() {
                 </label>
                 <select
                   value={formData.customerId}
-                  onChange={(e) => setFormData({ ...formData, customerId: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      customerId: Number(e.target.value),
+                    })
+                  }
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"
                   required
                 >
@@ -426,7 +466,12 @@ function CheckoutsView() {
                 </label>
                 <select
                   value={formData.movieId}
-                  onChange={(e) => setFormData({ ...formData, movieId: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      movieId: Number(e.target.value),
+                    })
+                  }
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"
                   required
                 >
@@ -451,7 +496,9 @@ function CheckoutsView() {
                 <input
                   type="date"
                   value={formData.dueDate}
-                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, dueDate: e.target.value })
+                  }
                   min={getTodayDate()}
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"
                 />
@@ -463,7 +510,9 @@ function CheckoutsView() {
                 </label>
                 <textarea
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
                   rows={3}
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"
                   placeholder="Optional notes..."
@@ -500,7 +549,11 @@ function CheckoutsView() {
       <ConfirmDialog
         isOpen={showReturnConfirm !== null}
         title="Return Movie"
-        message={showReturnConfirm ? `Mark "${showReturnConfirm.movie?.title}" as returned from ${showReturnConfirm.customer?.name}?` : ''}
+        message={
+          showReturnConfirm
+            ? `Mark "${showReturnConfirm.movie?.title}" as returned from ${showReturnConfirm.customer?.name}?`
+            : ""
+        }
         onConfirm={handleReturn}
         onCancel={() => setShowReturnConfirm(null)}
         confirmText="Return"
@@ -516,7 +569,7 @@ function CheckoutsView() {
         confirmText="Delete"
       />
     </div>
-  )
+  );
 }
 
-export default CheckoutsView
+export default CheckoutsView;

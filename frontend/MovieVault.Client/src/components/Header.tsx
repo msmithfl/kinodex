@@ -1,49 +1,61 @@
-import { Link, useLocation } from 'react-router-dom'
-import { useState } from 'react'
+import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
 import { BsSafe2 } from "react-icons/bs";
-import { PiFilmReel  } from "react-icons/pi";
+import { PiFilmReel } from "react-icons/pi";
 import { HiMenu, HiX, HiPlus } from "react-icons/hi";
-import { FaHome, FaTv, FaFilm, FaChartBar, FaCog, FaBookmark } from 'react-icons/fa';
+import {
+  FaHome,
+  FaTv,
+  FaFilm,
+  FaChartBar,
+  FaCog,
+  FaBookmark,
+} from "react-icons/fa";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  
+
   const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path + '/');
+    return (
+      location.pathname === path || location.pathname.startsWith(path + "/")
+    );
   };
 
   const navItems = [
-    { path: '/', label: 'Movies', icon: FaFilm },
-    { path: '/tvshows', label: 'TV Shows', icon: FaTv },
+    { path: "/", label: "Movies", icon: FaFilm },
+    { path: "/tvshows", label: "TV Shows", icon: FaTv },
   ];
-  
+
   const utilityItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: FaHome },
-    { path: '/stats', label: 'Statistics', icon: FaChartBar },
-    { path: '/watchlist', label: 'Watchlist', icon: FaBookmark },
-    { path: '/settings', label: 'Settings', icon: FaCog },
+    { path: "/dashboard", label: "Dashboard", icon: FaHome },
+    { path: "/stats", label: "Statistics", icon: FaChartBar },
+    { path: "/watchlist", label: "Watchlist", icon: FaBookmark },
+    { path: "/settings", label: "Settings", icon: FaCog },
   ];
 
   return (
     <header className="bg-gray-800 border-b border-gray-700 relative">
       <div className="mx-auto px-8 py-4">
         <div className="flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-1 hover:opacity-80 transition-opacity">
+          <Link
+            to="/"
+            className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+          >
             <PiFilmReel className="w-11 h-11 text-white" />
             <BsSafe2 className="w-10 h-10 text-white" />
           </Link>
-          
+
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link 
-              to="/dashboard" 
+            <Link
+              to="/dashboard"
               className="text-gray-300 hover:text-white transition-colors font-medium"
             >
               Dashboard
             </Link>
-            <Link 
-              to="/add" 
+            <Link
+              to="/add"
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200"
             >
               + Add Movie
@@ -64,7 +76,11 @@ function Header() {
               className="text-white p-2"
               aria-label="Toggle menu"
             >
-              {isMenuOpen ? <HiX className="w-6 h-6" /> : <HiMenu className="w-6 h-6" />}
+              {isMenuOpen ? (
+                <HiX className="w-6 h-6" />
+              ) : (
+                <HiMenu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -82,8 +98,8 @@ function Header() {
                     onClick={() => setIsMenuOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 transition-colors rounded-md ${
                       isActive(item.path)
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                        ? "bg-indigo-600 text-white"
+                        : "text-gray-300 hover:bg-gray-700 hover:text-white"
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -104,8 +120,8 @@ function Header() {
                       onClick={() => setIsMenuOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 transition-colors rounded-md ${
                         isActive(item.path)
-                          ? 'bg-indigo-600 text-white'
-                          : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                          ? "bg-indigo-600 text-white"
+                          : "text-gray-300 hover:bg-gray-700 hover:text-white"
                       }`}
                     >
                       <Icon className="w-5 h-5" />
@@ -119,7 +135,7 @@ function Header() {
         )}
       </div>
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;

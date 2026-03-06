@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 interface EmptyStateProps {
   message: string;
@@ -6,12 +6,14 @@ interface EmptyStateProps {
   buttonText?: string;
 }
 
-function EmptyState({ message, showAddButton = true, buttonText = '+ Add Movie' }: EmptyStateProps) {
+function EmptyState({
+  message,
+  showAddButton = true,
+  buttonText = "+ Add Movie",
+}: EmptyStateProps) {
   return (
     <div className="text-center py-10">
-      <p className="text-gray-400 text-lg mb-6">
-        {message}
-      </p>
+      <p className="text-gray-400 text-lg mb-6">{message}</p>
       {showAddButton && (
         <Link
           to="/add"

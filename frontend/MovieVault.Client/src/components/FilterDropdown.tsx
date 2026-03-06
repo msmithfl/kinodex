@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { FaFilter, FaArrowLeft, FaCheck } from 'react-icons/fa';
+import { useState, useRef, useEffect } from "react";
+import { FaFilter, FaArrowLeft, FaCheck } from "react-icons/fa";
 
 interface FilterOption {
   label: string;
@@ -18,24 +18,31 @@ interface FilterDropdownProps {
   onFilterChange: (categoryId: string, values: string[]) => void;
 }
 
-function FilterDropdown({ categories, selectedFilters, onFilterChange }: FilterDropdownProps) {
+function FilterDropdown({
+  categories,
+  selectedFilters,
+  onFilterChange,
+}: FilterDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentLevel, setCurrentLevel] = useState<'root' | string>('root');
+  const [currentLevel, setCurrentLevel] = useState<"root" | string>("root");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
-        setCurrentLevel('root');
+        setCurrentLevel("root");
       }
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }
   }, [isOpen]);
@@ -45,24 +52,27 @@ function FilterDropdown({ categories, selectedFilters, onFilterChange }: FilterD
   };
 
   const handleBack = () => {
-    setCurrentLevel('root');
+    setCurrentLevel("root");
   };
 
   const handleOptionToggle = (categoryId: string, optionValue: string) => {
     const currentValues = selectedFilters[categoryId] || [];
     const newValues = currentValues.includes(optionValue)
-      ? currentValues.filter(v => v !== optionValue)
+      ? currentValues.filter((v) => v !== optionValue)
       : [...currentValues, optionValue];
-    
+
     onFilterChange(categoryId, newValues);
   };
 
   const getActiveFilterCount = () => {
-    return Object.values(selectedFilters).reduce((sum, values) => sum + values.length, 0);
+    return Object.values(selectedFilters).reduce(
+      (sum, values) => sum + values.length,
+      0,
+    );
   };
 
   const activeCount = getActiveFilterCount();
-  const currentCategory = categories.find(cat => cat.id === currentLevel);
+  const currentCategory = categories.find((cat) => cat.id === currentLevel);
 
   return (
     <div ref={dropdownRef} className="relative">
@@ -81,10 +91,10 @@ function FilterDropdown({ categories, selectedFilters, onFilterChange }: FilterD
 
       {isOpen && (
         <div className="text-sm absolute left-0 mt-2 w-46 bg-gray-800 border border-gray-600 rounded-md shadow-lg z-20">
-          {currentLevel === 'root' ? (
+          {currentLevel === "root" ? (
             // Root level - show categories
             <div className="">
-              {categories.map(category => {
+              {categories.map((category) => {
                 const activeCount = (selectedFilters[category.id] || []).length;
                 return (
                   <button
@@ -114,20 +124,32 @@ function FilterDropdown({ categories, selectedFilters, onFilterChange }: FilterD
                   className="w-full px-3 py-2 text-left hover:bg-gray-700 transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   <FaArrowLeft className="w-3 h-3 text-gray-400" />
-                  <span className="text-white font-medium">{currentCategory?.label}</span>
+                  <span className="text-white font-medium">
+                    {currentCategory?.label}
+                  </span>
                 </button>
               </div>
               <div className="max-h-80 overflow-y-auto truncate">
-                {currentCategory?.options.map(option => {
-                  const isSelected = (selectedFilters[currentLevel] || []).includes(option.value);
+                {currentCategory?.options.map((option) => {
+                  const isSelected = (
+                    selectedFilters[currentLevel] || []
+                  ).includes(option.value);
                   return (
                     <button
                       key={option.value}
-                      onClick={() => handleOptionToggle(currentLevel, option.value)}
+                      onClick={() =>
+                        handleOptionToggle(currentLevel, option.value)
+                      }
                       className="w-full px-3 py-2 text-left hover:bg-gray-700 rounded transition-colors flex items-center justify-between cursor-pointer"
                     >
-                      <span className={`${isSelected ? 'text-indigo-400' : 'text-white'}`}>{option.label}</span>
-                      {isSelected && <FaCheck className="w-4 h-4 text-indigo-400" />}
+                      <span
+                        className={`${isSelected ? "text-indigo-400" : "text-white"}`}
+                      >
+                        {option.label}
+                      </span>
+                      {isSelected && (
+                        <FaCheck className="w-4 h-4 text-indigo-400" />
+                      )}
                     </button>
                   );
                 })}

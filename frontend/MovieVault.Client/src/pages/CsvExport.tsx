@@ -1,16 +1,16 @@
-import { useState } from 'react'
-import { FaDownload } from 'react-icons/fa'
+import { useState } from "react";
+import { FaDownload } from "react-icons/fa";
 
 function CsvExport() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5156';
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
 
   const handleExport = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     setSuccess(false);
 
     try {
@@ -22,16 +22,18 @@ function CsvExport() {
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = 'movie-vault-export.csv';
+      a.download = "movie-vault-export.csv";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Export failed. Please try again.');
+      setError(
+        err instanceof Error ? err.message : "Export failed. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -40,7 +42,9 @@ function CsvExport() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-2">Export Collection</h1>
-      <p className="text-gray-400 mb-8">Download your entire movie collection as a CSV file.</p>
+      <p className="text-gray-400 mb-8">
+        Download your entire movie collection as a CSV file.
+      </p>
 
       <div className="bg-gray-800 rounded-lg p-8">
         <div className="mb-6">
@@ -75,7 +79,7 @@ function CsvExport() {
           className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-md transition cursor-pointer"
         >
           <FaDownload className="w-4 h-4" />
-          {loading ? 'Exporting...' : 'Download CSV'}
+          {loading ? "Exporting..." : "Download CSV"}
         </button>
       </div>
     </div>

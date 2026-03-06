@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import ConfirmDialog from '../components/ConfirmDialog'
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import ConfirmDialog from "../components/ConfirmDialog";
 //import Counter from '../components/Counter'
-import MovieDetailCard from '../components/MovieCardDetail'
-import MoviePosterCard from '../components/MovieCardPoster'
-import EmptyState from '../components/EmptyState'
-import { FaCheck, FaImage, FaEllipsisV } from 'react-icons/fa'
-import { FaTableList, FaChevronDown, FaChevronUp } from 'react-icons/fa6'
-import LoadingSpinner from '../components/LoadingSpinner'
-import SubNavigation from '../components/SubNavigation'
-import type { Movie, ShelfSection } from '../types'
+import MovieDetailCard from "../components/MovieCardDetail";
+import MoviePosterCard from "../components/MovieCardPoster";
+import EmptyState from "../components/EmptyState";
+import { FaCheck, FaImage, FaEllipsisV } from "react-icons/fa";
+import { FaTableList, FaChevronDown, FaChevronUp } from "react-icons/fa6";
+import LoadingSpinner from "../components/LoadingSpinner";
+import SubNavigation from "../components/SubNavigation";
+import type { Movie, ShelfSection } from "../types";
 
 function ShelfSectionDetail() {
   const { sectionName } = useParams<{ sectionName: string }>();
@@ -18,28 +18,28 @@ function ShelfSectionDetail() {
   const [section, setSection] = useState<ShelfSection | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState('');
+  const [editedName, setEditedName] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  
+
   // View mode state
-  const [viewMode, setViewMode] = useState<'detail' | 'poster'>(() => {
-    const saved = localStorage.getItem('movieViewMode');
-    return (saved === 'poster' || saved === 'detail') ? saved : 'detail';
+  const [viewMode, setViewMode] = useState<"detail" | "poster">(() => {
+    const saved = localStorage.getItem("movieViewMode");
+    return saved === "poster" || saved === "detail" ? saved : "detail";
   });
   const [isViewDropdownOpen, setIsViewDropdownOpen] = useState(false);
   const viewDropdownRef = useRef<HTMLDivElement>(null);
-  
+
   // Actions dropdown state
   const [isActionsDropdownOpen, setIsActionsDropdownOpen] = useState(false);
   const actionsDropdownRef = useRef<HTMLDivElement>(null);
-  
-  const handleViewModeChange = (mode: 'detail' | 'poster') => {
+
+  const handleViewModeChange = (mode: "detail" | "poster") => {
     setViewMode(mode);
-    localStorage.setItem('movieViewMode', mode);
+    localStorage.setItem("movieViewMode", mode);
     setIsViewDropdownOpen(false);
   };
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5156';
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const MOVIES_URL = `${API_BASE}/api/movies`;
   const SECTIONS_URL = `${API_BASE}/api/shelfsections`;
 
@@ -50,18 +50,24 @@ function ShelfSectionDetail() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (viewDropdownRef.current && !viewDropdownRef.current.contains(event.target as Node)) {
+      if (
+        viewDropdownRef.current &&
+        !viewDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsViewDropdownOpen(false);
       }
-      if (actionsDropdownRef.current && !actionsDropdownRef.current.contains(event.target as Node)) {
+      if (
+        actionsDropdownRef.current &&
+        !actionsDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsActionsDropdownOpen(false);
       }
     };
 
     if (isViewDropdownOpen || isActionsDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener("mousedown", handleClickOutside);
       };
     }
   }, [isViewDropdownOpen, isActionsDropdownOpen]);
@@ -78,33 +84,39 @@ function ShelfSectionDetail() {
     try {
       const [moviesRes, sectionsRes] = await Promise.all([
         fetch(MOVIES_URL),
-        fetch(SECTIONS_URL)
+        fetch(SECTIONS_URL),
       ]);
-      
+
       if (moviesRes.ok) {
         const data = await moviesRes.json();
         let filtered;
-        if (sectionName === 'Unshelved') {
+        if (sectionName === "Unshelved") {
           // Show movies with no shelf section
-          filtered = data.filter((movie: Movie) => 
-            !movie.shelfSection || movie.shelfSection.trim() === '' || movie.shelfSection === 'Unshelved'
+          filtered = data.filter(
+            (movie: Movie) =>
+              !movie.shelfSection ||
+              movie.shelfSection.trim() === "" ||
+              movie.shelfSection === "Unshelved",
           );
         } else {
           // Show movies matching the shelf section
-          filtered = data.filter((movie: Movie) => 
-            movie.shelfSection && movie.shelfSection === sectionName
+          filtered = data.filter(
+            (movie: Movie) =>
+              movie.shelfSection && movie.shelfSection === sectionName,
           );
         }
         setMovies(filtered);
       }
-      
+
       if (sectionsRes.ok) {
         const sectionsData = await sectionsRes.json();
-        const foundSection = sectionsData.find((s: ShelfSection) => s.name === sectionName);
+        const foundSection = sectionsData.find(
+          (s: ShelfSection) => s.name === sectionName,
+        );
         setSection(foundSection || null);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
@@ -112,7 +124,7 @@ function ShelfSectionDetail() {
 
   const handleEditClick = () => {
     setIsEditing(true);
-    setEditedName(sectionName || '');
+    setEditedName(sectionName || "");
     setIsActionsDropdownOpen(false);
   };
 
@@ -120,25 +132,28 @@ function ShelfSectionDetail() {
     if (!section || !editedName.trim()) return;
 
     try {
-      const response = await fetch(`${SECTIONS_URL}/${section.id}?newName=${encodeURIComponent(editedName)}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${SECTIONS_URL}/${section.id}?newName=${encodeURIComponent(editedName)}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (response.ok) {
         setIsEditing(false);
         navigate(`/shelfsections/${encodeURIComponent(editedName)}`);
       }
     } catch (error) {
-      console.error('Error updating shelf section:', error);
+      console.error("Error updating shelf section:", error);
     }
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setEditedName('');
+    setEditedName("");
   };
 
   const handleDeleteClick = () => {
@@ -151,14 +166,14 @@ function ShelfSectionDetail() {
 
     try {
       const response = await fetch(`${SECTIONS_URL}/${section.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
-        navigate('/shelfsections');
+        navigate("/shelfsections");
       }
     } catch (error) {
-      console.error('Error deleting shelf section:', error);
+      console.error("Error deleting shelf section:", error);
     } finally {
       setShowDeleteConfirm(false);
     }
@@ -180,7 +195,7 @@ function ShelfSectionDetail() {
   return (
     <>
       <SubNavigation />
-      <div className='flex h-[calc(100vh-9rem)] pt-2'>
+      <div className="flex h-[calc(100vh-9rem)] pt-2">
         <div className="flex-1 min-h-0 overflow-y-auto px-8 md:px-12 pt-8">
           <div className="mt-4 mb-8">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
@@ -211,13 +226,15 @@ function ShelfSectionDetail() {
                   </div>
                 ) : (
                   <div>
-                    <div className='flex items-center gap-4'>
+                    <div className="flex items-center gap-4">
                       <h1 className="text-3xl font-bold mb-2">{sectionName}</h1>
                       {/* <Counter count={movies.length} className="mb-2" /> */}
-                      {!isEditing && section && sectionName !== 'Unshelved' && (
+                      {!isEditing && section && sectionName !== "Unshelved" && (
                         <div ref={actionsDropdownRef} className="relative mb-2">
                           <button
-                            onClick={() => setIsActionsDropdownOpen(!isActionsDropdownOpen)}
+                            onClick={() =>
+                              setIsActionsDropdownOpen(!isActionsDropdownOpen)
+                            }
                             className="text-gray-400 hover:text-gray-300 hover:bg-gray-700 px-2 py-2 rounded-md transition-colors duration-200 cursor-pointer"
                             aria-label="Actions"
                           >
@@ -241,12 +258,17 @@ function ShelfSectionDetail() {
                           )}
                         </div>
                       )}
-                      <div ref={viewDropdownRef} className="ml-auto relative mb-2">
+                      <div
+                        ref={viewDropdownRef}
+                        className="ml-auto relative mb-2"
+                      >
                         <button
-                          onClick={() => setIsViewDropdownOpen(!isViewDropdownOpen)}
+                          onClick={() =>
+                            setIsViewDropdownOpen(!isViewDropdownOpen)
+                          }
                           className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm font-medium flex items-center gap-2 cursor-pointer"
                         >
-                          {viewMode === 'poster' ? (
+                          {viewMode === "poster" ? (
                             <FaImage className="w-5 h-5" />
                           ) : (
                             <FaTableList className="w-5 h-5" />
@@ -260,22 +282,26 @@ function ShelfSectionDetail() {
                         {isViewDropdownOpen && (
                           <div className="absolute right-0 mt-2 w-36 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10">
                             <button
-                              onClick={() => handleViewModeChange('poster')}
+                              onClick={() => handleViewModeChange("poster")}
                               className="w-full px-4 py-3 text-left hover:bg-gray-600 transition-colors flex items-center justify-between border-b border-gray-600 cursor-pointer"
                             >
                               <div className="flex items-center gap-3">
                                 <span>Poster View</span>
                               </div>
-                              {viewMode === 'poster' && <FaCheck className="w-4 h-4 text-white" />}
+                              {viewMode === "poster" && (
+                                <FaCheck className="w-4 h-4 text-white" />
+                              )}
                             </button>
                             <button
-                              onClick={() => handleViewModeChange('detail')}
+                              onClick={() => handleViewModeChange("detail")}
                               className="w-full px-4 py-3 text-left hover:bg-gray-600 transition-colors flex items-center justify-between cursor-pointer"
                             >
                               <div className="flex items-center gap-3">
                                 <span>Detail View</span>
                               </div>
-                              {viewMode === 'detail' && <FaCheck className="w-4 h-4 text-white" />}
+                              {viewMode === "detail" && (
+                                <FaCheck className="w-4 h-4 text-white" />
+                              )}
                             </button>
                           </div>
                         )}
@@ -290,17 +316,20 @@ function ShelfSectionDetail() {
           {movies.length === 0 ? (
             <EmptyState message="No movies in this shelf section yet." />
           ) : (
-            <div className={viewMode === 'poster' 
-              ? "grid grid-cols-3 min-[400px]:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-4 md:gap-y-10" 
-              : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-            }>
-              {movies.map((movie) => (
-                viewMode === 'poster' ? (
+            <div
+              className={
+                viewMode === "poster"
+                  ? "grid grid-cols-3 min-[400px]:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-4 md:gap-y-10"
+                  : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+              }
+            >
+              {movies.map((movie) =>
+                viewMode === "poster" ? (
                   <MoviePosterCard key={movie.id} movie={movie} />
                 ) : (
                   <MovieDetailCard key={movie.id} movie={movie} showYear />
-                )
-              ))}
+                ),
+              )}
             </div>
           )}
 
