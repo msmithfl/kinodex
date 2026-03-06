@@ -73,7 +73,7 @@ function SubNavigation() {
           </button>
 
           {mobileOpen && (
-            <div className="absolute top-full ml-6 mt-1 z-50 bg-gray-800 rounded-lg shadow-lg py-1 min-w-40 border border-gray-700">
+            <div className="absolute top-full mt-1 z-50 bg-gray-800 rounded-lg shadow-lg py-1 min-w-40 border border-gray-700">
               {NAV_LINKS.filter(l => !isActive(l.to)).map(({ to, label }) => (
                 <Link
                   key={to}

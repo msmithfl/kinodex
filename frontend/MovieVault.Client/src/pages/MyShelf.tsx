@@ -61,7 +61,7 @@ function MyShelf() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <SubNavigation />
-      <div className="max-w-full mx-auto px-4 md:px-10 py-8 overflow-x-scroll md:overflow-auto">
+      <div className="max-w-full mx-auto px-4 md:px-10 py-4 overflow-x-scroll md:overflow-auto">
         <div className="space-y-10">
           {rows.map((row, rowIdx) => (
             <div key={rowIdx}>
