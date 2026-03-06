@@ -61,12 +61,12 @@ function MyShelf() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <SubNavigation />
-      <div className="max-w-full mx-auto px-6 py-8">
+      <div className="max-w-full mx-auto px-4 md:px-10 py-8 overflow-x-scroll md:overflow-auto">
         <div className="space-y-10">
           {rows.map((row, rowIdx) => (
             <div key={rowIdx}>
               {/* Spine row — align to bottom so DVD spines stick up above the rest */}
-              <div className="flex items-end gap-0.5">
+              <div className="flex items-end gap-0.5 min-w-max">
                 {row.map(movie => {
                   const tier = getFormatTier(movie.formats ?? []);
                   const isDvd = tier === 'dvd';
@@ -114,8 +114,8 @@ function MyShelf() {
                 })}
               </div>
               {/* Shelf plank */}
-              <div className="h-4 rounded bg-linear-to-b from-amber-700 to-amber-900 shadow-lg" />
-              <div className="h-2 rounded-b bg-amber-950 shadow-md" />
+              <div className={`h-4 rounded bg-linear-to-b from-amber-700 to-amber-900 shadow-lg w-xl md:w-full`} />
+              <div className="h-2 rounded-b bg-amber-950 shadow-md w-xl md:w-full" />
             </div>
           ))}
         </div>
