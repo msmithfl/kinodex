@@ -66,7 +66,7 @@ function MyShelf() {
           {rows.map((row, rowIdx) => (
             <div key={rowIdx}>
               {/* Spine row — align to bottom so DVD spines stick up above the rest */}
-              <div className="flex items-end gap-0.5 min-w-max">
+              <div className="flex items-end justify-center gap-0.5 min-w-max">
                 {row.map(movie => {
                   const tier = getFormatTier(movie.formats ?? []);
                   const isDvd = tier === 'dvd';
