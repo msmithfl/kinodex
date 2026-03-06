@@ -1,128 +1,137 @@
-import { useState, useEffect } from 'react'
-import LoadingSpinner from '../components/LoadingSpinner'
-import EmptyState from '../components/EmptyState'
-import ConfirmDialog from '../components/ConfirmDialog'
-import { FaPencilAlt, FaTrash, FaPlus, FaEnvelope, FaPhone } from 'react-icons/fa'
-import { IoPersonCircleSharp } from 'react-icons/io5'
-import { getRelativeTimeString } from '../utils/dateUtils'
-import type { Customer } from '../types'
+import { useState, useEffect } from "react";
+import LoadingSpinner from "../components/LoadingSpinner";
+import EmptyState from "../components/EmptyState";
+import ConfirmDialog from "../components/ConfirmDialog";
+import {
+  FaPencilAlt,
+  FaTrash,
+  FaPlus,
+  FaEnvelope,
+  FaPhone,
+} from "react-icons/fa";
+import { IoPersonCircleSharp } from "react-icons/io5";
+import { getRelativeTimeString } from "../utils/dateUtils";
+import type { Customer } from "../types";
 
 function CustomersView() {
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
-  const [deleteCustomer, setDeleteCustomer] = useState<Customer | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [deleteCustomer, setDeleteCustomer] = useState<Customer | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-  })
-  const [error, setError] = useState('')
+    name: "",
+    email: "",
+    phone: "",
+  });
+  const [error, setError] = useState("");
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5156'
-  const API_URL = `${API_BASE}/api/customers`
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
+  const API_URL = `${API_BASE}/api/customers`;
 
   useEffect(() => {
-    fetchCustomers()
-  }, [])
+    fetchCustomers();
+  }, []);
 
   const fetchCustomers = async () => {
     try {
-      const response = await fetch(API_URL)
+      const response = await fetch(API_URL);
       if (response.ok) {
-        const data = await response.json()
-        setCustomers(data)
+        const data = await response.json();
+        setCustomers(data);
       }
     } catch (error) {
-      console.error('Error fetching customers:', error)
+      console.error("Error fetching customers:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError("");
 
     if (!formData.name.trim()) {
-      setError('Name is required')
-      return
+      setError("Name is required");
+      return;
     }
 
     try {
-      const url = editingCustomer ? `${API_URL}/${editingCustomer.id}` : API_URL
-      const method = editingCustomer ? 'PUT' : 'POST'
+      const url = editingCustomer
+        ? `${API_URL}/${editingCustomer.id}`
+        : API_URL;
+      const method = editingCustomer ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-      })
+      });
 
       if (response.ok) {
-        await fetchCustomers()
-        handleCloseModal()
+        await fetchCustomers();
+        handleCloseModal();
       } else {
-        setError('Failed to save customer')
+        setError("Failed to save customer");
       }
     } catch (error) {
-      console.error('Error saving customer:', error)
-      setError('An error occurred while saving')
+      console.error("Error saving customer:", error);
+      setError("An error occurred while saving");
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!deleteCustomer?.id) return
+    if (!deleteCustomer?.id) return;
 
     try {
       const response = await fetch(`${API_URL}/${deleteCustomer.id}`, {
-        method: 'DELETE',
-      })
+        method: "DELETE",
+      });
 
       if (response.ok) {
-        await fetchCustomers()
-        setDeleteCustomer(null)
+        await fetchCustomers();
+        setDeleteCustomer(null);
       } else {
-        const data = await response.json()
-        setError(data.message || 'Failed to delete customer')
+        const data = await response.json();
+        setError(data.message || "Failed to delete customer");
       }
     } catch (error) {
-      console.error('Error deleting customer:', error)
-      setError('An error occurred while deleting')
+      console.error("Error deleting customer:", error);
+      setError("An error occurred while deleting");
     }
-  }
+  };
 
   const handleEdit = (customer: Customer) => {
-    setEditingCustomer(customer)
+    setEditingCustomer(customer);
     setFormData({
       name: customer.name,
       email: customer.email,
       phone: customer.phone,
-    })
-    setShowAddModal(true)
-  }
+    });
+    setShowAddModal(true);
+  };
 
   const handleCloseModal = () => {
-    setShowAddModal(false)
-    setEditingCustomer(null)
-    setFormData({ name: '', email: '', phone: '' })
-    setError('')
-  }
+    setShowAddModal(false);
+    setEditingCustomer(null);
+    setFormData({ name: "", email: "", phone: "" });
+    setError("");
+  };
 
   const getActiveCheckouts = (customer: Customer) => {
-    return customer.checkouts?.filter(ch => !ch.returnedDate).length || 0
-  }
+    return customer.checkouts?.filter((ch) => !ch.returnedDate).length || 0;
+  };
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    customer.phone.includes(searchQuery)
-  )
+  const filteredCustomers = customers.filter(
+    (customer) =>
+      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.phone.includes(searchQuery),
+  );
 
   if (loading) {
-    return <LoadingSpinner />
+    return <LoadingSpinner />;
   }
 
   return (
@@ -135,7 +144,8 @@ function CustomersView() {
             Customers
           </h1>
           <p className="text-gray-400 mt-1">
-            {customers.length} {customers.length === 1 ? 'customer' : 'customers'}
+            {customers.length}{" "}
+            {customers.length === 1 ? "customer" : "customers"}
           </p>
         </div>
         <button
@@ -168,20 +178,26 @@ function CustomersView() {
       {/* Customers List */}
       {filteredCustomers.length === 0 ? (
         <EmptyState
-          message={searchQuery ? "No customers found. Try adjusting your search." : "No customers yet. Add your first customer to get started."}
+          message={
+            searchQuery
+              ? "No customers found. Try adjusting your search."
+              : "No customers yet. Add your first customer to get started."
+          }
           showAddButton={false}
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredCustomers.map((customer) => {
-            const activeCheckouts = getActiveCheckouts(customer)
+            const activeCheckouts = getActiveCheckouts(customer);
             return (
               <div
                 key={customer.id}
                 className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-indigo-500 transition-colors"
               >
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold text-white">{customer.name}</h3>
+                  <h3 className="text-xl font-semibold text-white">
+                    {customer.name}
+                  </h3>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(customer)}
@@ -227,7 +243,10 @@ function CustomersView() {
 
                 <div className="mt-4 pt-4 border-t border-gray-700 flex justify-between items-center text-sm">
                   <span className="text-gray-400">
-                    Active checkouts: <span className="text-white font-semibold">{activeCheckouts}</span>
+                    Active checkouts:{" "}
+                    <span className="text-white font-semibold">
+                      {activeCheckouts}
+                    </span>
                   </span>
                   {customer.createdAt && (
                     <span className="text-gray-500 text-xs">
@@ -236,7 +255,7 @@ function CustomersView() {
                   )}
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
@@ -246,9 +265,9 @@ function CustomersView() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
             <h2 className="text-2xl font-bold text-white mb-4">
-              {editingCustomer ? 'Edit Customer' : 'Add Customer'}
+              {editingCustomer ? "Edit Customer" : "Add Customer"}
             </h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -257,7 +276,9 @@ function CustomersView() {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"
                   required
                 />
@@ -270,7 +291,9 @@ function CustomersView() {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -282,7 +305,9 @@ function CustomersView() {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
                   className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -305,7 +330,7 @@ function CustomersView() {
                   type="submit"
                   className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                 >
-                  {editingCustomer ? 'Update' : 'Create'}
+                  {editingCustomer ? "Update" : "Create"}
                 </button>
               </div>
             </form>
@@ -317,16 +342,20 @@ function CustomersView() {
       <ConfirmDialog
         isOpen={deleteCustomer !== null}
         title="Delete Customer"
-        message={deleteCustomer ? `Are you sure you want to delete ${deleteCustomer.name}? This action cannot be undone.` : ''}
+        message={
+          deleteCustomer
+            ? `Are you sure you want to delete ${deleteCustomer.name}? This action cannot be undone.`
+            : ""
+        }
         onConfirm={handleDelete}
         onCancel={() => {
-          setDeleteCustomer(null)
-          setError('')
+          setDeleteCustomer(null);
+          setError("");
         }}
         confirmText="Delete"
       />
     </div>
-  )
+  );
 }
 
-export default CustomersView
+export default CustomersView;

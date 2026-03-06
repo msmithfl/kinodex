@@ -1,19 +1,19 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import CollectionCard from '../components/CollectionCard'
-import EmptyState from '../components/EmptyState'
-import LoadingSpinner from '../components/LoadingSpinner'
-import SubNavigation from '../components/SubNavigation'
-import type { Movie, ShelfSection } from '../types'
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import CollectionCard from "../components/CollectionCard";
+import EmptyState from "../components/EmptyState";
+import LoadingSpinner from "../components/LoadingSpinner";
+import SubNavigation from "../components/SubNavigation";
+import type { Movie, ShelfSection } from "../types";
 
 function ShelfSectionsView() {
   const [shelfSections, setShelfSections] = useState<ShelfSection[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateInput, setShowCreateInput] = useState(false);
-  const [newSectionName, setNewSectionName] = useState('');
+  const [newSectionName, setNewSectionName] = useState("");
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5156';
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const SECTIONS_URL = `${API_BASE}/api/shelfsections`;
   const MOVIES_URL = `${API_BASE}/api/movies`;
 
@@ -25,7 +25,7 @@ function ShelfSectionsView() {
     try {
       const [sectionsRes, moviesRes] = await Promise.all([
         fetch(SECTIONS_URL),
-        fetch(MOVIES_URL)
+        fetch(MOVIES_URL),
       ]);
 
       if (sectionsRes.ok) {
@@ -38,41 +38,53 @@ function ShelfSectionsView() {
         setMovies(moviesData);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const getMovieCount = (sectionName: string) => {
-    return movies.filter(movie => 
-      movie.shelfSection && movie.shelfSection === sectionName
+    return movies.filter(
+      (movie) => movie.shelfSection && movie.shelfSection === sectionName,
     ).length;
   };
 
   const getUnshelvedCount = () => {
-    return movies.filter(movie => !movie.shelfSection || movie.shelfSection.trim() === '' || movie.shelfSection === 'Unshelved').length;
+    return movies.filter(
+      (movie) =>
+        !movie.shelfSection ||
+        movie.shelfSection.trim() === "" ||
+        movie.shelfSection === "Unshelved",
+    ).length;
   };
 
   const createShelfSection = async () => {
-    if (newSectionName && !shelfSections.find(s => s.name === newSectionName)) {
+    if (
+      newSectionName &&
+      !shelfSections.find((s) => s.name === newSectionName)
+    ) {
       try {
         const response = await fetch(SECTIONS_URL, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ name: newSectionName }),
         });
-        
+
         if (response.ok) {
           const newSection = await response.json();
-          setShelfSections([...shelfSections, newSection].sort((a, b) => a.name.localeCompare(b.name)));
-          setNewSectionName('');
+          setShelfSections(
+            [...shelfSections, newSection].sort((a, b) =>
+              a.name.localeCompare(b.name),
+            ),
+          );
+          setNewSectionName("");
           setShowCreateInput(false);
         }
       } catch (error) {
-        console.error('Error creating shelf section:', error);
+        console.error("Error creating shelf section:", error);
       }
     }
   };
@@ -89,7 +101,7 @@ function ShelfSectionsView() {
   return (
     <>
       <SubNavigation />
-      <div className='flex h-[calc(100vh-9rem)] pt-2'>
+      <div className="flex h-[calc(100vh-9rem)] pt-2">
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pt-2">
           {shelfSections.length === 0 ? (
             <EmptyState message="No shelf sections yet. " />
@@ -125,7 +137,7 @@ function ShelfSectionsView() {
                     collection={section}
                     movieCount={movieCount}
                     completionPercentage={null}
-                    urlPath='shelfsections'
+                    urlPath="shelfsections"
                   />
                 );
               })}
@@ -134,17 +146,25 @@ function ShelfSectionsView() {
 
           {/* Create Shelf Section Modal */}
           {showCreateInput && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => {
-              setShowCreateInput(false);
-              setNewSectionName('');
-            }}>
-              <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
-                <h2 className="text-2xl font-bold mb-4">Create New Shelf Section</h2>
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              onClick={() => {
+                setShowCreateInput(false);
+                setNewSectionName("");
+              }}
+            >
+              <div
+                className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className="text-2xl font-bold mb-4">
+                  Create New Shelf Section
+                </h2>
                 <input
                   type="text"
                   value={newSectionName}
                   onChange={(e) => setNewSectionName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && createShelfSection()}
+                  onKeyDown={(e) => e.key === "Enter" && createShelfSection()}
                   placeholder="Shelf section name"
                   autoFocus
                   className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
@@ -159,7 +179,7 @@ function ShelfSectionsView() {
                   <button
                     onClick={() => {
                       setShowCreateInput(false);
-                      setNewSectionName('');
+                      setNewSectionName("");
                     }}
                     className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
                   >

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 interface Movie {
   id?: number;
@@ -19,25 +19,33 @@ interface MovieDetailCardProps {
   showShelfNumber?: boolean;
 }
 
-function MovieDetailCard({ movie, showYear = false, showUpc = false, showShelfNumber = false }: MovieDetailCardProps) {
+function MovieDetailCard({
+  movie,
+  showYear = false,
+  showUpc = false,
+  showShelfNumber = false,
+}: MovieDetailCardProps) {
   return (
     <Link
       to={`/movie/${movie.id}`}
       className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg overflow-hidden transition-all duration-200 transform hover:scale-105 flex gap-4 p-4"
     >
       {movie.posterPath && (
-        <img 
-          src={movie.posterPath} 
+        <img
+          src={movie.posterPath}
           alt={`${movie.title} poster`}
           className="w-24 h-36 object-cover rounded-md shrink-0"
           onError={(e) => {
-            e.currentTarget.src = 'https://via.placeholder.com/96x144?text=No+Poster';
+            e.currentTarget.src =
+              "https://via.placeholder.com/96x144?text=No+Poster";
           }}
         />
       )}
       <div className="flex-1 min-w-0">
         <div className="mb-4">
-          <h3 className="text-xl font-bold text-white mb-2 truncate">{movie.title}</h3>
+          <h3 className="text-xl font-bold text-white mb-2 truncate">
+            {movie.title}
+          </h3>
           {showYear && movie.year && (
             <p className="text-gray-400 text-sm font-mono">{movie.year}</p>
           )}
@@ -49,7 +57,10 @@ function MovieDetailCard({ movie, showYear = false, showUpc = false, showShelfNu
         {movie.formats && movie.formats.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
             {[...movie.formats].sort().map((fmt, idx) => (
-              <span key={idx} className="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+              <span
+                key={idx}
+                className="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-medium"
+              >
                 {fmt}
               </span>
             ))}
@@ -64,12 +75,17 @@ function MovieDetailCard({ movie, showYear = false, showUpc = false, showShelfNu
 
         {movie.condition && (
           <div className="mt-3">
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-              movie.condition === 'New' ? 'bg-green-600 text-white' :
-              movie.condition === 'Good' ? 'bg-blue-600 text-white' :
-              movie.condition === 'Skips' ? 'bg-yellow-600 text-white' :
-              'bg-red-600 text-white'
-            }`}>
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                movie.condition === "New"
+                  ? "bg-green-600 text-white"
+                  : movie.condition === "Good"
+                    ? "bg-blue-600 text-white"
+                    : movie.condition === "Skips"
+                      ? "bg-yellow-600 text-white"
+                      : "bg-red-600 text-white"
+              }`}
+            >
               {movie.condition}
             </span>
           </div>

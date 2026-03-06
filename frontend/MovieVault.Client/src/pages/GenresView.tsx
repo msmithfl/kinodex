@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react'
-import CollectionCard from '../components/CollectionCard'
-import EmptyState from '../components/EmptyState'
-import LoadingSpinner from '../components/LoadingSpinner';
-import SubNavigation from '../components/SubNavigation'
-import type { Movie } from '../types'
+import { useState, useEffect } from "react";
+import CollectionCard from "../components/CollectionCard";
+import EmptyState from "../components/EmptyState";
+import LoadingSpinner from "../components/LoadingSpinner";
+import SubNavigation from "../components/SubNavigation";
+import type { Movie } from "../types";
 
 function GenresView() {
   const [genres, setGenres] = useState<string[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5156';
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const MOVIES_URL = `${API_BASE}/api/movies`;
 
   useEffect(() => {
@@ -24,27 +24,27 @@ function GenresView() {
       if (moviesRes.ok) {
         const moviesData = await moviesRes.json();
         setMovies(moviesData);
-        
+
         // Extract unique genres from all movies
         const uniqueGenres = new Set<string>();
         moviesData.forEach((movie: Movie) => {
           if (movie.genres && movie.genres.length > 0) {
-            movie.genres.forEach(genre => uniqueGenres.add(genre));
+            movie.genres.forEach((genre) => uniqueGenres.add(genre));
           }
         });
-        
+
         setGenres(Array.from(uniqueGenres).sort());
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const getMovieCount = (genreName: string) => {
-    return movies.filter(movie => 
-      movie.genres && movie.genres.includes(genreName)
+    return movies.filter(
+      (movie) => movie.genres && movie.genres.includes(genreName),
     ).length;
   };
 
@@ -74,7 +74,7 @@ function GenresView() {
                     collection={{ id: 0, name: genre }}
                     movieCount={movieCount}
                     completionPercentage={null}
-                    urlPath='genres'
+                    urlPath="genres"
                   />
                 );
               })}

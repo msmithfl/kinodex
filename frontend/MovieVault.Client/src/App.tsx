@@ -1,24 +1,23 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Header from './components/Header'
-// import Footer from './components/Footer'
-import Sidebar from './components/Sidebar'
-import Dashboard from './pages/Dashboard'
-import MovieList from './pages/MovieList'
-import AddMovie from './pages/AddMovie'
-import EditMovie from './pages/EditMovie'
-import MovieDetail from './pages/MovieDetail'
-import CollectionsView from './pages/CollectionsView'
-import CollectionDetail from './pages/CollectionDetail'
-import ShelfSectionsView from './pages/ShelfSectionsView'
-import ShelfSectionDetail from './pages/ShelfSectionDetail'
-import GenresView from './pages/GenresView'
-import GenreDetail from './pages/GenreDetail'
-import MatchMovies from './pages/MatchMovies'
-import CustomersView from './pages/CustomersView'
-import CheckoutsView from './pages/CheckoutsView'
-import MyShelf from './pages/MyShelf'
-import Stats from './pages/Stats'
-import CsvExport from './pages/CsvExport'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Sidebar from "./components/Sidebar";
+import Dashboard from "./pages/Dashboard";
+import MovieList from "./pages/MovieList";
+import AddMovie from "./pages/AddMovie";
+import EditMovie from "./pages/EditMovie";
+import MovieDetail from "./pages/MovieDetail";
+import CollectionsView from "./pages/CollectionsView";
+import CollectionDetail from "./pages/CollectionDetail";
+import ShelfSectionsView from "./pages/ShelfSectionsView";
+import ShelfSectionDetail from "./pages/ShelfSectionDetail";
+import GenresView from "./pages/GenresView";
+import GenreDetail from "./pages/GenreDetail";
+import MatchMovies from "./pages/MatchMovies";
+import CustomersView from "./pages/CustomersView";
+import CheckoutsView from "./pages/CheckoutsView";
+import MyShelf from "./pages/MyShelf";
+import Stats from "./pages/Stats";
+import CsvExport from "./pages/CsvExport";
 
 function App() {
   return (
@@ -51,8 +50,7 @@ function App() {
         </div>
       </div>
     </Router>
-  )
+  );
 }
 
-export default App
-
+export default App;

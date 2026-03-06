@@ -1,6 +1,10 @@
-import { useState, useEffect } from 'react';
-import { TiStarOutline, TiStarHalfOutline, TiStarFullOutline } from "react-icons/ti";
-import type { Movie } from '../types';
+import { useState, useEffect } from "react";
+import {
+  TiStarOutline,
+  TiStarHalfOutline,
+  TiStarFullOutline,
+} from "react-icons/ti";
+import type { Movie } from "../types";
 
 interface MovieFormProps {
   formData: Movie;
@@ -42,26 +46,39 @@ function MovieForm({
   addShelfSection,
   onSubmit,
   onCancel,
-  submitButtonText = 'Save',
+  submitButtonText = "Save",
   showScanButton = false,
   onScanClick,
-  onManualSearchClick
+  onManualSearchClick,
 }: MovieFormProps) {
-  const [validationError, setValidationError] = useState<string>('');
+  const [validationError, setValidationError] = useState<string>("");
   const [yearInput, setYearInput] = useState<string>(formData.year.toString());
-  const [shelfInput, setShelfInput] = useState<string>(formData.shelfNumber.toString());
-  const [hddInput, setHddInput] = useState<string>(formData.hdDriveNumber.toString());
-  const [tmdbInput, setTmdbInput] = useState<string>(formData.tmdbId?.toString() || '');
-  const [purchasePriceInput, setPurchasePriceInput] = useState<string>(formData.purchasePrice.toString());
+  const [shelfInput, setShelfInput] = useState<string>(
+    formData.shelfNumber.toString(),
+  );
+  const [hddInput, setHddInput] = useState<string>(
+    formData.hdDriveNumber.toString(),
+  );
+  const [tmdbInput, setTmdbInput] = useState<string>(
+    formData.tmdbId?.toString() || "",
+  );
+  const [purchasePriceInput, setPurchasePriceInput] = useState<string>(
+    formData.purchasePrice.toString(),
+  );
 
   // Sync local state when formData changes (e.g., from TMDB search or editing different movie)
   useEffect(() => {
     setYearInput(formData.year.toString());
     setShelfInput(formData.shelfNumber.toString());
     setHddInput(formData.hdDriveNumber.toString());
-    setTmdbInput(formData.tmdbId?.toString() || '');
+    setTmdbInput(formData.tmdbId?.toString() || "");
     setPurchasePriceInput(formData.purchasePrice.toString());
-  }, [formData.year, formData.shelfNumber, formData.hdDriveNumber, formData.tmdbId]);
+  }, [
+    formData.year,
+    formData.shelfNumber,
+    formData.hdDriveNumber,
+    formData.tmdbId,
+  ]);
 
   const handleYearChange = (value: string) => {
     setYearInput(value);
@@ -89,7 +106,7 @@ function MovieForm({
 
   const handleTmdbChange = (value: string) => {
     setTmdbInput(value);
-    if (value === '') {
+    if (value === "") {
       setFormData({ ...formData, tmdbId: undefined });
     } else {
       const num = parseInt(value);
@@ -109,30 +126,30 @@ function MovieForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setValidationError('');
+    setValidationError("");
 
     // Validate numeric fields
     const yearNum = parseInt(yearInput);
     if (isNaN(yearNum) || yearNum < 1900 || yearNum > 2100) {
-      setValidationError('Year must be a valid number between 1900 and 2100');
+      setValidationError("Year must be a valid number between 1900 and 2100");
       return;
     }
-    
+
     const shelfNum = parseInt(shelfInput);
     if (isNaN(shelfNum)) {
-      setValidationError('Shelf Number must be a valid number');
+      setValidationError("Shelf Number must be a valid number");
       return;
     }
-    
+
     const hddNum = parseInt(hddInput);
     if (isNaN(hddNum)) {
-      setValidationError('HDD Number must be a valid number');
+      setValidationError("HDD Number must be a valid number");
       return;
     }
 
     const purchasePriceNum = parseFloat(purchasePriceInput);
     if (isNaN(purchasePriceNum)) {
-      setValidationError('Purchase Price must be a valid number');
+      setValidationError("Purchase Price must be a valid number");
       return;
     }
 
@@ -140,20 +157,28 @@ function MovieForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">      {validationError && (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {" "}
+      {validationError && (
         <div className="bg-red-600 text-white px-4 py-3 rounded-md">
           {validationError}
         </div>
-      )}      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      )}{" "}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-2">
+          <label
+            htmlFor="title"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
             Movie Title *
           </label>
           <input
             type="text"
             id="title"
             value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, title: e.target.value })
+            }
             required
             placeholder="Enter movie title"
             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
@@ -161,7 +186,10 @@ function MovieForm({
         </div>
 
         <div>
-          <label htmlFor="upc" className="block text-sm font-medium text-gray-300 mb-2">
+          <label
+            htmlFor="upc"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
             UPC Number *
           </label>
           <div className="flex gap-2">
@@ -169,7 +197,9 @@ function MovieForm({
               type="text"
               id="upc"
               value={formData.upcNumber}
-              onChange={(e) => setFormData({ ...formData, upcNumber: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, upcNumber: e.target.value })
+              }
               required
               placeholder="Enter UPC barcode number"
               className="flex-1 max-w-42 md:max-w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
@@ -230,7 +260,10 @@ function MovieForm({
         </div>
 
         <div>
-          <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-2">
+          <label
+            htmlFor="year"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
             Year
           </label>
           <input
@@ -244,7 +277,10 @@ function MovieForm({
         </div>
 
         <div>
-          <label htmlFor="tmdbId" className="block text-sm font-medium text-gray-300 mb-2">
+          <label
+            htmlFor="tmdbId"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
             TMDB ID
           </label>
           <input
@@ -258,7 +294,10 @@ function MovieForm({
         </div>
 
         <div>
-          <label htmlFor="purchasePrice" className="block text-sm font-medium text-gray-300 mb-2">
+          <label
+            htmlFor="purchasePrice"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
             Purchase Price
           </label>
           <input
@@ -270,13 +309,15 @@ function MovieForm({
             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
           />
         </div>
-        
+
         <div className="flex items-center">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
               checked={formData.hasWatched}
-              onChange={(e) => setFormData({ ...formData, hasWatched: e.target.checked })}
+              onChange={(e) =>
+                setFormData({ ...formData, hasWatched: e.target.checked })
+              }
               className="w-5 h-5 bg-gray-700 border-gray-600 rounded focus:outline-none cursor-pointer"
             />
             <span className="text-sm font-medium text-gray-300">Watched</span>
@@ -296,7 +337,12 @@ function MovieForm({
                 {fmt}
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, formats: formData.formats.filter((_, i) => i !== index) })}
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      formats: formData.formats.filter((_, i) => i !== index),
+                    })
+                  }
                   className="hover:text-red-300 transition cursor-pointer"
                 >
                   ×
@@ -307,17 +353,34 @@ function MovieForm({
           <select
             value=""
             onChange={(e) => {
-              if (e.target.value && !formData.formats.includes(e.target.value)) {
-                setFormData({ ...formData, formats: [...formData.formats, e.target.value] });
+              if (
+                e.target.value &&
+                !formData.formats.includes(e.target.value)
+              ) {
+                setFormData({
+                  ...formData,
+                  formats: [...formData.formats, e.target.value],
+                });
               }
             }}
             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-gray-500 cursor-pointer"
           >
             <option value="">Add format...</option>
-            <option value="4K" disabled={formData.formats.includes('4K')}>4K Ultra HD</option>
-            <option value="Blu-ray" disabled={formData.formats.includes('Blu-ray')}>Blu-ray</option>
-            <option value="DVD" disabled={formData.formats.includes('DVD')}>DVD</option>
-            <option value="VHS" disabled={formData.formats.includes('VHS')}>VHS</option>
+            <option value="4K" disabled={formData.formats.includes("4K")}>
+              4K Ultra HD
+            </option>
+            <option
+              value="Blu-ray"
+              disabled={formData.formats.includes("Blu-ray")}
+            >
+              Blu-ray
+            </option>
+            <option value="DVD" disabled={formData.formats.includes("DVD")}>
+              DVD
+            </option>
+            <option value="VHS" disabled={formData.formats.includes("VHS")}>
+              VHS
+            </option>
           </select>
         </div>
 
@@ -334,7 +397,12 @@ function MovieForm({
                 {genre}
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, genres: formData.genres.filter((_, i) => i !== index) })}
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      genres: formData.genres.filter((_, i) => i !== index),
+                    })
+                  }
                   className="hover:text-red-300 transition cursor-pointer"
                 >
                   ×
@@ -346,42 +414,133 @@ function MovieForm({
             value=""
             onChange={(e) => {
               if (e.target.value && !formData.genres.includes(e.target.value)) {
-                setFormData({ ...formData, genres: [...formData.genres, e.target.value] });
+                setFormData({
+                  ...formData,
+                  genres: [...formData.genres, e.target.value],
+                });
               }
             }}
             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-gray-500 cursor-pointer"
           >
             <option value="">Add genre...</option>
-            <option value="Action" disabled={formData.genres.includes('Action')}>Action</option>
-            <option value="Adventure" disabled={formData.genres.includes('Adventure')}>Adventure</option>
-            <option value="Animation" disabled={formData.genres.includes('Animation')}>Animation</option>
-            <option value="Comedy" disabled={formData.genres.includes('Comedy')}>Comedy</option>
-            <option value="Crime" disabled={formData.genres.includes('Crime')}>Crime</option>
-            <option value="Documentary" disabled={formData.genres.includes('Documentary')}>Documentary</option>
-            <option value="Drama" disabled={formData.genres.includes('Drama')}>Drama</option>
-            <option value="Family" disabled={formData.genres.includes('Family')}>Family</option>
-            <option value="Fantasy" disabled={formData.genres.includes('Fantasy')}>Fantasy</option>
-            <option value="History" disabled={formData.genres.includes('History')}>History</option>
-            <option value="Horror" disabled={formData.genres.includes('Horror')}>Horror</option>
-            <option value="Music" disabled={formData.genres.includes('Music')}>Music</option>
-            <option value="Mystery" disabled={formData.genres.includes('Mystery')}>Mystery</option>
-            <option value="Romance" disabled={formData.genres.includes('Romance')}>Romance</option>
-            <option value="Sci-Fi" disabled={formData.genres.includes('Sci-Fi')}>Sci-Fi</option>
-            <option value="Thriller" disabled={formData.genres.includes('Thriller')}>Thriller</option>
-            <option value="TV Movie" disabled={formData.genres.includes('TV Movie')}>TV Movie</option>
-            <option value="War" disabled={formData.genres.includes('War')}>War</option>
-            <option value="Western" disabled={formData.genres.includes('Western')}>Western</option>
+            <option
+              value="Action"
+              disabled={formData.genres.includes("Action")}
+            >
+              Action
+            </option>
+            <option
+              value="Adventure"
+              disabled={formData.genres.includes("Adventure")}
+            >
+              Adventure
+            </option>
+            <option
+              value="Animation"
+              disabled={formData.genres.includes("Animation")}
+            >
+              Animation
+            </option>
+            <option
+              value="Comedy"
+              disabled={formData.genres.includes("Comedy")}
+            >
+              Comedy
+            </option>
+            <option value="Crime" disabled={formData.genres.includes("Crime")}>
+              Crime
+            </option>
+            <option
+              value="Documentary"
+              disabled={formData.genres.includes("Documentary")}
+            >
+              Documentary
+            </option>
+            <option value="Drama" disabled={formData.genres.includes("Drama")}>
+              Drama
+            </option>
+            <option
+              value="Family"
+              disabled={formData.genres.includes("Family")}
+            >
+              Family
+            </option>
+            <option
+              value="Fantasy"
+              disabled={formData.genres.includes("Fantasy")}
+            >
+              Fantasy
+            </option>
+            <option
+              value="History"
+              disabled={formData.genres.includes("History")}
+            >
+              History
+            </option>
+            <option
+              value="Horror"
+              disabled={formData.genres.includes("Horror")}
+            >
+              Horror
+            </option>
+            <option value="Music" disabled={formData.genres.includes("Music")}>
+              Music
+            </option>
+            <option
+              value="Mystery"
+              disabled={formData.genres.includes("Mystery")}
+            >
+              Mystery
+            </option>
+            <option
+              value="Romance"
+              disabled={formData.genres.includes("Romance")}
+            >
+              Romance
+            </option>
+            <option
+              value="Sci-Fi"
+              disabled={formData.genres.includes("Sci-Fi")}
+            >
+              Sci-Fi
+            </option>
+            <option
+              value="Thriller"
+              disabled={formData.genres.includes("Thriller")}
+            >
+              Thriller
+            </option>
+            <option
+              value="TV Movie"
+              disabled={formData.genres.includes("TV Movie")}
+            >
+              TV Movie
+            </option>
+            <option value="War" disabled={formData.genres.includes("War")}>
+              War
+            </option>
+            <option
+              value="Western"
+              disabled={formData.genres.includes("Western")}
+            >
+              Western
+            </option>
           </select>
         </div>
 
         <div>
-          <label htmlFor="condition" className="block text-sm font-medium text-gray-300 mb-2">
+          <label
+            htmlFor="condition"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
             Condition *
           </label>
           <select
             id="condition"
             value={formData.condition}
-            onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, condition: e.target.value })
+            }
             required
             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-gray-500 cursor-pointer"
           >
@@ -406,7 +565,14 @@ function MovieForm({
                 {col}
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, collections: formData.collections.filter((_, i) => i !== index) })}
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      collections: formData.collections.filter(
+                        (_, i) => i !== index,
+                      ),
+                    })
+                  }
                   className="hover:text-red-300 transition cursor-pointer"
                 >
                   ×
@@ -418,16 +584,26 @@ function MovieForm({
             <select
               value=""
               onChange={(e) => {
-                if (e.target.value && !formData.collections.includes(e.target.value)) {
-                  setFormData({ ...formData, collections: [...formData.collections, e.target.value] });
+                if (
+                  e.target.value &&
+                  !formData.collections.includes(e.target.value)
+                ) {
+                  setFormData({
+                    ...formData,
+                    collections: [...formData.collections, e.target.value],
+                  });
                 }
               }}
               className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-gray-500 cursor-pointer"
             >
               <option value="">Add collection...</option>
-              {collections.filter(col => !formData.collections.includes(col.name)).map(col => (
-                <option key={col.id} value={col.name}>{col.name}</option>
-              ))}
+              {collections
+                .filter((col) => !formData.collections.includes(col.name))
+                .map((col) => (
+                  <option key={col.id} value={col.name}>
+                    {col.name}
+                  </option>
+                ))}
             </select>
             <button
               type="button"
@@ -465,17 +641,19 @@ function MovieForm({
             {[1, 2, 3, 4, 5].map((star) => {
               const isFullStar = formData.rating >= star;
               const isHalfStar = formData.rating === star - 0.5;
-              
+
               return (
                 <div
                   key={star}
                   className="relative cursor-pointer group"
-                  style={{ width: '32px', height: '32px' }}
+                  style={{ width: "32px", height: "32px" }}
                 >
                   {/* Left half clickable area */}
                   <div
                     className="absolute left-0 top-0 w-1/2 h-full z-10"
-                    onClick={() => setFormData({ ...formData, rating: star - 0.5 })}
+                    onClick={() =>
+                      setFormData({ ...formData, rating: star - 0.5 })
+                    }
                     title={`${star - 0.5} stars`}
                   />
                   {/* Right half clickable area */}
@@ -504,12 +682,15 @@ function MovieForm({
             </button>
           </div>
           <p className="text-xs text-gray-400 mt-1">
-            {formData.rating > 0 ? `${formData.rating} stars` : 'Not rated'}
+            {formData.rating > 0 ? `${formData.rating} stars` : "Not rated"}
           </p>
         </div>
 
         <div>
-          <label htmlFor="shelfNumber" className="block text-sm font-medium text-gray-300 mb-2">
+          <label
+            htmlFor="shelfNumber"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
             Shelf Number
           </label>
           <input
@@ -528,12 +709,16 @@ function MovieForm({
           <div className="flex gap-2">
             <select
               value={formData.shelfSection}
-              onChange={(e) => setFormData({ ...formData, shelfSection: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, shelfSection: e.target.value })
+              }
               className="flex-1 min-w-0 px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-gray-500 cursor-pointer"
             >
               <option value="Unshelved">Unshelved</option>
-              {shelfSections.map(section => (
-                <option key={section.id} value={section.name}>{section.name}</option>
+              {shelfSections.map((section) => (
+                <option key={section.id} value={section.name}>
+                  {section.name}
+                </option>
               ))}
             </select>
             <button
@@ -565,7 +750,10 @@ function MovieForm({
         </div>
 
         <div>
-          <label htmlFor="hdDriveNumber" className="block text-sm font-medium text-gray-300 mb-2">
+          <label
+            htmlFor="hdDriveNumber"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
             HDD Number
           </label>
           <input
@@ -582,43 +770,58 @@ function MovieForm({
             <input
               type="checkbox"
               checked={formData.isOnPlex}
-              onChange={(e) => setFormData({ ...formData, isOnPlex: e.target.checked })}
+              onChange={(e) =>
+                setFormData({ ...formData, isOnPlex: e.target.checked })
+              }
               className="w-5 h-5 bg-gray-700 border-gray-600 rounded focus:outline-none cursor-pointer"
             />
-            <span className="text-sm font-medium text-gray-300">Available on Plex</span>
+            <span className="text-sm font-medium text-gray-300">
+              Available on Plex
+            </span>
           </label>
         </div>
       </div>
-
       <div>
-        <label htmlFor="posterPath" className="block text-sm font-medium text-gray-300 mb-2">
+        <label
+          htmlFor="posterPath"
+          className="block text-sm font-medium text-gray-300 mb-2"
+        >
           Movie Poster URL
         </label>
         <input
           type="text"
           id="posterPath"
           value={formData.posterPath}
-          onChange={(e) => setFormData({ ...formData, posterPath: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, posterPath: e.target.value })
+          }
           placeholder="https://example.com/movie-poster.jpg"
           className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
         />
       </div>
       <div>
-        <label htmlFor="productPosterPath" className="block text-sm font-medium text-gray-300 mb-2">
+        <label
+          htmlFor="productPosterPath"
+          className="block text-sm font-medium text-gray-300 mb-2"
+        >
           Product Image URL
         </label>
         <input
           type="text"
           id="productPosterPath"
           value={formData.productPosterPath}
-          onChange={(e) => setFormData({ ...formData, productPosterPath: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, productPosterPath: e.target.value })
+          }
           placeholder="https://example.com/product-image.jpg"
           className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
         />
       </div>
-
       <div>
-        <label htmlFor="review" className="block text-sm font-medium text-gray-300 mb-2">
+        <label
+          htmlFor="review"
+          className="block text-sm font-medium text-gray-300 mb-2"
+        >
           Review / Notes
         </label>
         <textarea
@@ -630,10 +833,9 @@ function MovieForm({
           className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
         />
       </div>
-
       <div className="flex gap-4 pt-4">
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 ease-in-out transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800 cursor-pointer"
         >
           {submitButtonText}

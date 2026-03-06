@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import Quagga from '@ericblade/quagga2';
+import { useEffect, useRef, useState } from "react";
+import Quagga from "@ericblade/quagga2";
 
 interface BarcodeScannerProps {
   onDetected: (code: string) => void;
@@ -11,7 +11,7 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const detectionCountRef = useRef<Map<string, number>>(new Map());
-  const lastDetectionRef = useRef<string>('');
+  const lastDetectionRef = useRef<string>("");
 
   useEffect(() => {
     if (!scannerRef.current) return;
@@ -20,33 +20,33 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
       Quagga.init(
         {
           inputStream: {
-            type: 'LiveStream',
+            type: "LiveStream",
             target: scannerRef.current!,
             constraints: {
               width: { min: 640, ideal: 1280, max: 1920 },
               height: { min: 480, ideal: 720, max: 1080 },
-              facingMode: 'environment',
+              facingMode: "environment",
               aspectRatio: { min: 1, max: 2 },
             },
             area: {
-              top: '25%',
-              right: '15%',
-              left: '15%',
-              bottom: '25%',
+              top: "25%",
+              right: "15%",
+              left: "15%",
+              bottom: "25%",
             },
           },
           locator: {
-            patchSize: 'medium',
+            patchSize: "medium",
             halfSample: true,
           },
           numOfWorkers: 0, // Single threaded often works better
           frequency: 10,
           decoder: {
             readers: [
-              'upc_reader',
-              'ean_reader',
-              'ean_8_reader',
-              'code_128_reader',
+              "upc_reader",
+              "ean_reader",
+              "ean_8_reader",
+              "code_128_reader",
             ],
             multiple: false,
           },
@@ -54,15 +54,17 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
         },
         (err) => {
           if (err) {
-            console.error('Error initializing Quagga:', err);
-            setError(`Failed to access camera: ${err.message || 'Please check permissions.'}`);
+            console.error("Error initializing Quagga:", err);
+            setError(
+              `Failed to access camera: ${err.message || "Please check permissions."}`,
+            );
             return;
           }
-          
-          console.log('Quagga initialized successfully');
+
+          console.log("Quagga initialized successfully");
           setIsInitialized(true);
           Quagga.start();
-        }
+        },
       );
     }, 100);
 
@@ -70,17 +72,17 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
       if (!result || !result.codeResult || !result.codeResult.code) return;
 
       const code = result.codeResult.code;
-      
+
       // Only accept results with good quality
       const err = getMedian(
         result.codeResult.decodedCodes
           .filter((x: any) => x.error !== undefined)
-          .map((x: any) => x.error)
+          .map((x: any) => x.error),
       );
 
       // Reject low quality scans
       if (err > 0.15) {
-        console.log('Low quality scan rejected:', code, 'error:', err);
+        console.log("Low quality scan rejected:", code, "error:", err);
         return;
       }
 
@@ -97,7 +99,7 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
 
       // Only accept code after 3 consecutive successful detections
       if (currentCount + 1 >= 3 && code !== lastDetectionRef.current) {
-        console.log('Barcode detected with confidence:', code);
+        console.log("Barcode detected with confidence:", code);
         lastDetectionRef.current = code;
         detectionCountRef.current.clear();
         onDetected(code);
@@ -152,7 +154,7 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
             <div
               ref={scannerRef}
               className="relative bg-black rounded-lg overflow-hidden border-2 border-blue-500"
-              style={{ height: '400px', maxHeight: '60vh' }}
+              style={{ height: "400px", maxHeight: "60vh" }}
             >
               <style>{`
                 #interactive.viewport canvas, #interactive.viewport video {
@@ -166,9 +168,9 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
             </div>
             <div className="mt-4 space-y-2">
               <p className="text-gray-400 text-sm text-center">
-                {isInitialized 
-                  ? 'Hold barcode steady in the center. Keep it well-lit and in focus.' 
-                  : 'Initializing camera...'}
+                {isInitialized
+                  ? "Hold barcode steady in the center. Keep it well-lit and in focus."
+                  : "Initializing camera..."}
               </p>
               <p className="text-gray-500 text-xs text-center">
                 Best results: barcode fills about 60-80% of the scanning area

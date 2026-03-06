@@ -1,10 +1,10 @@
-import { FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 
 interface SortableTableHeaderProps {
   label: string;
   sortKey: string;
   currentSortBy: string;
-  sortDirection: 'asc' | 'desc';
+  sortDirection: "asc" | "desc";
   onClick: (sortKey: string) => void;
   className?: string;
 }
@@ -15,10 +15,10 @@ function SortableTableHeader({
   currentSortBy,
   sortDirection,
   onClick,
-  className = ''
+  className = "",
 }: SortableTableHeaderProps) {
   const isActive = currentSortBy === sortKey;
-  
+
   return (
     <th
       onClick={() => onClick(sortKey)}
@@ -26,10 +26,10 @@ function SortableTableHeader({
     >
       <div className="flex items-center gap-2">
         {label}
-        {sortDirection === 'asc' ? (
-          <FaArrowUp className={`w-3 h-3 ${isActive ? '' : 'invisible'}`} />
+        {sortDirection === "asc" ? (
+          <FaArrowUp className={`w-3 h-3 ${isActive ? "" : "invisible"}`} />
         ) : (
-          <FaArrowDown className={`w-3 h-3 ${isActive ? '' : 'invisible'}`} />
+          <FaArrowDown className={`w-3 h-3 ${isActive ? "" : "invisible"}`} />
         )}
       </div>
     </th>

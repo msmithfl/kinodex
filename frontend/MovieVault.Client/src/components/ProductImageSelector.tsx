@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface ProductImageSelectorProps {
   upc: string;
@@ -19,65 +19,75 @@ interface UPCResponse {
   items?: UPCItem[];
 }
 
-function ProductImageSelector({ upc, onSelect, onSkip, onClose }: ProductImageSelectorProps) {
+function ProductImageSelector({
+  upc,
+  onSelect,
+  onSkip,
+  onClose,
+}: ProductImageSelectorProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([]);
-  const [productTitle, setProductTitle] = useState<string>('');
-  const [apiCallsRemaining, setApiCallsRemaining] = useState<string | null>(null);
+  const [productTitle, setProductTitle] = useState<string>("");
+  const [apiCallsRemaining, setApiCallsRemaining] = useState<string | null>(
+    null,
+  );
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5156';
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
 
   useEffect(() => {
     const fetchProductImages = async () => {
       try {
         const response = await fetch(`${API_BASE}/api/upc/lookup/${upc}`);
-        
+
         // Get API calls remaining from header (case-insensitive)
-        const remaining = response.headers.get('x-ratelimit-remaining');
+        const remaining = response.headers.get("x-ratelimit-remaining");
         if (remaining) {
           setApiCallsRemaining(remaining);
         }
 
         const data: UPCResponse = await response.json();
 
-        if (data.code === 'INVALID_UPC' || data.code === 'ERROR') {
-          setError(data.message || 'Invalid UPC code');
+        if (data.code === "INVALID_UPC" || data.code === "ERROR") {
+          setError(data.message || "Invalid UPC code");
           setLoading(false);
           return;
         }
 
-        if (data.code === 'OK' && data.items && data.items.length > 0) {
+        if (data.code === "OK" && data.items && data.items.length > 0) {
           const item = data.items[0];
-          setProductTitle(item.title || item.description || 'Unknown Product');
-          
+          setProductTitle(item.title || item.description || "Unknown Product");
+
           // Filter and prioritize HTTPS images, remove known bad domains
           const filteredImages = (item.images || [])
-            .filter(url => {
+            .filter((url) => {
               // Skip if not a valid URL
-              if (!url || typeof url !== 'string') return false;
-              
+              if (!url || typeof url !== "string") return false;
+
               // Skip known problematic domains
-              const badDomains = ['secondspin.com', 'sdcd.us', 'fye.com'];
-              if (badDomains.some(domain => url.includes(domain))) return false;
-              
+              const badDomains = ["secondspin.com", "sdcd.us", "fye.com"];
+              if (badDomains.some((domain) => url.includes(domain)))
+                return false;
+
               return true;
             })
             // Prefer HTTPS URLs
             .sort((a, b) => {
-              if (a.startsWith('https://') && !b.startsWith('https://')) return -1;
-              if (!a.startsWith('https://') && b.startsWith('https://')) return 1;
+              if (a.startsWith("https://") && !b.startsWith("https://"))
+                return -1;
+              if (!a.startsWith("https://") && b.startsWith("https://"))
+                return 1;
               return 0;
             });
-          
+
           setImages(filteredImages);
         } else {
-          setError('No product images found for this UPC');
+          setError("No product images found for this UPC");
         }
       } catch (err) {
-        console.error('Error fetching product images:', err);
-        setError('Failed to fetch product images');
+        console.error("Error fetching product images:", err);
+        setError("Failed to fetch product images");
       } finally {
         setLoading(false);
       }
@@ -97,7 +107,9 @@ function ProductImageSelector({ upc, onSelect, onSkip, onClose }: ProductImageSe
       <div className="bg-gray-800 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-xl font-bold text-white">Select Product Image</h3>
+            <h3 className="text-xl font-bold text-white">
+              Select Product Image
+            </h3>
             {apiCallsRemaining && (
               <p className="text-sm text-gray-400 mt-1">
                 API Calls Remaining Today: {apiCallsRemaining}
@@ -128,7 +140,9 @@ function ProductImageSelector({ upc, onSelect, onSkip, onClose }: ProductImageSe
           </div>
         ) : images.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-400 mb-4">No product images available for this UPC</p>
+            <p className="text-gray-400 mb-4">
+              No product images available for this UPC
+            </p>
             <button
               onClick={onSkip}
               className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition"
@@ -153,8 +167,8 @@ function ProductImageSelector({ upc, onSelect, onSkip, onClose }: ProductImageSe
                   onClick={() => setSelectedImage(imageUrl)}
                   className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition ${
                     selectedImage === imageUrl
-                      ? 'border-indigo-500 ring-2 ring-indigo-500'
-                      : 'border-gray-600 hover:border-gray-400'
+                      ? "border-indigo-500 ring-2 ring-indigo-500"
+                      : "border-gray-600 hover:border-gray-400"
                   }`}
                 >
                   <img
@@ -165,7 +179,7 @@ function ProductImageSelector({ upc, onSelect, onSkip, onClose }: ProductImageSe
                       // Hide the parent div instead of just the image
                       const parent = e.currentTarget.parentElement;
                       if (parent) {
-                        parent.style.display = 'none';
+                        parent.style.display = "none";
                       }
                     }}
                   />
@@ -183,8 +197,8 @@ function ProductImageSelector({ upc, onSelect, onSkip, onClose }: ProductImageSe
                 disabled={!selectedImage}
                 className={`flex-1 py-3 px-6 rounded-md transition font-semibold ${
                   selectedImage
-                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer'
-                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    ? "bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                    : "bg-gray-600 text-gray-400 cursor-not-allowed"
                 }`}
               >
                 Use Selected Image
