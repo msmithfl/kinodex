@@ -62,10 +62,6 @@ function MyShelf() {
     <div className="min-h-screen bg-gray-900 text-white">
       <SubNavigation />
       <div className="max-w-full mx-auto px-6 py-8">
-        <div className="flex items-center mb-8">
-          <h1 className="text-2xl font-bold">My Shelf</h1>
-        </div>
-
         <div className="space-y-10">
           {rows.map((row, rowIdx) => (
             <div key={rowIdx}>
@@ -88,7 +84,7 @@ function MyShelf() {
                       to={`/movie/${movie.id}`}
                       title={`${movie.title}${tier !== 'other' ? ` (${tier === 'bluray' ? 'Blu-ray' : tier.toUpperCase()})` : ''}`}
                       style={{ flexBasis: `${95 / PER_ROW}%`, flexShrink: 0, flexGrow: 0, height: `${spineHeight + 6}px` }}
-                      className={`group relative flex flex-col rounded-t-sm ${getSpineColor(movie.title)} hover:brightness-125 hover:-translate-y-2 transition-all duration-150 cursor-pointer`}
+                      className={`group relative flex flex-col rounded-t-sm ${getSpineColor(movie.title)} hover:brightness-125 hover:-translate-y-1 translate-y-1.5 transition-all duration-150 cursor-pointer`}
                     >
                       {/* Format notch */}
                       <div
