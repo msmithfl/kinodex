@@ -61,8 +61,8 @@ function MyShelf() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <SubNavigation />
-      <div className="max-w-full mx-auto px-4 md:px-10 pb-4 md:py-4 overflow-x-scroll md:overflow-auto">
-        <div className="space-y-10">
+      <div className="max-w-full mx-auto px-4 md:px-10 pt-2 pb-4 md:py-4 overflow-x-scroll md:overflow-auto">
+        <div className="space-y-8">
           {rows.map((row, rowIdx) => (
             <div key={rowIdx}>
               {/* Spine row — align to bottom so DVD spines stick up above the rest */}

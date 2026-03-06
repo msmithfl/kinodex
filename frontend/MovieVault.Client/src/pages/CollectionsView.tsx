@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-//import Counter from '../components/Counter'
 import type { CollectionListItem } from '../types'
 import CollectionCard from '../components/CollectionCard'
 import EmptyState from '../components/EmptyState'
