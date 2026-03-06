@@ -17,6 +17,7 @@ import MatchMovies from './pages/MatchMovies'
 import CustomersView from './pages/CustomersView'
 import CheckoutsView from './pages/CheckoutsView'
 import MyShelf from './pages/MyShelf'
+import Stats from './pages/Stats'
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
               <Route path="/add" element={<AddMovie />} />
               <Route path="/movie/:id" element={<MovieDetail />} />
               <Route path="/edit/:id" element={<EditMovie />} />
+              <Route path="/stats" element={<Stats />} />
             </Routes>
           </main>
         </div>
