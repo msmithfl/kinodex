@@ -507,8 +507,8 @@ function MovieList() {
       <SubNavigation />
       <div className="flex flex-col h-[calc(100vh-9rem)]">
         {/* Fixed header section */}
-        <div className="shrink-0 mx-12">
-          <div className="flex justify-between items-center mb-8 px-4">
+        <div className="shrink-0 mx-6 md:mx-12">
+          <div className="flex justify-between items-center mb-4 md:mb-8 px-4">
             {/* Mobile Sort and Column Buttons */}
             {/* {movies.length > 0 && (
               <div className="md:hidden flex gap-2">
