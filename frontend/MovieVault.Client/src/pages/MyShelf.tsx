@@ -103,7 +103,7 @@ function MyShelf() {
                             writingMode: 'vertical-rl',
                             transform: 'rotate(180deg)',
                             fontSize: 'clamp(7px, 1.8vw, 13px)',
-                            maxHeight: `${spineHeight - 8}px`,
+                            maxHeight: `${spineHeight - 40}px`,
                             lineHeight: 1.1,
                           }}
                         >
