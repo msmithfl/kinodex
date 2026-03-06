@@ -18,10 +18,11 @@ import { getRelativeTimeString } from '../utils/dateUtils';
 import { buildFilterCategories } from '../utils/filterCategories';
 import EmptyState from '../components/EmptyState';
 import { MobileOnlyMessage } from '../components/MobileOnlyMessage';
-import type { Movie } from '../types'
+import type { Movie, SortOption } from '../types'
 import { BulkEditModal } from '../components/BulkEditModal';
-
-type SortOption = 'date' | 'alphabetic' | 'format' | 'year' | 'condition' | 'rating';
+import { applyFilters } from '../utils/applyFilters';
+import { getSortedMovies } from '../utils/getSortedMovies';
+import { isMobile } from '../utils/isMobile';
 
 interface VisibleColumns {
   year: boolean;
@@ -44,7 +45,6 @@ function MovieList() {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [upcSearchQuery, setUpcSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
@@ -76,12 +76,6 @@ function MovieList() {
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5156';
   const API_URL = `${API_BASE}/api/movies`;
 
-  // Check if device is mobile
-  const isMobile = () => {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-           (window.innerWidth <= 768);
-  };
-
   useEffect(() => {
     fetchMovies();
     fetchShelfSections();
@@ -98,11 +92,6 @@ function MovieList() {
     localStorage.setItem('movieListSortBy', sortBy);
     localStorage.setItem('movieListSortDirection', sortDirection);
   }, [sortBy, sortDirection]);
-
-  // Scroll to top when page changes
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [currentPage]);
 
   const fetchMovies = async () => {
     try {
@@ -142,120 +131,10 @@ function MovieList() {
     }
   };
 
-  const getSortedMovies = () => {
-    const sortedMovies = [...movies];
-    
-    switch (sortBy) {
-      case 'alphabetic':
-        sortedMovies.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case 'year':
-        sortedMovies.sort((a, b) => (a.year || 0) - (b.year || 0));
-        break;
-      case 'format':
-        sortedMovies.sort((a, b) => {
-          // Get first format alphabetically (4K < Blu-ray < DVD)
-          const aFormat = a.formats.length > 0 ? [...a.formats].sort()[0] : 'ZZZ';
-          const bFormat = b.formats.length > 0 ? [...b.formats].sort()[0] : 'ZZZ';
-          return aFormat.localeCompare(bFormat);
-        });
-        break;
-      case 'condition':
-        sortedMovies.sort((a, b) => a.condition.localeCompare(b.condition));
-        break;
-      case 'rating':
-        sortedMovies.sort((a, b) => a.rating - b.rating);
-        break;
-      case 'date':
-      default:
-        sortedMovies.sort((a, b) => {
-          if (!a.createdAt || !b.createdAt) return 0;
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        });
-        break;
-    }
-
-    // Apply sort direction
-    if (sortDirection === 'desc') {
-      sortedMovies.reverse();
-    }
-
-    return sortedMovies;
-  };
-
-  const sortedMovies = getSortedMovies();
-  
-  // Apply filters
-  const applyFilters = (movies: Movie[]) => {
-    let filtered = [...movies];
-    
-    // Format filter
-    if (selectedFilters.format && selectedFilters.format.length > 0) {
-      filtered = filtered.filter(movie => 
-        movie.formats.some(format => selectedFilters.format.includes(format))
-      );
-    }
-    
-    // HDD Number filter
-    if (selectedFilters.hdd && selectedFilters.hdd.length > 0) {
-      filtered = filtered.filter(movie => {
-        const hddValue = movie.hdDriveNumber.toString();
-        const hasNoHDD = movie.hdDriveNumber === 0;
-        return selectedFilters.hdd.includes(hddValue) || 
-               (selectedFilters.hdd.includes('0') && hasNoHDD);
-      });
-    }
-    
-    // Collection filter
-    if (selectedFilters.collection && selectedFilters.collection.length > 0) {
-      filtered = filtered.filter(movie => 
-        movie.collections.some(collection => selectedFilters.collection.includes(collection))
-      );
-    }
-    
-    // OnPlex filter
-    if (selectedFilters.onPlex && selectedFilters.onPlex.length > 0) {
-      filtered = filtered.filter(movie => {
-        const isOnPlex = movie.isOnPlex ? 'true' : 'false';
-        return selectedFilters.onPlex.includes(isOnPlex);
-      });
-    }
-
-    // HasWatched filter
-    if (selectedFilters.hasWatched && selectedFilters.hasWatched.length > 0) {
-      filtered = filtered.filter(movie => {
-        const hasWatched = movie.hasWatched ? 'true' : 'false';
-        return selectedFilters.hasWatched.includes(hasWatched);
-      });
-    }
-    
-    // Shelf Section filter
-    if (selectedFilters.shelfSection && selectedFilters.shelfSection.length > 0) {
-      filtered = filtered.filter(movie => 
-        movie.shelfSection && selectedFilters.shelfSection.includes(movie.shelfSection)
-      );
-    }
-    
-    // Shelf Number filter
-    if (selectedFilters.shelfNumber && selectedFilters.shelfNumber.length > 0) {
-      filtered = filtered.filter(movie => {
-        const shelfValue = movie.shelfNumber.toString();
-        return selectedFilters.shelfNumber.includes(shelfValue);
-      });
-    }
-    
-    // Condition filter
-    if (selectedFilters.condition && selectedFilters.condition.length > 0) {
-      filtered = filtered.filter(movie => 
-        selectedFilters.condition.includes(movie.condition)
-      );
-    }
-    
-    return filtered;
-  };
+  const sortedMovies = getSortedMovies(movies, sortBy, sortDirection);
   
   // Filter movies by search query and filters
-  const filteredMovies = applyFilters(sortedMovies).filter(movie => {
+  const filteredMovies = applyFilters(sortedMovies, selectedFilters).filter(movie => {
     const matchesTitle = movie.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesUpc = movie.upcNumber.toLowerCase().includes(upcSearchQuery.toLowerCase());
     return matchesTitle && matchesUpc;
@@ -275,12 +154,10 @@ function MovieList() {
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
-    setCurrentPage(1);
   };
 
   const handleUpcSearchChange = (value: string) => {
     setUpcSearchQuery(value);
-    setCurrentPage(1);
   };
 
   const handleScanClick = () => {
@@ -294,7 +171,6 @@ function MovieList() {
   const handleBarcodeDetected = (code: string) => {
     setUpcSearchQuery(code);
     setShowScanner(false);
-    setCurrentPage(1);
   };
 
   const toggleColumn = (column: keyof VisibleColumns) => {
@@ -309,12 +185,10 @@ function MovieList() {
       ...prev,
       [categoryId]: values
     }));
-    setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
     setSelectedFilters({});
-    setCurrentPage(1);
   };
 
   const handleDeselectAll = () => {
