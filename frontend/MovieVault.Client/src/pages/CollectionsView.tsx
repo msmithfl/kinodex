@@ -108,14 +108,6 @@ function CollectionsView() {
     <>
       <SubNavigation />
       <div className="flex flex-col h-[calc(100vh-9rem)] pt-2">
-        {/* Fixed header section */}
-        {/* <div className="shrink-0 px-8 pt-8 pb-4">
-          <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold">Collections</h1>
-            <Counter count={collections.filter(c => !c.isDirectorCollection).length} />
-          </div>
-        </div> */}
-
         {/* Scrollable content section */}
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
           {collections.length === 0 ? (

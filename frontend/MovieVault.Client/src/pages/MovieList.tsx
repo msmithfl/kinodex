@@ -260,18 +260,6 @@ function MovieList() {
     const matchesUpc = movie.upcNumber.toLowerCase().includes(upcSearchQuery.toLowerCase());
     return matchesTitle && matchesUpc;
   });
-  
-  // Pagination calculations
-  //const totalPages = Math.ceil(filteredMovies.length / itemsPerPage);
-  //const startIndex = (currentPage - 1) * itemsPerPage;
-  //const endIndex = startIndex + itemsPerPage;
-  //const currentMovies = filteredMovies.slice(startIndex, endIndex);
-  
-  // Reset to page 1 when changing items per page or sort
-  // const handleItemsPerPageChange = (value: number) => {
-  //   setItemsPerPage(value);
-  //   setCurrentPage(1);
-  // };
 
   const handleColumnClick = (sortKey: string) => {
     const column = sortKey as SortOption;
@@ -507,21 +495,8 @@ function MovieList() {
       <SubNavigation />
       <div className="flex flex-col h-[calc(100vh-9rem)]">
         {/* Fixed header section */}
-        <div className="shrink-0 mx-6 md:mx-12">
-          <div className="flex justify-between items-center mb-4 md:mb-8 px-4">
-            {/* Mobile Sort and Column Buttons */}
-            {/* {movies.length > 0 && (
-              <div className="md:hidden flex gap-2">
-                <button
-                  onClick={() => setShowSortMenu(!showSortMenu)}
-                  className="p-2 text-gray-300 hover:text-white transition-colors"
-                  aria-label="Sort options"
-                >
-                  <FaSortAmountDown className="w-6 h-6" />
-                </button>
-              </div>
-            )} */}
-          </div>
+        <div className="shrink-0 mx-6 mt-4 md:mx-12">
+          
 
       {movies.length > 0 && (
         <div className="mb-4 space-y-4">
@@ -579,21 +554,6 @@ function MovieList() {
                 </div>
                 <Counter count={filteredMovies.length} />
               </div>
-              {/* <div className="flex items-center gap-3">
-                <label htmlFor="itemsPerPage" className="text-sm font-medium text-gray-300">
-                  Per page:
-                </label>
-                <select
-                  id="itemsPerPage"
-                  value={itemsPerPage}
-                  onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                  className="text-sm px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:border-gray-500 cursor-pointer"
-                >
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div> */}
             </div>
           ) : (
             <div className="hidden md:flex items-center justify-between py-1 px-6 bg-yellow-900/30 border border-yellow-600 rounded-lg">
@@ -628,27 +588,6 @@ function MovieList() {
               </button>
             </div>
           )}
-
-          {/* Mobile Sort Controls - Toggle Visibility */}
-          {/* {showSortMenu && (
-            <div className="md:hidden space-y-3 p-4 bg-gray-700 rounded-lg">
-              <div className="flex flex-col gap-2">
-                <label htmlFor="itemsPerPage-mobile" className="text-sm font-medium text-gray-300">
-                  Per page:
-                </label>
-                <select
-                  id="itemsPerPage-mobile"
-                  value={itemsPerPage}
-                  onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                  className="text-sm px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:border-gray-500 cursor-pointer"
-                >
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-              </div>
-            </div>
-          )} */}
         </div>
       )}
         </div>
@@ -847,64 +786,6 @@ function MovieList() {
             </tbody>
           </table>
           </div>
-          
-          {/* Fixed pagination at bottom */}
-          {/* {totalPages > 1 && (
-            <div className="shrink-0 px-6 py-4 bg-gray-700 border-t border-gray-600 flex items-center justify-between">
-              <div className="text-sm text-gray-300">
-                Showing {startIndex + 1} to {Math.min(endIndex, sortedMovies.length)} of {sortedMovies.length} movies
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
-                >
-                  Previous
-                </button>
-                
-                <div className="flex gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                    // Show first page, last page, current page, and pages around current
-                    const showPage = page === 1 || 
-                                    page === totalPages || 
-                                    (page >= currentPage - 1 && page <= currentPage + 1);
-                    
-                    const showEllipsis = (page === currentPage - 2 && currentPage > 3) ||
-                                        (page === currentPage + 2 && currentPage < totalPages - 2);
-                    
-                    if (showEllipsis) {
-                      return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
-                    }
-                    
-                    if (!showPage) return null;
-                    
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-4 py-2 rounded-md transition cursor-pointer ${
-                          currentPage === page
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-gray-800 border border-gray-600 text-white hover:bg-gray-600'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-                </div>
-                
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )} */}
         </div>
         )}
       </div>
