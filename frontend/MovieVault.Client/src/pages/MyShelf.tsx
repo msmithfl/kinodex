@@ -45,7 +45,7 @@ function MyShelf() {
     fetch(`${API_BASE}/api/movies`)
       .then(r => r.json())
       .then((data: Movie[]) => {
-        setMovies([...data].filter(m => m.shelfSection).sort((a, b) => a.title.localeCompare(b.title)));
+        setMovies([...data].sort((a, b) => a.title.localeCompare(b.title)));
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -87,7 +87,7 @@ function MyShelf() {
                       key={movie.id}
                       to={`/movie/${movie.id}`}
                       title={`${movie.title}${tier !== 'other' ? ` (${tier === 'bluray' ? 'Blu-ray' : tier.toUpperCase()})` : ''}`}
-                      style={{ flexBasis: `${100 / PER_ROW}%`, flexShrink: 0, flexGrow: 0, height: `${spineHeight + 6}px` }}
+                      style={{ flexBasis: `${95 / PER_ROW}%`, flexShrink: 0, flexGrow: 0, height: `${spineHeight + 6}px` }}
                       className={`group relative flex flex-col rounded-t-sm ${getSpineColor(movie.title)} hover:brightness-125 hover:-translate-y-2 transition-all duration-150 cursor-pointer`}
                     >
                       {/* Format notch */}
