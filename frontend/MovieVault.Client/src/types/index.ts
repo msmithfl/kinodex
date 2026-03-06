@@ -5,6 +5,8 @@ export interface Movie {
     formats: string[];
     collections: string[];
     condition: string;
+    purchasePrice: number;
+    hasWatched: boolean;
     rating: number;
     review: string;
     year: number;

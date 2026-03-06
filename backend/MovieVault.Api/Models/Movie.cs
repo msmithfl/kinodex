@@ -8,6 +8,8 @@ public class Movie
     public List<string> Formats { get; set; } = new List<string>();
     public List<string> Collections { get; set; } = new List<string>();
     public required string Condition { get; set; }
+    public float PurchasePrice { get; set; }
+    public bool HasWatched { get; set; } = false;
     public float Rating { get; set; }
     public string Review { get; set; } = string.Empty;
     public int Year { get; set; }

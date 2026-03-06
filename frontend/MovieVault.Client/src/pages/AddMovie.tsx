@@ -21,6 +21,8 @@ function AddMovie() {
     formats: [],
     collections: [],
     condition: 'Like New',
+    purchasePrice: 0,
+    hasWatched: false,
     rating: 0,
     review: '',
     year: new Date().getFullYear(),

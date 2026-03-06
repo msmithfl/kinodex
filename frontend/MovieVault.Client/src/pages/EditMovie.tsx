@@ -15,6 +15,8 @@ function EditMovie() {
     formats: [],
     collections: [],
     condition: 'New',
+    purchasePrice: 0,
+    hasWatched: false,
     rating: 0,
     review: '',
     year: new Date().getFullYear(),

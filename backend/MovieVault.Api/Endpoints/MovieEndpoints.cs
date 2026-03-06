@@ -43,6 +43,8 @@ public static class MovieEndpoints
             movie.Formats = updatedMovie.Formats;
             movie.Collections = updatedMovie.Collections;
             movie.Condition = updatedMovie.Condition;
+            movie.PurchasePrice = updatedMovie.PurchasePrice;
+            movie.HasWatched = updatedMovie.HasWatched;
             movie.Rating = updatedMovie.Rating;
             movie.Review = updatedMovie.Review;
             movie.Year = updatedMovie.Year;
