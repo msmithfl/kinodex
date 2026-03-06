@@ -133,11 +133,14 @@ function Home() {
               <p className="text-gray-400">Browse your entire collection</p>
             </Link>
 
-            <div className="bg-gray-800 rounded-lg shadow-lg p-8 text-center opacity-50">
+            <Link
+              to="/stats"
+              className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-8 transition-all duration-200 transform hover:scale-105 text-center"
+            >
               <div className="text-5xl mb-4">📊</div>
               <h3 className="text-xl font-semibold mb-2">Statistics</h3>
-              <p className="text-gray-400">Coming soon...</p>
-            </div>
+              <p className="text-gray-400">View collection insights</p>
+            </Link>
           </div>
         </div>
 
