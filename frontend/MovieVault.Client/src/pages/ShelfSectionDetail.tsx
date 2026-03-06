@@ -87,7 +87,7 @@ function ShelfSectionDetail() {
         if (sectionName === 'Unshelved') {
           // Show movies with no shelf section
           filtered = data.filter((movie: Movie) => 
-            !movie.shelfSection || movie.shelfSection.trim() === ''
+            !movie.shelfSection || movie.shelfSection.trim() === '' || movie.shelfSection === 'Unshelved'
           );
         } else {
           // Show movies matching the shelf section

@@ -489,7 +489,7 @@ function MovieForm({
               onChange={(e) => setFormData({ ...formData, shelfSection: e.target.value })}
               className="flex-1 min-w-0 px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:border-gray-500 cursor-pointer"
             >
-              <option value="">None</option>
+              <option value="Unshelved">Unshelved</option>
               {shelfSections.map(section => (
                 <option key={section.id} value={section.name}>{section.name}</option>
               ))}
