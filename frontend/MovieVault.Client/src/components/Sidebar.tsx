@@ -1,6 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-  FaTv,
   FaFilm,
   FaCog,
   FaLink,
@@ -21,8 +20,8 @@ function Sidebar() {
   };
 
   const navItems = [
-    { path: "/", label: "Movies", icon: FaFilm },
-    { path: "/tvshows", label: "TV Shows", icon: FaTv },
+    { path: "/", label: "Library", icon: FaFilm },
+    // { path: "/tvshows", label: "TV Shows", icon: FaTv },
   ];
 
   const utilityItems = [
@@ -60,7 +59,7 @@ function Sidebar() {
         </div>
 
         {/* Utility Section */}
-        <div className="mt-8 pt-8 border-t border-gray-700">
+        <div className="mt-4 pt-4 border-t border-gray-700">
           <div className="space-y-1">
             {utilityItems.map((item) => {
               const Icon = item.icon;
