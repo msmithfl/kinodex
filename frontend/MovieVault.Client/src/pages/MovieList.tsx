@@ -81,6 +81,7 @@ function MovieList() {
     shelfNumber: "",
     shelfSection: "",
     hdDriveNumber: "",
+    purchasePrice: "",
     isOnPlex: "",
     hasWatched: "",
     condition: "",
@@ -255,6 +256,9 @@ function MovieList() {
       if (bulkEditData.condition !== "") {
         updates.condition = bulkEditData.condition;
       }
+      if (bulkEditData.purchasePrice !== "") {
+        updates.purchasePrice = parseFloat(bulkEditData.purchasePrice);
+      }
 
       // Update each selected movie
       const updatePromises = Array.from(selectedMovieIds).map(
@@ -286,6 +290,7 @@ function MovieList() {
         shelfNumber: "",
         shelfSection: "",
         hdDriveNumber: "",
+        purchasePrice: "",
         isOnPlex: "",
         hasWatched: "",
         condition: "",
