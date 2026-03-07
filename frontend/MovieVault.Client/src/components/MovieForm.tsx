@@ -301,7 +301,7 @@ function MovieForm({
             Purchase Price
           </label>
           <input
-            type="text"
+            type="number"
             id="purchasePrice"
             value={purchasePriceInput}
             onChange={(e) => handlePurchasePriceChange(e.target.value)}
