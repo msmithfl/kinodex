@@ -79,6 +79,18 @@ function Stats() {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   })();
 
+  const decadeData = (() => {
+    const counts: Record<string, number> = {};
+    movies.forEach((m) => {
+      if (!m.year) return;
+      const decade = `${Math.floor(m.year / 10) * 10}s`;
+      counts[decade] = (counts[decade] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([name, value]) => ({ name, value }));
+  })();
+
   const WATCHED_COLORS = ["#6366f1", "#374151"];
   const FORMAT_COLORS = ["#06b6d4", "#8b5cf6", "#a855f7", "#ec4899"];
   const GENRE_COLORS = [
@@ -97,6 +109,18 @@ function Stats() {
     "#eab308",
     "#f97316",
     "#ef4444",
+  ];
+  const DECADE_COLORS = [
+    "#06b6d4",
+    "#6366f1",
+    "#8b5cf6",
+    "#a855f7",
+    "#ec4899",
+    "#f43f5e",
+    "#f97316",
+    "#eab308",
+    "#22c55e",
+    "#14b8a6",
   ];
 
   const totalSpend = movies.reduce((sum, m) => sum + (m.purchasePrice || 0), 0);
@@ -193,6 +217,30 @@ function Stats() {
                 {onPlexCount}
               </p>
             </div>
+          </div>
+
+          {/* Monthly Spend bar chart - full width */}
+          <div className="bg-gray-800 rounded-lg p-6 mt-8 mb-8">
+            <h2 className="text-xl font-semibold mb-4">Monthly Spending</h2>
+            {monthlySpendData.length === 0 ? (
+              <p className="text-gray-400 text-center py-12">No data yet.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlySpendData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="month" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                  <YAxis
+                    tick={{ fill: '#9ca3af', fontSize: 12 }}
+                    tickFormatter={(v) => `$${v}`}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                    formatter={(value: number | undefined) => [`$${(value ?? 0).toFixed(2)}`, 'Spent']}
+                  />
+                  <Bar dataKey="total" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
 
           {/* Charts grid */}
@@ -339,6 +387,50 @@ function Stats() {
               )}
             </div>
 
+            {/* Decades donut */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Decades</h2>
+              {decadeData.length === 0 ? (
+                <p className="text-gray-400 text-center py-12">No data yet.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={decadeData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={110}
+                      paddingAngle={3}
+                      dataKey="value"
+                      labelLine={false}
+                      label={renderCustomLabel}
+                    >
+                      {decadeData.map((_, index) => (
+                        <Cell
+                          key={index}
+                          fill={DECADE_COLORS[index % DECADE_COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1f2937",
+                        border: "none",
+                        borderRadius: "8px",
+                        color: "#fff",
+                      }}
+                      formatter={(value: number | undefined) => [
+                        `${value ?? 0} movie${(value ?? 0) !== 1 ? "s" : ""}`,
+                        "",
+                      ]}
+                    />
+                    <Legend wrapperStyle={{ color: "#d1d5db" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+
             {/* Condition donut */}
             <div className="bg-gray-800 rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">Condition</h2>
@@ -384,30 +476,6 @@ function Stats() {
                 </ResponsiveContainer>
               )}
             </div>
-          </div>
-
-          {/* Monthly Spend bar chart - full width */}
-          <div className="bg-gray-800 rounded-lg p-6 mt-8">
-            <h2 className="text-xl font-semibold mb-4">Monthly Spending</h2>
-            {monthlySpendData.length === 0 ? (
-              <p className="text-gray-400 text-center py-12">No data yet.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlySpendData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="month" tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                  <YAxis
-                    tick={{ fill: '#9ca3af', fontSize: 12 }}
-                    tickFormatter={(v) => `$${v}`}
-                  />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
-                    formatter={(value: number | undefined) => [`$${(value ?? 0).toFixed(2)}`, 'Spent']}
-                  />
-                  <Bar dataKey="total" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
           </div>
         </>
       )}
