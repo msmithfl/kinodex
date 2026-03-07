@@ -24,13 +24,14 @@ function getSpineColor(title: string) {
   return SPINE_COLORS[Math.abs(hash) % SPINE_COLORS.length];
 }
 
-type FormatTier = "4k" | "bluray" | "dvd" | "other";
+type FormatTier = "4k" | "bluray" | "dvd" | "vhs" | "other";
 
 function getFormatTier(formats: string[]): FormatTier {
   const f = formats.map((s) => s.toLowerCase());
   if (f.some((s) => s.includes("4k") || s.includes("uhd"))) return "4k";
   if (f.some((s) => s.includes("blu"))) return "bluray";
   if (f.some((s) => s.includes("dvd"))) return "dvd";
+  if (f.some((s) => s.includes("vhs"))) return "vhs";
   return "other";
 }
 
@@ -77,73 +78,95 @@ function MyShelf() {
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-10 pb-8">
           <div className="space-y-8">
             {rows.map((row, rowIdx) => (
-            <div key={rowIdx}>
-              {/* Spine row — align to bottom so DVD spines stick up above the rest */}
-              <div className="flex items-end justify-center gap-0.5 min-w-max">
-                {row.map((movie) => {
-                  const tier = getFormatTier(movie.formats ?? []);
-                  const isDvd = tier === "dvd";
-                  const spineHeight = isDvd ? 185 : 160;
+              <div key={rowIdx}>
+                {/* Spine row — align to bottom so DVD spines stick up above the rest */}
+                <div className="flex items-end justify-center gap-0.5 min-w-max">
+                  {row.map((movie) => {
+                    const tier = getFormatTier(movie.formats ?? []);
+                    const isDvd = tier === "dvd";
+                    const isVhs = tier === "vhs";
+                    const spineHeight = isDvd || isVhs ? 185 : 160;
 
-                  const notchColor =
-                    tier === "4k"
-                      ? "#111111"
-                      : tier === "bluray"
-                        ? "#1d4ed8"
-                        : tier === "dvd"
-                          ? "#242322"
-                          : "#374151";
+                    const notchColor =
+                      tier === "4k"
+                        ? "#111111"
+                        : tier === "bluray"
+                          ? "#1d4ed8"
+                          : tier === "dvd"
+                            ? "#242322"
+                            : tier === "vhs"
+                              ? "#4b5563"
+                              : "#374151";
 
-                  return (
-                    <Link
-                      key={movie.id}
-                      to={`/movie/${movie.id}`}
-                      title={`${movie.title}${tier !== "other" ? ` (${tier === "bluray" ? "Blu-ray" : tier.toUpperCase()})` : ""}`}
-                      style={{ width: "20px", height: `${spineHeight + 30}px` }}
-                      className={`group relative flex flex-col rounded-md ${getSpineColor(movie.title)} hover:brightness-125 hover:-translate-y-1 translate-y-1.5 transition-all duration-150 cursor-pointer`}
-                    >
-                      {/* Format notch */}
-                      <div
-                        className="w-full rounded-t-sm shrink-0"
+                    return (
+                      <Link
+                        key={movie.id}
+                        to={`/movie/${movie.id}`}
+                        title={`${movie.title}${tier !== "other" ? ` (${tier === "bluray" ? "Blu-ray" : tier.toUpperCase()})` : ""}`}
                         style={{
-                          height: `${tier === "dvd" ? "10px" : "20px"}`,
-                          backgroundColor: notchColor,
+                          width: `${tier === "vhs" ? "40px" : "20px"}`,
+                          height: `${spineHeight + 30}px`,
                         }}
-                      />
-                      {/* Spine body with title */}
-                      <div
-                        className="relative shrink-0 flex items-center justify-center overflow-hidden"
-                        style={{
-                          height: `${spineHeight + (tier === "dvd" ? 10 : 0)}px`,
-                        }}
+                        className={`group relative flex flex-col ${tier === "vhs" ? "" : "rounded-md"} ${getSpineColor(movie.title)} hover:brightness-125 hover:-translate-y-1 translate-y-1.5 transition-all duration-150 cursor-pointer`}
                       >
-                        <span
-                          className="text-white font-semibold select-none whitespace-nowrap overflow-hidden text-ellipsis"
+                        {/* Format notch */}
+                        <div
+                          className={`${tier === "vhs" ? "hidden" : ""} w-full rounded-t-sm shrink-0`}
                           style={{
-                            writingMode: "vertical-rl",
-                            fontSize: "clamp(7px, 1.8vw, 13px)",
-                            maxHeight: `${spineHeight - 40}px`,
-                            lineHeight: 1.1,
+                            height: `${tier === "dvd" ? "10px" : "20px"}`,
+                            backgroundColor: notchColor,
+                          }}
+                        />
+                        {/* Spine body with title */}
+                        <div
+                          className="relative shrink-0 flex items-center justify-center overflow-hidden"
+                          style={{
+                            height: `${spineHeight + (tier === "dvd" ? 10 : 0)}px`,
                           }}
                         >
-                          {movie.title}
-                        </span>
-                      </div>
-                      <div
-                        className="w-full rounded-b-sm shrink-0"
-                        style={{ height: "10px", backgroundColor: notchColor }}
-                      />
-                    </Link>
-                  );
-                })}
+                          <span
+                            className="text-white font-semibold select-none whitespace-nowrap overflow-hidden text-ellipsis"
+                            style={{
+                              writingMode: "vertical-rl",
+                              fontSize: "clamp(7px, 1.8vw, 13px)",
+                              maxHeight: `${spineHeight - 40}px`,
+                              lineHeight: 1.1,
+                            }}
+                          >
+                            {movie.title}
+                          </span>
+                        </div>
+                        <div
+                          className={`${tier === "vhs" ? "hidden" : ""} w-full rounded-b-sm shrink-0`}
+                          style={{
+                            height: "10px",
+                            backgroundColor: notchColor,
+                          }}
+                        />
+                        {/* VHS spool — half circle at bottom */}
+                        {tier === "vhs" && (
+                          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+                            <div
+                              style={{
+                                width: "30px",
+                                height: "14px",
+                                backgroundColor: "#000",
+                                borderRadius: "14px 14px 0 0",
+                              }}
+                            />
+                          </div>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+                {/* Shelf plank */}
+                <div
+                  className={`h-4 rounded bg-linear-to-b from-amber-700 to-amber-900 shadow-lg w-xl md:w-full`}
+                />
+                <div className="h-2 rounded-b bg-amber-950 shadow-md w-xl md:w-full" />
               </div>
-              {/* Shelf plank */}
-              <div
-                className={`h-4 rounded bg-linear-to-b from-amber-700 to-amber-900 shadow-lg w-xl md:w-full`}
-              />
-              <div className="h-2 rounded-b bg-amber-950 shadow-md w-xl md:w-full" />
-            </div>
-          ))}
+            ))}
           </div>
 
           {movies.length === 0 && (
