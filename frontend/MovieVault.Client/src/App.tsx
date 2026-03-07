@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
@@ -18,10 +18,11 @@ import CheckoutsView from "./pages/CheckoutsView";
 import MyShelf from "./pages/MyShelf";
 import Stats from "./pages/Stats";
 import CsvExport from "./pages/CsvExport";
+import SignUpPage from "./pages/SignUpPage";
+import SignInPage from "./pages/SignInPage";
 
 function App() {
   return (
-    <Router>
       <div className="min-h-screen bg-gray-900 text-white flex flex-col">
         <Header />
         <div className="flex flex-1">
@@ -45,11 +46,12 @@ function App() {
               <Route path="/edit/:id" element={<EditMovie />} />
               <Route path="/stats" element={<Stats />} />
               <Route path="/export" element={<CsvExport />} />
+              <Route path="/sign-in/*" element={<SignInPage />} />
+              <Route path="/sign-up/*" element={<SignUpPage />} />
             </Routes>
           </main>
         </div>
       </div>
-    </Router>
   );
 }
 
