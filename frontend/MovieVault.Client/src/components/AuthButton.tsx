@@ -30,7 +30,7 @@ const AuthButton = () => {
       <SignedIn>
         <div className="flex items-center gap-3 mt-2 mr-2 ml-2">
           <button
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate("/dashboard")}
             className="text-white pb-2 pr-2 font-semibold hover:text-gray-400 transition-colors cursor-pointer"
           >
             {user?.username || user?.firstName || "User"}
@@ -45,7 +45,7 @@ const AuthButton = () => {
                       <FaUserAstronaut />
                     </span>
                   }
-                  onClick={() => navigate("/profile")}
+                  onClick={() => navigate("/dashboard")}
                 />
               </UserButton.MenuItems>
             </UserButton>
