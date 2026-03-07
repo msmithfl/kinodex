@@ -415,7 +415,7 @@ function Stats() {
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#1f2937",
+                        backgroundColor: "#FFFFFF",
                         border: "none",
                         borderRadius: "8px",
                         color: "#fff",
