@@ -11,6 +11,7 @@ import {
   FaCog,
   FaBookmark,
 } from "react-icons/fa";
+import AuthButton from "./AuthButton";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -60,6 +61,7 @@ function Header() {
             >
               + Add Movie
             </Link>
+            <AuthButton />
           </nav>
 
           {/* Mobile Buttons */}
