@@ -358,14 +358,16 @@ function MovieDetail() {
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-2">
+                    <h3 className="text-sm font-medium text-gray-400 mb-4">
                       Shelf Section
                     </h3>
-                    <p className="text-base text-white">
-                      {movie.shelfSection || (
-                        <span className="text-gray-500">None</span>
-                      )}
-                    </p>
+                    <Link
+                      to={`/shelfsections/${encodeURIComponent(movie.shelfSection || "Unshelved")}`}
+                      className="bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded-md text-white transition-colors cursor-pointer"
+                    >
+                      {movie.shelfSection || "Unshelved"}
+                    </Link>
+                    
                   </div>
                 </div>
 
