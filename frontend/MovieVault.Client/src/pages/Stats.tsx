@@ -6,6 +6,11 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from "recharts";
 import type { PieLabelRenderProps } from "recharts";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -104,6 +109,23 @@ function Stats() {
       : 0;
 
   const onPlexCount = movies.filter((m) => m.isOnPlex).length;
+
+  const monthlySpendData = (() => {
+    const counts: Record<string, number> = {};
+    movies.forEach((m) => {
+      if (!m.createdAt) return;
+      const date = new Date(m.createdAt);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      counts[key] = (counts[key] || 0) + (m.purchasePrice || 0);
+    });
+    return Object.entries(counts)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, total]) => {
+        const [year, month] = key.split('-');
+        const label = new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'short', year: '2-digit' });
+        return { month: label, total: parseFloat(total.toFixed(2)) };
+      });
+  })();
 
   const renderCustomLabel = ({
     cx,
@@ -362,6 +384,30 @@ function Stats() {
                 </ResponsiveContainer>
               )}
             </div>
+          </div>
+
+          {/* Monthly Spend bar chart - full width */}
+          <div className="bg-gray-800 rounded-lg p-6 mt-8">
+            <h2 className="text-xl font-semibold mb-4">Monthly Spending</h2>
+            {monthlySpendData.length === 0 ? (
+              <p className="text-gray-400 text-center py-12">No data yet.</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={monthlySpendData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="month" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                  <YAxis
+                    tick={{ fill: '#9ca3af', fontSize: 12 }}
+                    tickFormatter={(v) => `$${v}`}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                    formatter={(value: number | undefined) => [`$${(value ?? 0).toFixed(2)}`, 'Spent']}
+                  />
+                  <Bar dataKey="total" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </>
       )}
