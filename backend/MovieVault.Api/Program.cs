@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MovieVault.Api.Data;
 using MovieVault.Api.Endpoints;
 using MovieVault.Api.Services;
@@ -89,6 +91,22 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Clerk JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = $"https://{builder.Configuration["Clerk:Domain"]}";
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = $"https://{builder.Configuration["Clerk:Domain"]}",
+            ValidateAudience = false,
+            ValidateLifetime = true
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 // Run migrations automatically on startup
@@ -102,6 +120,8 @@ if (app.Environment.IsDevelopment())
 
 // CORS must come before UseHttpsRedirection
 app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Only redirect to HTTPS in production
 if (!app.Environment.IsDevelopment())
@@ -110,6 +130,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 // Map movie endpoints
+app.MapWebhookEndpoints();
 app.MapMovieEndpoints();
 app.MapCollectionEndpoints();
 app.MapShelfSectionEndpoints();
