@@ -98,4 +98,4 @@ export interface Checkout {
   isActive?: boolean;
 }
 
-export type SortOption = 'date' | 'alphabetic' | 'format' | 'year' | 'condition' | 'rating';
+export type SortOption = 'date' | 'alphabetic' | 'format' | 'year' | 'condition' | 'rating' | 'purchasePrice';

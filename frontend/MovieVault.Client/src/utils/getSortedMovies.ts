@@ -24,6 +24,13 @@ export const getSortedMovies = (movies: Movie[], sortBy: SortOption, sortDirecti
       case 'rating':
         sortedMovies.sort((a, b) => a.rating - b.rating);
         break;
+        case 'purchasePrice':
+          sortedMovies.sort((a, b) => {
+            const aPrice = a.purchasePrice || 0;
+            const bPrice = b.purchasePrice || 0;
+            return aPrice - bPrice;
+          });
+          break;
       case 'date':
       default:
         sortedMovies.sort((a, b) => {
