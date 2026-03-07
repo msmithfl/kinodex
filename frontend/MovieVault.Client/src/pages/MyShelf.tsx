@@ -56,7 +56,14 @@ function MyShelf() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <>
+        <SubNavigation />
+        <LoadingSpinner />
+      </>
+    );
+  }
 
   const rows: Movie[][] = [];
   for (let i = 0; i < movies.length; i += PER_ROW) {
@@ -64,11 +71,12 @@ function MyShelf() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <>
       <SubNavigation />
-      <div className="max-w-full mx-auto px-4 md:px-10 pt-2 pb-4 md:py-4 overflow-x-scroll md:overflow-auto">
-        <div className="space-y-8">
-          {rows.map((row, rowIdx) => (
+      <div className="flex flex-col h-[calc(100vh-9rem)] pt-2">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-10 pb-8">
+          <div className="space-y-8">
+            {rows.map((row, rowIdx) => (
             <div key={rowIdx}>
               {/* Spine row — align to bottom so DVD spines stick up above the rest */}
               <div className="flex items-end justify-center gap-0.5 min-w-max">
@@ -136,15 +144,16 @@ function MyShelf() {
               <div className="h-2 rounded-b bg-amber-950 shadow-md w-xl md:w-full" />
             </div>
           ))}
-        </div>
+          </div>
 
-        {movies.length === 0 && (
-          <p className="text-center text-gray-500 mt-20">
-            No movies in your collection yet.
-          </p>
-        )}
+          {movies.length === 0 && (
+            <p className="text-center text-gray-500 mt-20">
+              No movies in your collection yet.
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
