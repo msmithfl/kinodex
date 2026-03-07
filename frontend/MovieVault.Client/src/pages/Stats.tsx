@@ -18,6 +18,8 @@ import type { Movie } from "../types";
 
 function Stats() {
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [startMonth, setStartMonth] = useState("");
+  const [endMonth, setEndMonth] = useState("");
   const [loading, setLoading] = useState(true);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
@@ -134,7 +136,7 @@ function Stats() {
 
   const onPlexCount = movies.filter((m) => m.isOnPlex).length;
 
-  const monthlySpendData = (() => {
+  const allMonthlyData = (() => {
     const counts: Record<string, number> = {};
     movies.forEach((m) => {
       if (!m.createdAt) return;
@@ -147,9 +149,15 @@ function Stats() {
       .map(([key, total]) => {
         const [year, month] = key.split('-');
         const label = new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'short', year: '2-digit' });
-        return { month: label, total: parseFloat(total.toFixed(2)) };
+        return { key, month: label, total: parseFloat(total.toFixed(2)) };
       });
   })();
+
+  const monthlySpendData = allMonthlyData.filter((d) => {
+    if (startMonth && d.key < startMonth) return false;
+    if (endMonth && d.key > endMonth) return false;
+    return true;
+  });
 
   const renderCustomLabel = ({
     cx,
@@ -221,7 +229,38 @@ function Stats() {
 
           {/* Monthly Spend bar chart - full width */}
           <div className="bg-gray-800 rounded-lg p-6 mt-8 mb-8">
-            <h2 className="text-xl font-semibold mb-4">Monthly Spending</h2>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+              <h2 className="text-xl font-semibold">Monthly Spending</h2>
+              <div className="flex items-center gap-3 text-sm">
+                <label className="text-gray-400">From</label>
+                <select
+                  value={startMonth}
+                  onChange={(e) => {
+                    setStartMonth(e.target.value);
+                    if (endMonth && e.target.value > endMonth) setEndMonth("");
+                  }}
+                  className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="">All</option>
+                  {allMonthlyData.map((d) => (
+                    <option key={d.key} value={d.key}>{d.month}</option>
+                  ))}
+                </select>
+                <label className="text-gray-400">To</label>
+                <select
+                  value={endMonth}
+                  onChange={(e) => setEndMonth(e.target.value)}
+                  className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="">All</option>
+                  {allMonthlyData
+                    .filter((d) => !startMonth || d.key >= startMonth)
+                    .map((d) => (
+                      <option key={d.key} value={d.key}>{d.month}</option>
+                    ))}
+                </select>
+              </div>
+            </div>
             {monthlySpendData.length === 0 ? (
               <p className="text-gray-400 text-center py-12">No data yet.</p>
             ) : (
