@@ -38,6 +38,7 @@ interface VisibleColumns {
   format: boolean;
   condition: boolean;
   rating: boolean;
+  purchasePrice: boolean;
   dateAdded: boolean;
 }
 
@@ -66,6 +67,7 @@ function MovieList() {
           format: true,
           condition: true,
           rating: true,
+          purchasePrice: true,
           dateAdded: true,
         };
   });
@@ -521,6 +523,19 @@ function MovieList() {
                                   )}
                                 </button>
                                 <button
+                                  onClick={() => toggleColumn("purchasePrice")}
+                                  className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
+                                >
+                                  <span
+                                    className={`font-normal ${visibleColumns.purchasePrice ? "text-indigo-400" : "text-white"}`}
+                                  >
+                                    Purchase Price
+                                  </span>
+                                  {visibleColumns.purchasePrice && (
+                                    <FaCheck className="w-5 h-5 text-indigo-400" />
+                                  )}
+                                </button>
+                                <button
                                   onClick={() => toggleColumn("dateAdded")}
                                   className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
                                 >
@@ -577,6 +592,15 @@ function MovieList() {
                         <SortableTableHeader
                           label="Rating"
                           sortKey="rating"
+                          currentSortBy={sortBy}
+                          sortDirection={sortDirection}
+                          onClick={handleColumnClick}
+                        />
+                      )}
+                      {visibleColumns.purchasePrice && (
+                        <SortableTableHeader
+                          label="Purchase Price"
+                          sortKey="purchasePrice"
                           currentSortBy={sortBy}
                           sortDirection={sortDirection}
                           onClick={handleColumnClick}
@@ -673,6 +697,11 @@ function MovieList() {
                                 );
                               })}
                             </div>
+                          </td>
+                        )}
+                        {visibleColumns.purchasePrice && (
+                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
+                            {movie.purchasePrice ? `$${movie.purchasePrice.toFixed(2)}` : "-"}
                           </td>
                         )}
                         {visibleColumns.dateAdded && (
