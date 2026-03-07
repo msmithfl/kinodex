@@ -16,10 +16,39 @@ import type { PieLabelRenderProps } from "recharts";
 import LoadingSpinner from "../components/LoadingSpinner";
 import type { Movie } from "../types";
 
+function DataTable({ data }: { data: { name: string; value: number }[] }) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  return (
+    <div className="overflow-y-auto max-h-75">
+      <table className="w-full text-sm">
+        <thead className="sticky top-0 bg-gray-800">
+          <tr className="text-left text-gray-400 border-b border-gray-700">
+            <th className="pb-2 pr-4 font-medium">Name</th>
+            <th className="pb-2 pr-4 font-medium text-right">Count</th>
+            <th className="pb-2 font-medium text-right">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row) => (
+            <tr key={row.name} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <td className="py-2 pr-4 text-white">{row.name}</td>
+              <td className="py-2 pr-4 text-gray-300 text-right">{row.value}</td>
+              <td className="py-2 text-gray-300 text-right">
+                {total > 0 ? ((row.value / total) * 100).toFixed(1) : "0"}%
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function Stats() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [startMonth, setStartMonth] = useState("");
   const [endMonth, setEndMonth] = useState("");
+  const [tableView, setTableView] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
@@ -60,7 +89,7 @@ function Stats() {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   })();
 
-  const genreData = (() => {
+  const genreDataFull = (() => {
     const counts: Record<string, number> = {};
     movies.forEach((m) => {
       m.genres.forEach((g) => {
@@ -69,9 +98,10 @@ function Stats() {
     });
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
       .map(([name, value]) => ({ name, value }));
   })();
+
+  const genreData = genreDataFull.slice(0, 8);
 
   const conditionData = (() => {
     const counts: Record<string, number> = {};
@@ -286,9 +316,19 @@ function Stats() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Watched / Not Watched donut */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">Watched</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Watched</h2>
+                <button
+                  onClick={() => setTableView((p) => ({ ...p, watched: !p.watched }))}
+                  className="text-xs text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 rounded px-2 py-1 transition-colors"
+                >
+                  {tableView.watched ? "Donut" : "Table"}
+                </button>
+              </div>
               {movies.length === 0 ? (
                 <p className="text-gray-400 text-center py-12">No data yet.</p>
+              ) : tableView.watched ? (
+                <DataTable data={watchedData} />
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
@@ -326,23 +366,23 @@ function Stats() {
                   </PieChart>
                 </ResponsiveContainer>
               )}
-              {/* <div className="flex justify-around mt-2 text-center">
-                <div>
-                  <p className="text-2xl font-bold text-indigo-400">{watched}</p>
-                  <p className="text-gray-400 text-sm">Watched</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-400">{notWatched}</p>
-                  <p className="text-gray-400 text-sm">Not Watched</p>
-                </div>
-              </div> */}
             </div>
 
             {/* Formats donut */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">Formats</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Formats</h2>
+                <button
+                  onClick={() => setTableView((p) => ({ ...p, formats: !p.formats }))}
+                  className="text-xs text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 rounded px-2 py-1 transition-colors"
+                >
+                  {tableView.formats ? "Donut" : "Table"}
+                </button>
+              </div>
               {formatData.length === 0 ? (
                 <p className="text-gray-400 text-center py-12">No data yet.</p>
+              ) : tableView.formats ? (
+                <DataTable data={formatData} />
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
@@ -384,9 +424,19 @@ function Stats() {
 
             {/* Top Genres donut */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">Top Genres</h2>
-              {genreData.length === 0 ? (
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Top Genres</h2>
+                <button
+                  onClick={() => setTableView((p) => ({ ...p, genres: !p.genres }))}
+                  className="text-xs text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 rounded px-2 py-1 transition-colors"
+                >
+                  {tableView.genres ? "Donut" : "Table"}
+                </button>
+              </div>
+              {genreDataFull.length === 0 ? (
                 <p className="text-gray-400 text-center py-12">No data yet.</p>
+              ) : tableView.genres ? (
+                <DataTable data={genreDataFull} />
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
@@ -428,9 +478,19 @@ function Stats() {
 
             {/* Decades donut */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">Decades</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Decades</h2>
+                <button
+                  onClick={() => setTableView((p) => ({ ...p, decades: !p.decades }))}
+                  className="text-xs text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 rounded px-2 py-1 transition-colors"
+                >
+                  {tableView.decades ? "Donut" : "Table"}
+                </button>
+              </div>
               {decadeData.length === 0 ? (
                 <p className="text-gray-400 text-center py-12">No data yet.</p>
+              ) : tableView.decades ? (
+                <DataTable data={decadeData} />
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
@@ -472,9 +532,19 @@ function Stats() {
 
             {/* Condition donut */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">Condition</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Condition</h2>
+                <button
+                  onClick={() => setTableView((p) => ({ ...p, condition: !p.condition }))}
+                  className="text-xs text-gray-400 hover:text-white border border-gray-600 hover:border-gray-400 rounded px-2 py-1 transition-colors"
+                >
+                  {tableView.condition ? "Donut" : "Table"}
+                </button>
+              </div>
               {conditionData.length === 0 ? (
                 <p className="text-gray-400 text-center py-12">No data yet.</p>
+              ) : tableView.condition ? (
+                <DataTable data={conditionData} />
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
