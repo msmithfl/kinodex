@@ -2,6 +2,7 @@ interface BulkEditData {
   shelfNumber: string;
   shelfSection: string;
   hdDriveNumber: string;
+  purchasePrice: string;
   isOnPlex: string;
   hasWatched: string;
   condition: string;
@@ -185,6 +186,27 @@ export function BulkEditModal({
                 <option value="Damaged">Damaged</option>
               </select>
             </div>
+            <div>
+              <label
+                htmlFor="bulk-hdd-number"
+                className="block text-sm font-medium text-gray-300 mb-2"
+              >
+                Purchase Price
+              </label>
+              <input
+                id="bulk-purchase-price"
+                type="number"
+                value={bulkEditData.purchasePrice}
+                onChange={(e) =>
+                  setBulkEditData((prev) => ({
+                    ...prev,
+                    purchasePrice: e.target.value,
+                  }))
+                }
+                placeholder="Enter purchase price"
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
           </div>
 
           <div className="flex gap-3 justify-end">
@@ -195,6 +217,7 @@ export function BulkEditModal({
                   shelfNumber: "",
                   shelfSection: "",
                   hdDriveNumber: "",
+                  purchasePrice: "",
                   isOnPlex: "",
                   hasWatched: "",
                   condition: "",
