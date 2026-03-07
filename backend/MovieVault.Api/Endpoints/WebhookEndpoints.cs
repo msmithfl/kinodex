@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Svix;
 using System.Text.Json;
 using MovieVault.Api.Data;
 using MovieVault.Api.Models;
@@ -11,10 +12,34 @@ public static class WebhookEndpoints
     {
         var group = app.MapGroup("/api/webhooks");
 
-        group.MapPost("/clerk", async (HttpContext context, MovieDbContext db) =>
+        group.MapPost("/clerk", async (HttpContext context, MovieDbContext db, IConfiguration config) =>
         {
+            // Read body first (must be done before any other reads)
             using var reader = new StreamReader(context.Request.Body);
             var payload = await reader.ReadToEndAsync();
+
+            // Verify Svix signature
+            var webhookSecret = config["Clerk:WebhookSecret"];
+            if (string.IsNullOrEmpty(webhookSecret))
+            {
+                Console.WriteLine("ERROR: Clerk:WebhookSecret is not configured.");
+                return Results.Problem("Webhook secret not configured.", statusCode: 500);
+            }
+
+            try
+            {
+                var svixHeaders = new System.Net.WebHeaderCollection();
+                foreach (var header in context.Request.Headers)
+                    svixHeaders.Add(header.Key, header.Value.ToString());
+
+                var wh = new Webhook(webhookSecret);
+                wh.Verify(payload, svixHeaders);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Webhook signature verification failed: {ex.Message}");
+                return Results.Unauthorized();
+            }
 
             Console.WriteLine($"Received webhook payload: {payload}");
 
