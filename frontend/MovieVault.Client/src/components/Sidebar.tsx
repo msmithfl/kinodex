@@ -1,14 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
 import {
-  FaHome,
   FaTv,
   FaFilm,
   FaCog,
   FaLink,
   FaDownload,
+  FaChartPie,
 } from "react-icons/fa";
 import { LuClipboardPen } from "react-icons/lu";
 import { IoPersonCircleSharp } from "react-icons/io5";
+import { MdDashboard } from "react-icons/md";
 
 function Sidebar() {
   const location = useLocation();
@@ -25,11 +26,12 @@ function Sidebar() {
   ];
 
   const utilityItems = [
-    { path: "/dashboard", label: "Dashboard", icon: FaHome },
-    { path: "/match-movies", label: "Match Movies", icon: FaLink },
+    { path: "/dashboard", label: "Dashboard", icon: MdDashboard },
+    { path: "/stats", label: "Stats", icon: FaChartPie },
+    { path: "/export", label: "CSV Export", icon: FaDownload },
     { path: "/checkout", label: "Checkouts", icon: LuClipboardPen },
     { path: "/customer", label: "Customers", icon: IoPersonCircleSharp },
-    { path: "/export", label: "CSV Export", icon: FaDownload },
+    { path: "/match-movies", label: "Match Movies", icon: FaLink },
     { path: "/settings", label: "Settings", icon: FaCog },
   ];
 
