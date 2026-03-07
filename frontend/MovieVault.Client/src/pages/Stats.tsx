@@ -93,19 +93,41 @@ function Stats() {
   const WATCHED_COLORS = ["#6366f1", "#374151"];
   const FORMAT_COLORS = ["#06b6d4", "#8b5cf6", "#a855f7", "#ec4899"];
   const GENRE_COLORS = [
-    "#6366f1", "#8b5cf6", "#a855f7", "#ec4899",
-    "#f43f5e", "#f97316", "#eab308", "#22c55e",
+    "#6366f1",
+    "#8b5cf6",
+    "#a855f7",
+    "#ec4899",
+    "#f43f5e",
+    "#f97316",
+    "#eab308",
+    "#22c55e",
   ];
-  const CONDITION_COLORS = ["#22c55e", "#6366f1", "#eab308", "#f97316", "#ef4444"];
+  const CONDITION_COLORS = [
+    "#22c55e",
+    "#6366f1",
+    "#eab308",
+    "#f97316",
+    "#ef4444",
+  ];
   const DECADE_COLORS = [
-    "#06b6d4", "#6366f1", "#8b5cf6", "#a855f7", "#ec4899",
-    "#f43f5e", "#f97316", "#eab308", "#22c55e", "#14b8a6",
+    "#06b6d4",
+    "#6366f1",
+    "#8b5cf6",
+    "#a855f7",
+    "#ec4899",
+    "#f43f5e",
+    "#f97316",
+    "#eab308",
+    "#22c55e",
+    "#14b8a6",
   ];
 
   const totalSpend = movies.reduce((sum, m) => sum + (m.purchasePrice || 0), 0);
   const avgRating =
     movies.filter((m) => m.rating > 0).length > 0
-      ? movies.filter((m) => m.rating > 0).reduce((sum, m) => sum + m.rating, 0) /
+      ? movies
+          .filter((m) => m.rating > 0)
+          .reduce((sum, m) => sum + m.rating, 0) /
         movies.filter((m) => m.rating > 0).length
       : 0;
 
@@ -123,7 +145,10 @@ function Stats() {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, total]) => {
         const [year, month] = key.split("-");
-        const label = new Date(parseInt(year), parseInt(month) - 1).toLocaleString("default", {
+        const label = new Date(
+          parseInt(year),
+          parseInt(month) - 1,
+        ).toLocaleString("default", {
           month: "short",
           year: "2-digit",
         });
@@ -138,100 +163,146 @@ function Stats() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Collection Statistics</h1>
+    <div className="flex flex-col h-[calc(100vh-5rem)] pt-2">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-20 pb-8">
+        <h1 className="text-3xl font-bold my-8">Collection Statistics</h1>
 
-      {loading ? (
-        <LoadingSpinner />
-      ) : (
-        <>
-          {/* Summary cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-            <div className="bg-gray-800 rounded-lg p-5 text-center">
-              <p className="text-gray-400 text-sm mb-1">Total Movies</p>
-              <p className="text-4xl font-bold text-white">{movies.length}</p>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-5 text-center">
-              <p className="text-gray-400 text-sm mb-1">Total Spent</p>
-              <p className="text-4xl font-bold text-green-400">${totalSpend.toFixed(2)}</p>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-5 text-center">
-              <p className="text-gray-400 text-sm mb-1">Avg Rating</p>
-              <p className="text-4xl font-bold text-yellow-400">
-                {avgRating > 0 ? avgRating.toFixed(1) : "—"}
-              </p>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-5 text-center">
-              <p className="text-gray-400 text-sm mb-1">On Plex</p>
-              <p className="text-4xl font-bold text-indigo-400">{onPlexCount}</p>
-            </div>
-          </div>
-
-          {/* Monthly Spend bar chart */}
-          <div className="bg-gray-800 rounded-lg p-6 mt-8 mb-8">
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-              <h2 className="text-xl font-semibold">Monthly Spending</h2>
-              <div className="flex items-center gap-3 text-sm">
-                <label className="text-gray-400">From</label>
-                <select
-                  value={startMonth}
-                  onChange={(e) => {
-                    setStartMonth(e.target.value);
-                    if (endMonth && e.target.value > endMonth) setEndMonth("");
-                  }}
-                  className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
-                >
-                  <option value="">All</option>
-                  {allMonthlyData.map((d) => (
-                    <option key={d.key} value={d.key}>{d.month}</option>
-                  ))}
-                </select>
-                <label className="text-gray-400">To</label>
-                <select
-                  value={endMonth}
-                  onChange={(e) => setEndMonth(e.target.value)}
-                  className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
-                >
-                  <option value="">All</option>
-                  {allMonthlyData
-                    .filter((d) => !startMonth || d.key >= startMonth)
-                    .map((d) => (
-                      <option key={d.key} value={d.key}>{d.month}</option>
-                    ))}
-                </select>
+        {loading ? (
+          <LoadingSpinner />
+        ) : (
+          <>
+            {/* Summary cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+              <div className="bg-gray-800 rounded-lg p-5 text-center">
+                <p className="text-gray-400 text-sm mb-1">Total Movies</p>
+                <p className="text-4xl font-bold text-white">{movies.length}</p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-5 text-center">
+                <p className="text-gray-400 text-sm mb-1">Total Spent</p>
+                <p className="text-4xl font-bold text-green-400">
+                  ${totalSpend.toFixed(2)}
+                </p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-5 text-center">
+                <p className="text-gray-400 text-sm mb-1">Avg Rating</p>
+                <p className="text-4xl font-bold text-yellow-400">
+                  {avgRating > 0 ? avgRating.toFixed(1) : "—"}
+                </p>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-5 text-center">
+                <p className="text-gray-400 text-sm mb-1">On Plex</p>
+                <p className="text-4xl font-bold text-indigo-400">
+                  {onPlexCount}
+                </p>
               </div>
             </div>
-            {monthlySpendData.length === 0 ? (
-              <p className="text-gray-400 text-center py-12">No data yet.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={monthlySpendData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="month" tick={{ fill: "#9ca3af", fontSize: 12 }} />
-                  <YAxis
-                    tick={{ fill: "#9ca3af", fontSize: 12 }}
-                    tickFormatter={(v) => `$${v}`}
-                  />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#1f2937", border: "none", borderRadius: "8px", color: "#fff" }}
-                    formatter={(value: number | undefined) => [`$${(value ?? 0).toFixed(2)}`, "Spent"]}
-                  />
-                  <Bar dataKey="total" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
 
-          {/* Charts grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <ChartCard title="Watched" data={watchedData} colors={WATCHED_COLORS} />
-            <ChartCard title="Formats" data={formatData} colors={FORMAT_COLORS} />
-            <ChartCard title="Top Genres" data={genreData} fullData={genreDataFull} colors={GENRE_COLORS} />
-            <ChartCard title="Decades" data={decadeData} colors={DECADE_COLORS} />
-            <ChartCard title="Condition" data={conditionData} colors={CONDITION_COLORS} />
-          </div>
-        </>
-      )}
+            {/* Monthly Spend bar chart */}
+            <div className="bg-gray-800 rounded-lg p-6 mt-8 mb-8">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <h2 className="text-xl font-semibold">Monthly Spending</h2>
+                <div className="flex items-center gap-3 text-sm">
+                  <label className="text-gray-400">From</label>
+                  <select
+                    value={startMonth}
+                    onChange={(e) => {
+                      setStartMonth(e.target.value);
+                      if (endMonth && e.target.value > endMonth)
+                        setEndMonth("");
+                    }}
+                    className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">All</option>
+                    {allMonthlyData.map((d) => (
+                      <option key={d.key} value={d.key}>
+                        {d.month}
+                      </option>
+                    ))}
+                  </select>
+                  <label className="text-gray-400">To</label>
+                  <select
+                    value={endMonth}
+                    onChange={(e) => setEndMonth(e.target.value)}
+                    className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">All</option>
+                    {allMonthlyData
+                      .filter((d) => !startMonth || d.key >= startMonth)
+                      .map((d) => (
+                        <option key={d.key} value={d.key}>
+                          {d.month}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+              {monthlySpendData.length === 0 ? (
+                <p className="text-gray-400 text-center py-12">No data yet.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart
+                    data={monthlySpendData}
+                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis
+                      dataKey="month"
+                      tick={{ fill: "#9ca3af", fontSize: 12 }}
+                    />
+                    <YAxis
+                      tick={{ fill: "#9ca3af", fontSize: 12 }}
+                      tickFormatter={(v) => `$${v}`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1f2937",
+                        border: "none",
+                        borderRadius: "8px",
+                        color: "#fff",
+                      }}
+                      formatter={(value: number | undefined) => [
+                        `$${(value ?? 0).toFixed(2)}`,
+                        "Spent",
+                      ]}
+                    />
+                    <Bar dataKey="total" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+
+            {/* Charts grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <ChartCard
+                title="Watched"
+                data={watchedData}
+                colors={WATCHED_COLORS}
+              />
+              <ChartCard
+                title="Formats"
+                data={formatData}
+                colors={FORMAT_COLORS}
+              />
+              <ChartCard
+                title="Top Genres"
+                data={genreData}
+                fullData={genreDataFull}
+                colors={GENRE_COLORS}
+              />
+              <ChartCard
+                title="Decades"
+                data={decadeData}
+                colors={DECADE_COLORS}
+              />
+              <ChartCard
+                title="Condition"
+                data={conditionData}
+                colors={CONDITION_COLORS}
+              />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
