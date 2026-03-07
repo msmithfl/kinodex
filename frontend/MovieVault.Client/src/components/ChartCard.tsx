@@ -74,11 +74,13 @@ function DataTable({ data }: { data: { name: string; value: number }[] }) {
 export default function ChartCard({
   title,
   data,
+  fullData = data,
   colors,
   tooltipStyle,
 }: {
   title: string;
   data: { name: string; value: number }[];
+  fullData?: { name: string; value: number }[];
   colors: string[];
   tooltipStyle?: React.CSSProperties;
 }) {
@@ -98,7 +100,7 @@ export default function ChartCard({
       {data.length === 0 ? (
         <p className="text-gray-400 text-center py-12">No data yet.</p>
       ) : showTable ? (
-        <DataTable data={data} />
+        <DataTable data={fullData} />
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>

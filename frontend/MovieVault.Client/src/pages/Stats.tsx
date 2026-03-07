@@ -226,7 +226,7 @@ function Stats() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <ChartCard title="Watched" data={watchedData} colors={WATCHED_COLORS} />
             <ChartCard title="Formats" data={formatData} colors={FORMAT_COLORS} />
-            <ChartCard title="Top Genres" data={genreData} colors={GENRE_COLORS} />
+            <ChartCard title="Top Genres" data={genreData} fullData={genreDataFull} colors={GENRE_COLORS} />
             <ChartCard title="Decades" data={decadeData} colors={DECADE_COLORS} />
             <ChartCard title="Condition" data={conditionData} colors={CONDITION_COLORS} />
           </div>
