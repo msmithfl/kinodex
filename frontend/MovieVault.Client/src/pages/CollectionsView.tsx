@@ -121,6 +121,7 @@ function CollectionsView() {
     <>
       <SubNavigation />
       <div className="flex flex-col h-[calc(100vh-9rem)] pt-2">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-10 pb-8">
         {/* Scrollable content section */}
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
           {collections.length === 0 ? (
@@ -241,6 +242,7 @@ function CollectionsView() {
           </div>
         </div>
       )}
+      </div>
     </>
   );
 }
