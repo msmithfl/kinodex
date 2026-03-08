@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MovieVault.Api.Data;
 using MovieVault.Api.Models;
+using System.Security.Claims;
 using System.Text;
 
 namespace MovieVault.Api.Endpoints;
@@ -12,10 +13,14 @@ public static class MovieEndpoints
         var group = app.MapGroup("/api/movies");
 
         // GET all movies
-        group.MapGet("/", async (MovieDbContext db) =>
+        group.MapGet("/", async (ClaimsPrincipal user, MovieDbContext db) =>
         {
-            return await db.Movies.OrderByDescending(m => m.CreatedAt).ToListAsync();
-        });
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            return await db.Movies
+                .Where(m => m.UserId == userId)
+                .OrderByDescending(m => m.CreatedAt)
+                .ToListAsync();
+        }).RequireAuthorization();
 
         // GET movie by id
         group.MapGet("/{id}", async (int id, MovieDbContext db) =>

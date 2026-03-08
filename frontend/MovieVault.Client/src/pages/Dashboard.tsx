@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import type { Movie } from "../types";
@@ -11,6 +12,7 @@ interface Stats {
 }
 
 function Home() {
+  const { getToken } = useAuth();
   const [stats, setStats] = useState<Stats>({
     total: 0,
     dvd: 0,
@@ -29,7 +31,10 @@ function Home() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch(API_URL);
+      const token = await getToken();
+      const response = await fetch(API_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const movies: Movie[] = await response.json();
 

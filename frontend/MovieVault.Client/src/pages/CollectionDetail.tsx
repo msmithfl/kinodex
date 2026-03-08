@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { useParams, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Counter from "../components/Counter";
@@ -14,6 +15,7 @@ import SubNavigation from "../components/SubNavigation";
 import type { Movie, Collection } from "../types";
 
 function CollectionDetail() {
+  const { getToken } = useAuth();
   const { collectionName } = useParams<{ collectionName: string }>();
   const navigate = useNavigate();
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -93,9 +95,14 @@ function CollectionDetail() {
 
   const fetchMovies = async () => {
     try {
+      const token = await getToken();
       const [moviesRes, collectionsRes] = await Promise.all([
-        fetch(MOVIES_URL),
-        fetch(COLLECTIONS_URL),
+        fetch(MOVIES_URL, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(COLLECTIONS_URL, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       if (moviesRes.ok) {
@@ -129,8 +136,12 @@ function CollectionDetail() {
 
   const fetchListItems = async (collectionId: number) => {
     try {
+      const token = await getToken();
       const response = await fetch(
         `${API_BASE}/api/collections/${collectionId}/items`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
       if (response.ok) {
         const data = await response.json();
@@ -186,8 +197,10 @@ function CollectionDetail() {
     if (!collection) return;
 
     try {
+      const token = await getToken();
       const response = await fetch(`${COLLECTIONS_URL}/${collection.id}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -265,12 +278,14 @@ function CollectionDetail() {
       : 0;
 
     try {
+      const token = await getToken();
       const response = await fetch(
         `${API_BASE}/api/collections/${collection.id}/items`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             title: movie.title,
@@ -296,10 +311,12 @@ function CollectionDetail() {
     if (!collection) return;
 
     try {
+      const token = await getToken();
       const response = await fetch(
         `${API_BASE}/api/collections/${collection.id}/items/${itemId}`,
         {
           method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
 

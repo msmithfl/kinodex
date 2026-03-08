@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EmptyState from "../components/EmptyState";
@@ -15,6 +16,7 @@ import { getRelativeTimeString } from "../utils/dateUtils";
 import type { Checkout, Customer, Movie } from "../types";
 
 function CheckoutsView() {
+  const { getToken } = useAuth();
   const [checkouts, setCheckouts] = useState<Checkout[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -81,7 +83,10 @@ function CheckoutsView() {
 
   const fetchMovies = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/movies`);
+      const token = await getToken();
+      const response = await fetch(`${API_BASE}/api/movies`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const data = await response.json();
         // Only show movies that aren't currently checked out
