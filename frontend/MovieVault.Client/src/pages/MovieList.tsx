@@ -132,7 +132,10 @@ function MovieList() {
 
   const fetchShelfSections = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/shelfsections`);
+      const token = await getToken();
+      const response = await fetch(`${API_BASE}/api/shelfsections`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const data = await response.json();
         setShelfSections(data.map((section: any) => section.name).sort());
