@@ -98,7 +98,7 @@ public static class MovieEndpoints
                 var genres = string.Join("|", movie.Genres);
                 var collections = string.Join("|", movie.Collections);
                 var title = movie.Title.Replace("\"", "\"\"");
-                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",{movie.Condition},{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},{movie.ShelfSection},{movie.HDDriveNumber},{movie.TmdbId},{movie.CreatedAt:yyyy-MM-dd}");
+                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",{movie.Condition},{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},{movie.ShelfSection},{movie.HDDriveNumber},{movie.TmdbId},{movie.PosterPath},{movie.ProductPosterPath},{movie.CreatedAt:yyyy-MM-dd}");
             }
 
             var bytes = Encoding.UTF8.GetBytes(csv.ToString());
@@ -138,7 +138,7 @@ public static class MovieEndpoints
                 try
                 {
                     var fields = ParseCsvLine(lines[i]);
-                    if (fields.Length < 16) continue;
+                    if (fields.Length < 18) continue;
 
                     var upc = fields[1];
                     if (!string.IsNullOrEmpty(upc) && existingUpcs.Contains(upc))
@@ -165,7 +165,9 @@ public static class MovieEndpoints
                         ShelfSection = fields[12],
                         HDDriveNumber = int.TryParse(fields[13], out var hd) ? hd : 0,
                         TmdbId = int.TryParse(fields[14], out var tmdb) ? tmdb : null,
-                        CreatedAt = DateTime.TryParse(fields[15], out var dt) ? dt.ToUniversalTime() : DateTime.UtcNow,
+                        PosterPath = fields[15],
+                        ProductPosterPath = fields[16],
+                        CreatedAt = DateTime.TryParse(fields[17], out var dt) ? dt.ToUniversalTime() : DateTime.UtcNow,
                     };
 
                     db.Movies.Add(movie);
