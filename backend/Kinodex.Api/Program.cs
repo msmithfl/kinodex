@@ -129,23 +129,37 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
-// One-time admin: assign current user's ID to all shelf sections missing a UserId
-// DELETE this endpoint after running it once in production.
-// app.MapPost("/api/admin/assign-shelfsections", async (System.Security.Claims.ClaimsPrincipal user, MovieDbContext db) =>
-// {
-//     var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-//     if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+// One-time admin: assign current user's ID to all records missing a UserId.
+// Safe to call multiple times — only updates rows with empty/null UserId.
+app.MapPost("/api/admin/assign-user-ids", async (System.Security.Claims.ClaimsPrincipal user, MovieDbContext db) =>
+{
+    var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
 
-//     var sections = await db.ShelfSections
-//         .Where(s => s.UserId == null || s.UserId == string.Empty)
-//         .ToListAsync();
+    var sections = await db.ShelfSections
+        .Where(s => s.UserId == null || s.UserId == string.Empty)
+        .ToListAsync();
+    foreach (var s in sections) s.UserId = userId;
 
-//     foreach (var s in sections)
-//         s.UserId = userId;
+    var collections = await db.Collections
+        .Where(c => c.UserId == null || c.UserId == string.Empty)
+        .ToListAsync();
+    foreach (var c in collections) c.UserId = userId;
 
-//     await db.SaveChangesAsync();
-//     return Results.Ok(new { updated = sections.Count, userId });
-// }).RequireAuthorization();
+    var collectionItems = await db.CollectionListItems
+        .Where(i => i.UserId == null || i.UserId == string.Empty)
+        .ToListAsync();
+    foreach (var i in collectionItems) i.UserId = userId;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(new
+    {
+        userId,
+        updatedShelfSections = sections.Count,
+        updatedCollections = collections.Count,
+        updatedCollectionItems = collectionItems.Count
+    });
+}).RequireAuthorization();
 
 // Map movie endpoints
 app.MapWebhookEndpoints();
