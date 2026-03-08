@@ -126,11 +126,11 @@ function AddMovie() {
   const addCollection = async () => {
     if (newCollection && !collections.find((c) => c.name === newCollection)) {
       try {
+        const token = await getToken();
+        const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
         const response = await fetch(COLLECTIONS_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({ name: newCollection }),
         });
 
@@ -160,11 +160,11 @@ function AddMovie() {
       !shelfSections.find((s) => s.name === newShelfSection)
     ) {
       try {
+        const token = await getToken();
+        const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
         const response = await fetch(SHELF_SECTIONS_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({ name: newShelfSection }),
         });
 

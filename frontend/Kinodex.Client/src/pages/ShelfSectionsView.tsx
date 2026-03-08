@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import CollectionCard from "../components/CollectionCard";
-import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
 import type { Movie, ShelfSection } from "../types";
@@ -112,10 +111,7 @@ function ShelfSectionsView() {
       <SubNavigation />
       <div className="flex h-[calc(100vh-9rem)] pt-2">
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pt-2">
-          {shelfSections.length === 0 ? (
-            <EmptyState message="No shelf sections yet. " />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               <button
                 onClick={() => setShowCreateInput(true)}
                 className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 border-2 border-dashed border-gray-600 hover:border-indigo-500 flex items-center justify-center cursor-pointer"
@@ -151,7 +147,6 @@ function ShelfSectionsView() {
                 );
               })}
             </div>
-          )}
 
           {/* Create Shelf Section Modal */}
           {showCreateInput && (

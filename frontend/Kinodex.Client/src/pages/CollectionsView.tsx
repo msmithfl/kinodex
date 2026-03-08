@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import type { CollectionListItem } from "../types";
 import CollectionCard from "../components/CollectionCard";
-import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
 import type { Movie, Collection } from "../types";
@@ -135,14 +134,9 @@ function CollectionsView() {
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-10 pb-8">
         {/* Scrollable content section */}
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
-          {collections.length === 0 ? (
-            <EmptyState message="No collections yet." />
-          ) : (
-            <>
+          <>
               {/* Standard Collections Section */}
-              {collections.filter((c) => !c.isDirectorCollection).length >
-                0 && (
-                <div className="mb-12 pt-2">
+              <div className="mb-12 pt-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     <button
                       onClick={() => setShowCreateInput(true)}
@@ -173,14 +167,12 @@ function CollectionsView() {
                       })}
                   </div>
                 </div>
-              )}
 
               {/* Director Collections Section */}
               {collections.filter((c) => c.isDirectorCollection).length > 0 && (
                 <div>
                   <div className="flex mb-4 gap-4">
                     <h2 className="text-2xl font-bold">Director Collections</h2>
-                    {/* <Counter count={collections.filter(c => c.isDirectorCollection).length} /> */}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {collections
@@ -206,7 +198,6 @@ function CollectionsView() {
                 </div>
               )}
             </>
-          )}
         </div>
       </div>
 
