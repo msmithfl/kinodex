@@ -8,7 +8,7 @@ function CsvExport() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ imported: number; errors: string[] } | null>(null);
+  const [importResult, setImportResult] = useState<{ imported: number; skipped: number; errors: string[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
@@ -68,7 +68,9 @@ function CsvExport() {
 
       const result = await response.json();
       setImportResult(result);
-      setSuccess(`Successfully imported ${result.imported} movie${result.imported !== 1 ? "s" : ""}.`);
+      const parts = [`Imported ${result.imported} movie${result.imported !== 1 ? "s" : ""}`];
+      if (result.skipped > 0) parts.push(`${result.skipped} skipped (already in collection)`);
+      setSuccess(parts.join(" · ") + ".");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Import failed. Please try again.");
     } finally {
