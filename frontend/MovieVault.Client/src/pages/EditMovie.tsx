@@ -111,11 +111,14 @@ function EditMovie() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = await getToken();
+      const headers = { 
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      };
       const response = await fetch(`${API_URL}/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(formData),
       });
 
@@ -130,11 +133,14 @@ function EditMovie() {
   const addCollection = async () => {
     if (newCollection && !collections.find((c) => c.name === newCollection)) {
       try {
+        const token = await getToken();
+        const headers = { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        };
         const response = await fetch(COLLECTIONS_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({ name: newCollection }),
         });
 
@@ -164,11 +170,14 @@ function EditMovie() {
       !shelfSections.find((s) => s.name === newShelfSection)
     ) {
       try {
+        const token = await getToken();
+        const headers = { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        };
         const response = await fetch(SHELF_SECTIONS_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({ name: newShelfSection }),
         });
 
