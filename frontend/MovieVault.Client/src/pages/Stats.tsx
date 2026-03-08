@@ -128,13 +128,17 @@ function Stats() {
   ];
 
   const totalSpend = movies.reduce((sum, m) => sum + (m.purchasePrice || 0), 0);
+  const ratedMovies = movies.filter((m) => m.rating > 0);
   const avgRating =
-    movies.filter((m) => m.rating > 0).length > 0
-      ? movies
-          .filter((m) => m.rating > 0)
-          .reduce((sum, m) => sum + m.rating, 0) /
-        movies.filter((m) => m.rating > 0).length
+    ratedMovies.length > 0
+      ? ratedMovies.reduce((sum, m) => sum + m.rating, 0) / ratedMovies.length
       : 0;
+
+  const ratingBuckets = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0];
+  const ratingDistData = ratingBuckets.map((r) => ({
+    label: r % 1 === 0 ? r.toFixed(0) : r.toFixed(1),
+    count: movies.filter((m) => m.rating === r).length,
+  }));
 
   const onPlexCount = movies.filter((m) => m.isOnPlex).length;
 
@@ -178,23 +182,51 @@ function Stats() {
           <>
             {/* Summary cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-              <div className="bg-gray-800 rounded-lg p-5 text-center">
+              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center">
                 <p className="text-gray-400 text-sm mb-1">Total Movies</p>
                 <p className="text-4xl font-bold text-white">{movies.length}</p>
               </div>
-              <div className="bg-gray-800 rounded-lg p-5 text-center">
+              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center">
                 <p className="text-gray-400 text-sm mb-1">Total Spent</p>
                 <p className="text-4xl font-bold text-green-400">
                   ${totalSpend.toFixed(2)}
                 </p>
               </div>
-              <div className="bg-gray-800 rounded-lg p-5 text-center">
-                <p className="text-gray-400 text-sm mb-1">Avg Rating</p>
-                <p className="text-4xl font-bold text-yellow-400">
-                  {avgRating > 0 ? avgRating.toFixed(1) : "—"}
-                </p>
+              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 col-span-2 md:col-span-1">
+                <div className="flex items-baseline justify-between mb-2">
+                  <p className="text-gray-400 text-sm">Ratings</p>
+                  <p className="text-yellow-400 text-sm font-bold">
+                    Avg {avgRating > 0 ? avgRating.toFixed(1) : "—"}
+                  </p>
+                </div>
+                <ResponsiveContainer width="100%" height={72}>
+                  <BarChart
+                    data={ratingDistData}
+                    margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                    barCategoryGap="8%"
+                  >
+                    <XAxis dataKey="label" hide />
+                    <YAxis hide domain={[0, "auto"]} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1f2937",
+                        border: "none",
+                        borderRadius: "8px",
+                        color: "#fff",
+                      }}
+                      formatter={(value: number | undefined) => [value ?? 0, "Movies"]}
+                      labelFormatter={(label) => `★ ${label}`}
+                    />
+                    <Bar
+                      dataKey="count"
+                      fill="#eab308"
+                      radius={[2, 2, 0, 0]}
+                      minPointSize={2}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-              <div className="bg-gray-800 rounded-lg p-5 text-center">
+              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center">
                 <p className="text-gray-400 text-sm mb-1">On Plex</p>
                 <p className="text-4xl font-bold text-indigo-400">
                   {onPlexCount}
