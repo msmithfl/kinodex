@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import BarcodeScanner from "../components/BarcodeScanner";
 import ProductImageSelector from "../components/ProductImageSelector";
 import MovieForm from "../components/MovieForm";
@@ -11,6 +11,7 @@ import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 function AddMovie() {
   const navigate = useNavigate();
   const { user } = useUser();
+  const { getToken } = useAuth();
   const [entryMode, setEntryMode] = useState<"choice" | "manual" | "search">(
     "choice",
   );
@@ -78,9 +79,11 @@ function AddMovie() {
     // Load collections and shelf sections from API
     const fetchData = async () => {
       try {
+        const token = await getToken();
+        const headers = { Authorization: `Bearer ${token}` };
         const [collectionsRes, shelfSectionsRes] = await Promise.all([
-          fetch(COLLECTIONS_URL),
-          fetch(SHELF_SECTIONS_URL),
+          fetch(COLLECTIONS_URL, { headers }),
+          fetch(SHELF_SECTIONS_URL, { headers }),
         ]);
 
         if (collectionsRes.ok) {
