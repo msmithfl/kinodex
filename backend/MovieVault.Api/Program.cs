@@ -142,6 +142,23 @@ app.MapTmdbMatchingEndpoints();
 app.MapCustomerEndpoints();
 app.MapCheckoutEndpoints();
 
+// ONE-TIME migration: assigns all movies to the calling user. Remove after use.
+app.MapPost("/api/admin/assign-movies", async (HttpContext context, MovieDbContext db) =>
+{
+    var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var unowned = await db.Movies
+        .Where(m => m.UserId == null || m.UserId == "")
+        .ToListAsync();
+
+    foreach (var movie in unowned)
+        movie.UserId = userId;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(new { updated = unowned.Count, userId });
+}).RequireAuthorization();
+
 // Use PORT from Railway if available, bind to all interfaces
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5156";
 app.Urls.Add($"http://0.0.0.0:{port}");
