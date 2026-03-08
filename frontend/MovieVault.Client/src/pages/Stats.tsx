@@ -187,9 +187,9 @@ function Stats() {
                 <p className="text-4xl font-bold text-white">{movies.length}</p>
               </div>
               <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center">
-                <p className="text-gray-400 text-sm mb-1">Total Spent</p>
-                <p className="text-4xl font-bold text-green-400">
-                  ${totalSpend.toFixed(2)}
+                <p className="text-gray-400 text-sm mb-1">On Plex</p>
+                <p className="text-4xl font-bold text-indigo-400">
+                  {onPlexCount}
                 </p>
               </div>
               <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 col-span-2 md:col-span-1">
@@ -226,10 +226,10 @@ function Stats() {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center">
-                <p className="text-gray-400 text-sm mb-1">On Plex</p>
-                <p className="text-4xl font-bold text-indigo-400">
-                  {onPlexCount}
+              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center  col-span-2 md:col-span-1">
+                <p className="text-gray-400 text-sm mb-1">Total Spent</p>
+                <p className="text-4xl font-bold text-green-400">
+                  ${totalSpend.toFixed(2)}
                 </p>
               </div>
             </div>
