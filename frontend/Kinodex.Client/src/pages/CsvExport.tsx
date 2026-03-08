@@ -81,10 +81,7 @@ function CsvExport() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Export Database</h1>
-      <p className="text-gray-400 mb-8">
-        Download your movie collection as a CSV file.
-      </p>
+      <h1 className="text-3xl font-bold mb-6">Export/Import Database</h1>
 
       {error && (
         <div className="mb-4 px-4 py-3 bg-red-900/40 border border-red-600 rounded-md text-red-300 text-sm">
