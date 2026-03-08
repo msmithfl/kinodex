@@ -8,6 +8,6 @@ Current features include:
 - Personal collections/shelves
 - Shelf view (experimental)
 - Collection list tracking
-- CSV export
+- CSV export/import
 
 ![Alt text](/frontend/Kinodex.Client/public/library-screenshot.png)
