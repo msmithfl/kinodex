@@ -124,7 +124,13 @@ public static class MovieEndpoints
             if (lines.Count < 2)
                 return Results.BadRequest(new { error = "CSV file is empty or has no data rows." });
 
+            var existingUpcs = await db.Movies
+                .Where(m => m.UserId == userId && m.UpcNumber != null && m.UpcNumber != "")
+                .Select(m => m.UpcNumber)
+                .ToHashSetAsync();
+
             var imported = 0;
+            var skipped = 0;
             var errors = new List<string>();
 
             for (int i = 1; i < lines.Count; i++)
@@ -133,6 +139,13 @@ public static class MovieEndpoints
                 {
                     var fields = ParseCsvLine(lines[i]);
                     if (fields.Length < 16) continue;
+
+                    var upc = fields[1];
+                    if (!string.IsNullOrEmpty(upc) && existingUpcs.Contains(upc))
+                    {
+                        skipped++;
+                        continue;
+                    }
 
                     var movie = new Movie
                     {
@@ -165,7 +178,7 @@ public static class MovieEndpoints
             }
 
             await db.SaveChangesAsync();
-            return Results.Ok(new { imported, errors });
+            return Results.Ok(new { imported, skipped, errors });
         }).RequireAuthorization();
     }
 
