@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import MovieList from "./pages/MovieList";
 import AddMovie from "./pages/AddMovie";
@@ -23,35 +24,47 @@ import SignInPage from "./pages/SignInPage";
 
 function App() {
   return (
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-        <Header />
-        <div className="flex flex-1">
-          <Sidebar />
-          <main className="flex-1 overflow-x-hidden">
-            <Routes>
-              <Route path="/" element={<MovieList />} />
-              <Route path="/my-shelf" element={<MyShelf />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/collections" element={<CollectionsView />} />
-              <Route path="/collections/:collectionName" element={<CollectionDetail />} />
-              <Route path="/shelfsections" element={<ShelfSectionsView />} />
-              <Route path="/shelfsections/:sectionName" element={<ShelfSectionDetail />} />
-              <Route path="/genres" element={<GenresView />} />
-              <Route path="/genres/:genreName" element={<GenreDetail />} />
-              <Route path="/match-movies" element={<MatchMovies />} />
-              <Route path="/checkout" element={<CheckoutsView />} />
-              <Route path="/customer" element={<CustomersView />} />
-              <Route path="/add" element={<AddMovie />} />
-              <Route path="/movie/:id" element={<MovieDetail />} />
-              <Route path="/edit/:id" element={<EditMovie />} />
-              <Route path="/stats" element={<Stats />} />
-              <Route path="/export" element={<CsvExport />} />
-              <Route path="/sign-in/*" element={<SignInPage />} />
-              <Route path="/sign-up/*" element={<SignUpPage />} />
-            </Routes>
-          </main>
-        </div>
-      </div>
+    <Routes>
+      {/* Auth pages — no header/sidebar */}
+      <Route path="/sign-in/*" element={<SignInPage />} />
+      <Route path="/sign-up/*" element={<SignUpPage />} />
+
+      {/* App layout — all protected */}
+      <Route
+        path="*"
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+              <Header />
+              <div className="flex flex-1">
+                <Sidebar />
+                <main className="flex-1 overflow-x-hidden">
+                  <Routes>
+                    <Route path="/" element={<MovieList />} />
+                    <Route path="/my-shelf" element={<MyShelf />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/collections" element={<CollectionsView />} />
+                    <Route path="/collections/:collectionName" element={<CollectionDetail />} />
+                    <Route path="/shelfsections" element={<ShelfSectionsView />} />
+                    <Route path="/shelfsections/:sectionName" element={<ShelfSectionDetail />} />
+                    <Route path="/genres" element={<GenresView />} />
+                    <Route path="/genres/:genreName" element={<GenreDetail />} />
+                    <Route path="/match-movies" element={<MatchMovies />} />
+                    <Route path="/checkout" element={<CheckoutsView />} />
+                    <Route path="/customer" element={<CustomersView />} />
+                    <Route path="/add" element={<AddMovie />} />
+                    <Route path="/movie/:id" element={<MovieDetail />} />
+                    <Route path="/edit/:id" element={<EditMovie />} />
+                    <Route path="/stats" element={<Stats />} />
+                    <Route path="/export" element={<CsvExport />} />
+                  </Routes>
+                </main>
+              </div>
+            </div>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 }
 
