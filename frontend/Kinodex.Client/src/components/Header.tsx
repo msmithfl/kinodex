@@ -1,7 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { HiMenu, HiX, HiPlus } from "react-icons/hi";
-import { RiMovie2Fill } from "react-icons/ri";
 import {
   FaHome,
   // FaTv,
