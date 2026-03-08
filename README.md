@@ -8,4 +8,4 @@ Current features include:
 - Personal collections/shelves
 - Shelf view (experimental)
 - Collection list tracking
-- CSV import/export
+- CSV export
