@@ -3,6 +3,7 @@ import { useState } from "react";
 import { BsSafe2 } from "react-icons/bs";
 import { PiFilmReel } from "react-icons/pi";
 import { HiMenu, HiX, HiPlus } from "react-icons/hi";
+import { RiMovie2Fill } from "react-icons/ri";
 import {
   FaHome,
   FaTv,
@@ -41,10 +42,10 @@ function Header() {
         <div className="flex items-center justify-between">
           <Link
             to="/"
-            className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+            className="flex items-end gap-1 hover:opacity-80 transition-opacity"
           >
-            <PiFilmReel className="w-11 h-11 text-white" />
-            <BsSafe2 className="w-10 h-10 text-white" />
+            <RiMovie2Fill className="w-11 h-11 text-white" />
+            <p className="text-white font-bold text-xl">Kinodex</p>
           </Link>
 
           {/* Desktop Navigation */}
