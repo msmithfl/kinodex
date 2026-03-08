@@ -81,9 +81,9 @@ function CsvExport() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">Export / Import</h1>
+      <h1 className="text-3xl font-bold mb-2">Export Database</h1>
       <p className="text-gray-400 mb-8">
-        Download or upload your movie collection as a CSV file.
+        Download your movie collection as a CSV file.
       </p>
 
       {error && (
@@ -115,7 +115,7 @@ function CsvExport() {
       </div>
 
       {/* Import */}
-      <div className="bg-gray-800 rounded-lg p-8">
+      <div className="hidden bg-gray-800 rounded-lg p-8">
         <h2 className="text-lg font-semibold mb-2">Import</h2>
         <p className="text-gray-400 text-sm mb-4">
           Upload a CSV file exported from Movie Vault to import movies into your collection.
