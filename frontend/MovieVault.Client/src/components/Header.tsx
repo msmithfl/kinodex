@@ -1,7 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { BsSafe2 } from "react-icons/bs";
-import { PiFilmReel } from "react-icons/pi";
 import { HiMenu, HiX, HiPlus } from "react-icons/hi";
 import { RiMovie2Fill } from "react-icons/ri";
 import {
