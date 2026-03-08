@@ -202,7 +202,7 @@ function EditMovie() {
     setFormData({ ...formData, upcNumber: code });
     setScannedUpc(code);
     setShowScanner(false);
-    setShowProductImageSelector(true);
+    //setShowProductImageSelector(true);
   };
 
   const handleProductImageSelect = (imageUrl: string) => {
