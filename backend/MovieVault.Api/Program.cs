@@ -129,6 +129,24 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+// One-time admin: assign current user's ID to all shelf sections missing a UserId
+// DELETE this endpoint after running it once in production.
+app.MapPost("/api/admin/assign-shelfsections", async (System.Security.Claims.ClaimsPrincipal user, MovieDbContext db) =>
+{
+    var userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+    var sections = await db.ShelfSections
+        .Where(s => s.UserId == null || s.UserId == string.Empty)
+        .ToListAsync();
+
+    foreach (var s in sections)
+        s.UserId = userId;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(new { updated = sections.Count, userId });
+}).RequireAuthorization();
+
 // Map movie endpoints
 app.MapWebhookEndpoints();
 app.MapMovieEndpoints();
