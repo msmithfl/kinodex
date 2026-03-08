@@ -174,8 +174,11 @@ function ShelfSectionDetail() {
     if (!section) return;
 
     try {
+      const token = await getToken();
+      const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
       const response = await fetch(`${SECTIONS_URL}/${section.id}`, {
         method: "DELETE",
+        headers,
       });
 
       if (response.ok) {
