@@ -132,6 +132,9 @@ function Header() {
                   );
                 })}
               </div>
+              <div className="flex items-center justify-center mt-4 border-t border-gray-700 pt-4">
+                <AuthButton />
+              </div>
             </div>
           </nav>
         )}
