@@ -115,7 +115,7 @@ function CsvExport() {
       </div>
 
       {/* Import */}
-      <div className="hidden bg-gray-800 rounded-lg p-8">
+      <div className="bg-gray-800 rounded-lg p-8">
         <h2 className="text-lg font-semibold mb-2">Import</h2>
         <p className="text-gray-400 text-sm mb-4">
           Upload a CSV file exported from Movie Vault to import movies into your collection.
