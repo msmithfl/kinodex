@@ -147,7 +147,10 @@ function MovieList() {
 
   const fetchCollections = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/collections`);
+      const token = await getToken();
+      const response = await fetch(`${API_BASE}/api/collections`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const data = await response.json();
         setCollections(data.map((collection: any) => collection.name).sort());
