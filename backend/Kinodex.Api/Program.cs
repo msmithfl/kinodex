@@ -137,17 +137,17 @@ app.MapPost("/api/admin/assign-user-ids", async (System.Security.Claims.ClaimsPr
     if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
 
     var sections = await db.ShelfSections
-        .Where(s => s.UserId == null || s.UserId == string.Empty)
+        .Where(s => s.UserId == null || s.UserId == string.Empty || s.UserId == "0")
         .ToListAsync();
     foreach (var s in sections) s.UserId = userId;
 
     var collections = await db.Collections
-        .Where(c => c.UserId == null || c.UserId == string.Empty)
+        .Where(c => c.UserId == null || c.UserId == string.Empty || c.UserId == "0")
         .ToListAsync();
     foreach (var c in collections) c.UserId = userId;
 
     var collectionItems = await db.CollectionListItems
-        .Where(i => i.UserId == null || i.UserId == string.Empty)
+        .Where(i => i.UserId == null || i.UserId == string.Empty || i.UserId == "0")
         .ToListAsync();
     foreach (var i in collectionItems) i.UserId = userId;
 
