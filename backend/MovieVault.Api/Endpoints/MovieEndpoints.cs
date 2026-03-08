@@ -39,6 +39,7 @@ public static class MovieEndpoints
             var movie = await db.Movies.FindAsync(id);
             if (movie is null) return Results.NotFound();
 
+            movie.UserId = updatedMovie.UserId;
             movie.Title = updatedMovie.Title;
             movie.UpcNumber = updatedMovie.UpcNumber;
             movie.Formats = updatedMovie.Formats;
