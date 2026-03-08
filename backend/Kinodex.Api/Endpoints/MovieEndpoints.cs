@@ -90,7 +90,7 @@ public static class MovieEndpoints
                 .ToListAsync();
 
             var csv = new StringBuilder();
-            csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Date Added");
+            csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Product Poster Path,Date Added");
 
             foreach (var movie in movies)
             {
