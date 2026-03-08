@@ -98,7 +98,7 @@ public static class MovieEndpoints
                 var genres = string.Join("|", movie.Genres);
                 var collections = string.Join("|", movie.Collections);
                 var title = movie.Title.Replace("\"", "\"\"");
-                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",{movie.Condition},{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},{movie.ShelfSection},{movie.HDDriveNumber},{movie.TmdbId},{movie.PosterPath},{movie.ProductPosterPath},{movie.CreatedAt:yyyy-MM-dd}");
+                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",\"{movie.Condition}\",{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},\"{movie.ShelfSection}\",{movie.HDDriveNumber},{movie.TmdbId},\"{movie.PosterPath}\",\"{movie.ProductPosterPath}\",{movie.CreatedAt:yyyy-MM-dd}");
             }
 
             var bytes = Encoding.UTF8.GetBytes(csv.ToString());
