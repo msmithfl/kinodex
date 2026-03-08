@@ -1,9 +1,0 @@
-namespace MovieVault.Api.Models;
-
-public class Collection
-{
-    public int Id { get; set; }
-    public required string Name { get; set; }
-    public bool IsDirectorCollection { get; set; } = false;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-}

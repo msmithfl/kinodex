@@ -1,1 +1,1 @@
-MovieVault web app
+Kinodex web app
