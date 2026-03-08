@@ -1,7 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { HiMenu, HiX, HiPlus } from "react-icons/hi";
-import { RiMovie2Fill } from "react-icons/ri";
 import {
   FaHome,
   // FaTv,
@@ -37,14 +36,18 @@ function Header() {
   return (
     <header className="bg-gray-800 border-b border-gray-700 relative">
       <div className="mx-auto px-8 py-4">
-        <div className="flex items-center justify-between">
-          <Link
-            to="/"
-            className="flex items-end gap-1 hover:opacity-80 transition-opacity"
-          >
-            <RiMovie2Fill className="w-11 h-11 text-white" />
-            <p className="text-white font-bold text-xl">Kinodex</p>
-          </Link>
+        <div className="flex items-end justify-between">
+  <Link
+    to="/"
+    className="flex items-end gap-1"
+  >
+    <img
+      src="/kinodex-logo.png"
+      alt="Kinodex"
+      className="w-10 h-10 mb-0.5"
+    />
+    <p className="text-white font-bold text-xl leading-none">Kinodex</p>
+  </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
