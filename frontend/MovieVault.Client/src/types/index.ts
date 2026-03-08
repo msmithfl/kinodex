@@ -1,5 +1,6 @@
 export interface Movie {
     id?: number;
+    userId: string; // Foreign key to User
     title: string;
     upcNumber: string;
     formats: string[];

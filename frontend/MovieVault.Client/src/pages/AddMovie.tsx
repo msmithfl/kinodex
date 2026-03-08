@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 import BarcodeScanner from "../components/BarcodeScanner";
 import ProductImageSelector from "../components/ProductImageSelector";
 import MovieForm from "../components/MovieForm";
@@ -9,6 +10,7 @@ import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 
 function AddMovie() {
   const navigate = useNavigate();
+  const { user } = useUser();
   const [entryMode, setEntryMode] = useState<"choice" | "manual" | "search">(
     "choice",
   );
@@ -18,6 +20,7 @@ function AddMovie() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchTimeoutRef = useRef<number | null>(null);
   const [formData, setFormData] = useState<Movie>({
+    userId: "", // Foreign key to User
     title: "",
     upcNumber: "",
     formats: [],
@@ -105,7 +108,7 @@ function AddMovie() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, userId: user?.id ?? "" }),
       });
 
       if (response.ok) {

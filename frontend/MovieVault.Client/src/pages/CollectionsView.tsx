@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import type { CollectionListItem } from "../types";
 import CollectionCard from "../components/CollectionCard";
 import EmptyState from "../components/EmptyState";
@@ -7,6 +8,7 @@ import SubNavigation from "../components/SubNavigation";
 import type { Movie, Collection } from "../types";
 
 function CollectionsView() {
+  const { getToken } = useAuth();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,10 +28,17 @@ function CollectionsView() {
 
   const fetchData = async () => {
     try {
+      const token = await getToken();
       const [collectionsRes, moviesRes, listItemsRes] = await Promise.all([
-        fetch(COLLECTIONS_URL),
-        fetch(MOVIES_URL),
-        fetch(`${API_BASE}/api/collections/items/all`),
+        fetch(COLLECTIONS_URL, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(MOVIES_URL, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${API_BASE}/api/collections/items/all`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       if (collectionsRes.ok) {
@@ -84,10 +93,12 @@ function CollectionsView() {
       !collections.find((c) => c.name === newCollectionName)
     ) {
       try {
+        const token = await getToken();
         const response = await fetch(COLLECTIONS_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ name: newCollectionName }),
         });

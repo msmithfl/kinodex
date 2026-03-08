@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { useParams, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
 //import Counter from '../components/Counter'
@@ -12,6 +13,7 @@ import SubNavigation from "../components/SubNavigation";
 import type { Movie, ShelfSection } from "../types";
 
 function ShelfSectionDetail() {
+  const { getToken } = useAuth();
   const { sectionName } = useParams<{ sectionName: string }>();
   const navigate = useNavigate();
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -82,9 +84,14 @@ function ShelfSectionDetail() {
 
   const fetchMovies = async () => {
     try {
+      const token = await getToken();
       const [moviesRes, sectionsRes] = await Promise.all([
-        fetch(MOVIES_URL),
-        fetch(SECTIONS_URL),
+        fetch(MOVIES_URL, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(SECTIONS_URL, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       if (moviesRes.ok) {
@@ -132,12 +139,14 @@ function ShelfSectionDetail() {
     if (!section || !editedName.trim()) return;
 
     try {
+      const token = await getToken();
       const response = await fetch(
         `${SECTIONS_URL}/${section.id}?newName=${encodeURIComponent(editedName)}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         },
       );

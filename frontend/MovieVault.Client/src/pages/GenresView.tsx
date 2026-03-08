@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import CollectionCard from "../components/CollectionCard";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -6,6 +7,7 @@ import SubNavigation from "../components/SubNavigation";
 import type { Movie } from "../types";
 
 function GenresView() {
+  const { getToken } = useAuth();
   const [genres, setGenres] = useState<string[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +21,10 @@ function GenresView() {
 
   const fetchData = async () => {
     try {
-      const moviesRes = await fetch(MOVIES_URL);
+      const token = await getToken();
+      const moviesRes = await fetch(MOVIES_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (moviesRes.ok) {
         const moviesData = await moviesRes.json();
