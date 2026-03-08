@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import Counter from "../components/Counter";
 import BarcodeScanner from "../components/BarcodeScanner";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -43,7 +44,8 @@ interface VisibleColumns {
 }
 
 function MovieList() {
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const { getToken } = useAuth();
+  const [movies, setMovies] = useState<Movie[]>([]);;
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<SortOption>(() => {
     const saved = localStorage.getItem("movieListSortBy");
@@ -113,7 +115,10 @@ function MovieList() {
 
   const fetchMovies = async () => {
     try {
-      const response = await fetch(API_URL);
+      const token = await getToken();
+      const response = await fetch(API_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const data = await response.json();
         setMovies(data);

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import {
   Tooltip,
   ResponsiveContainer,
@@ -13,6 +14,7 @@ import type { Movie } from "../types";
 import ChartCard from "../components/ChartCard";
 
 function Stats() {
+  const { getToken } = useAuth();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [startMonth, setStartMonth] = useState("");
   const [endMonth, setEndMonth] = useState("");
@@ -24,7 +26,10 @@ function Stats() {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const response = await fetch(API_URL);
+        const token = await getToken();
+        const response = await fetch(API_URL, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (response.ok) {
           const data: Movie[] = await response.json();
           setMovies(data);

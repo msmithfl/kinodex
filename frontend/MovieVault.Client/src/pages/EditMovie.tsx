@@ -10,6 +10,7 @@ function EditMovie() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [formData, setFormData] = useState<Movie>({
+    userId: "",
     title: "",
     upcNumber: "",
     formats: [],

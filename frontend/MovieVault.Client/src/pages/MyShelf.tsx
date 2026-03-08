@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import SubNavigation from "../components/SubNavigation";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -38,23 +39,34 @@ function getFormatTier(formats: string[]): FormatTier {
 const PER_ROW = 40;
 
 function MyShelf() {
+  const { getToken } = useAuth();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/movies`)
-      .then((r) => r.json())
-      .then((data: Movie[]) => {
-        setMovies(
-          [...data]
-            .filter((m) => m.shelfSection && m.shelfSection !== "Unshelved")
-            .sort((a, b) => a.title.localeCompare(b.title)),
-        );
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const fetchMovies = async () => {
+      try {
+        const token = await getToken();
+        const response = await fetch(`${API_BASE}/api/movies`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data: Movie[] = await response.json();
+          setMovies(
+            [...data]
+              .filter((m) => m.shelfSection && m.shelfSection !== "Unshelved")
+              .sort((a, b) => a.title.localeCompare(b.title)),
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching movies:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMovies();
   }, []);
 
   if (loading) {

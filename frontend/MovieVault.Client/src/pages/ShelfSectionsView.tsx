@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import CollectionCard from "../components/CollectionCard";
 import EmptyState from "../components/EmptyState";
@@ -7,6 +8,7 @@ import SubNavigation from "../components/SubNavigation";
 import type { Movie, ShelfSection } from "../types";
 
 function ShelfSectionsView() {
+  const { getToken } = useAuth();
   const [shelfSections, setShelfSections] = useState<ShelfSection[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,9 +25,14 @@ function ShelfSectionsView() {
 
   const fetchData = async () => {
     try {
+      const token = await getToken();
       const [sectionsRes, moviesRes] = await Promise.all([
-        fetch(SECTIONS_URL),
-        fetch(MOVIES_URL),
+        fetch(SECTIONS_URL, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(MOVIES_URL, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
       ]);
 
       if (sectionsRes.ok) {
@@ -65,10 +72,12 @@ function ShelfSectionsView() {
       !shelfSections.find((s) => s.name === newSectionName)
     ) {
       try {
+        const token = await getToken();
         const response = await fetch(SECTIONS_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ name: newSectionName }),
         });

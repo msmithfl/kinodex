@@ -3,6 +3,7 @@ namespace MovieVault.Api.Models;
 public class Movie
 {
     public int Id { get; set; }
+    public string UserId { get; set; } = string.Empty; // Foreign key to User
     public required string Title { get; set; }
     public required string UpcNumber { get; set; }
     public List<string> Formats { get; set; } = new List<string>();
