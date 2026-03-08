@@ -9,3 +9,5 @@ Current features include:
 - Shelf view (experimental)
 - Collection list tracking
 - CSV export
+
+![Alt text](/frontend/Kinodex.Client/public/library-screenshot.png)
