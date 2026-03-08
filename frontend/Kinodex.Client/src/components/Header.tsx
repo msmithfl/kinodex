@@ -4,11 +4,11 @@ import { HiMenu, HiX, HiPlus } from "react-icons/hi";
 import { RiMovie2Fill } from "react-icons/ri";
 import {
   FaHome,
-  FaTv,
+  // FaTv,
   FaFilm,
   FaChartBar,
   FaCog,
-  FaBookmark,
+  // FaBookmark,
 } from "react-icons/fa";
 import AuthButton from "./AuthButton";
 
