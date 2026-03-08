@@ -49,7 +49,7 @@ function MovieForm({
   submitButtonText = "Save",
   showScanButton = false,
   onScanClick,
-  onManualSearchClick,
+  //onManualSearchClick,
 }: MovieFormProps) {
   const [validationError, setValidationError] = useState<string>("");
   const [yearInput, setYearInput] = useState<string>(formData.year.toString());
@@ -202,7 +202,7 @@ function MovieForm({
               }
               required
               placeholder="Enter UPC barcode number"
-              className="flex-1 max-w-42 md:max-w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
+              className="flex-1 max-w-60 md:max-w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500"
             />
             {showScanButton && onScanClick && (
               <>
@@ -232,7 +232,7 @@ function MovieForm({
                     />
                   </svg>
                 </button>
-                {onManualSearchClick && (
+                {/* {onManualSearchClick && (
                   <button
                     type="button"
                     onClick={onManualSearchClick}
@@ -253,7 +253,7 @@ function MovieForm({
                       />
                     </svg>
                   </button>
-                )}
+                )} */}
               </>
             )}
           </div>
