@@ -133,14 +133,23 @@ public static class MovieEndpoints
             var skipped = 0;
             var errors = new List<string>();
 
+            // Map header names to column indices so column order doesn't matter
+            var headers = ParseCsvLine(lines[0]);
+            var col = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int h = 0; h < headers.Length; h++)
+                col[headers[h].Trim()] = h;
+
+            int Idx(string name) => col.TryGetValue(name, out var i) ? i : -1;
+            string Field(string[] f, string name) { var i = Idx(name); return i >= 0 && i < f.Length ? f[i] : ""; }
+
             for (int i = 1; i < lines.Count; i++)
             {
                 try
                 {
                     var fields = ParseCsvLine(lines[i]);
-                    if (fields.Length < 18) continue;
+                    if (fields.Length < 2) continue;
 
-                    var upc = fields[1];
+                    var upc = Field(fields, "UPC");
                     if (!string.IsNullOrEmpty(upc) && existingUpcs.Contains(upc))
                     {
                         skipped++;
@@ -150,24 +159,24 @@ public static class MovieEndpoints
                     var movie = new Movie
                     {
                         UserId = userId,
-                        Title = fields[0],
-                        UpcNumber = fields[1],
-                        Year = int.TryParse(fields[2], out var yr) ? yr : 0,
-                        Formats = fields[3].Split('|', StringSplitOptions.RemoveEmptyEntries).ToList(),
-                        Genres = fields[4].Split('|', StringSplitOptions.RemoveEmptyEntries).ToList(),
-                        Collections = fields[5].Split('|', StringSplitOptions.RemoveEmptyEntries).ToList(),
-                        Condition = fields[6],
-                        PurchasePrice = float.TryParse(fields[7], NumberStyles.Float, CultureInfo.InvariantCulture, out var pp) ? pp : 0,
-                        Rating = float.TryParse(fields[8], NumberStyles.Float, CultureInfo.InvariantCulture, out var rt) ? rt : 0,
-                        HasWatched = bool.TryParse(fields[9], out var hw) && hw,
-                        IsOnPlex = bool.TryParse(fields[10], out var ip) && ip,
-                        ShelfNumber = int.TryParse(fields[11], out var sn) ? sn : 0,
-                        ShelfSection = fields[12],
-                        HDDriveNumber = int.TryParse(fields[13], out var hd) ? hd : 0,
-                        TmdbId = int.TryParse(fields[14], out var tmdb) ? tmdb : null,
-                        PosterPath = fields[15],
-                        ProductPosterPath = fields[16],
-                        CreatedAt = DateTime.TryParse(fields[17], out var dt) ? dt.ToUniversalTime() : DateTime.UtcNow,
+                        Title = Field(fields, "Title"),
+                        UpcNumber = upc,
+                        Year = int.TryParse(Field(fields, "Year"), out var yr) ? yr : 0,
+                        Formats = Field(fields, "Formats").Split('|', StringSplitOptions.RemoveEmptyEntries).ToList(),
+                        Genres = Field(fields, "Genres").Split('|', StringSplitOptions.RemoveEmptyEntries).ToList(),
+                        Collections = Field(fields, "Collections").Split('|', StringSplitOptions.RemoveEmptyEntries).ToList(),
+                        Condition = Field(fields, "Condition"),
+                        PurchasePrice = float.TryParse(Field(fields, "Purchase Price"), NumberStyles.Float, CultureInfo.InvariantCulture, out var pp) ? pp : 0,
+                        Rating = float.TryParse(Field(fields, "Rating"), NumberStyles.Float, CultureInfo.InvariantCulture, out var rt) ? rt : 0,
+                        HasWatched = bool.TryParse(Field(fields, "Watched"), out var hw) && hw,
+                        IsOnPlex = bool.TryParse(Field(fields, "On Plex"), out var ip) && ip,
+                        ShelfNumber = int.TryParse(Field(fields, "Shelf Number"), out var sn) ? sn : 0,
+                        ShelfSection = Field(fields, "Shelf Section"),
+                        HDDriveNumber = int.TryParse(Field(fields, "HDD Number"), out var hd) ? hd : 0,
+                        TmdbId = int.TryParse(Field(fields, "TMDB ID"), out var tmdb) ? tmdb : null,
+                        PosterPath = Field(fields, "Poster Path"),
+                        ProductPosterPath = Field(fields, "Product Poster Path"),
+                        CreatedAt = DateTime.TryParse(Field(fields, "Date Added"), out var dt) ? dt.ToUniversalTime() : DateTime.UtcNow,
                     };
 
                     db.Movies.Add(movie);
