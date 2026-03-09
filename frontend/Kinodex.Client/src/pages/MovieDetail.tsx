@@ -9,6 +9,7 @@ import { FaEdit, FaTrash } from "react-icons/fa";
 import ConfirmDialog from "../components/ConfirmDialog";
 import type { Movie } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { EditMovieModal } from "../components/EditMovieModal";
 
 function MovieDetail() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ function MovieDetail() {
   const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const API_URL = `${API_BASE}/api/movies`;
@@ -180,13 +182,20 @@ function MovieDetail() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Link
+                  {/* <Link
                     to={`/edit/${movie.id}`}
                     className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200"
                     aria-label="Edit movie"
                   >
                     <FaEdit className="w-5 h-5" />
-                  </Link>
+                  </Link> */}
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+                    aria-label="Edit movie"
+                  >
+                    <FaEdit className="w-5 h-5" />
+                  </button>
                   <button
                     onClick={handleDeleteClick}
                     className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
@@ -428,6 +437,7 @@ function MovieDetail() {
             </div>
           </div>
         </div>
+        {showModal && <EditMovieModal onClose={() => setShowModal(false)} />}
 
         <ConfirmDialog
           isOpen={showDeleteConfirm}
