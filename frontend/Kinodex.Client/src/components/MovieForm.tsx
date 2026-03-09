@@ -6,6 +6,8 @@ import {
 } from "react-icons/ti";
 import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { IoCameraOutline } from "react-icons/io5";
+import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
+import { FaPlus, FaMinus } from "react-icons/fa6";
 import { Genres, type Movie } from "../types";
 
 interface MovieFormProps {
@@ -72,6 +74,11 @@ function MovieForm({
   const genreRef = useRef<HTMLDivElement>(null);
   const [formatDropdownOpen, setFormatDropdownOpen] = useState(false);
   const formatRef = useRef<HTMLDivElement>(null);
+  const [collectionDropdownOpen, setCollectionDropdownOpen] = useState(false);
+  const collectionRef = useRef<HTMLDivElement>(null);
+  const [shelfSectionDropdownOpen, setShelfSectionDropdownOpen] =
+    useState(false);
+  const shelfSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -80,6 +87,18 @@ function MovieForm({
       }
       if (formatRef.current && !formatRef.current.contains(e.target as Node)) {
         setFormatDropdownOpen(false);
+      }
+      if (
+        collectionRef.current &&
+        !collectionRef.current.contains(e.target as Node)
+      ) {
+        setCollectionDropdownOpen(false);
+      }
+      if (
+        shelfSectionRef.current &&
+        !shelfSectionRef.current.contains(e.target as Node)
+      ) {
+        setShelfSectionDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -314,82 +333,94 @@ function MovieForm({
             </div>
 
             {/* Collections */}
-            <div>
+            <div ref={collectionRef}>
               <label className={labelClass}>Collections</label>
-              <div className="mb-2 flex flex-wrap gap-2">
-                {formData.collections.map((col, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded-full text-sm"
+              <div className="flex flex-wrap gap-2">
+                <div className="relative bg-gray-700 border border-gray-600 focus-within:border-gray-500 flex-1">
+                  <div
+                    className="flex flex-wrap items-center gap-2 px-3 py-1 min-h-10.5 cursor-pointer"
+                    onClick={() => setCollectionDropdownOpen((prev) => !prev)}
                   >
-                    {col}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData({
-                          ...formData,
-                          collections: formData.collections.filter(
-                            (_, i) => i !== index,
-                          ),
-                        })
-                      }
-                      className="hover:text-red-300 transition cursor-pointer"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <select
-                  value=""
-                  onChange={(e) => {
-                    if (
-                      e.target.value &&
-                      !formData.collections.includes(e.target.value)
-                    )
-                      setFormData({
-                        ...formData,
-                        collections: [...formData.collections, e.target.value],
-                      });
-                  }}
-                  className={inputClass + " cursor-pointer flex-1"}
-                >
-                  <option value="">Add collection...</option>
-                  {collections
-                    .filter((col) => !formData.collections.includes(col.name))
-                    .map((col) => (
-                      <option key={col.id} value={col.name}>
-                        {col.name}
-                      </option>
+                    {formData.collections.map((col, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded-full text-sm relative z-10"
+                      >
+                        {col}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFormData({
+                              ...formData,
+                              collections: formData.collections.filter(
+                                (_, i) => i !== index,
+                              ),
+                            });
+                          }}
+                          className="hover:text-red-300 transition cursor-pointer"
+                        >
+                          ×
+                        </button>
+                      </span>
                     ))}
-                </select>
+                  </div>
+
+                  {collectionDropdownOpen && (
+                    <ul className="absolute top-full left-0 w-full max-h-30 overflow-y-auto bg-gray-800 border border-gray-600 z-50">
+                      {collections
+                        .filter(
+                          (col) => !formData.collections.includes(col.name),
+                        )
+                        .map((col) => (
+                          <li
+                            key={col.id}
+                            onClick={() => {
+                              setFormData({
+                                ...formData,
+                                collections: [
+                                  ...formData.collections,
+                                  col.name,
+                                ],
+                              });
+                              setCollectionDropdownOpen(false);
+                            }}
+                            className="px-3 py-2 text-white text-sm hover:bg-gray-600 cursor-pointer"
+                          >
+                            {col.name}
+                          </li>
+                        ))}
+                    </ul>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setShowCollectionInput(!showCollectionInput)}
-                  className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
+                  className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer shrink-0"
                 >
-                  +
+                  {showCollectionInput ? <FaMinus /> : <FaPlus />}
                 </button>
+
+                {showCollectionInput && (
+                  <div className="flex gap-2 basis-full sm:basis-0 sm:flex-1">
+                    <input
+                      type="text"
+                      value={newCollection}
+                      onChange={(e) => setNewCollection(e.target.value)}
+                      placeholder="New collection name"
+                      className={inputClass + " flex-1"}
+                    />
+                    <button
+                      type="button"
+                      onClick={addCollection}
+                      className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition cursor-pointer shrink-0"
+                    >
+                      Add
+                    </button>
+                  </div>
+                )}
               </div>
-              {showCollectionInput && (
-                <div className="flex gap-2 mt-2">
-                  <input
-                    type="text"
-                    value={newCollection}
-                    onChange={(e) => setNewCollection(e.target.value)}
-                    placeholder="New collection name"
-                    className={inputClass + " flex-1"}
-                  />
-                  <button
-                    type="button"
-                    onClick={addCollection}
-                    className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition"
-                  >
-                    Add
-                  </button>
-                </div>
-              )}
             </div>
 
             <div className="flex items-start justify-center gap-16">
@@ -504,14 +535,13 @@ function MovieForm({
                     setFormData({ ...formData, upcNumber: e.target.value })
                   }
                   required
-                  placeholder="Enter UPC barcode number"
                   className={inputClass + " flex-1"}
                 />
                 {showScanButton && onScanClick && (
                   <button
                     type="button"
                     onClick={onScanClick}
-                    className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
+                    className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
                     title="Scan barcode"
                   >
                     <IoCameraOutline className="w-6 h-6" />
@@ -551,9 +581,6 @@ function MovieForm({
                       </button>
                     </span>
                   ))}
-                  {formData.formats.length === 0 && (
-                    <span className="text-gray-400 text-sm">Add format...</span>
-                  )}
                 </div>
 
                 {formatDropdownOpen && (
@@ -620,23 +647,52 @@ function MovieForm({
             </div>
 
             {/* Shelf Section */}
-            <div>
+            <div ref={shelfSectionRef}>
               <label className={labelClass}>Shelf Section</label>
-              <div className="flex gap-2">
-                <select
-                  value={formData.shelfSection}
-                  onChange={(e) =>
-                    setFormData({ ...formData, shelfSection: e.target.value })
-                  }
-                  className={inputClass + " cursor-pointer flex-1"}
-                >
-                  <option value="Unshelved">Unshelved</option>
-                  {shelfSections.map((section) => (
-                    <option key={section.id} value={section.name}>
-                      {section.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="flex flex-wrap gap-2">
+                <div className="relative bg-gray-700 border border-gray-600 focus-within:border-gray-500 flex-1">
+                  <div
+                    className="flex flex-wrap items-center gap-2 px-3 py-1 min-h-10.5 cursor-pointer"
+                    onClick={() => setShelfSectionDropdownOpen((prev) => !prev)}
+                  >
+                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded-full text-sm relative z-10">
+                      {formData.shelfSection || "Unshelved"}
+                    </span>
+                  </div>
+
+                  {shelfSectionDropdownOpen && (
+                    <ul className="absolute top-full left-0 w-full max-h-30 overflow-y-auto bg-gray-800 border border-gray-600 z-50">
+                      <li
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            shelfSection: "Unshelved",
+                          });
+                          setShelfSectionDropdownOpen(false);
+                        }}
+                        className="px-3 py-2 text-white text-sm hover:bg-gray-600 cursor-pointer"
+                      >
+                        Unshelved
+                      </li>
+                      {shelfSections.map((section) => (
+                        <li
+                          key={section.id}
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              shelfSection: section.name,
+                            });
+                            setShelfSectionDropdownOpen(false);
+                          }}
+                          className="px-3 py-2 text-white text-sm hover:bg-gray-600 cursor-pointer"
+                        >
+                          {section.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   onClick={() =>
@@ -644,27 +700,28 @@ function MovieForm({
                   }
                   className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer shrink-0"
                 >
-                  +
+                  {showShelfSectionInput ? <FaMinus /> : <FaPlus />}
                 </button>
+
+                {showShelfSectionInput && (
+                  <div className="flex gap-2 basis-full sm:basis-0 sm:flex-1">
+                    <input
+                      type="text"
+                      value={newShelfSection}
+                      onChange={(e) => setNewShelfSection(e.target.value)}
+                      placeholder="New shelf section name"
+                      className={inputClass + " flex-1"}
+                    />
+                    <button
+                      type="button"
+                      onClick={addShelfSection}
+                      className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition cursor-pointer shrink-0"
+                    >
+                      Add
+                    </button>
+                  </div>
+                )}
               </div>
-              {showShelfSectionInput && (
-                <div className="flex gap-2 mt-2">
-                  <input
-                    type="text"
-                    value={newShelfSection}
-                    onChange={(e) => setNewShelfSection(e.target.value)}
-                    placeholder="New shelf section name"
-                    className={inputClass + " flex-1"}
-                  />
-                  <button
-                    type="button"
-                    onClick={addShelfSection}
-                    className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition"
-                  >
-                    Add
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Shelf Number */}
@@ -697,19 +754,29 @@ function MovieForm({
             </div>
 
             {/* Available on Plex */}
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.isOnPlex}
-                onChange={(e) =>
-                  setFormData({ ...formData, isOnPlex: e.target.checked })
+            <div className="flex flex-col items-center">
+              <label className="block text-sm font-medium text-gray-300 mb-2 mt-2">
+                Available to Stream
+              </label>
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData({ ...formData, isOnPlex: !formData.isOnPlex })
                 }
-                className="w-5 h-5 bg-gray-700 border-gray-600 rounded focus:outline-none cursor-pointer"
-              />
-              <span className="text-sm font-medium text-gray-300">
-                Available on Plex
-              </span>
-            </label>
+                className="cursor-pointer"
+                title={
+                  formData.isOnPlex
+                    ? "Available to stream"
+                    : "Not available to stream"
+                }
+              >
+                {formData.isOnPlex ? (
+                  <HiSignal className="w-8 h-8 text-indigo-400" />
+                ) : (
+                  <HiOutlineSignalSlash className="w-8 h-8 text-gray-500 hover:text-indigo-400" />
+                )}
+              </button>
+            </div>
           </div>
         )}
 
@@ -717,56 +784,72 @@ function MovieForm({
         {activeTab === "poster" && (
           <div className="space-y-2 pb-2">
             {/* Movie Poster */}
-            <div>
-              <label htmlFor="posterPath" className={labelClass}>
-                Movie Poster URL
-              </label>
-              <input
-                type="text"
-                id="posterPath"
-                value={formData.posterPath}
-                onChange={(e) =>
-                  setFormData({ ...formData, posterPath: e.target.value })
-                }
-                placeholder="https://example.com/movie-poster.jpg"
-                className={inputClass}
-              />
-              {formData.posterPath && (
-                <img
-                  src={formData.posterPath}
-                  alt="Movie poster preview"
-                  className="mt-3 h-48 rounded-md object-contain bg-gray-900"
-                  onError={(e) => (e.currentTarget.style.display = "none")}
+            <div className="flex gap-4 items-end">
+              <div className="w-24 h-36 rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
+                {formData.posterPath ? (
+                  <img
+                    src={formData.posterPath}
+                    alt="Movie poster preview"
+                    className="w-full h-full object-contain"
+                    onError={(e) => (e.currentTarget.style.display = "none")}
+                  />
+                ) : (
+                  <span className="text-gray-600 text-xs text-center px-1">
+                    No poster
+                  </span>
+                )}
+              </div>
+              <div className="flex-1">
+                <label htmlFor="posterPath" className={labelClass}>
+                  Movie Poster URL
+                </label>
+                <input
+                  type="text"
+                  id="posterPath"
+                  value={formData.posterPath}
+                  onChange={(e) =>
+                    setFormData({ ...formData, posterPath: e.target.value })
+                  }
+                  placeholder="https://example.com/movie-poster.jpg"
+                  className={inputClass}
                 />
-              )}
+              </div>
             </div>
-            
+
             {/* Product Poster */}
-            <div>
-              <label htmlFor="productPosterPath" className={labelClass}>
-                Product Image URL
-              </label>
-              <input
-                type="text"
-                id="productPosterPath"
-                value={formData.productPosterPath}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    productPosterPath: e.target.value,
-                  })
-                }
-                placeholder="https://example.com/product-image.jpg"
-                className={inputClass}
-              />
-              {formData.productPosterPath && (
-                <img
-                  src={formData.productPosterPath}
-                  alt="Product image preview"
-                  className="mt-3 h-48 rounded-md object-contain bg-gray-900"
-                  onError={(e) => (e.currentTarget.style.display = "none")}
+            <div className="flex gap-4 items-end">
+              <div className="w-24 h-36 rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
+                {formData.productPosterPath ? (
+                  <img
+                    src={formData.productPosterPath}
+                    alt="Product image preview"
+                    className="w-full h-full object-contain"
+                    onError={(e) => (e.currentTarget.style.display = "none")}
+                  />
+                ) : (
+                  <span className="text-gray-600 text-xs text-center px-1">
+                    No image
+                  </span>
+                )}
+              </div>
+              <div className="flex-1">
+                <label htmlFor="productPosterPath" className={labelClass}>
+                  Product Image URL
+                </label>
+                <input
+                  type="text"
+                  id="productPosterPath"
+                  value={formData.productPosterPath}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      productPosterPath: e.target.value,
+                    })
+                  }
+                  placeholder="https://example.com/product-image.jpg"
+                  className={inputClass}
                 />
-              )}
+              </div>
             </div>
           </div>
         )}
