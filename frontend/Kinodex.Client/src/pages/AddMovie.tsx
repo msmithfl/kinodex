@@ -306,16 +306,7 @@ function AddMovie() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <button
-          onClick={() => navigate("/")}
-          className="text-indigo-400 hover:text-indigo-300 flex items-center gap-2 transition-colors cursor-pointer"
-        >
-          ← Back to Library
-        </button>
-      </div>
-
+      <div className="max-w-4xl mx-auto px-4 py-4 flex flex-col justify-center md:h-[calc(100vh-10rem)]">
       {entryMode === "choice" && (
         <div className="bg-gray-800 rounded-lg shadow-lg p-8">
           <h2 className="text-3xl font-bold mb-6 text-center">Add New Movie</h2>
@@ -328,7 +319,7 @@ function AddMovie() {
               <div className="text-5xl mb-4">🔍</div>
               <h3 className="text-xl font-semibold mb-2">Find By Title</h3>
               <p className="text-gray-400 text-sm">
-                Search for movie information online
+                Search for movie info on TMDB
               </p>
             </button>
 
@@ -455,8 +446,8 @@ function AddMovie() {
       )}
 
       {entryMode === "manual" && (
-        <div className="bg-gray-800 rounded-lg shadow-lg p-8">
-          <div className="mb-6">
+        <div className="bg-gray-800 rounded-lg shadow-lg p-8 flex flex-col flex-1 min-h-0">
+          <div className="mb-6 shrink-0">
             <button
               onClick={() => setEntryMode("choice")}
               className="text-indigo-400 hover:text-indigo-300 flex items-center gap-2 transition-colors cursor-pointer"
@@ -464,7 +455,6 @@ function AddMovie() {
               ← Back to Choice
             </button>
           </div>
-          <h2 className="text-3xl font-bold mb-6">Manual Entry</h2>
           <MovieForm
             formData={formData}
             setFormData={setFormData}
