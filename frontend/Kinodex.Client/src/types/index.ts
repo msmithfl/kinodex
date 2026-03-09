@@ -99,4 +99,26 @@ export interface Checkout {
   isActive?: boolean;
 }
 
+export const Genres = {
+  Action: 'Action',
+  Comedy: 'Comedy',
+  Adventure: 'Adventure',
+  Animation: 'Animation',
+  Crime: 'Crime',
+  Documentary: 'Documentary',
+  Drama: 'Drama',
+  Family: 'Family',
+  Fantasy: 'Fantasy',
+  History: 'History',
+  Horror: 'Horror',
+  Music: 'Music',
+  Mystery: 'Mystery',
+  Romance: 'Romance',
+  SciFi: 'Sci-Fi',
+  Thriller: 'Thriller',
+  TVMovie: 'TV Movie',
+  War: 'War',
+  Western: 'Western',
+} as const;
+
 export type SortOption = 'date' | 'alphabetic' | 'format' | 'year' | 'condition' | 'rating' | 'purchasePrice';

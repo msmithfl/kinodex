@@ -307,15 +307,6 @@ function AddMovie() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <button
-          onClick={() => navigate("/")}
-          className="text-indigo-400 hover:text-indigo-300 flex items-center gap-2 transition-colors cursor-pointer"
-        >
-          ← Back to Library
-        </button>
-      </div>
-
       {entryMode === "choice" && (
         <div className="bg-gray-800 rounded-lg shadow-lg p-8">
           <h2 className="text-3xl font-bold mb-6 text-center">Add New Movie</h2>
@@ -464,7 +455,6 @@ function AddMovie() {
               ← Back to Choice
             </button>
           </div>
-          <h2 className="text-3xl font-bold mb-6">Manual Entry</h2>
           <MovieForm
             formData={formData}
             setFormData={setFormData}
