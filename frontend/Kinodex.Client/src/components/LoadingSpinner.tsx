@@ -1,6 +1,6 @@
 function LoadingSpinner() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="flex h-[calc(100vh-9rem)] items-center justify-center">
       <div className="flex flex-col items-center justify-center py-20">
         <div className="relative w-32 h-32">
           <img
