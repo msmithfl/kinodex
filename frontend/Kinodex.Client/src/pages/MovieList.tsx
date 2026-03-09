@@ -351,7 +351,7 @@ function MovieList() {
     return (
       <>
         <SubNavigation />
-        <LoadingSpinner />
+          <LoadingSpinner />
       </>
     );
   }
