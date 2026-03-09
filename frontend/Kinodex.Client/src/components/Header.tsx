@@ -10,9 +10,11 @@ import {
   // FaBookmark,
 } from "react-icons/fa";
 import AuthButton from "./AuthButton";
+import { AddMovieModal } from "./AddMovieModal";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const location = useLocation();
 
   const isActive = (path: string) => {
@@ -37,17 +39,14 @@ function Header() {
     <header className="bg-gray-800 border-b border-gray-700 relative">
       <div className="mx-auto px-8 py-4">
         <div className="flex items-end justify-between">
-  <Link
-    to="/"
-    className="flex items-end gap-1"
-  >
-    <img
-      src="/kinodex-logo.png"
-      alt="Kinodex"
-      className="w-10 h-10 mb-0.5"
-    />
-    <p className="text-white font-bold text-xl leading-none">Kinodex</p>
-  </Link>
+          <Link to="/" className="flex items-end gap-1">
+            <img
+              src="/kinodex-logo.png"
+              alt="Kinodex"
+              className="w-10 h-10 mb-0.5"
+            />
+            <p className="text-white font-bold text-xl leading-none">Kinodex</p>
+          </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
@@ -57,24 +56,24 @@ function Header() {
             >
               Dashboard
             </Link>
-            <Link
-              to="/add"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200"
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 cursor-pointer"
             >
               + Add Movie
-            </Link>
+            </button>
             <AuthButton />
           </nav>
 
           {/* Mobile Buttons */}
           <div className="md:hidden flex items-center gap-3">
-            <Link
-              to="/add"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-md transition"
+            <button
+              onClick={() => setShowModal(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-md transition cursor-pointer"
               aria-label="Add movie"
             >
               <HiPlus className="w-6 h-6" />
-            </Link>
+            </button>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-white p-2"
@@ -141,6 +140,7 @@ function Header() {
           </nav>
         )}
       </div>
+      {showModal && <AddMovieModal onClose={() => setShowModal(false)} />}
     </header>
   );
 }
