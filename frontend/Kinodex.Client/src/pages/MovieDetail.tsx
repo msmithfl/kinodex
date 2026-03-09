@@ -6,6 +6,8 @@ import {
   TiStarFullOutline,
 } from "react-icons/ti";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { LuEye, LuEyeClosed } from "react-icons/lu";
+import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import ConfirmDialog from "../components/ConfirmDialog";
 import type { Movie } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -169,9 +171,10 @@ function MovieDetail() {
                         <Link
                           key={idx}
                           to={`/genres/${encodeURIComponent(genre)}`}
-                          className="bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded-md text-white transition-colors cursor-pointer"
+                          className="cursor-pointer hover:underline"
                         >
                           {genre}
+                          {idx < movie.genres.length - 1 ? "," : ""}
                         </Link>
                       ))}
                     </div>
@@ -182,13 +185,6 @@ function MovieDetail() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  {/* <Link
-                    to={`/edit/${movie.id}`}
-                    className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200"
-                    aria-label="Edit movie"
-                  >
-                    <FaEdit className="w-5 h-5" />
-                  </Link> */}
                   <button
                     onClick={() => setShowModal(true)}
                     className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
@@ -249,9 +245,10 @@ function MovieDetail() {
                       {[...movie.formats].sort().map((fmt, idx) => (
                         <span
                           key={idx}
-                          className="bg-indigo-600 text-white px-4 py-2 rounded-full text-base font-medium"
+                          className="cursor-pointer hover:underline"
                         >
                           {fmt}
+                          {idx < movie.formats.length - 1 ? "," : ""}
                         </span>
                       ))}
                     </div>
@@ -264,23 +261,7 @@ function MovieDetail() {
                   <h3 className="text-sm font-medium text-gray-400 mb-2">
                     Condition
                   </h3>
-                  <span
-                    className={`px-4 py-2 rounded-full text-base font-medium inline-block ${
-                      movie.condition === "Sealed"
-                        ? "bg-purple-600 text-white"
-                        : movie.condition === "Like New"
-                          ? "bg-green-600 text-white"
-                          : movie.condition === "Good"
-                            ? "bg-blue-600 text-white"
-                            : movie.condition === "Poor"
-                              ? "bg-gray-600 text-white"
-                              : movie.condition === "Damaged"
-                                ? "bg-red-600 text-white"
-                                : "bg-red-600"
-                    } text-white`}
-                  >
-                    {movie.condition}
-                  </span>
+                  <span>{movie.condition}</span>
                 </div>
 
                 <div className="col-span-2 md:col-span-1">
@@ -322,8 +303,16 @@ function MovieDetail() {
                   <h3 className="text-sm font-medium text-gray-400 mb-2">
                     Watched
                   </h3>
-                  <p className="text-base text-white">
-                    {movie.hasWatched ? "✅ Yes" : "❌ No"}
+                  <p className="text-base text-white flex items-center gap-2">
+                    {movie.hasWatched ? (
+                      <>
+                        <LuEye className="w-5 h-5" /> Yes
+                      </>
+                    ) : (
+                      <>
+                        <LuEyeClosed className="w-5 h-5" /> No
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
@@ -342,9 +331,10 @@ function MovieDetail() {
                         <Link
                           key={idx}
                           to={`/collections/${encodeURIComponent(col)}`}
-                          className="bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded-md text-white transition-colors cursor-pointer"
+                          className="cursor-pointer hover:underline"
                         >
                           {col}
+                          {idx < movie.collections.length - 1 ? "," : ""}
                         </Link>
                       ))}
                     </div>
@@ -372,11 +362,10 @@ function MovieDetail() {
                     </h3>
                     <Link
                       to={`/shelfsections/${encodeURIComponent(movie.shelfSection || "Unshelved")}`}
-                      className="bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded-md text-white transition-colors cursor-pointer"
+                      className="cursor-pointer hover:underline"
                     >
                       {movie.shelfSection || "Unshelved"}
                     </Link>
-                    
                   </div>
                 </div>
 
@@ -398,8 +387,16 @@ function MovieDetail() {
                     <h3 className="text-sm font-medium text-gray-400 mb-2">
                       On Plex
                     </h3>
-                    <p className="text-base text-white">
-                      {movie.isOnPlex ? "✅ Yes" : "❌ No"}
+                    <p className="text-base text-white flex items-center gap-2">
+                      {movie.isOnPlex ? (
+                        <>
+                          <HiSignal className="w-5 h-5" /> Yes
+                        </>
+                      ) : (
+                        <>
+                          <HiOutlineSignalSlash className="w-5 h-5" /> No
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>

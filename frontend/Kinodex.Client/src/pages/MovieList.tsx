@@ -45,7 +45,7 @@ interface VisibleColumns {
 
 function MovieList() {
   const { getToken } = useAuth();
-  const [movies, setMovies] = useState<Movie[]>([]);;
+  const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<SortOption>(() => {
     const saved = localStorage.getItem("movieListSortBy");
@@ -351,7 +351,7 @@ function MovieList() {
     return (
       <>
         <SubNavigation />
-          <LoadingSpinner />
+        <LoadingSpinner />
       </>
     );
   }
@@ -670,11 +670,9 @@ function MovieList() {
                             {movie.formats && movie.formats.length > 0 ? (
                               <div className="flex gap-1">
                                 {[...movie.formats].sort().map((fmt, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap"
-                                  >
+                                  <span key={idx}>
                                     {fmt}
+                                    {idx < movie.formats.length - 1 ? "," : ""}
                                   </span>
                                 ))}
                               </div>
@@ -712,7 +710,9 @@ function MovieList() {
                         )}
                         {visibleColumns.purchasePrice && (
                           <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                            {movie.purchasePrice ? `$${movie.purchasePrice.toFixed(2)}` : "-"}
+                            {movie.purchasePrice
+                              ? `$${movie.purchasePrice.toFixed(2)}`
+                              : "-"}
                           </td>
                         )}
                         {visibleColumns.dateAdded && (
