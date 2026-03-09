@@ -290,7 +290,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
       onClick={onClose}
     >
       <div
-        className="flex flex-col mx-2 justify-between bg-gray-800 shadow-2xl w-full max-w-2xl h-full max-h-3/4 relative"
+        className="flex flex-col mx-2 bg-gray-800 shadow-2xl w-full max-w-3xl h-full max-h-3/4 relative"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex gap-4 justify-between bg-gray-700 p-2">
@@ -376,7 +376,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
           </div>
         )}
         {showForm && (
-          <div className="flex px-4">
+          <div className="flex flex-col flex-1 min-h-0 px-4">
             <MovieForm
               formData={formData}
               setFormData={setFormData}

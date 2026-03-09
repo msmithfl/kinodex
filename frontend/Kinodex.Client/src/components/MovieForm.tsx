@@ -181,7 +181,7 @@ function MovieForm({
       )}
 
       {/* Scrollable tab content */}
-      <div className="flex-1 max-h-120 overflow-y-auto min-h-0 pr-1">
+      <div className="flex-1 overflow-y-auto min-h-0 pr-1">
         {/* Movie Details */}
         {activeTab === "details" && (
           <div className="space-y-5 pb-2">
