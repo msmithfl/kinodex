@@ -5,6 +5,7 @@ import {
   TiStarFullOutline,
 } from "react-icons/ti";
 import { LuEye, LuEyeClosed } from "react-icons/lu";
+import { IoCameraOutline } from "react-icons/io5";
 import { Genres, type Movie } from "../types";
 
 interface MovieFormProps {
@@ -69,11 +70,16 @@ function MovieForm({
 
   const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
   const genreRef = useRef<HTMLDivElement>(null);
+  const [formatDropdownOpen, setFormatDropdownOpen] = useState(false);
+  const formatRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (genreRef.current && !genreRef.current.contains(e.target as Node)) {
         setGenreDropdownOpen(false);
+      }
+      if (formatRef.current && !formatRef.current.contains(e.target as Node)) {
+        setFormatDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -171,7 +177,7 @@ function MovieForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full w-full">
       {/* Tabs */}
-      <div className="flex border-b border-gray-700 mb-4 shrink-0">
+      <div className="flex border-b border-gray-700 mb-4 mt-2 shrink-0">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -278,9 +284,7 @@ function MovieForm({
                     </span>
                   ))}
                   {formData.genres.length === 0 && (
-                    <span className="text-gray-400 text-sm">
-                      
-                    </span>
+                    <span className="text-gray-400 text-sm"></span>
                   )}
                 </div>
 
@@ -477,7 +481,6 @@ function MovieForm({
                   setFormData({ ...formData, review: e.target.value })
                 }
                 rows={4}
-                placeholder="Add your review or notes..."
                 className={inputClass}
               />
             </div>
@@ -487,6 +490,7 @@ function MovieForm({
         {/* Physical Details */}
         {activeTab === "physical" && (
           <div className="space-y-2 pb-2">
+            {/* UPC */}
             <div>
               <label htmlFor="upc" className={labelClass}>
                 UPC Number *
@@ -510,90 +514,74 @@ function MovieForm({
                     className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
                     title="Scan barcode"
                   >
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
+                    <IoCameraOutline className="w-6 h-6" />
                   </button>
                 )}
               </div>
             </div>
 
-            <div>
+            {/* Formats */}
+            <div ref={formatRef}>
               <label className={labelClass}>Formats *</label>
-              <div className="mb-2 flex flex-wrap gap-2">
-                {formData.formats.map((fmt, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded-full text-sm"
-                  >
-                    {fmt}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData({
-                          ...formData,
-                          formats: formData.formats.filter(
-                            (_, i) => i !== index,
-                          ),
-                        })
-                      }
-                      className="hover:text-red-300 transition cursor-pointer"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <select
-                value=""
-                onChange={(e) => {
-                  if (
-                    e.target.value &&
-                    !formData.formats.includes(e.target.value)
-                  )
-                    setFormData({
-                      ...formData,
-                      formats: [...formData.formats, e.target.value],
-                    });
-                }}
-                className={inputClass + " cursor-pointer"}
-              >
-                <option value="">Add format...</option>
-                <option value="4K" disabled={formData.formats.includes("4K")}>
-                  4K Ultra HD
-                </option>
-                <option
-                  value="Blu-ray"
-                  disabled={formData.formats.includes("Blu-ray")}
+              <div className="relative bg-gray-700 border border-gray-600 focus-within:border-gray-500">
+                <div
+                  className="flex flex-wrap items-center gap-2 px-3 py-2 min-h-10.5 cursor-pointer"
+                  onClick={() => setFormatDropdownOpen((prev) => !prev)}
                 >
-                  Blu-ray
-                </option>
-                <option value="DVD" disabled={formData.formats.includes("DVD")}>
-                  DVD
-                </option>
-                <option value="VHS" disabled={formData.formats.includes("VHS")}>
-                  VHS
-                </option>
-              </select>
+                  {formData.formats.map((fmt, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded-full text-sm relative z-10"
+                    >
+                      {fmt}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFormData({
+                            ...formData,
+                            formats: formData.formats.filter(
+                              (_, i) => i !== index,
+                            ),
+                          });
+                        }}
+                        className="hover:text-red-300 transition cursor-pointer"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  {formData.formats.length === 0 && (
+                    <span className="text-gray-400 text-sm">Add format...</span>
+                  )}
+                </div>
+
+                {formatDropdownOpen && (
+                  <ul className="absolute top-full left-0 w-full max-h-30 overflow-y-auto bg-gray-800 border border-gray-600 z-50">
+                    {(["4K", "Blu-ray", "DVD", "VHS"] as const)
+                      .filter((f) => !formData.formats.includes(f))
+                      .map((f) => (
+                        <li
+                          key={f}
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              formats: [...formData.formats, f],
+                            });
+                            setFormatDropdownOpen(false);
+                          }}
+                          className="px-3 py-2 text-white text-sm hover:bg-gray-600 cursor-pointer"
+                        >
+                          {f === "4K" ? "4K Ultra HD" : f}
+                        </li>
+                      ))}
+                  </ul>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
+              {/* Purchase Price */}
               <div>
                 <label htmlFor="purchasePrice" className={labelClass}>
                   Purchase Price
@@ -607,6 +595,8 @@ function MovieForm({
                   className={inputClass}
                 />
               </div>
+
+              {/* Condition */}
               <div>
                 <label htmlFor="condition" className={labelClass}>
                   Condition *
@@ -629,6 +619,7 @@ function MovieForm({
               </div>
             </div>
 
+            {/* Shelf Section */}
             <div>
               <label className={labelClass}>Shelf Section</label>
               <div className="flex gap-2">
@@ -676,6 +667,7 @@ function MovieForm({
               )}
             </div>
 
+            {/* Shelf Number */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="shelfNumber" className={labelClass}>
@@ -689,6 +681,7 @@ function MovieForm({
                   className={inputClass}
                 />
               </div>
+              {/* HDD Number */}
               <div>
                 <label htmlFor="hdDriveNumber" className={labelClass}>
                   HDD Number
@@ -703,6 +696,7 @@ function MovieForm({
               </div>
             </div>
 
+            {/* Available on Plex */}
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -722,6 +716,7 @@ function MovieForm({
         {/* Poster Details */}
         {activeTab === "poster" && (
           <div className="space-y-2 pb-2">
+            {/* Movie Poster */}
             <div>
               <label htmlFor="posterPath" className={labelClass}>
                 Movie Poster URL
@@ -745,6 +740,8 @@ function MovieForm({
                 />
               )}
             </div>
+            
+            {/* Product Poster */}
             <div>
               <label htmlFor="productPosterPath" className={labelClass}>
                 Product Image URL
