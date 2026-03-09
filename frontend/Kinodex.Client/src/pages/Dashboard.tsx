@@ -16,7 +16,7 @@ interface Stats {
   fourK: number;
 }
 
-function Home() {
+function Dashboard() {
   const { getToken } = useAuth();
   const [stats, setStats] = useState<Stats>({
     total: 0,
@@ -225,24 +225,6 @@ function Home() {
                 </div>
               </div>
             )}
-
-            {stats.total === 0 && !loading && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📽️</div>
-                <h3 className="text-2xl font-semibold mb-2">
-                  Your collection is empty
-                </h3>
-                <p className="text-gray-400 mb-6">
-                  Start building your movie library today!
-                </p>
-                <Link
-                  to="/add"
-                  className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-md transition duration-200"
-                >
-                  Add Your First Movie
-                </Link>
-              </div>
-            )}
           </>
         )}
       </div>
@@ -250,4 +232,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Dashboard;
