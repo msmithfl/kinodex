@@ -424,10 +424,10 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
             )}
 
             {showMobileOnlyMessage && (
-                    <MobileOnlyMessage
-                      setShowMobileOnlyMessage={setShowMobileOnlyMessage}
-                    />
-                  )}
+              <MobileOnlyMessage
+                setShowMobileOnlyMessage={setShowMobileOnlyMessage}
+              />
+            )}
           </div>
         )}
 
