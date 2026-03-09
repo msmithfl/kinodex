@@ -6,6 +6,8 @@ import type { Movie, TMDBMovie } from "../types";
 import { GENRE_MAP, searchTMDB } from "../utils/tmdbApi";
 import MovieForm from "./MovieForm";
 import { useUser, useAuth } from "@clerk/clerk-react";
+import BarcodeScanner from "./BarcodeScanner";
+import { MobileOnlyMessage } from "./MobileOnlyMessage";
 
 interface AddMovieModalProps {
   onClose: () => void;
@@ -19,8 +21,6 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const [searchYear, setSearchYear] = useState("");
   const [suggestions, setSuggestions] = useState<TMDBMovie[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [_showScanner, setShowScanner] = useState(false);
-  const [_showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const searchTimeoutRef = useRef<number | null>(null);
   const [formData, setFormData] = useState<Movie>({
@@ -54,12 +54,15 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const [showShelfSectionInput, setShowShelfSectionInput] = useState(false);
   const [newCollection, setNewCollection] = useState("");
   const [newShelfSection, setNewShelfSection] = useState("");
+  const [submitError, setSubmitError] = useState("");
+
   const [_showProductImageSelector, _setShowProductImageSelector] =
     useState(false);
-  const [_scannedUpc, _setScannedUpc] = useState("");
+  const [_scannedUpc, setScannedUpc] = useState("");
   const [_showManualUpcInput, _setShowManualUpcInput] = useState(false);
   const [_manualUpc, _setManualUpc] = useState("");
-  const [submitError, setSubmitError] = useState("");
+  const [showScanner, setShowScanner] = useState(false);
+  const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const API_URL = `${API_BASE}/api/movies`;
@@ -76,32 +79,32 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   };
 
   useEffect(() => {
-      // Load collections and shelf sections from API
-      const fetchData = async () => {
-        try {
-          const token = await getToken();
-          const headers = { Authorization: `Bearer ${token}` };
-          const [collectionsRes, shelfSectionsRes] = await Promise.all([
-            fetch(COLLECTIONS_URL, { headers }),
-            fetch(SHELF_SECTIONS_URL, { headers }),
-          ]);
-  
-          if (collectionsRes.ok) {
-            const collectionsData = await collectionsRes.json();
-            setCollections(collectionsData);
-          }
-  
-          if (shelfSectionsRes.ok) {
-            const shelfSectionsData = await shelfSectionsRes.json();
-            setShelfSections(shelfSectionsData);
-          }
-        } catch (error) {
-          console.error("Error loading collections and shelf sections:", error);
+    // Load collections and shelf sections from API
+    const fetchData = async () => {
+      try {
+        const token = await getToken();
+        const headers = { Authorization: `Bearer ${token}` };
+        const [collectionsRes, shelfSectionsRes] = await Promise.all([
+          fetch(COLLECTIONS_URL, { headers }),
+          fetch(SHELF_SECTIONS_URL, { headers }),
+        ]);
+
+        if (collectionsRes.ok) {
+          const collectionsData = await collectionsRes.json();
+          setCollections(collectionsData);
         }
-      };
-  
-      fetchData();
-    }, []);
+
+        if (shelfSectionsRes.ok) {
+          const shelfSectionsData = await shelfSectionsRes.json();
+          setShelfSections(shelfSectionsData);
+        }
+      } catch (error) {
+        console.error("Error loading collections and shelf sections:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -252,14 +255,6 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     }
   };
 
-  const handleScanClick = () => {
-    if (isMobile()) {
-      setShowScanner(true);
-    } else {
-      setShowMobileOnlyMessage(true);
-    }
-  };
-
   const handleManualSearchClick = () => {
     _setManualUpc(formData.upcNumber);
     _setShowManualUpcInput(true);
@@ -288,6 +283,21 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     } catch (error) {
       console.error("Error adding movie:", error);
     }
+  };
+
+  const handleScanClick = () => {
+    if (isMobile()) {
+      setShowScanner(true);
+    } else {
+      setShowMobileOnlyMessage(true);
+    }
+  };
+
+  const handleBarcodeDetected = (code: string) => {
+    setFormData({ ...formData, upcNumber: code });
+    setScannedUpc(code);
+    setShowScanner(false);
+    //setShowProductImageSelector(true);
   };
 
   return (
@@ -405,6 +415,19 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
               onScanClick={handleScanClick}
               onManualSearchClick={handleManualSearchClick}
             />
+
+            {showScanner && (
+              <BarcodeScanner
+                onDetected={handleBarcodeDetected}
+                onClose={() => setShowScanner(false)}
+              />
+            )}
+
+            {showMobileOnlyMessage && (
+                    <MobileOnlyMessage
+                      setShowMobileOnlyMessage={setShowMobileOnlyMessage}
+                    />
+                  )}
           </div>
         )}
 
@@ -413,18 +436,18 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
             <p className="text-red-400 text-sm text-right">{submitError}</p>
           )}
           <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
-          >
-            Close
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
-          >
-            Save
-          </button>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
+            >
+              Close
+            </button>
+            <button
+              onClick={handleSubmit}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
+            >
+              Save
+            </button>
           </div>
         </div>
       </div>
