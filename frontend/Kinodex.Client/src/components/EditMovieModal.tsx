@@ -239,7 +239,7 @@ export function EditMovieModal({ onClose }: EditMovieModalProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex gap-4 justify-between bg-gray-700 p-2">
-          <p className="text-white text-xl pl-2">Add Movie</p>
+          <p className="text-white text-xl pl-2">Editing {formData.title}</p>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-white cursor-pointer"
@@ -266,7 +266,7 @@ export function EditMovieModal({ onClose }: EditMovieModalProps) {
             addShelfSection={addShelfSection}
             onSubmit={handleSubmit}
             onCancel={onClose}
-            submitButtonText="Add to Collection"
+            submitButtonText="Save"
             showScanButton={true}
             onScanClick={handleScanClick}
             onManualSearchClick={handleManualSearchClick}
