@@ -5,8 +5,7 @@ import { useNavigate } from "react-router-dom";
 import type { Movie, TMDBMovie } from "../types";
 import { GENRE_MAP, searchTMDB } from "../utils/tmdbApi";
 import MovieForm from "./MovieForm";
-import { getToken } from "@clerk/react";
-import { useUser } from "@clerk/clerk-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 
 interface AddMovieModalProps {
   onClose: () => void;
@@ -15,6 +14,7 @@ interface AddMovieModalProps {
 export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const navigate = useNavigate();
   const { user } = useUser();
+  const { getToken } = useAuth();
   const [search, setSearch] = useState("");
   const [searchYear, setSearchYear] = useState("");
   const [suggestions, setSuggestions] = useState<TMDBMovie[]>([]);
@@ -276,8 +276,8 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
       });
 
       if (response.ok) {
-        // Navigate back to library page after successful add
-        navigate("/");
+        onClose();
+        navigate(0);
       }
     } catch (error) {
       console.error("Error adding movie:", error);

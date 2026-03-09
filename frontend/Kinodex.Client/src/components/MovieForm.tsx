@@ -45,8 +45,8 @@ function MovieForm({
   addCollection,
   addShelfSection,
   onSubmit,
-  onCancel,
-  submitButtonText = "Save",
+  // onCancel,
+  // submitButtonText = "Save",
   showScanButton = false,
   onScanClick,
 }: MovieFormProps) {
