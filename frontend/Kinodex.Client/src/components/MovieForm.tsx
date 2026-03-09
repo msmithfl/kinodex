@@ -29,8 +29,6 @@ interface MovieFormProps {
   onManualSearchClick?: () => void;
 }
 
-type Tab = "details" | "physical" | "visual";
-
 function MovieForm({
   formData,
   setFormData,
@@ -144,10 +142,12 @@ function MovieForm({
     await onSubmit(e);
   };
 
+  type Tab = "details" | "physical" | "poster";
+
   const tabs: { id: Tab; label: string }[] = [
     { id: "details", label: "Movie Details" },
     { id: "physical", label: "Physical" },
-    { id: "visual", label: "Visual" },
+    { id: "poster", label: "Poster" },
   ];
 
   const inputClass =
@@ -181,7 +181,7 @@ function MovieForm({
       )}
 
       {/* Scrollable tab content */}
-      <div className="flex-1 overflow-y-auto min-h-0 pr-1">
+      <div className="flex-1 max-h-120 overflow-y-auto min-h-0 pr-1">
         {/* Movie Details */}
         {activeTab === "details" && (
           <div className="space-y-5 pb-2">
@@ -674,8 +674,8 @@ function MovieForm({
           </div>
         )}
 
-        {/* Visual Details */}
-        {activeTab === "visual" && (
+        {/* Poster Details */}
+        {activeTab === "poster" && (
           <div className="space-y-5 pb-2">
             <div>
               <label htmlFor="posterPath" className={labelClass}>
