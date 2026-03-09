@@ -3,6 +3,11 @@ import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import type { Movie } from "../types";
+import {
+  FaFilm,
+  FaDownload,
+  FaChartPie,
+} from "react-icons/fa";
 
 interface Stats {
   total: number;
@@ -147,32 +152,26 @@ function Home() {
             <div className="mb-12">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Link
-                  to="/add"
-                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-8 transition-all duration-200 transform hover:scale-105 text-center"
-                >
-                  <div className="text-5xl mb-4">➕</div>
-                  <h3 className="text-xl font-semibold mb-2">Add Movie</h3>
-                  <p className="text-gray-400">
-                    Add a new movie to your collection
-                  </p>
-                </Link>
-
-                <Link
                   to="/"
                   className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-8 transition-all duration-200 transform hover:scale-105 text-center"
                 >
-                  <div className="text-5xl mb-4">📚</div>
-                  <h3 className="text-xl font-semibold mb-2">View Library</h3>
-                  <p className="text-gray-400">Browse your entire collection</p>
+                  <FaFilm className="text-5xl mb-4 mx-auto" />
+                  <h3 className="text-xl font-semibold mb-2">Library</h3>
                 </Link>
 
                 <Link
                   to="/stats"
                   className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-8 transition-all duration-200 transform hover:scale-105 text-center"
                 >
-                  <div className="text-5xl mb-4">📊</div>
+                  <FaChartPie className="text-5xl mb-4 mx-auto" />
                   <h3 className="text-xl font-semibold mb-2">Statistics</h3>
-                  <p className="text-gray-400">View collection insights</p>
+                </Link>
+                <Link
+                  to="/export"
+                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-8 transition-all duration-200 transform hover:scale-105 text-center"
+                >
+                  <FaDownload className="text-5xl mb-4 mx-auto" />
+                  <h3 className="text-xl font-semibold mb-2">Export/Import</h3>
                 </Link>
               </div>
             </div>
