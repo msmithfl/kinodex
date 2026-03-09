@@ -4,7 +4,6 @@ import Sidebar from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import MovieList from "./pages/MovieList";
-import AddMovie from "./pages/AddMovie";
 import EditMovie from "./pages/EditMovie";
 import MovieDetail from "./pages/MovieDetail";
 import CollectionsView from "./pages/CollectionsView";
@@ -52,7 +51,6 @@ function App() {
                     <Route path="/match-movies" element={<MatchMovies />} />
                     <Route path="/checkout" element={<CheckoutsView />} />
                     <Route path="/customer" element={<CustomersView />} />
-                    <Route path="/add" element={<AddMovie />} />
                     <Route path="/movie/:id" element={<MovieDetail />} />
                     <Route path="/edit/:id" element={<EditMovie />} />
                     <Route path="/stats" element={<Stats />} />
