@@ -173,8 +173,7 @@ function Stats() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)] pt-2">
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-20 pb-8">
-        <h1 className="text-3xl font-bold my-8">Collection Statistics</h1>
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-20 py-8">
 
         {loading ? (
           <LoadingSpinner />
