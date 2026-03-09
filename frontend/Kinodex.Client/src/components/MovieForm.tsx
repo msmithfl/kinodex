@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   TiStarOutline,
   TiStarHalfOutline,
   TiStarFullOutline,
 } from "react-icons/ti";
+import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { Genres, type Movie } from "../types";
 
 interface MovieFormProps {
@@ -65,6 +66,19 @@ function MovieForm({
   const [purchasePriceInput, setPurchasePriceInput] = useState<string>(
     formData.purchasePrice.toString(),
   );
+
+  const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
+  const genreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (genreRef.current && !genreRef.current.contains(e.target as Node)) {
+        setGenreDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     setYearInput(formData.year.toString());
@@ -151,7 +165,7 @@ function MovieForm({
   ];
 
   const inputClass =
-    "w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-gray-500";
+    "w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-gray-500";
   const labelClass = "block text-sm font-medium text-gray-300 mb-2";
 
   return (
@@ -184,7 +198,8 @@ function MovieForm({
       <div className="flex-1 overflow-y-auto min-h-0 pr-1">
         {/* Movie Details */}
         {activeTab === "details" && (
-          <div className="space-y-5 pb-2">
+          <div className="space-y-2 pb-2">
+            {/* Title */}
             <div>
               <label htmlFor="title" className={labelClass}>
                 Movie Title *
@@ -197,12 +212,12 @@ function MovieForm({
                   setFormData({ ...formData, title: e.target.value })
                 }
                 required
-                placeholder="Enter movie title"
                 className={inputClass}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
+              {/* Year */}
               <div>
                 <label htmlFor="year" className={labelClass}>
                   Year
@@ -216,6 +231,7 @@ function MovieForm({
                   className={inputClass}
                 />
               </div>
+              {/* TMDB ID */}
               <div>
                 <label htmlFor="tmdbId" className={labelClass}>
                   TMDB ID
@@ -225,63 +241,75 @@ function MovieForm({
                   id="tmdbId"
                   value={tmdbInput}
                   onChange={(e) => handleTmdbChange(e.target.value)}
-                  placeholder="Optional"
                   className={inputClass}
                 />
               </div>
             </div>
 
-            <div>
+            {/* Genres */}
+            <div ref={genreRef}>
               <label className={labelClass}>Genres</label>
-              <div className="mb-2 flex flex-wrap gap-2">
-                {formData.genres.map((genre, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-purple-600 text-white rounded-full text-sm"
-                  >
-                    {genre}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormData({
-                          ...formData,
-                          genres: formData.genres.filter((_, i) => i !== index),
-                        })
-                      }
-                      className="hover:text-red-300 transition cursor-pointer"
+              <div className="relative bg-gray-700 border border-gray-600 focus-within:border-gray-500">
+                <div
+                  className="flex flex-wrap items-center gap-2 px-3 py-1 min-h-10.5 cursor-pointer"
+                  onClick={() => setGenreDropdownOpen((prev) => !prev)}
+                >
+                  {formData.genres.map((genre, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-purple-600 text-white rounded-full text-sm relative z-10"
                     >
-                      ×
-                    </button>
-                  </span>
-                ))}
+                      {genre}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFormData({
+                            ...formData,
+                            genres: formData.genres.filter(
+                              (_, i) => i !== index,
+                            ),
+                          });
+                        }}
+                        className="hover:text-red-300 transition cursor-pointer"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  {formData.genres.length === 0 && (
+                    <span className="text-gray-400 text-sm">
+                      
+                    </span>
+                  )}
+                </div>
+
+                {/* Custom dropdown */}
+                {genreDropdownOpen && (
+                  <ul className="absolute top-full left-0 w-full max-h-50 overflow-y-auto bg-gray-800 border border-gray-600 z-50">
+                    {Object.values(Genres)
+                      .filter((g) => !formData.genres.includes(g))
+                      .map((g) => (
+                        <li
+                          key={g}
+                          onClick={() => {
+                            setFormData({
+                              ...formData,
+                              genres: [...formData.genres, g],
+                            });
+                            setGenreDropdownOpen(false);
+                          }}
+                          className="px-3 py-2 text-white text-sm hover:bg-gray-600 cursor-pointer"
+                        >
+                          {g}
+                        </li>
+                      ))}
+                  </ul>
+                )}
               </div>
-              <select
-                value=""
-                onChange={(e) => {
-                  if (
-                    e.target.value &&
-                    !formData.genres.includes(e.target.value)
-                  )
-                    setFormData({
-                      ...formData,
-                      genres: [...formData.genres, e.target.value],
-                    });
-                }}
-                className={inputClass + " cursor-pointer"}
-              >
-                <option value="">Add genre...</option>
-                {Object.values(Genres).map((g) => (
-                  <option
-                    key={g}
-                    value={g}
-                    disabled={formData.genres.includes(g)}
-                  >
-                    {g}
-                  </option>
-                ))}
-              </select>
             </div>
 
+            {/* Collections */}
             <div>
               <label className={labelClass}>Collections</label>
               <div className="mb-2 flex flex-wrap gap-2">
@@ -360,67 +388,84 @@ function MovieForm({
               )}
             </div>
 
-            <div>
-              <label className={labelClass}>Rating (0–5)</label>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((star) => {
-                  const isFullStar = formData.rating >= star;
-                  const isHalfStar = formData.rating === star - 0.5;
-                  return (
-                    <div
-                      key={star}
-                      className="relative cursor-pointer group"
-                      style={{ width: "32px", height: "32px" }}
-                    >
-                      <div
-                        className="absolute left-0 top-0 w-1/2 h-full z-10"
-                        onClick={() =>
-                          setFormData({ ...formData, rating: star - 0.5 })
-                        }
-                        title={`${star - 0.5} stars`}
-                      />
-                      <div
-                        className="absolute right-0 top-0 w-1/2 h-full z-10"
-                        onClick={() =>
-                          setFormData({ ...formData, rating: star })
-                        }
-                        title={`${star} stars`}
-                      />
-                      {isFullStar ? (
-                        <TiStarFullOutline className="w-8 h-8 text-yellow-400 absolute top-0 left-0" />
-                      ) : isHalfStar ? (
-                        <TiStarHalfOutline className="w-8 h-8 text-yellow-400 absolute top-0 left-0" />
-                      ) : (
-                        <TiStarOutline className="w-8 h-8 text-gray-500 group-hover:text-yellow-200 absolute top-0 left-0" />
-                      )}
-                    </div>
-                  );
-                })}
+            <div className="flex items-start justify-center gap-16">
+              {/* Watched */}
+              <div className="flex flex-col items-center">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Watched
+                </label>
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, rating: 0 })}
-                  className="ml-2 text-xs text-gray-400 hover:text-white transition cursor-pointer"
+                  onClick={() =>
+                    setFormData({
+                      ...formData,
+                      hasWatched: !formData.hasWatched,
+                    })
+                  }
+                  className="cursor-pointer"
+                  title={formData.hasWatched ? "Watched" : "Not watched"}
                 >
-                  Clear
+                  {formData.hasWatched ? (
+                    <LuEye className="w-8 h-8 text-indigo-400" />
+                  ) : (
+                    <LuEyeClosed className="w-8 h-8 text-gray-500 hover:text-indigo-400" />
+                  )}
                 </button>
               </div>
-              <p className="text-xs text-gray-400 mt-1">
-                {formData.rating > 0 ? `${formData.rating} stars` : "Not rated"}
-              </p>
+              {/* Rating */}
+              <div>
+                <label className={labelClass}>Rating</label>
+                <div className="flex">
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const isFullStar = formData.rating >= star;
+                    const isHalfStar = formData.rating === star - 0.5;
+                    return (
+                      <div
+                        key={star}
+                        className="relative cursor-pointer group"
+                        style={{ width: "32px", height: "32px" }}
+                      >
+                        <div
+                          className="absolute left-0 top-0 w-1/2 h-full z-10"
+                          onClick={() =>
+                            setFormData({ ...formData, rating: star - 0.5 })
+                          }
+                          title={`${star - 0.5} stars`}
+                        />
+                        <div
+                          className="absolute right-0 top-0 w-1/2 h-full z-10"
+                          onClick={() =>
+                            setFormData({ ...formData, rating: star })
+                          }
+                          title={`${star} stars`}
+                        />
+                        {isFullStar ? (
+                          <TiStarFullOutline className="w-8 h-8 text-yellow-400 absolute top-0 left-0" />
+                        ) : isHalfStar ? (
+                          <TiStarHalfOutline className="w-8 h-8 text-yellow-400 absolute top-0 left-0" />
+                        ) : (
+                          <TiStarOutline className="w-8 h-8 text-gray-500 group-hover:text-yellow-200 absolute top-0 left-0" />
+                        )}
+                      </div>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, rating: 0 })}
+                    className="ml-2 text-xs text-gray-400 hover:text-white transition cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+                {/* <p className="text-xs text-gray-400 mt-1">
+                  {formData.rating > 0
+                    ? `${formData.rating} stars`
+                    : "Not rated"}
+                </p> */}
+              </div>
             </div>
 
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.hasWatched}
-                onChange={(e) =>
-                  setFormData({ ...formData, hasWatched: e.target.checked })
-                }
-                className="w-5 h-5 bg-gray-700 border-gray-600 rounded focus:outline-none cursor-pointer"
-              />
-              <span className="text-sm font-medium text-gray-300">Watched</span>
-            </label>
-
+            {/* Review / Notes */}
             <div>
               <label htmlFor="review" className={labelClass}>
                 Review / Notes
@@ -441,7 +486,7 @@ function MovieForm({
 
         {/* Physical Details */}
         {activeTab === "physical" && (
-          <div className="space-y-5 pb-2">
+          <div className="space-y-2 pb-2">
             <div>
               <label htmlFor="upc" className={labelClass}>
                 UPC Number *
@@ -676,7 +721,7 @@ function MovieForm({
 
         {/* Poster Details */}
         {activeTab === "poster" && (
-          <div className="space-y-5 pb-2">
+          <div className="space-y-2 pb-2">
             <div>
               <label htmlFor="posterPath" className={labelClass}>
                 Movie Poster URL
@@ -729,23 +774,6 @@ function MovieForm({
           </div>
         )}
       </div>
-
-      {/* Action buttons — always visible at bottom */}
-      {/* <div className="flex gap-4 pt-4 shrink-0 border-t border-gray-700 mt-4">
-        <button
-          type="submit"
-          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 ease-in-out cursor-pointer"
-        >
-          {submitButtonText}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-md transition duration-200 cursor-pointer"
-        >
-          Cancel
-        </button>
-      </div> */}
     </form>
   );
 }
