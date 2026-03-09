@@ -59,6 +59,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const [_scannedUpc, _setScannedUpc] = useState("");
   const [_showManualUpcInput, _setShowManualUpcInput] = useState(false);
   const [_manualUpc, _setManualUpc] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const API_URL = `${API_BASE}/api/movies`;
@@ -266,6 +267,11 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.title.trim()) {
+      setSubmitError("Movie title is required.");
+      return;
+    }
+    setSubmitError("");
     try {
       const response = await fetch(API_URL, {
         method: "POST",
@@ -402,7 +408,11 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
           </div>
         )}
 
-        <div className="flex px-6 py-3 bg-gray-700 justify-end gap-3">
+        <div className="flex flex-col px-6 py-3 bg-gray-700 gap-2">
+          {submitError && (
+            <p className="text-red-400 text-sm text-right">{submitError}</p>
+          )}
+          <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
@@ -415,6 +425,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
           >
             Save
           </button>
+          </div>
         </div>
       </div>
     </div>
