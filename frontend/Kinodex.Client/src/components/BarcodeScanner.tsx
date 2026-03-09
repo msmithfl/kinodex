@@ -12,61 +12,78 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   const [isInitialized, setIsInitialized] = useState(false);
   const detectionCountRef = useRef<Map<string, number>>(new Map());
   const lastDetectionRef = useRef<string>("");
+  const retryCountRef = useRef(0);
+  const MAX_RETRIES = 5;
 
   useEffect(() => {
     if (!scannerRef.current) return;
 
-    const timer = setTimeout(() => {
-      Quagga.init(
-        {
-          inputStream: {
-            type: "LiveStream",
-            target: scannerRef.current!,
-            constraints: {
-              width: { min: 640, ideal: 1280, max: 1920 },
-              height: { min: 480, ideal: 720, max: 1080 },
-              facingMode: "environment",
-              aspectRatio: { min: 1, max: 2 },
+    const initQuagga = (delay: number) => {
+      const timer = setTimeout(() => {
+        Quagga.stop();
+        Quagga.init(
+          {
+            inputStream: {
+              type: "LiveStream",
+              target: scannerRef.current!,
+              constraints: {
+                width: { min: 640, ideal: 1280, max: 1920 },
+                height: { min: 480, ideal: 720, max: 1080 },
+                facingMode: "environment",
+                aspectRatio: { min: 1, max: 2 },
+              },
+              area: {
+                top: "25%",
+                right: "15%",
+                left: "15%",
+                bottom: "25%",
+              },
             },
-            area: {
-              top: "25%",
-              right: "15%",
-              left: "15%",
-              bottom: "25%",
+            locator: {
+              patchSize: "medium",
+              halfSample: true,
             },
+            numOfWorkers: 0,
+            frequency: 10,
+            decoder: {
+              readers: [
+                "upc_reader",
+                "ean_reader",
+                "ean_8_reader",
+                "code_128_reader",
+              ],
+              multiple: false,
+            },
+            locate: true,
           },
-          locator: {
-            patchSize: "medium",
-            halfSample: true,
-          },
-          numOfWorkers: 0, // Single threaded often works better
-          frequency: 10,
-          decoder: {
-            readers: [
-              "upc_reader",
-              "ean_reader",
-              "ean_8_reader",
-              "code_128_reader",
-            ],
-            multiple: false,
-          },
-          locate: true,
-        },
-        (err) => {
-          if (err) {
-            console.error("Error initializing Quagga:", err);
-            setError(
-              `Failed to access camera: ${err.message || "Please check permissions."}`,
-            );
-            return;
-          }
+          (err) => {
+            if (err) {
+              console.error("Error initializing Quagga:", err);
+              const msg: string = err.message || String(err);
+              const isDimensionError = msg.includes("NaN") || msg.includes("dimensions");
+              if (isDimensionError && retryCountRef.current < MAX_RETRIES) {
+                retryCountRef.current += 1;
+                console.log(`Retrying Quagga init (attempt ${retryCountRef.current})...`);
+                initQuagga(300 * retryCountRef.current);
+                return;
+              }
+              setError(
+                `Failed to access camera: ${msg || "Please check permissions."}`,
+              );
+              return;
+            }
 
-          console.log("Quagga initialized successfully");
-          setIsInitialized(true);
-          Quagga.start();
-        },
-      );
-    }, 100);
+            console.log("Quagga initialized successfully");
+            retryCountRef.current = 0;
+            setIsInitialized(true);
+            Quagga.start();
+          },
+        );
+      }, delay);
+      return timer;
+    };
+
+    let currentTimer = initQuagga(100);
 
     const handleDetected = (result: any) => {
       if (!result || !result.codeResult || !result.codeResult.code) return;
@@ -109,7 +126,7 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
     Quagga.onDetected(handleDetected);
 
     return () => {
-      clearTimeout(timer);
+      clearTimeout(currentTimer);
       Quagga.offDetected(handleDetected);
       Quagga.stop();
       setIsInitialized(false);
