@@ -38,7 +38,7 @@ export function BulkEditModal({
       >
         <div className="flex gap-4 justify-between bg-gray-700 p-2">
           <p className="text-white text-xl pl-2">
-            Bulk Edit {selectedMovieIds.size} Movie{selectedMovieIds.size !== 1 ? "s" : ""}
+            Bulk Editing {selectedMovieIds.size} Movie{selectedMovieIds.size !== 1 ? "s" : ""}
           </p>
           <button
             onClick={() => setShowBulkEditModal(false)}
