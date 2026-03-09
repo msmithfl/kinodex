@@ -155,7 +155,7 @@ function MovieForm({
   const labelClass = "block text-sm font-medium text-gray-300 mb-2";
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full w-full">
       {/* Tabs */}
       <div className="flex border-b border-gray-700 mb-4 shrink-0">
         {tabs.map((tab) => (
@@ -731,7 +731,7 @@ function MovieForm({
       </div>
 
       {/* Action buttons — always visible at bottom */}
-      <div className="flex gap-4 pt-4 shrink-0 border-t border-gray-700 mt-4">
+      {/* <div className="flex gap-4 pt-4 shrink-0 border-t border-gray-700 mt-4">
         <button
           type="submit"
           className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 ease-in-out cursor-pointer"
@@ -745,7 +745,7 @@ function MovieForm({
         >
           Cancel
         </button>
-      </div>
+      </div> */}
     </form>
   );
 }

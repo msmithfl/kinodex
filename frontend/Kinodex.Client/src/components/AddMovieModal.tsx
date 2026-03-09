@@ -1,18 +1,26 @@
 import { IoClose } from "react-icons/io5";
 import { FaArrowRight } from "react-icons/fa";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Movie, TMDBMovie } from "../types";
 import { GENRE_MAP, searchTMDB } from "../utils/tmdbApi";
+import MovieForm from "./MovieForm";
+import { getToken } from "@clerk/react";
+import { useUser } from "@clerk/clerk-react";
 
 interface AddMovieModalProps {
   onClose: () => void;
 }
 
 export function AddMovieModal({ onClose }: AddMovieModalProps) {
+  const navigate = useNavigate();
+  const { user } = useUser();
   const [search, setSearch] = useState("");
   const [searchYear, setSearchYear] = useState("");
   const [suggestions, setSuggestions] = useState<TMDBMovie[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [_showScanner, setShowScanner] = useState(false);
+  const [_showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const searchTimeoutRef = useRef<number | null>(null);
   const [formData, setFormData] = useState<Movie>({
@@ -36,6 +44,63 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     shelfSection: "",
     isOnPlex: true,
   });
+  const [collections, setCollections] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [shelfSections, setShelfSections] = useState<
+    { id: number; name: string }[]
+  >([]);
+  const [showCollectionInput, setShowCollectionInput] = useState(false);
+  const [showShelfSectionInput, setShowShelfSectionInput] = useState(false);
+  const [newCollection, setNewCollection] = useState("");
+  const [newShelfSection, setNewShelfSection] = useState("");
+  const [_showProductImageSelector, _setShowProductImageSelector] =
+    useState(false);
+  const [_scannedUpc, _setScannedUpc] = useState("");
+  const [_showManualUpcInput, _setShowManualUpcInput] = useState(false);
+  const [_manualUpc, _setManualUpc] = useState("");
+
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
+  const API_URL = `${API_BASE}/api/movies`;
+  const COLLECTIONS_URL = `${API_BASE}/api/collections`;
+  const SHELF_SECTIONS_URL = `${API_BASE}/api/shelfsections`;
+
+  // Check if device is mobile
+  const isMobile = () => {
+    return (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      ) || window.innerWidth <= 768
+    );
+  };
+
+  useEffect(() => {
+      // Load collections and shelf sections from API
+      const fetchData = async () => {
+        try {
+          const token = await getToken();
+          const headers = { Authorization: `Bearer ${token}` };
+          const [collectionsRes, shelfSectionsRes] = await Promise.all([
+            fetch(COLLECTIONS_URL, { headers }),
+            fetch(SHELF_SECTIONS_URL, { headers }),
+          ]);
+  
+          if (collectionsRes.ok) {
+            const collectionsData = await collectionsRes.json();
+            setCollections(collectionsData);
+          }
+  
+          if (shelfSectionsRes.ok) {
+            const shelfSectionsData = await shelfSectionsRes.json();
+            setShelfSections(shelfSectionsData);
+          }
+        } catch (error) {
+          console.error("Error loading collections and shelf sections:", error);
+        }
+      };
+  
+      fetchData();
+    }, []);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -118,13 +183,114 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     setShowSuggestions(false);
   };
 
+  const addCollection = async () => {
+    if (newCollection && !collections.find((c) => c.name === newCollection)) {
+      try {
+        const token = await getToken();
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
+        const response = await fetch(COLLECTIONS_URL, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ name: newCollection }),
+        });
+
+        if (response.ok) {
+          const newCollectionData = await response.json();
+          setCollections(
+            [...collections, newCollectionData].sort((a, b) =>
+              a.name.localeCompare(b.name),
+            ),
+          );
+          setFormData({
+            ...formData,
+            collections: [...formData.collections, newCollection],
+          });
+          setNewCollection("");
+          setShowCollectionInput(false);
+        }
+      } catch (error) {
+        console.error("Error adding collection:", error);
+      }
+    }
+  };
+
+  const addShelfSection = async () => {
+    if (
+      newShelfSection &&
+      !shelfSections.find((s) => s.name === newShelfSection)
+    ) {
+      try {
+        const token = await getToken();
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
+        const response = await fetch(SHELF_SECTIONS_URL, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ name: newShelfSection }),
+        });
+
+        if (response.ok) {
+          const newShelfSectionData = await response.json();
+          setShelfSections(
+            [...shelfSections, newShelfSectionData].sort((a, b) =>
+              a.name.localeCompare(b.name),
+            ),
+          );
+          setFormData({ ...formData, shelfSection: newShelfSection });
+          setNewShelfSection("");
+          setShowShelfSectionInput(false);
+        }
+      } catch (error) {
+        console.error("Error adding shelf section:", error);
+      }
+    }
+  };
+
+  const handleScanClick = () => {
+    if (isMobile()) {
+      setShowScanner(true);
+    } else {
+      setShowMobileOnlyMessage(true);
+    }
+  };
+
+  const handleManualSearchClick = () => {
+    _setManualUpc(formData.upcNumber);
+    _setShowManualUpcInput(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...formData, userId: user?.id ?? "" }),
+      });
+
+      if (response.ok) {
+        // Navigate back to library page after successful add
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Error adding movie:", error);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
       onClick={onClose}
     >
       <div
-        className="flex flex-col justify-between bg-gray-800 shadow-2xl w-full max-w-2xl h-full max-h-3/4 relative"
+        className="flex flex-col mx-2 justify-between bg-gray-800 shadow-2xl w-full max-w-2xl h-full max-h-3/4 relative"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex gap-4 justify-between bg-gray-700 p-2">
@@ -210,8 +376,29 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
           </div>
         )}
         {showForm && (
-          <div>
-            <p className="text-white">Form goes here</p>
+          <div className="flex px-4">
+            <MovieForm
+              formData={formData}
+              setFormData={setFormData}
+              collections={collections}
+              shelfSections={shelfSections}
+              showCollectionInput={showCollectionInput}
+              setShowCollectionInput={setShowCollectionInput}
+              showShelfSectionInput={showShelfSectionInput}
+              setShowShelfSectionInput={setShowShelfSectionInput}
+              newCollection={newCollection}
+              setNewCollection={setNewCollection}
+              newShelfSection={newShelfSection}
+              setNewShelfSection={setNewShelfSection}
+              addCollection={addCollection}
+              addShelfSection={addShelfSection}
+              onSubmit={handleSubmit}
+              onCancel={() => navigate("/")}
+              submitButtonText="Add to Collection"
+              showScanButton={true}
+              onScanClick={handleScanClick}
+              onManualSearchClick={handleManualSearchClick}
+            />
           </div>
         )}
 
@@ -223,7 +410,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
             Close
           </button>
           <button
-            onClick={onClose}
+            onClick={handleSubmit}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
           >
             Save
