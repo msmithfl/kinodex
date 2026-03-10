@@ -12,6 +12,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import type { Movie } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { EditMovieModal } from "../components/EditMovieModal";
+import SubNavigation from "../components/SubNavigation";
 
 function MovieDetail() {
   const navigate = useNavigate();
@@ -83,26 +84,40 @@ function MovieDetail() {
   }
 
   return (
-    <div>
+    <div className="relative min-h-full">
       {movie.backdropPath && (
-        <div className="relative w-full h-56 md:h-72 lg:h-96 overflow-hidden">
-          <img
-            src={movie.backdropPath}
-            alt=""
-            className="w-full h-full object-cover object-center md:object-top"
-          />
-          <div className="absolute inset-0 bg-linear-to-b from-gray-900/20 to-gray-900" />
-        </div>
+        <>
+          {/* Mobile: absolute banner behind SubNav */}
+          <div className="absolute top-0 left-0 right-0 h-56 overflow-hidden md:hidden">
+            <img
+              src={movie.backdropPath}
+              alt=""
+              className="w-full h-full object-cover object-center"
+            />
+            <div className="absolute inset-0 bg-linear-to-b from-gray-900/20 to-gray-900" />
+          </div>
+          {/* Desktop: full page background */}
+          <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
+            <img
+              src={movie.backdropPath}
+              alt=""
+              className="w-full h-full object-cover object-top opacity-20"
+            />
+            <div className="absolute inset-0 bg-linear-to-b from-gray-900/60 via-gray-900/80 to-gray-900" />
+          </div>
+        </>
       )}
-      <div className="max-w-6xl mx-auto px-4 pt-2 -mt-12 relative">
+      <div className="relative z-10">
+        <SubNavigation />
+        <div className="mx-auto md:mx-10 px-4 pt-2 mt-40 md:mt-0">
         <div className="overflow-hidden">
           {/* Movie Details Header */}
           <div className="p-2 pb-4 border-b border-gray-700">
-            <div className="grid grid-cols-12 gap-4 lg:gap-6">
+            <div className="flex justify-between md:justify-start">
               {/* Title, Year, Rating, Genres - Center */}
-              <div className="col-span-8 lg:col-span-6 flex flex-col justify-center space-y-2 lg:space-y-4">
-                <div className="flex items-center gap-3">
-                  <h1 className="text-xl lg:text-2xl font-bold text-white">
+              <div className="md:ml-10 flex flex-col justify-center space-y-2 lg:space-y-4">
+                <div className="flex items-center">
+                  <h1 className="text-xl lg:text-3xl font-bold text-white">
                     {movie.title}
                   </h1>
                 </div>
@@ -175,12 +190,12 @@ function MovieDetail() {
                 </div>
               </div>
               {/* Poster */}
-              <div className="col-span-4 lg:col-span-3">
+              <div className="lg:order-first">
                 {movie.posterPath ? (
                   <img
                     src={movie.posterPath}
                     alt={`${movie.title} poster`}
-                    className="rounded-lg shadow-lg w-full object-cover"
+                    className="rounded-lg shadow-lg w-20 md:w-60 object-cover"
                     onError={(e) => {
                       e.currentTarget.src =
                         "https://via.placeholder.com/300x450?text=No+Poster";
@@ -452,6 +467,7 @@ function MovieDetail() {
           onConfirm={handleDeleteConfirm}
           onCancel={handleDeleteCancel}
         />
+      </div>
       </div>
     </div>
   );
