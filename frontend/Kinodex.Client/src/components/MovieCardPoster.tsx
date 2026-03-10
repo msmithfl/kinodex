@@ -18,7 +18,7 @@ function MoviePosterCard({ movie, showShelf = false }: MoviePosterCardProps) {
   return (
     <Link
       to={`/movie/${movie.id}`}
-      className="group relative aspect-2/3 max-w-42 rounded border border-gray-700 overflow-hidden shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-2xl"
+      className="group relative aspect-2/3 max-w-42 rounded border border-gray-600 overflow-hidden shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-2xl"
     >
       {movie.posterPath ? (
         <img
