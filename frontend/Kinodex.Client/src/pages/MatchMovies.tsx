@@ -52,7 +52,7 @@ function MatchMovies() {
     }
   };
 
-  const assignMatch = async (movieId: number, tmdbId: number) => {
+  const assignMatch = async (movieId: number, tmdbId: number, posterPath?: string, backdropPath?: string) => {
     setProcessing((prev) => new Set(prev).add(movieId));
 
     try {
@@ -61,7 +61,7 @@ function MatchMovies() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ movieId, tmdbId }),
+        body: JSON.stringify({ movieId, tmdbId, posterPath, backdropPath }),
       });
 
       if (response.ok) {
@@ -239,7 +239,7 @@ function MatchMovies() {
 
 interface MatchSuggestionCardProps {
   suggestion: MatchSuggestion;
-  onAssign: (movieId: number, tmdbId: number) => void;
+  onAssign: (movieId: number, tmdbId: number, posterPath?: string, backdropPath?: string) => void;
   onSkip: (movieId: number) => void;
   isProcessing: boolean;
 }
@@ -270,7 +270,7 @@ function MatchSuggestionCard({
           >
             {match.posterPath ? (
               <img
-                src={`https://image.tmdb.org/t/p/w92${match.posterPath}`}
+                src={match.posterPath}
                 alt={match.title}
                 className="w-16 h-24 object-cover rounded"
               />
@@ -294,7 +294,7 @@ function MatchSuggestionCard({
 
             <div className="flex gap-2">
               <button
-                onClick={() => onAssign(suggestion.movieId, match.tmdbId)}
+                onClick={() => onAssign(suggestion.movieId, match.tmdbId, match.posterPath, match.backdropPath)}
                 disabled={isProcessing}
                 className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-md transition flex items-center gap-2 cursor-pointer"
                 title="Accept this match"

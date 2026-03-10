@@ -58,6 +58,7 @@ public static class MovieEndpoints
             movie.Year = updatedMovie.Year;
             movie.Genres = updatedMovie.Genres;
             movie.PosterPath = updatedMovie.PosterPath;
+            movie.BackdropPath = updatedMovie.BackdropPath;
             movie.ProductPosterPath = updatedMovie.ProductPosterPath;
             movie.TmdbId = updatedMovie.TmdbId;
             movie.HDDriveNumber = updatedMovie.HDDriveNumber;
@@ -90,7 +91,7 @@ public static class MovieEndpoints
                 .ToListAsync();
 
             var csv = new StringBuilder();
-            csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Product Poster Path,Date Added");
+            csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added");
 
             foreach (var movie in movies)
             {
@@ -98,7 +99,7 @@ public static class MovieEndpoints
                 var genres = string.Join("|", movie.Genres);
                 var collections = string.Join("|", movie.Collections);
                 var title = movie.Title.Replace("\"", "\"\"");
-                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",\"{movie.Condition}\",{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},\"{movie.ShelfSection}\",{movie.HDDriveNumber},{movie.TmdbId},\"{movie.PosterPath}\",\"{movie.ProductPosterPath}\",{movie.CreatedAt:yyyy-MM-dd}");
+                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",\"{movie.Condition}\",{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},\"{movie.ShelfSection}\",{movie.HDDriveNumber},{movie.TmdbId},\"{movie.PosterPath}\",\"{movie.BackdropPath}\",\"{movie.ProductPosterPath}\",{movie.CreatedAt:yyyy-MM-dd}");
             }
 
             var bytes = Encoding.UTF8.GetBytes(csv.ToString());
@@ -138,7 +139,7 @@ public static class MovieEndpoints
                 try
                 {
                     var fields = ParseCsvLine(lines[i]);
-                    if (fields.Length < 18) continue;
+                    if (fields.Length < 20) continue;
 
                     var upc = fields[1];
                     if (!string.IsNullOrEmpty(upc) && existingUpcs.Contains(upc))
@@ -166,8 +167,9 @@ public static class MovieEndpoints
                         HDDriveNumber = int.TryParse(fields[13], out var hd) ? hd : 0,
                         TmdbId = int.TryParse(fields[14], out var tmdb) ? tmdb : null,
                         PosterPath = fields[15],
-                        ProductPosterPath = fields[16],
-                        CreatedAt = DateTime.TryParse(fields[17], out var dt) ? dt.ToUniversalTime() : DateTime.UtcNow,
+                        BackdropPath = fields[16],
+                        ProductPosterPath = fields[17],
+                        CreatedAt = DateTime.TryParse(fields[18], out var dt) ? dt.ToUniversalTime() : DateTime.UtcNow,
                     };
 
                     db.Movies.Add(movie);

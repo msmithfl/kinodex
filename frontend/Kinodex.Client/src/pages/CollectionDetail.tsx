@@ -597,7 +597,7 @@ function CollectionDetail() {
                             <div className="flex items-center gap-4">
                               {movie.poster_path ? (
                                 <img
-                                  src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                                  src={movie.poster_path}
                                   alt={movie.title}
                                   className="w-12 h-18 object-cover rounded"
                                 />

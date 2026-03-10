@@ -350,7 +350,7 @@ function CheckoutsView() {
                     <div className="flex items-start gap-4">
                       {checkout.movie?.posterPath && (
                         <img
-                          src={`https://image.tmdb.org/t/p/w92${checkout.movie.posterPath}`}
+                          src={checkout.movie.posterPath}
                           alt={checkout.movie.title}
                           className="w-16 h-24 object-cover rounded"
                         />
