@@ -151,8 +151,8 @@ function GenreDetail() {
               <div
                 className={
                   viewMode === "poster"
-                    ? "grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-2 md:gap-y-10"
-                    : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                    ? "grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-1.5 md:gap-y-10"
+                    : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2"
                 }
               >
                 {movies.map((movie) =>
