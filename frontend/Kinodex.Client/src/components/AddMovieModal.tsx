@@ -278,7 +278,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
 
       if (response.ok) {
         onClose();
-        navigate("/");
+        window.location.reload();
       }
     } catch (error) {
       console.error("Error adding movie:", error);
