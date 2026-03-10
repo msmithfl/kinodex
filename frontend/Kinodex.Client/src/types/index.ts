@@ -13,6 +13,7 @@ export interface Movie {
     year: number;
     genres: string[];
     posterPath: string;
+    backdropPath: string;
     productPosterPath: string;
     tmdbId?: number;
     hdDriveNumber: number;

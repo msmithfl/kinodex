@@ -37,6 +37,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     year: new Date().getFullYear(),
     genres: [],
     posterPath: "",
+    backdropPath: "",
     productPosterPath: "",
     tmdbId: undefined,
     hdDriveNumber: 0,
