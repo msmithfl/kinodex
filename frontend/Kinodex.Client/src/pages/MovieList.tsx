@@ -97,9 +97,16 @@ function MovieList() {
   const API_URL = `${API_BASE}/api/movies`;
 
   useEffect(() => {
-    fetchMovies();
-    fetchShelfSections();
-    fetchCollections();
+    const loadData = async () => {
+      const token = await getToken();
+      if (!token) return;
+      await Promise.all([
+        fetchMovies(token),
+        fetchShelfSections(token),
+        fetchCollections(token),
+      ]);
+    };
+    loadData();
   }, []);
 
   // Save column preferences to localStorage
@@ -113,9 +120,9 @@ function MovieList() {
     localStorage.setItem("movieListSortDirection", sortDirection);
   }, [sortBy, sortDirection]);
 
-  const fetchMovies = async () => {
+  const fetchMovies = async (token?: string | null) => {
     try {
-      const token = await getToken();
+      if (!token) token = await getToken();
       const response = await fetch(API_URL, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -130,9 +137,8 @@ function MovieList() {
     }
   };
 
-  const fetchShelfSections = async () => {
+  const fetchShelfSections = async (token: string) => {
     try {
-      const token = await getToken();
       const response = await fetch(`${API_BASE}/api/shelfsections`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -145,9 +151,8 @@ function MovieList() {
     }
   };
 
-  const fetchCollections = async () => {
+  const fetchCollections = async (token: string) => {
     try {
-      const token = await getToken();
       const response = await fetch(`${API_BASE}/api/collections`, {
         headers: { Authorization: `Bearer ${token}` },
       });
