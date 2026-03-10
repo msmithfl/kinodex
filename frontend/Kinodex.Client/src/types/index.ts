@@ -57,6 +57,7 @@ export interface TmdbSearchResult {
   title: string;
   year?: number;
   posterPath?: string;
+  backdropPath?: string;
   overview?: string;
 }
 

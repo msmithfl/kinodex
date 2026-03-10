@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Kinodex.Api.Data;
 using Kinodex.Api.Models;
 using Microsoft.EntityFrameworkCore;
@@ -161,6 +162,7 @@ public class TmdbMatchingService
                         ? date.Year 
                         : null,
                     PosterPath = r.PosterPath != null ? $"https://image.tmdb.org/t/p/w500{r.PosterPath}" : null,
+                    BackdropPath = r.BackdropPath != null ? $"https://image.tmdb.org/t/p/w1280{r.BackdropPath}" : null,
                     Overview = r.Overview
                 })
                 .ToList() ?? new List<TmdbSearchResult>();
@@ -172,12 +174,14 @@ public class TmdbMatchingService
         }
     }
 
-    public async Task<bool> AssignTmdbId(int movieId, int tmdbId)
+    public async Task<bool> AssignTmdbId(int movieId, int tmdbId, string? posterPath = null, string? backdropPath = null)
     {
         var movie = await _db.Movies.FindAsync(movieId);
         if (movie == null) return false;
 
         movie.TmdbId = tmdbId;
+        if (posterPath != null) movie.PosterPath = posterPath;
+        if (backdropPath != null) movie.BackdropPath = backdropPath;
         await _db.SaveChangesAsync();
         return true;
     }
@@ -215,6 +219,7 @@ public class TmdbSearchResult
     public string Title { get; set; } = string.Empty;
     public int? Year { get; set; }
     public string? PosterPath { get; set; }
+    public string? BackdropPath { get; set; }
     public string? Overview { get; set; }
 }
 
@@ -228,7 +233,11 @@ internal class TmdbMovie
 {
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
+    [JsonPropertyName("release_date")]
     public string? ReleaseDate { get; set; }
+    [JsonPropertyName("poster_path")]
     public string? PosterPath { get; set; }
+    [JsonPropertyName("backdrop_path")]
+    public string? BackdropPath { get; set; }
     public string? Overview { get; set; }
 }
