@@ -57,7 +57,11 @@ function MyShelf() {
           setMovies(
             [...data]
               .filter((m) => m.shelfSection && m.shelfSection !== "Unshelved")
-              .sort((a, b) => a.title.localeCompare(b.title)),
+              .sort((a, b) => {
+                const sectionCmp = a.shelfSection!.localeCompare(b.shelfSection!);
+                if (sectionCmp !== 0) return sectionCmp;
+                return a.title.localeCompare(b.title);
+              }),
           );
         }
       } catch (error) {
@@ -78,18 +82,31 @@ function MyShelf() {
     );
   }
 
-  const rows: Movie[][] = [];
-  for (let i = 0; i < movies.length; i += PER_ROW) {
-    rows.push(movies.slice(i, i + PER_ROW));
+  // Group movies by shelf section, preserving sort order within each group
+  const sectionMap = new Map<string, Movie[]>();
+  for (const movie of movies) {
+    const section = movie.shelfSection!;
+    if (!sectionMap.has(section)) sectionMap.set(section, []);
+    sectionMap.get(section)!.push(movie);
   }
+  const sections = Array.from(sectionMap.entries());
 
   return (
     <>
       <SubNavigation />
       <div className="flex flex-col h-[calc(100vh-9rem)] pt-2">
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-10 pb-8">
-          <div className="space-y-8">
-            {rows.map((row, rowIdx) => (
+          <div className="space-y-10">
+            {sections.map(([sectionName, sectionMovies]) => {
+              const rows: Movie[][] = [];
+              for (let i = 0; i < sectionMovies.length; i += PER_ROW) {
+                rows.push(sectionMovies.slice(i, i + PER_ROW));
+              }
+              return (
+              <div key={sectionName}>
+                <h2 className="text-lg font-semibold text-gray-300 mb-2 ml-1">{sectionName}</h2>
+                <div className="space-y-8">
+                {rows.map((row, rowIdx) => (
               <div key={rowIdx}>
                 {/* Spine row — align to bottom so DVD spines stick up above the rest */}
                 <div className="flex items-end justify-center gap-0.5 min-w-max">
@@ -179,6 +196,10 @@ function MyShelf() {
                 <div className="h-2 rounded-b bg-amber-950 shadow-md w-xl md:w-full" />
               </div>
             ))}
+                </div>
+              </div>
+              );
+            })}
           </div>
 
           {movies.length === 0 && (

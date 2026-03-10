@@ -39,6 +39,7 @@ function App() {
                 <main className="flex-1 overflow-x-hidden">
                   <Routes>
                     <Route path="/" element={<MovieList />} />
+                    <Route path="/library" element={<MovieList />} />
                     <Route path="/my-shelf" element={<MyShelf />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/collections" element={<CollectionsView />} />
