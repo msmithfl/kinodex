@@ -87,33 +87,12 @@ function MovieDetail() {
       <div className="max-w-6xl mx-auto px-4 pt-2">
         <div className="overflow-hidden">
           {/* Movie Details Header */}
-          <div className="p-8 border-b border-gray-700">
+          <div className="p-2 pb-4 border-b border-gray-700">
             <div className="grid grid-cols-12 gap-4 lg:gap-6">
-              {/* Poster - Left */}
-              <div className="col-span-4 lg:col-span-3">
-                {movie.posterPath ? (
-                  <img
-                    src={movie.posterPath}
-                    alt={`${movie.title} poster`}
-                    className="rounded-lg shadow-lg w-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "https://via.placeholder.com/300x450?text=No+Poster";
-                    }}
-                  />
-                ) : (
-                  <div className="bg-gray-700 rounded-lg flex items-center justify-center h-full min-h-75">
-                    <p className="text-gray-500 text-xs lg:text-base">
-                      No poster
-                    </p>
-                  </div>
-                )}
-              </div>
-
               {/* Title, Year, Rating, Genres - Center */}
               <div className="col-span-8 lg:col-span-6 flex flex-col justify-center space-y-2 lg:space-y-4">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl lg:text-4xl font-bold text-white">
+                  <h1 className="text-xl lg:text-2xl font-bold text-white">
                     {movie.title}
                   </h1>
                 </div>
@@ -184,50 +163,27 @@ function MovieDetail() {
                     </p>
                   )}
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowModal(true)}
-                    className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                    aria-label="Edit movie"
-                  >
-                    <FaEdit className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={handleDeleteClick}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                    aria-label="Delete movie"
-                  >
-                    <FaTrash className="w-5 h-5" />
-                  </button>
-                </div>
               </div>
-
-              {/* Product Image & eBay Button - Right */}
-              <div className="col-span-12 lg:col-span-3 flex lg:flex-col items-end justify-end gap-4">
-                {movie.productPosterPath && (
+              {/* Poster */}
+              <div className="col-span-4 lg:col-span-3">
+                {movie.posterPath ? (
                   <img
-                    src={movie.productPosterPath}
-                    alt={`${movie.title} product`}
-                    className="rounded-lg shadow-md w-24 lg:w-32 h-auto object-cover"
+                    src={movie.posterPath}
+                    alt={`${movie.title} poster`}
+                    className="rounded-lg shadow-lg w-full object-cover"
                     onError={(e) => {
-                      e.currentTarget.style.display = "none";
+                      e.currentTarget.src =
+                        "https://via.placeholder.com/300x450?text=No+Poster";
                     }}
                   />
+                ) : (
+                  <div className="bg-gray-700 rounded-lg flex items-center justify-center h-full min-h-75">
+                    <p className="text-gray-500 text-xs lg:text-base">
+                      No poster
+                    </p>
+                  </div>
                 )}
-
-                <button
-                  onClick={() => {
-                    const query = encodeURIComponent(`${movie.upcNumber}`);
-                    window.open(
-                      `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&rt=nc&LH_ItemCondition=4`,
-                      "_blank",
-                      "noopener,noreferrer",
-                    );
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 text-xs lg:text-sm cursor-pointer w-auto lg:w-full"
-                >
-                  🔍 Search on eBay
-                </button>
+                
               </div>
             </div>
           </div>
@@ -417,6 +373,34 @@ function MovieDetail() {
                 </div>
               </div> */}
 
+              {/* Product Image & eBay Button - Right */}
+              <div className="col-span-12 lg:col-span-3 flex lg:flex-col items-end justify-end gap-4">
+                {movie.productPosterPath && (
+                  <img
+                    src={movie.productPosterPath}
+                    alt={`${movie.title} product`}
+                    className="rounded-lg shadow-md w-24 lg:w-32 h-auto object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                )}
+
+                <button
+                  onClick={() => {
+                    const query = encodeURIComponent(`${movie.upcNumber}`);
+                    window.open(
+                      `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&rt=nc&LH_ItemCondition=4`,
+                      "_blank",
+                      "noopener,noreferrer",
+                    );
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 text-xs lg:text-sm cursor-pointer w-auto lg:w-full"
+                >
+                  🔍 Search on eBay
+                </button>
+              </div>
+
               <div className="p-6 bg-gray-700 rounded-lg">
                 <h3 className="text-sm font-medium text-gray-400 mb-3">
                   Review / Notes
@@ -431,6 +415,22 @@ function MovieDetail() {
                   </p>
                 )}
               </div>
+              <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+                    aria-label="Edit movie"
+                  >
+                    <FaEdit className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={handleDeleteClick}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+                    aria-label="Delete movie"
+                  >
+                    <FaTrash className="w-5 h-5" />
+                  </button>
+                </div>
             </div>
           </div>
         </div>

@@ -160,7 +160,7 @@ public class TmdbMatchingService
                     Year = r.ReleaseDate != null && DateTime.TryParse(r.ReleaseDate, out var date) 
                         ? date.Year 
                         : null,
-                    PosterPath = r.PosterPath,
+                    PosterPath = r.PosterPath != null ? $"https://image.tmdb.org/t/p/w500{r.PosterPath}" : null,
                     Overview = r.Overview
                 })
                 .ToList() ?? new List<TmdbSearchResult>();
