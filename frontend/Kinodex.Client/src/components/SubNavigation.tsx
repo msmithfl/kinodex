@@ -69,7 +69,7 @@ function SubNavigation() {
         >
           <button
             onClick={() => setMobileOpen((prev) => !prev)}
-            className="flex items-center gap-2 text-indigo-400 font-semibold text-base focus:outline-none cursor-pointer"
+            className="flex items-center gap-2 font-semibold text-base focus:outline-none cursor-pointer"
           >
             {activeLink.label}
             {mobileOpen ? <FaChevronUp /> : <FaChevronDown />}
@@ -81,7 +81,7 @@ function SubNavigation() {
                 <Link
                   key={to}
                   to={to}
-                  className={`block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors font-medium ${
+                  className={`block text-center px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors font-medium ${
                     isActive(to) ? "text-indigo-400" : ""
                   }`}
                 >
