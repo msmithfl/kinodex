@@ -91,7 +91,7 @@ function GenreDetail() {
   return (
     <>
       <SubNavigation />
-      <div className="flex h-[calc(100vh-9rem)]">
+      <div className="flex h-[calc(100vh-9rem)] mt-2">
         <div className="flex-1 min-h-0 overflow-y-auto px-4 md:px-12">
           <div>
             <div className="flex items-center gap-4">
