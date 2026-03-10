@@ -16,6 +16,9 @@ function MatchMovies() {
   );
   const [processing, setProcessing] = useState<Set<number>>(new Set());
 
+  const [filling, setFilling] = useState(false);
+  const [fillResult, setFillResult] = useState<{ success: boolean; message: string; updated: number; total: number } | null>(null);
+
   useEffect(() => {
     fetchUnmatchedMovies();
   }, []);
@@ -31,6 +34,22 @@ function MatchMovies() {
       console.error("Error fetching unmatched movies:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const runFillImages = async () => {
+    setFilling(true);
+    setFillResult(null);
+    try {
+      const response = await fetch(`${API_BASE}/api/tmdb/fill-images`, { method: "POST" });
+      if (response.ok) {
+        const result = await response.json();
+        setFillResult(result);
+      }
+    } catch (error) {
+      console.error("Error filling images:", error);
+    } finally {
+      setFilling(false);
     }
   };
 
@@ -120,6 +139,32 @@ function MatchMovies() {
               Automatically match your movies with The Movie Database to enable
               enhanced features like posters, metadata, and collection tracking.
             </p>
+          </div>
+
+          <div className="bg-gray-800 rounded-lg p-6 mb-6">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold mb-1">Fill Missing Images</h2>
+                <p className="text-gray-400 text-sm">
+                  For movies already matched to TMDB, fetch any missing poster or backdrop images.
+                </p>
+                {fillResult && (
+                  <div className={`mt-3 rounded-lg p-3 text-sm ${
+                    fillResult.success ? "bg-green-900/30 border border-green-700 text-green-400" : "bg-red-900/30 border border-red-700 text-red-400"
+                  }`}>
+                    {fillResult.message}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={runFillImages}
+                disabled={filling}
+                className="bg-teal-600 hover:bg-teal-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-6 rounded-md transition flex items-center gap-2 cursor-pointer whitespace-nowrap h-fit"
+              >
+                <FaSync className={filling ? "animate-spin" : ""} />
+                {filling ? "Filling..." : "Fill Missing Images"}
+              </button>
+            </div>
           </div>
 
           {unmatchedMovies.length === 0 ? (

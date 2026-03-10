@@ -29,6 +29,13 @@ public static class TmdbMatchingEndpoints
             return success ? Results.Ok() : Results.NotFound();
         });
 
+        // POST - Fill missing poster/backdrop paths for already-matched movies
+        group.MapPost("/fill-images", async (TmdbMatchingService service) =>
+        {
+            var result = await service.FillMissingImages();
+            return Results.Ok(result);
+        });
+
         // GET - Search TMDB for a specific title
         group.MapGet("/search", async (string title, int? year, TmdbMatchingService service) =>
         {

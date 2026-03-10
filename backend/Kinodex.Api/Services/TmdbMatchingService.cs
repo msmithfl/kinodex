@@ -174,6 +174,61 @@ public class TmdbMatchingService
         }
     }
 
+    public async Task<FillImagesResult> FillMissingImages()
+    {
+        if (string.IsNullOrEmpty(_apiKey))
+            return new FillImagesResult { Success = false, Message = "TMDB API key not configured." };
+
+        var movies = await _db.Movies
+            .Where(m => m.TmdbId != null && (m.BackdropPath == null || m.BackdropPath == ""))
+            .ToListAsync();
+
+        var result = new FillImagesResult { Success = true, Total = movies.Count };
+
+        foreach (var movie in movies)
+        {
+            try
+            {
+                await Task.Delay(250);
+
+                var url = $"https://api.themoviedb.org/3/movie/{movie.TmdbId}";
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+                if (_apiKey.StartsWith("eyJ"))
+                    request.Headers.Add("Authorization", $"Bearer {_apiKey}");
+                else
+                    request.RequestUri = new Uri(url + $"?api_key={_apiKey}");
+
+                var response = await _httpClient.SendAsync(request);
+                if (!response.IsSuccessStatusCode)
+                {
+                    result.Errors.Add($"Failed to fetch '{movie.Title}': {response.StatusCode}");
+                    continue;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var details = JsonSerializer.Deserialize<TmdbMovie>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (details != null)
+                {
+                    if (details.BackdropPath != null)
+                        movie.BackdropPath = $"https://image.tmdb.org/t/p/w1280{details.BackdropPath}";
+                    if (details.PosterPath != null && string.IsNullOrEmpty(movie.PosterPath))
+                        movie.PosterPath = $"https://image.tmdb.org/t/p/w500{details.PosterPath}";
+                    result.Updated++;
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Errors.Add($"Error processing '{movie.Title}': {ex.Message}");
+            }
+        }
+
+        await _db.SaveChangesAsync();
+        result.Message = $"Updated {result.Updated} of {result.Total} movies.";
+        return result;
+    }
+
     public async Task<bool> AssignTmdbId(int movieId, int tmdbId, string? posterPath = null, string? backdropPath = null)
     {
         var movie = await _db.Movies.FindAsync(movieId);
@@ -193,6 +248,15 @@ public class TmdbMatchingService
             .OrderBy(m => m.Title)
             .ToListAsync();
     }
+}
+
+public class FillImagesResult
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public int Total { get; set; }
+    public int Updated { get; set; }
+    public List<string> Errors { get; set; } = new();
 }
 
 public class MatchingResult
