@@ -122,7 +122,7 @@ function ShelfSectionsView() {
     };
     el.addEventListener("touchmove", onTouchMove, { passive: false });
     return () => el.removeEventListener("touchmove", onTouchMove);
-  }, []);
+  }, [loading]);
 
   const handleTouchStart = (index: number) => {
     touchDragRef.current = index;
