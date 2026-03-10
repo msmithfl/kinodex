@@ -41,36 +41,42 @@ const PER_ROW = 40;
 function MyShelf() {
   const { getToken } = useAuth();
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [sectionOrder, setSectionOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
 
   useEffect(() => {
-    const fetchMovies = async () => {
+    const fetchData = async () => {
       try {
         const token = await getToken();
-        const response = await fetch(`${API_BASE}/api/movies`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.ok) {
-          const data: Movie[] = await response.json();
+        const [moviesRes, sectionsRes] = await Promise.all([
+          fetch(`${API_BASE}/api/movies`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_BASE}/api/shelfsections`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+        if (moviesRes.ok) {
+          const data: Movie[] = await moviesRes.json();
           setMovies(
             [...data]
               .filter((m) => m.shelfSection && m.shelfSection !== "Unshelved")
-              .sort((a, b) => {
-                const sectionCmp = a.shelfSection!.localeCompare(b.shelfSection!);
-                if (sectionCmp !== 0) return sectionCmp;
-                return a.title.localeCompare(b.title);
-              }),
+              .sort((a, b) => a.title.localeCompare(b.title)),
           );
         }
+        if (sectionsRes.ok) {
+          const sections: { name: string }[] = await sectionsRes.json();
+          setSectionOrder(sections.map((s) => s.name));
+        }
       } catch (error) {
-        console.error("Error fetching movies:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchMovies();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -89,7 +95,14 @@ function MyShelf() {
     if (!sectionMap.has(section)) sectionMap.set(section, []);
     sectionMap.get(section)!.push(movie);
   }
-  const sections = Array.from(sectionMap.entries());
+  const sections = Array.from(sectionMap.entries()).sort(([a], [b]) => {
+    const ai = sectionOrder.indexOf(a);
+    const bi = sectionOrder.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
 
   return (
     <>

@@ -16,16 +16,40 @@ public static class ShelfSectionEndpoints
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             return await db.ShelfSections
                 .Where(s => s.UserId == userId)
-                .OrderBy(s => s.Name)
+                .OrderBy(s => s.SortOrder)
+                .ThenBy(s => s.Name)
                 .ToListAsync();
         }).RequireAuthorization();
 
         group.MapPost("/", async (ShelfSection section, ClaimsPrincipal user, MovieDbContext db) =>
         {
             section.UserId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+            var maxOrder = await db.ShelfSections
+                .Where(s => s.UserId == section.UserId)
+                .Select(s => (int?)s.SortOrder)
+                .MaxAsync() ?? -1;
+            section.SortOrder = maxOrder + 1;
             db.ShelfSections.Add(section);
             await db.SaveChangesAsync();
             return Results.Created($"/api/shelfsections/{section.Id}", section);
+        }).RequireAuthorization();
+
+        group.MapPut("/reorder", async (ReorderItem[] items, ClaimsPrincipal user, MovieDbContext db) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var ids = items.Select(i => i.Id).ToList();
+            var sections = await db.ShelfSections
+                .Where(s => s.UserId == userId && ids.Contains(s.Id))
+                .ToListAsync();
+
+            foreach (var section in sections)
+            {
+                var match = items.FirstOrDefault(i => i.Id == section.Id);
+                if (match is not null) section.SortOrder = match.SortOrder;
+            }
+
+            await db.SaveChangesAsync();
+            return Results.NoContent();
         }).RequireAuthorization();
 
         group.MapPut("/{id}", async (int id, string newName, ClaimsPrincipal user, MovieDbContext db) =>
@@ -75,3 +99,5 @@ public static class ShelfSectionEndpoints
         }).RequireAuthorization();
     }
 }
+
+public record ReorderItem(int Id, int SortOrder);
