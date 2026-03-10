@@ -83,7 +83,17 @@ function MovieDetail() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] pt-2">
+    <div>
+      {movie.backdropPath && (
+        <div className="relative w-full h-56 lg:h-72 overflow-hidden">
+          <img
+            src={movie.backdropPath}
+            alt=""
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-linear-to-b from-gray-900/20 to-gray-900" />
+        </div>
+      )}
       <div className="max-w-6xl mx-auto px-4 pt-2">
         <div className="overflow-hidden">
           {/* Movie Details Header */}
@@ -183,7 +193,6 @@ function MovieDetail() {
                     </p>
                   </div>
                 )}
-                
               </div>
             </div>
           </div>
@@ -416,21 +425,21 @@ function MovieDetail() {
                 )}
               </div>
               <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => setShowModal(true)}
-                    className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                    aria-label="Edit movie"
-                  >
-                    <FaEdit className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={handleDeleteClick}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                    aria-label="Delete movie"
-                  >
-                    <FaTrash className="w-5 h-5" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+                  aria-label="Edit movie"
+                >
+                  <FaEdit className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handleDeleteClick}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+                  aria-label="Delete movie"
+                >
+                  <FaTrash className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
