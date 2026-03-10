@@ -81,7 +81,7 @@ function SubNavigation() {
                 <Link
                   key={to}
                   to={to}
-                  className={`block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors font-medium ${
+                  className={`block text-center px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors font-medium ${
                     isActive(to) ? "text-indigo-400" : ""
                   }`}
                 >
