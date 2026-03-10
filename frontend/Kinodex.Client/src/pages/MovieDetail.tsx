@@ -85,16 +85,16 @@ function MovieDetail() {
   return (
     <div>
       {movie.backdropPath && (
-        <div className="relative w-full h-56 lg:h-72 overflow-hidden">
+        <div className="relative w-full h-56 md:h-72 lg:h-96 overflow-hidden">
           <img
             src={movie.backdropPath}
             alt=""
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-center md:object-top"
           />
           <div className="absolute inset-0 bg-linear-to-b from-gray-900/20 to-gray-900" />
         </div>
       )}
-      <div className="max-w-6xl mx-auto px-4 pt-2">
+      <div className="max-w-6xl mx-auto px-4 pt-2 -mt-12 relative">
         <div className="overflow-hidden">
           {/* Movie Details Header */}
           <div className="p-2 pb-4 border-b border-gray-700">
