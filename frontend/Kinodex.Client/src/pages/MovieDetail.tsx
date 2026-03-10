@@ -113,7 +113,7 @@ function MovieDetail() {
         <div className="overflow-hidden">
           {/* Movie Details Header */}
           <div className="p-2 pb-4 border-b border-gray-700">
-            <div className="flex justify-between md:justify-start">
+            <div className="flex justify-between md:justify-start gap-4 md:gap-0">
               {/* Title, Year, Rating, Genres - Center */}
               <div className="md:ml-10 flex flex-col justify-center space-y-2 lg:space-y-4">
                 <div className="flex items-center">
@@ -195,7 +195,7 @@ function MovieDetail() {
                   <img
                     src={movie.posterPath}
                     alt={`${movie.title} poster`}
-                    className="rounded-lg shadow-lg w-20 md:w-60 object-cover"
+                    className="rounded-lg shadow-lg max-w-25 md:max-w-60 object-cover"
                     onError={(e) => {
                       e.currentTarget.src =
                         "https://via.placeholder.com/300x450?text=No+Poster";
