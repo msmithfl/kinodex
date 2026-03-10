@@ -25,7 +25,7 @@ public static class TmdbMatchingEndpoints
         // POST - Assign TMDB ID to a movie
         group.MapPost("/assign", async (AssignTmdbRequest request, TmdbMatchingService service) =>
         {
-            var success = await service.AssignTmdbId(request.MovieId, request.TmdbId);
+            var success = await service.AssignTmdbId(request.MovieId, request.TmdbId, request.PosterPath, request.BackdropPath);
             return success ? Results.Ok() : Results.NotFound();
         });
 
@@ -38,4 +38,4 @@ public static class TmdbMatchingEndpoints
     }
 }
 
-public record AssignTmdbRequest(int MovieId, int TmdbId);
+public record AssignTmdbRequest(int MovieId, int TmdbId, string? PosterPath = null, string? BackdropPath = null);
