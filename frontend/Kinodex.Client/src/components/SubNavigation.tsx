@@ -43,7 +43,7 @@ function SubNavigation() {
   }, [location.pathname]);
 
   return (
-    <nav className="bg-gray-900">
+    <nav>
       <div className="max-w-7xl mx-auto px-4">
         {/* Desktop */}
         <div className="hidden md:flex justify-center gap-8 pt-6">

@@ -50,12 +50,12 @@ function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link
+            {/* <Link
               to="/dashboard"
               className="text-gray-300 hover:text-white transition-colors font-medium"
             >
               Dashboard
-            </Link>
+            </Link> */}
             <button
               onClick={() => setShowModal(true)}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 cursor-pointer"
