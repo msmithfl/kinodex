@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { FaChevronDown, FaChevronUp } from "react-icons/fa6";
 
 const NAV_LINKS = [
   { to: "/", label: "Library" },
@@ -71,28 +72,18 @@ function SubNavigation() {
             className="flex items-center gap-2 text-indigo-400 font-semibold text-base focus:outline-none cursor-pointer"
           >
             {activeLink.label}
-            <svg
-              className={`w-4 h-4 transition-transform duration-200 ${mobileOpen ? "rotate-180" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
+            {mobileOpen ? <FaChevronUp /> : <FaChevronDown />}
           </button>
 
           {mobileOpen && (
             <div className="absolute top-full mt-1 z-50 bg-gray-800 rounded-lg shadow-lg py-1 min-w-40 border border-gray-700">
-              {NAV_LINKS.filter((l) => !isActive(l.to)).map(({ to, label }) => (
+              {NAV_LINKS.map(({ to, label }) => (
                 <Link
                   key={to}
                   to={to}
-                  className="block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors font-medium"
+                  className={`block px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors font-medium ${
+                    isActive(to) ? "text-indigo-400" : ""
+                  }`}
                 >
                   {label}
                 </Link>
