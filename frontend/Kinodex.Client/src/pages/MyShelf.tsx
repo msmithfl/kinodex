@@ -61,9 +61,7 @@ function MyShelf() {
         if (moviesRes.ok) {
           const data: Movie[] = await moviesRes.json();
           setMovies(
-            [...data]
-              .filter((m) => m.shelfSection && m.shelfSection !== "Unshelved")
-              .sort((a, b) => a.title.localeCompare(b.title)),
+            data.filter((m) => m.shelfSection && m.shelfSection !== "Unshelved"),
           );
         }
         if (sectionsRes.ok) {
@@ -88,38 +86,34 @@ function MyShelf() {
     );
   }
 
-  // Group movies by shelf section, preserving sort order within each group
-  const sectionMap = new Map<string, Movie[]>();
-  for (const movie of movies) {
-    const section = movie.shelfSection!;
-    if (!sectionMap.has(section)) sectionMap.set(section, []);
-    sectionMap.get(section)!.push(movie);
-  }
-  const sections = Array.from(sectionMap.entries()).sort(([a], [b]) => {
-    const ai = sectionOrder.indexOf(a);
-    const bi = sectionOrder.indexOf(b);
-    if (ai === -1 && bi === -1) return a.localeCompare(b);
-    if (ai === -1) return 1;
-    if (bi === -1) return -1;
-    return ai - bi;
+  // Sort movies by section order, then alphabetically within each section
+  const sortedMovies = [...movies].sort((a, b) => {
+    const ai = sectionOrder.indexOf(a.shelfSection!);
+    const bi = sectionOrder.indexOf(b.shelfSection!);
+    const sectionCmp =
+      ai === -1 && bi === -1
+        ? a.shelfSection!.localeCompare(b.shelfSection!)
+        : ai === -1
+          ? 1
+          : bi === -1
+            ? -1
+            : ai - bi;
+    if (sectionCmp !== 0) return sectionCmp;
+    return a.title.localeCompare(b.title);
   });
+
+  const rows: Movie[][] = [];
+  for (let i = 0; i < sortedMovies.length; i += PER_ROW) {
+    rows.push(sortedMovies.slice(i, i + PER_ROW));
+  }
 
   return (
     <>
       <SubNavigation />
       <div className="flex flex-col h-[calc(100vh-9rem)] pt-2">
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-10 pb-8">
-          <div className="space-y-10">
-            {sections.map(([sectionName, sectionMovies]) => {
-              const rows: Movie[][] = [];
-              for (let i = 0; i < sectionMovies.length; i += PER_ROW) {
-                rows.push(sectionMovies.slice(i, i + PER_ROW));
-              }
-              return (
-              <div key={sectionName}>
-                <h2 className="text-lg font-semibold text-gray-300 mb-2 ml-1">{sectionName}</h2>
-                <div className="space-y-8">
-                {rows.map((row, rowIdx) => (
+          <div className="space-y-8">
+            {rows.map((row, rowIdx) => (
               <div key={rowIdx}>
                 {/* Spine row — align to bottom so DVD spines stick up above the rest */}
                 <div className="flex items-end justify-center gap-0.5 min-w-max">
@@ -209,10 +203,6 @@ function MyShelf() {
                 <div className="h-2 rounded-b bg-amber-950 shadow-md w-xl md:w-full" />
               </div>
             ))}
-                </div>
-              </div>
-              );
-            })}
           </div>
 
           {movies.length === 0 && (
