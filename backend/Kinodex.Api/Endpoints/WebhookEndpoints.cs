@@ -136,10 +136,26 @@ public static class WebhookEndpoints
                     var user = await db.Users.FindAsync(userId);
                     if (user != null)
                     {
+                        // Delete related data in dependency order to avoid FK violations
+                        await db.CollectionListItems.Where(c => c.UserId == userId).ExecuteDeleteAsync();
+                        await db.Collections.Where(c => c.UserId == userId).ExecuteDeleteAsync();
+                        await db.ShelfSections.Where(s => s.UserId == userId).ExecuteDeleteAsync();
+
+                        // Deletes checkouts for movies owned by the user (if any) before deleting movies
+                        var movieIds = await db.Movies
+                            .Where(m => m.UserId == userId)
+                            .Select(m => m.Id)
+                            .ToListAsync();
+                        if (movieIds.Count > 0)
+                        {
+                            await db.Checkouts.Where(c => movieIds.Contains(c.MovieId)).ExecuteDeleteAsync();
+                        }
+                        await db.Movies.Where(m => m.UserId == userId).ExecuteDeleteAsync();
+
                         db.Users.Remove(user);
                         await db.SaveChangesAsync();
                         
-                        Console.WriteLine($"Deleted user - ID: {userId}");
+                        Console.WriteLine($"Deleted user and all associated data - ID: {userId}");
                     }
                     else
                     {
