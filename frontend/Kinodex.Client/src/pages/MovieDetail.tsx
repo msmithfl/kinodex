@@ -117,7 +117,7 @@ function MovieDetail() {
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover object-center"
               />
-              <div className="absolute inset-x-0 top-0 -bottom-0.5 bg-linear-to-b from-gray-900/60 via-gray-900/80 to-gray-900" />
+              <div className="absolute inset-x-0 top-0 -bottom-0.5 bg-linear-to-b from-gray-900/20 to-gray-900" />
             </div>
           )}
           <div className="mx-auto max-w-4xl pt-2">
