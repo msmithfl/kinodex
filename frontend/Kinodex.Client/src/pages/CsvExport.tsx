@@ -1,7 +1,6 @@
 ﻿import { useState, useRef } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { FaDownload, FaUpload } from "react-icons/fa";
-import { SiLetterboxd } from "react-icons/si";
 
 function CsvExport() {
   const { getToken } = useAuth();
@@ -189,7 +188,7 @@ function CsvExport() {
       {/* Letterboxd Import */}
       <div className="bg-gray-800 rounded-lg p-8 mt-6">
         <div className="flex items-center gap-2 mb-2">
-          <SiLetterboxd className="w-5 h-5 text-[#00c030]" />
+          <img src="/letterboxd-icon.png" alt="Letterboxd" className="w-5 h-5" />
           <h2 className="text-lg font-semibold">Import from Letterboxd</h2>
         </div>
         <p className="text-gray-400 text-sm mb-1">
