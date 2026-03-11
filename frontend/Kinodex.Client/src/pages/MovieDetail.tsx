@@ -217,26 +217,27 @@ function MovieDetail() {
               {/* Physical Details Section */}
               <div className="mb-8">
                 <div>
-                  <div className="p-4 border-b border-gray-700">
-                    <h3 className="text-sm font-medium text-gray-400 mb-2">
-                      Formats
-                    </h3>
-                    {movie.formats && movie.formats.length > 0 ? (
-                      <div className="flex flex-wrap gap-3">
-                        {[...movie.formats].sort().map((fmt, idx) => (
-                          <FormatIcon key={idx} fmt={fmt} />
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 italic">None</p>
-                    )}
-                  </div>
-
-                  <div className="p-4 border-b border-gray-700">
-                    <h3 className="text-sm font-medium text-gray-400 mb-2">
-                      Condition
-                    </h3>
-                    <span>{movie.condition}</span>
+                  <div className="flex p-4 border-b border-gray-700">
+                    <div className="w-1/2">
+                      <h3 className="text-sm font-medium text-gray-400 mb-2">
+                        Formats
+                      </h3>
+                      {movie.formats && movie.formats.length > 0 ? (
+                        <div className="flex flex-wrap gap-3">
+                          {[...movie.formats].sort().map((fmt, idx) => (
+                            <FormatIcon key={idx} fmt={fmt} />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 italic">None</p>
+                      )}
+                    </div>
+                    <div className="w-1/2">
+                      <h3 className="text-sm font-medium text-gray-400 mb-2">
+                        Condition
+                      </h3>
+                      <span>{movie.condition}</span>
+                    </div>
                   </div>
 
                   <div className="flex p-4 border-b border-gray-700">
