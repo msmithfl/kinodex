@@ -197,14 +197,14 @@ function MovieDetail() {
                     <img
                       src={movie.posterPath}
                       alt={`${movie.title} poster`}
-                      className="rounded-lg shadow-lg max-w-25 md:max-w-60 object-cover"
+                      className="border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-60 object-cover"
                       onError={(e) => {
                         e.currentTarget.src =
                           "https://via.placeholder.com/300x450?text=No+Poster";
                       }}
                     />
                   ) : (
-                    <div className="bg-gray-700 rounded-lg flex items-center justify-center h-full min-h-75">
+                    <div className="bg-gray-700 border-[0.5px] border-white/20 rounded-lg flex items-center justify-center h-full min-h-75">
                       <p className="text-gray-500 text-xs lg:text-base">
                         No poster
                       </p>
