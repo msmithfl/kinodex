@@ -1,6 +1,7 @@
 ﻿import { useState, useRef } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { FaDownload, FaUpload } from "react-icons/fa";
+import { SiLetterboxd } from "react-icons/si";
 
 function CsvExport() {
   const { getToken } = useAuth();
@@ -10,6 +11,10 @@ function CsvExport() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number; errors: string[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [importingLetterboxd, setImportingLetterboxd] = useState(false);
+  const [letterboxdResult, setLetterboxdResult] = useState<{ imported: number; skipped: number; errors: string[] } | null>(null);
+  const letterboxdFileInputRef = useRef<HTMLInputElement>(null);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
 
@@ -79,6 +84,44 @@ function CsvExport() {
     }
   };
 
+  const handleLetterboxdImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportingLetterboxd(true);
+    setError("");
+    setSuccess("");
+    setLetterboxdResult(null);
+
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${API_BASE}/api/movies/import/letterboxd`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || `Import failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      setLetterboxdResult(result);
+      const parts = [`Imported ${result.imported} movie${result.imported !== 1 ? "s" : ""}  from Letterboxd`];
+      if (result.skipped > 0) parts.push(`${result.skipped} skipped (already in collection)`);
+      setSuccess(parts.join(" · ") + ".");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Import failed. Please try again.");
+    } finally {
+      setImportingLetterboxd(false);
+      if (letterboxdFileInputRef.current) letterboxdFileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Export/Import Database</h1>
@@ -138,6 +181,49 @@ function CsvExport() {
             <p className="text-yellow-400 text-sm font-medium mb-1">Some rows had errors:</p>
             <ul className="text-yellow-300 text-xs space-y-0.5 list-disc list-inside">
               {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Letterboxd Import */}
+      <div className="bg-gray-800 rounded-lg p-8 mt-6">
+        <div className="flex items-center gap-2 mb-2">
+          <SiLetterboxd className="w-5 h-5 text-[#00c030]" />
+          <h2 className="text-lg font-semibold">Import from Letterboxd</h2>
+        </div>
+        <p className="text-gray-400 text-sm mb-1">
+          Upload a Letterboxd list export CSV. Movies will be imported with title and year,
+          and automatically enriched with poster/backdrop images from TMDB.
+        </p>
+        <p className="text-gray-500 text-xs mb-4">
+          In Letterboxd: open your list → click the <strong className="text-gray-400">↓</strong> export button → upload the downloaded CSV here.
+        </p>
+        <input
+          ref={letterboxdFileInputRef}
+          type="file"
+          accept=".csv"
+          className="hidden"
+          onChange={handleLetterboxdImport}
+        />
+        <button
+          onClick={() => letterboxdFileInputRef.current?.click()}
+          disabled={importingLetterboxd}
+          className="flex items-center gap-2 px-6 py-3 bg-[#00c030]/80 hover:bg-[#00c030] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-md transition cursor-pointer"
+        >
+          <FaUpload className="w-4 h-4" />
+          {importingLetterboxd ? "Importing..." : "Upload Letterboxd CSV"}
+        </button>
+
+        {importingLetterboxd && (
+          <p className="text-gray-400 text-xs mt-3">Looking up TMDB data for each film — this may take a moment for large lists...</p>
+        )}
+
+        {letterboxdResult && letterboxdResult.errors.length > 0 && (
+          <div className="mt-4">
+            <p className="text-yellow-400 text-sm font-medium mb-1">Some rows had errors:</p>
+            <ul className="text-yellow-300 text-xs space-y-0.5 list-disc list-inside">
+              {letterboxdResult.errors.map((e, i) => <li key={i}>{e}</li>)}
             </ul>
           </div>
         )}
