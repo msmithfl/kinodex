@@ -34,9 +34,18 @@ public static class MovieEndpoints
         // POST create movie
         group.MapPost("/", async (Movie movie, MovieDbContext db) =>
         {
-            db.Movies.Add(movie);
-            await db.SaveChangesAsync();
-            return Results.Created($"/api/movies/{movie.Id}", movie);
+            try
+            {
+                db.Movies.Add(movie);
+                await db.SaveChangesAsync();
+                Console.WriteLine($"Created movie ID={movie.Id}, Title={movie.Title}, UserId={movie.UserId}");
+                return Results.Created($"/api/movies/{movie.Id}", movie);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR creating movie: {ex.Message}\n{ex.StackTrace}");
+                return Results.Problem($"Failed to save movie: {ex.Message}", statusCode: 500);
+            }
         });
 
         // PUT update movie

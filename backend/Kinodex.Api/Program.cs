@@ -37,6 +37,7 @@ if (string.IsNullOrEmpty(connectionString))
             // Convert postgresql:// URL to Npgsql format with connection pooling
             var uri = new Uri(databaseUrl);
             connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={uri.UserInfo.Split(':')[0]};Password={uri.UserInfo.Split(':')[1]};SSL Mode=Require;Trust Server Certificate=true;Minimum Pool Size=0;Maximum Pool Size=10;Connection Idle Lifetime=60;Connection Pruning Interval=10";
+            Console.WriteLine($"DB source: DATABASE_URL → Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')}");
         }
         catch (Exception ex)
         {
@@ -51,7 +52,14 @@ if (string.IsNullOrEmpty(connectionString))
     throw new InvalidOperationException("No database connection string found. Please set ConnectionStrings:DefaultConnection or DATABASE_URL.");
 }
 
-Console.WriteLine($"Connection String: SET");
+// Extract and log host from whichever connection string was used, without leaking credentials
+try
+{
+    var hostMatch = System.Text.RegularExpressions.Regex.Match(connectionString, @"Host=([^;]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    var dbMatch = System.Text.RegularExpressions.Regex.Match(connectionString, @"Database=([^;]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+    Console.WriteLine($"DB connection: Host={hostMatch.Groups[1].Value}, Database={dbMatch.Groups[1].Value}");
+}
+catch { Console.WriteLine("DB connection: SET (could not parse for logging)"); }
 
 builder.Services.AddDbContext<MovieDbContext>(options =>
 {
