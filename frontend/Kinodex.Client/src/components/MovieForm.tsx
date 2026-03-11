@@ -584,7 +584,7 @@ function MovieForm({
 
                 {formatDropdownOpen && (
                   <ul className="absolute top-full left-0 w-full max-h-30 overflow-y-auto bg-gray-800 border border-gray-600 z-50">
-                    {(["4K", "Blu-ray", "DVD", "VHS"] as const)
+                    {(["4K", "Blu-ray", "DVD", "VHS", "Digital"] as const)
                       .filter((f) => !formData.formats.includes(f))
                       .map((f) => (
                         <li

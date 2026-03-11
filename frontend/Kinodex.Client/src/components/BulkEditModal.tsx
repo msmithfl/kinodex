@@ -8,6 +8,7 @@ interface BulkEditData {
   isOnPlex: string;
   hasWatched: string;
   condition: string;
+  formats: string;
 }
 
 interface BulkEditModalProps {
@@ -151,7 +152,7 @@ export function BulkEditModal({
               </select>
             </div>
 
-            <div className="pb-6">
+            <div className="">
               <label htmlFor="bulk-purchase-price" className="block text-sm font-medium text-gray-300 mb-2">
                 Purchase Price
               </label>
@@ -164,6 +165,24 @@ export function BulkEditModal({
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
+            <div className="pb-6">
+              <label htmlFor="bulk-formats" className="block text-sm font-medium text-gray-300 mb-2">
+                Formats
+              </label>
+              <select
+                id="bulk-formats"
+                value={bulkEditData.formats}
+                onChange={(e) => setBulkEditData((prev) => ({ ...prev, formats: e.target.value }))}
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
+              >
+                <option value="">-- Keep Current --</option>
+                <option value="4K">4K</option>
+                <option value="Blu-ray">Blu-ray</option>
+                <option value="DVD">DVD</option>
+                <option value="Digital">Digital</option>
+                <option value="VHS">VHS</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -172,7 +191,7 @@ export function BulkEditModal({
             <button
               onClick={() => {
                 setShowBulkEditModal(false);
-                setBulkEditData({ shelfNumber: "", shelfSection: "", hdDriveNumber: "", purchasePrice: "", isOnPlex: "", hasWatched: "", condition: "" });
+                setBulkEditData({ shelfNumber: "", shelfSection: "", hdDriveNumber: "", purchasePrice: "", isOnPlex: "", hasWatched: "", condition: "", formats: "" });
               }}
               className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
             >
