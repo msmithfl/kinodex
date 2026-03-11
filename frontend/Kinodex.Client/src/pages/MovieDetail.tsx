@@ -111,7 +111,7 @@ function MovieDetail() {
       )}
       <div className="relative z-10">
         <SubNavigation />
-        <div className="mx-auto md:mx-10 pt-2 mt-40 md:mt-0">
+        <div className="mx-auto max-w-4xl pt-2 mt-40 md:mt-0">
           <div className="overflow-hidden">
             {/* Movie Details Header */}
             <div className="px-4 pb-4 border-b-[0.5px] border-white/20">
@@ -360,7 +360,7 @@ function MovieDetail() {
 
                     <div className="w-1/2">
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
-                        On Plex
+                        Streaming
                       </h3>
                       <p className="text-base text-white flex items-center gap-2">
                         {movie.isOnPlex ? (
