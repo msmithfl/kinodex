@@ -89,6 +89,7 @@ function MovieList() {
     isOnPlex: "",
     hasWatched: "",
     condition: "",
+    formats: "",
   });
   const [shelfSections, setShelfSections] = useState<string[]>([]);
   const [collections, setCollections] = useState<string[]>([]);
@@ -277,6 +278,9 @@ function MovieList() {
       if (bulkEditData.purchasePrice !== "") {
         updates.purchasePrice = parseFloat(bulkEditData.purchasePrice);
       }
+      if (bulkEditData.formats !== "") {
+        updates.formats = [bulkEditData.formats];
+      }
 
       // Update each selected movie
       const updatePromises = Array.from(selectedMovieIds).map(
@@ -312,6 +316,7 @@ function MovieList() {
         isOnPlex: "",
         hasWatched: "",
         condition: "",
+        formats: "",
       });
     } catch (error) {
       console.error("Error updating movies:", error);
