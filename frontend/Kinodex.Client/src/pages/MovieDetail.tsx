@@ -114,7 +114,7 @@ function MovieDetail() {
         <div className="mx-auto md:mx-10 pt-2 mt-40 md:mt-0">
           <div className="overflow-hidden">
             {/* Movie Details Header */}
-            <div className="px-4 pb-4 border-b border-gray-700">
+            <div className="px-4 pb-4 border-b border-white/10">
               <div className="flex justify-between md:justify-start gap-4 md:gap-0">
                 {/* Title, Year, Rating, Genres - Center */}
                 <div className="md:ml-10 flex flex-col justify-center lg:space-y-4">
@@ -218,7 +218,7 @@ function MovieDetail() {
               {/* Physical Details Section */}
               <div className="mb-8">
                 <div>
-                  <div className="flex p-4 border-b border-gray-700">
+                  <div className="flex p-4 border-b border-gray-700/40">
                     <div className="w-1/2">
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
                         Formats
@@ -241,7 +241,7 @@ function MovieDetail() {
                     </div>
                   </div>
 
-                  <div className="flex p-4 border-b border-gray-700">
+                  <div className="flex p-4 border-b border-gray-700/40">
                     <div className="w-1/2 flex flex-col justify-between">
                       <div className="mb-4">
                         <h3 className="text-sm font-medium text-gray-400 mb-2">
@@ -318,7 +318,7 @@ function MovieDetail() {
                     </div>
                   </div>
 
-                  <div className="flex p-4 border-b border-gray-700">
+                  <div className="flex p-4 border-b border-gray-700/40">
                     <div className="w-1/2">
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
                         Shelf Section
@@ -344,7 +344,7 @@ function MovieDetail() {
                     </div>
                   </div>
 
-                  <div className="flex p-4 border-b border-gray-700">
+                  <div className="flex p-4 border-b border-gray-700/40">
                     <div className="w-1/2">
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
                         HDD Number
@@ -377,7 +377,7 @@ function MovieDetail() {
                   </div>
 
                   {/* Location Details Section */}
-                  <div className="flex p-4 border-b border-gray-700">
+                  <div className="flex p-4 border-b border-gray-700/40">
                     <div>
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
                         Collections
@@ -401,7 +401,7 @@ function MovieDetail() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col p-4 border-b border-gray-700">
+                  <div className="flex flex-col p-4 border-b border-gray-700/40">
                     <h3 className="text-sm font-medium text-gray-400 mb-2">
                       Watched
                     </h3>
