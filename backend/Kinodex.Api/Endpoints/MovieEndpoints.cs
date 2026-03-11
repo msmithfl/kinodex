@@ -148,7 +148,7 @@ public static class MovieEndpoints
                 try
                 {
                     var fields = ParseCsvLine(lines[i]);
-                    if (fields.Length < 20) continue;
+                    if (fields.Length < 19) continue;
 
                     var upc = fields[1];
                     if (!string.IsNullOrEmpty(upc) && existingUpcs.Contains(upc))
