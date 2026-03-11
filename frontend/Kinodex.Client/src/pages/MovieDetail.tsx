@@ -86,7 +86,7 @@ function MovieDetail() {
   }
 
   return (
-    <div className="relative h-[calc(100vh-5rem)] flex flex-col">
+    <div className="relative md:h-[calc(100vh-5rem)] flex flex-col">
       {movie.backdropPath && (
         <>
           {/* Mobile: absolute banner */}
