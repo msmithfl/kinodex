@@ -76,7 +76,7 @@ function Header() {
             </button>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white p-2"
+              className="text-white p-2 cursor-pointer"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? (
