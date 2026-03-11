@@ -36,7 +36,7 @@ function Header() {
   ];
 
   return (
-    <header className="bg-gray-800 border-b border-gray-700 relative">
+    <header className="bg-gray-800 border-b-[0.5px] border-white/20 relative">
       <div className="mx-auto px-8 py-4">
         <div className="flex items-end justify-between">
           <Link to="/" className="flex items-end gap-1">

@@ -35,7 +35,7 @@ function Sidebar() {
   ];
 
   return (
-    <aside className="hidden md:flex w-64 bg-gray-800 border-r border-gray-700 flex-col">
+    <aside className="hidden md:flex w-64 bg-gray-800 border-r-[0.5px] border-white/20 flex-col">
       {/* Main Navigation */}
       <nav className="flex-1 px-3 py-4">
         <div className="space-y-1">
@@ -59,7 +59,7 @@ function Sidebar() {
         </div>
 
         {/* Utility Section */}
-        <div className="mt-4 pt-4 border-t border-gray-700">
+        <div className="mt-4 pt-4 border-t-[0.5px] border-white/20">
           <div className="space-y-1">
             {utilityItems.map((item) => {
               const Icon = item.icon;
