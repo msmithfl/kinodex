@@ -158,12 +158,16 @@ public class TmdbMatchingService
                 {
                     TmdbId = r.Id,
                     Title = r.Title,
-                    Year = r.ReleaseDate != null && DateTime.TryParse(r.ReleaseDate, out var date) 
-                        ? date.Year 
+                    Year = r.ReleaseDate != null && DateTime.TryParse(r.ReleaseDate, out var date)
+                        ? date.Year
                         : null,
                     PosterPath = r.PosterPath != null ? $"https://image.tmdb.org/t/p/w500{r.PosterPath}" : null,
                     BackdropPath = r.BackdropPath != null ? $"https://image.tmdb.org/t/p/w1280{r.BackdropPath}" : null,
-                    Overview = r.Overview
+                    Overview = r.Overview,
+                    Genres = r.GenreIds
+                        .Where(id => TmdbGenreMap.Map.ContainsKey(id))
+                        .Select(id => TmdbGenreMap.Map[id])
+                        .ToList()
                 })
                 .ToList() ?? new List<TmdbSearchResult>();
         }
@@ -285,6 +289,7 @@ public class TmdbSearchResult
     public string? PosterPath { get; set; }
     public string? BackdropPath { get; set; }
     public string? Overview { get; set; }
+    public List<string> Genres { get; set; } = new();
 }
 
 // Internal classes for JSON deserialization
@@ -304,4 +309,18 @@ internal class TmdbMovie
     [JsonPropertyName("backdrop_path")]
     public string? BackdropPath { get; set; }
     public string? Overview { get; set; }
+    [JsonPropertyName("genre_ids")]
+    public List<int> GenreIds { get; set; } = new();
+}
+
+internal static class TmdbGenreMap
+{
+    public static readonly Dictionary<int, string> Map = new()
+    {
+        { 28, "Action" }, { 12, "Adventure" }, { 16, "Animation" }, { 35, "Comedy" },
+        { 80, "Crime" }, { 99, "Documentary" }, { 18, "Drama" }, { 10751, "Family" },
+        { 14, "Fantasy" }, { 36, "History" }, { 27, "Horror" }, { 10402, "Music" },
+        { 9648, "Mystery" }, { 10749, "Romance" }, { 878, "Sci-Fi" }, { 10770, "TV Movie" },
+        { 53, "Thriller" }, { 10752, "War" }, { 37, "Western" }
+    };
 }
