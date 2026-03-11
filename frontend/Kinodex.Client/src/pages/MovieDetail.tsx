@@ -218,7 +218,7 @@ function MovieDetail() {
               {/* Physical Details Section */}
               <div className="mb-8">
                 <div>
-                  <div className="flex p-4 border-b-[0.5px] border-gray-300/40">
+                  <div className="flex p-4 border-b-[0.5px] border-white/20">
                     <div className="w-1/2">
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
                         Formats
@@ -241,7 +241,7 @@ function MovieDetail() {
                     </div>
                   </div>
 
-                  <div className="flex p-4 border-b border-gray-700/40">
+                  <div className="flex p-4 border-b-[0.5px] border-white/20">
                     <div className="w-1/2 flex flex-col justify-between">
                       <div className="mb-4">
                         <h3 className="text-sm font-medium text-gray-400 mb-2">
@@ -318,7 +318,7 @@ function MovieDetail() {
                     </div>
                   </div>
 
-                  <div className="flex p-4 border-b border-white/10">
+                  <div className="flex p-4 border-b-[0.5px] border-white/20">
                     <div className="w-1/2">
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
                         Shelf Section
@@ -344,7 +344,7 @@ function MovieDetail() {
                     </div>
                   </div>
 
-                  <div className="flex p-4 border-b border-gray-700/40">
+                  <div className="flex p-4 border-b-[0.5px] border-white/20">
                     <div className="w-1/2">
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
                         HDD Number
@@ -377,7 +377,7 @@ function MovieDetail() {
                   </div>
 
                   {/* Location Details Section */}
-                  <div className="flex p-4 border-b border-gray-700/40">
+                  <div className="flex p-4 border-b-[0.5px] border-white/20">
                     <div>
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
                         Collections
@@ -401,7 +401,7 @@ function MovieDetail() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col p-4 border-b border-gray-700/40">
+                  <div className="flex flex-col p-4 border-b-[0.5px] border-white/20">
                     <h3 className="text-sm font-medium text-gray-400 mb-2">
                       Watched
                     </h3>
