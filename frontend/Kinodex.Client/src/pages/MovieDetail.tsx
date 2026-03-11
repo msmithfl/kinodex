@@ -86,11 +86,11 @@ function MovieDetail() {
   }
 
   return (
-    <div className="relative min-h-full">
+    <div className="relative h-[calc(100vh-5rem)] flex flex-col">
       {movie.backdropPath && (
         <>
-          {/* Mobile: absolute banner behind SubNav */}
-          <div className="absolute top-0 left-0 right-0 h-56 overflow-hidden md:hidden">
+          {/* Mobile: absolute banner */}
+          <div className="absolute top-0 left-0 right-0 h-56 overflow-hidden md:hidden pointer-events-none">
             <img
               src={movie.backdropPath}
               alt=""
@@ -98,19 +98,22 @@ function MovieDetail() {
             />
             <div className="absolute inset-0 bg-linear-to-b from-gray-900/20 to-gray-900" />
           </div>
-          {/* Desktop: full page background */}
-          <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
-            <img
-              src={movie.backdropPath}
-              alt=""
-              className="w-full h-full object-cover object-top opacity-20"
-            />
-            <div className="absolute inset-0 bg-linear-to-b from-gray-900/60 via-gray-900/80 to-gray-900" />
-          </div>
+          {/* Desktop: fixed background scoped to this container */}
+          <div
+            className="hidden md:block absolute inset-0 pointer-events-none opacity-20"
+            style={{
+              backgroundImage: `url(${movie.backdropPath})`,
+              backgroundAttachment: "fixed",
+              backgroundSize: "cover",
+              backgroundPosition: "top center",
+            }}
+          />
+          <div className="hidden md:block absolute inset-0 pointer-events-none bg-linear-to-b from-gray-900/60 via-gray-900/80 to-gray-900" />
         </>
       )}
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col flex-1 min-h-0">
         <SubNavigation />
+        <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="mx-auto max-w-4xl pt-2 mt-40 md:mt-0">
           <div className="overflow-hidden">
             {/* Movie Details Header */}
@@ -464,6 +467,7 @@ function MovieDetail() {
             onConfirm={handleDeleteConfirm}
             onCancel={handleDeleteCancel}
           />
+        </div>
         </div>
       </div>
     </div>
