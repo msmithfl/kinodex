@@ -43,7 +43,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     hdDriveNumber: 0,
     shelfNumber: 1,
     shelfSection: "",
-    isOnPlex: true,
+    isOnPlex: false,
   });
   const [collections, setCollections] = useState<
     { id: number; name: string }[]

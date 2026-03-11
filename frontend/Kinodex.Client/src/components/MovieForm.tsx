@@ -524,7 +524,7 @@ function MovieForm({
             {/* UPC */}
             <div>
               <label htmlFor="upc" className={labelClass}>
-                UPC Number *
+                UPC Number
               </label>
               <div className="flex gap-2">
                 <input
@@ -534,7 +534,6 @@ function MovieForm({
                   onChange={(e) =>
                     setFormData({ ...formData, upcNumber: e.target.value })
                   }
-                  required
                   className={inputClass + " flex-1"}
                 />
                 {showScanButton && onScanClick && (
@@ -552,7 +551,7 @@ function MovieForm({
 
             {/* Formats */}
             <div ref={formatRef}>
-              <label className={labelClass}>Formats *</label>
+              <label className={labelClass}>Formats</label>
               <div className="relative bg-gray-700 border border-gray-600 focus-within:border-gray-500">
                 <div
                   className="flex flex-wrap items-center gap-2 px-3 py-2 min-h-10.5 cursor-pointer"
@@ -626,7 +625,7 @@ function MovieForm({
               {/* Condition */}
               <div>
                 <label htmlFor="condition" className={labelClass}>
-                  Condition *
+                  Condition
                 </label>
                 <select
                   id="condition"
@@ -634,7 +633,6 @@ function MovieForm({
                   onChange={(e) =>
                     setFormData({ ...formData, condition: e.target.value })
                   }
-                  required
                   className={inputClass + " cursor-pointer"}
                 >
                   <option value="Sealed">Sealed</option>
