@@ -12,7 +12,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import type { Movie } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { EditMovieModal } from "../components/EditMovieModal";
-// import SubNavigation from "../components/SubNavigation";
+import SubNavigation from "../components/SubNavigation";
 import { FormatIcon } from "../utils/formatIcon";
 import { FaBarcode } from "react-icons/fa6";
 
@@ -105,9 +105,9 @@ function MovieDetail() {
         </>
       )}
       <div className="relative z-10 flex flex-col flex-1 min-h-0">
-        {/* <div className="relative z-20 md:z-auto">
+        <div className="hidden md:block relative z-20 md:z-auto">
           <SubNavigation />
-        </div> */}
+        </div>
         <div className="absolute inset-0 overflow-y-auto z-10 md:relative md:inset-auto md:flex-1 md:min-h-0 md:z-auto">
           {/* Mobile: in-flow hero banner — scrolls away with content */}
           {movie.backdropPath && (
