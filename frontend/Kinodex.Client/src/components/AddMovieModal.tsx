@@ -273,10 +273,12 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     }
     setSubmitError("");
     try {
+      const token = await getToken();
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ ...formData, userId: user?.id ?? "" }),
       });
@@ -284,9 +286,12 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
       if (response.ok) {
         onClose();
         window.location.reload();
+      } else {
+        setSubmitError(`Failed to add movie (${response.status}). Please try again.`);
       }
     } catch (error) {
       console.error("Error adding movie:", error);
+      setSubmitError("Could not reach the server. Please check your connection.");
     }
   };
 
