@@ -242,7 +242,7 @@ function MovieDetail() {
 
                   <div className="flex p-4 border-b border-gray-700">
                     <div className="w-1/2 flex flex-col justify-between">
-                      <div>
+                      <div className="mb-4">
                         <h3 className="text-sm font-medium text-gray-400 mb-2">
                           Purchase Price
                         </h3>
@@ -278,9 +278,9 @@ function MovieDetail() {
                         </div>
                       </div>
                     </div>
-                    <div className="w-1/2">
+                    <div className="w-1/2 flex items-end">
                       {/* Product Image & eBay Button - Right */}
-                      <div className="flex flex-col items-end gap-4">
+                      <div className="flex flex-col items-start gap-4">
                         {movie.productPosterPath && (
                           <img
                             src={movie.productPosterPath}
