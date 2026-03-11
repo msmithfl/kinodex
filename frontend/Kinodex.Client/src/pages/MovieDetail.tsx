@@ -14,6 +14,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import { EditMovieModal } from "../components/EditMovieModal";
 import SubNavigation from "../components/SubNavigation";
 import { FormatIcon } from "../utils/formatIcon";
+import { FaBarcode } from "react-icons/fa6";
 
 function MovieDetail() {
   const navigate = useNavigate();
@@ -246,7 +247,7 @@ function MovieDetail() {
                         <h3 className="text-sm font-medium text-gray-400 mb-2">
                           Purchase Price
                         </h3>
-                        <p className="text-base text-white">
+                        <p className="text-base font-mono text-white">
                           {movie.purchasePrice > 0 ? (
                             `$${movie.purchasePrice.toFixed(2)}`
                           ) : (
@@ -255,26 +256,25 @@ function MovieDetail() {
                         </p>
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium text-gray-400 mb-2">
+                        {/* <h3 className="text-sm font-medium text-gray-400 mb-2">
                           UPC Number
-                        </h3>
+                        </h3> */}
                         <div className="relative inline-block">
                           <button
                             onClick={() => {
-                              navigator.clipboard.writeText(movie.upcNumber);
-                              setCopied(true);
-                              setTimeout(() => setCopied(false), 1500);
+                              const query = encodeURIComponent(
+                                `${movie.upcNumber}`,
+                              );
+                              window.open(
+                                `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&rt=nc&LH_ItemCondition=4`,
+                                "_blank",
+                                "noopener,noreferrer",
+                              );
                             }}
-                            title="Copy to clipboard"
-                            className="text-base font-mono text-white bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-md cursor-pointer transition-colors"
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 text-xs lg:text-sm cursor-pointer w-auto lg:w-full"
                           >
-                            {movie.upcNumber}
+                            Search eBay
                           </button>
-                          {copied && (
-                            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
-                              Copied!
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -291,22 +291,29 @@ function MovieDetail() {
                             }}
                           />
                         )}
-
-                        <button
-                          onClick={() => {
-                            const query = encodeURIComponent(
-                              `${movie.upcNumber}`,
-                            );
-                            window.open(
-                              `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&rt=nc&LH_ItemCondition=4`,
-                              "_blank",
-                              "noopener,noreferrer",
-                            );
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 text-xs lg:text-sm cursor-pointer w-auto lg:w-full"
-                        >
-                          Search eBay
-                        </button>
+                        <div className="relative inline-block">
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(movie.upcNumber);
+                              setCopied(true);
+                              setTimeout(() => setCopied(false), 1500);
+                            }}
+                            title="Copy to clipboard"
+                            className="text-base font-mono text-white rounded-md cursor-pointer transition-colors"
+                          >
+                            <div className="flex items-center gap-1">
+                              <FaBarcode />
+                              <p className="text-base font-mono text-white">
+                                {movie.upcNumber}
+                              </p>
+                            </div>
+                          </button>
+                          {copied && (
+                            <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
+                              Copied!
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -327,7 +334,7 @@ function MovieDetail() {
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
                         Shelf Number
                       </h3>
-                      <p className="text-base text-white">
+                      <p className="text-base font-mono text-white">
                         {movie.shelfNumber > 0 ? (
                           `${movie.shelfNumber}`
                         ) : (
@@ -342,9 +349,9 @@ function MovieDetail() {
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
                         HDD Number
                       </h3>
-                      <p className="text-base text-white">
+                      <p className="text-base font-mono text-white">
                         {movie.hdDriveNumber > 0 ? (
-                          `Drive #${movie.hdDriveNumber}`
+                          `${movie.hdDriveNumber}`
                         ) : (
                           <span className="text-gray-500">Not set</span>
                         )}
