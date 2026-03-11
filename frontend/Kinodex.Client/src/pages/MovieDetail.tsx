@@ -86,7 +86,7 @@ function MovieDetail() {
   }
 
   return (
-    <div className="relative md:h-[calc(100vh-5rem)] flex flex-col">
+    <div className="relative h-[calc(100vh-5rem)] flex flex-col">
       {movie.backdropPath && (
         <>
           {/* Mobile: absolute banner */}
@@ -96,7 +96,7 @@ function MovieDetail() {
               alt=""
               className="w-full h-full object-cover object-center"
             />
-            <div className="absolute inset-0 bg-linear-to-b from-gray-900/20 to-gray-900" />
+            <div className="absolute inset-0 bg-linear-to-b from-gray-900/60 via-gray-900/80 to-gray-900" />
           </div>
           {/* Desktop: fixed background scoped to this container */}
           <div
