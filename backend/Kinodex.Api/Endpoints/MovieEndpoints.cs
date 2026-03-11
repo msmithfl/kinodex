@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Kinodex.Api.Data;
 using Kinodex.Api.Models;
+using Kinodex.Api.Services;
 using System.Globalization;
 using System.Security.Claims;
 using System.Text;
@@ -113,6 +114,118 @@ public static class MovieEndpoints
 
             var bytes = Encoding.UTF8.GetBytes(csv.ToString());
             return Results.File(bytes, "text/csv", "movie-vault-export.csv");
+        }).RequireAuthorization();
+
+        // POST import movies from Letterboxd CSV
+        group.MapPost("/import/letterboxd", async (HttpContext context, ClaimsPrincipal user, MovieDbContext db, TmdbMatchingService tmdb) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+            if (!context.Request.HasFormContentType || !context.Request.Form.Files.Any())
+                return Results.BadRequest(new { error = "No file uploaded." });
+
+            var file = context.Request.Form.Files[0];
+            using var reader = new StreamReader(file.OpenReadStream());
+            var content = await reader.ReadToEndAsync();
+            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                               .Select(l => l.TrimEnd('\r'))
+                               .ToList();
+
+            // Find the header row with "Position,Name,Year"
+            int headerIndex = -1;
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var fields = ParseCsvLine(lines[i]);
+                if (fields.Length >= 3 &&
+                    fields[0].Trim().Equals("Position", StringComparison.OrdinalIgnoreCase) &&
+                    fields[1].Trim().Equals("Name", StringComparison.OrdinalIgnoreCase) &&
+                    fields[2].Trim().Equals("Year", StringComparison.OrdinalIgnoreCase))
+                {
+                    headerIndex = i;
+                    break;
+                }
+            }
+
+            if (headerIndex == -1)
+                return Results.BadRequest(new { error = "Could not find film list header row. Is this a valid Letterboxd list export?" });
+
+            // Deduplicate by title+year
+            var existingTitleYears = await db.Movies
+                .Where(m => m.UserId == userId)
+                .Select(m => new { m.Title, m.Year })
+                .ToListAsync();
+            var existingSet = existingTitleYears
+                .Select(m => $"{m.Title.ToLower()}|{m.Year}")
+                .ToHashSet();
+
+            var imported = 0;
+            var skipped = 0;
+            var errors = new List<string>();
+
+            for (int i = headerIndex + 1; i < lines.Count; i++)
+            {
+                try
+                {
+                    var fields = ParseCsvLine(lines[i]);
+                    if (fields.Length < 3) continue;
+
+                    var title = fields[1].Trim();
+                    var year = int.TryParse(fields[2].Trim(), out var yr) ? yr : 0;
+
+                    if (string.IsNullOrEmpty(title)) continue;
+
+                    if (existingSet.Contains($"{title.ToLower()}|{year}"))
+                    {
+                        skipped++;
+                        continue;
+                    }
+
+                    // Try to enrich with TMDB data
+                    var tmdbResults = await tmdb.SearchTmdb(title, year > 0 ? year : null);
+                    var match = tmdbResults.FirstOrDefault();
+
+                    var movie = new Movie
+                    {
+                        UserId = userId,
+                        Title = title,
+                        Year = match != null && match.Year.HasValue ? match.Year.Value : year,
+                        TmdbId = match?.TmdbId,
+                        PosterPath = match?.PosterPath ?? "",
+                        BackdropPath = match?.BackdropPath ?? "",
+                        UpcNumber = "",
+                        Formats = new List<string>(),
+                        Collections = new List<string>(),
+                        Genres = match?.Genres ?? new List<string>(),
+                        Condition = "Unknown",
+                        PurchasePrice = 0,
+                        HasWatched = false,
+                        Rating = 0,
+                        Review = "",
+                        ProductPosterPath = "",
+                        HDDriveNumber = 0,
+                        ShelfNumber = 0,
+                        ShelfSection = "",
+                        IsOnPlex = false,
+                        CreatedAt = DateTime.UtcNow,
+                    };
+
+                    db.Movies.Add(movie);
+                    existingSet.Add($"{title.ToLower()}|{year}");
+                    imported++;
+
+                    // Save in batches of 20 to avoid long-running transactions
+                    if (imported % 20 == 0)
+                        await db.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    errors.Add($"Row {i + 1}: {ex.Message}");
+                }
+            }
+
+            await db.SaveChangesAsync();
+            return Results.Ok(new { imported, skipped, errors });
         }).RequireAuthorization();
 
         // POST import movies from CSV
