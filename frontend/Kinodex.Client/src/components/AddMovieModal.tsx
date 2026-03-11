@@ -165,9 +165,12 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
       ? parseInt(movie.release_date.split("-")[0])
       : new Date().getFullYear();
 
-    // Construct poster URL
+    // Construct poster and backdrop URLs
     const posterPath = movie.poster_path
       ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+      : "";
+    const backdropPath = movie.backdrop_path
+      ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
       : "";
 
     // Update form data with TMDB info including TMDB ID
@@ -177,6 +180,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
       year,
       genres,
       posterPath,
+      backdropPath,
       tmdbId: movie.id,
     });
 
