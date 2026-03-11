@@ -25,6 +25,7 @@ interface TMDBMovie {
   title: string;
   release_date: string;
   poster_path: string;
+  backdrop_path: string;
   genre_ids: number[];
 }
 
