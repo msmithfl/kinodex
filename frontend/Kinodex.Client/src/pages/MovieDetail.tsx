@@ -116,7 +116,7 @@ function MovieDetail() {
             <div className="px-4 pb-4 border-b border-gray-700">
               <div className="flex justify-between md:justify-start gap-4 md:gap-0">
                 {/* Title, Year, Rating, Genres - Center */}
-                <div className="md:ml-10 flex flex-col justify-center space-y-2 lg:space-y-4">
+                <div className="md:ml-10 flex flex-col justify-center lg:space-y-4">
                   <div className="flex items-center">
                     <h1 className="text-xl lg:text-3xl font-bold text-white">
                       {movie.title}
@@ -124,7 +124,7 @@ function MovieDetail() {
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <p className="text-lg lg:text-xl text-white">
+                    <p className="text-sm lg:text-xl text-white">
                       {movie.year || (
                         <span className="text-gray-500">Not set</span>
                       )}
@@ -176,7 +176,7 @@ function MovieDetail() {
                           <Link
                             key={idx}
                             to={`/genres/${encodeURIComponent(genre)}`}
-                            className="cursor-pointer hover:underline"
+                            className="text-sm mt-1 cursor-pointer hover:underline"
                           >
                             {genre}
                             {idx < movie.genres.length - 1 ? "," : ""}
@@ -314,6 +314,17 @@ function MovieDetail() {
                   <div className="flex p-4 border-b border-gray-700">
                     <div className="w-1/2">
                       <h3 className="text-sm font-medium text-gray-400 mb-2">
+                        Shelf Section
+                      </h3>
+                      <Link
+                        to={`/shelfsections/${encodeURIComponent(movie.shelfSection || "Unshelved")}`}
+                        className="cursor-pointer hover:underline"
+                      >
+                        {movie.shelfSection || "Unshelved"}
+                      </Link>
+                    </div>
+                    <div className="w-1/2">
+                      <h3 className="text-sm font-medium text-gray-400 mb-2">
                         Shelf Number
                       </h3>
                       <p className="text-base text-white">
@@ -323,17 +334,6 @@ function MovieDetail() {
                           <span className="text-gray-500">Not set</span>
                         )}
                       </p>
-                    </div>
-                    <div className="w-1/2">
-                      <h3 className="text-sm font-medium text-gray-400 mb-2">
-                        Shelf Section
-                      </h3>
-                      <Link
-                        to={`/shelfsections/${encodeURIComponent(movie.shelfSection || "Unshelved")}`}
-                        className="cursor-pointer hover:underline"
-                      >
-                        {movie.shelfSection || "Unshelved"}
-                      </Link>
                     </div>
                   </div>
 
