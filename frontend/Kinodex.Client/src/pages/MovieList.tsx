@@ -33,6 +33,8 @@ import { BulkEditModal } from "../components/BulkEditModal";
 import { applyFilters } from "../utils/applyFilters";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { isMobile } from "../utils/isMobile";
+import FloatingAddButton from "../components/FloatingAddButton";
+import { AddMovieModal } from "../components/AddMovieModal";
 
 interface VisibleColumns {
   year: boolean;
@@ -93,6 +95,7 @@ function MovieList() {
   });
   const [shelfSections, setShelfSections] = useState<string[]>([]);
   const [collections, setCollections] = useState<string[]>([]);
+  const [showModal, setShowModal] = useState(false);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const API_URL = `${API_BASE}/api/movies`;
@@ -369,6 +372,8 @@ function MovieList() {
   return (
     <>
       <SubNavigation />
+      <FloatingAddButton onClick={() => setShowModal(true)} />
+      {showModal && <AddMovieModal onClose={() => setShowModal(false)} />}
       <div className="flex flex-col h-[calc(100vh-9rem)]">
         {/* Fixed header section */}
         <div className="shrink-0 mx-6 mt-4 md:mx-12">
