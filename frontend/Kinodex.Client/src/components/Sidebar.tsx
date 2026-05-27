@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   FaFilm,
   FaCog,
+  // FaTv,
   // FaLink,
   FaDownload,
   FaChartPie,

@@ -163,12 +163,14 @@ function CollectionDetail() {
     if (!collection || !editedName.trim()) return;
 
     try {
+      const token = await getToken();
       const response = await fetch(
         `${COLLECTIONS_URL}/${collection.id}?newName=${encodeURIComponent(editedName)}&isDirectorCollection=${editedIsDirector}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
         },
       );

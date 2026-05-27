@@ -2,9 +2,7 @@
 # Kinodex - Root .gitignore
 # ===================================
 
-# .NET Core / ASP.NET Core
-bin/
-obj/
+
 *.user
 *.suo
 *.cache
