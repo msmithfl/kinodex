@@ -61,13 +61,13 @@ function Header() {
 
           {/* Mobile Buttons */}
           <div className="md:hidden flex items-center gap-3">
-            <button
+            {/* <button
               onClick={() => setShowModal(true)}
               className="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-md transition cursor-pointer"
               aria-label="Add movie"
             >
               <HiPlus className="w-6 h-6" />
-            </button>
+            </button> */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="text-white p-2 cursor-pointer"
