@@ -49,7 +49,7 @@ function Header() {
               alt="Kinodex"
               className="w-10 h-10 mb-0.5"
             />
-            <p className="text-white font-bold text-xl leading-none">Kinodex</p>
+            <p className="text-white font-bold text-xl leading-none"></p>
           </Link>
 
           {/* Desktop Navigation */}
