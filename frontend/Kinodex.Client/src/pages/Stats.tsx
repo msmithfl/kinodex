@@ -209,13 +209,13 @@ function Stats() {
         ) : (
           <>
             {/* Summary cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 md:mb-10">
               <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center">
                 <p className="text-gray-400 text-sm mb-1">Total Movies</p>
                 <p className="text-4xl font-bold text-white">{movies.length}</p>
               </div>
               <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center">
-                <p className="text-gray-400 text-sm mb-1">On Plex</p>
+                <p className="text-gray-400 text-sm mb-1">On Jellyfin</p>
                 <p className="text-4xl font-bold text-indigo-400">
                   {onPlexCount}
                 </p>
@@ -263,7 +263,7 @@ function Stats() {
             </div>
 
             {/* Monthly Spend bar chart */}
-            <div className="bg-gray-800 rounded-lg p-6 mt-8 mb-8">
+            <div className="bg-gray-800 rounded-lg p-6 mb-4 md:mb-8">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <h2 className="text-xl font-semibold">Monthly Spending</h2>
                 <div className="flex items-center gap-3 text-sm">
@@ -337,7 +337,7 @@ function Stats() {
             </div>
 
             {/* Charts grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
               <ChartCard
                 title="Watched"
                 data={watchedData}
