@@ -58,7 +58,6 @@ function MovieList() {
     return (saved as "asc" | "desc") || "asc";
   });
   const [searchQuery, setSearchQuery] = useState("");
-  const [upcSearchQuery, setUpcSearchQuery] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
@@ -174,13 +173,11 @@ function MovieList() {
   // Filter movies by search query and filters
   const filteredMovies = applyFilters(sortedMovies, selectedFilters).filter(
     (movie) => {
-      const matchesTitle = movie.title
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const matchesUpc = movie.upcNumber
-        .toLowerCase()
-        .includes(upcSearchQuery.toLowerCase());
-      return matchesTitle && matchesUpc;
+      const query = searchQuery.trim().toLowerCase();
+      if (!query) return true;
+      const matchesTitle = movie.title.toLowerCase().includes(query);
+      const matchesUpc = (movie.upcNumber ?? "").toLowerCase().includes(query);
+      return matchesTitle || matchesUpc;
     },
   );
 
@@ -200,10 +197,6 @@ function MovieList() {
     setSearchQuery(value);
   };
 
-  const handleUpcSearchChange = (value: string) => {
-    setUpcSearchQuery(value);
-  };
-
   const handleScanClick = () => {
     if (isMobile()) {
       setShowScanner(true);
@@ -213,7 +206,7 @@ function MovieList() {
   };
 
   const handleBarcodeDetected = (code: string) => {
-    setUpcSearchQuery(code);
+    setSearchQuery(code);
     setShowScanner(false);
   };
 
@@ -379,34 +372,25 @@ function MovieList() {
         <div className="shrink-0 mx-6 mt-4 md:mx-12">
           {movies.length > 0 && (
             <div className="mb-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="relative">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
                   <input
                     type="text"
-                    placeholder="Search by title..."
+                    placeholder="Search by title or UPC..."
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     className="w-full px-4 py-3 pl-10 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                   />
                   <FaMagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Search by UPC..."
-                    value={upcSearchQuery}
-                    onChange={(e) => handleUpcSearchChange(e.target.value)}
-                    className="flex-1 px-4 py-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleScanClick}
-                    className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer flex items-center justify-center"
-                    title="Scan barcode"
-                  >
-                    <IoCameraOutline className="w-6 h-6" />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleScanClick}
+                  className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer flex items-center justify-center"
+                  title="Scan barcode"
+                >
+                  <IoCameraOutline className="w-6 h-6" />
+                </button>
               </div>
 
               {/* Desktop Sort Controls - Conditionally Visible */}
