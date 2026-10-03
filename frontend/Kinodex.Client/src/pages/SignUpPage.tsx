@@ -8,7 +8,7 @@ const SignUpPage = () => {
         <SignUp
           routing="virtual"
           signInUrl="/sign-in"
-          forceRedirectUrl="/dashboard"
+          forceRedirectUrl="/"
           appearance={{
             elements: {
               rootBox: "mx-auto",

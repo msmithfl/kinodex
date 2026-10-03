@@ -39,11 +39,11 @@ function MovieDetail() {
         const data = await response.json();
         setMovie(data);
       } else {
-        navigate("/");
+        navigate("/library");
       }
     } catch (error) {
       console.error("Error fetching movie:", error);
-      navigate("/");
+      navigate("/library");
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,7 @@ function MovieDetail() {
       });
 
       if (response.ok) {
-        navigate("/");
+        navigate("/library");
       }
     } catch (error) {
       console.error("Error deleting movie:", error);

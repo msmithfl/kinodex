@@ -21,12 +21,12 @@ function Sidebar() {
   };
 
   const navItems = [
-    { path: "/", label: "Library", icon: FaFilm },
+    { path: "/library", label: "Library", icon: FaFilm },
     // { path: "/tvshows", label: "TV Shows", icon: FaTv },
   ];
 
   const utilityItems = [
-    { path: "/dashboard", label: "Dashboard", icon: MdDashboard },
+    { path: "/", label: "Dashboard", icon: MdDashboard },
     { path: "/stats", label: "Stats", icon: FaChartPie },
     { path: "/export", label: "CSV Export", icon: FaDownload },
     // { path: "/checkout", label: "Checkouts", icon: LuClipboardPen },

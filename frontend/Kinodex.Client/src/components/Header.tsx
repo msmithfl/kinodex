@@ -28,12 +28,12 @@ function Header() {
   };
 
   const navItems = [
-    { path: "/", label: "Movies", icon: FaFilm },
+    { path: "/library", label: "Movies", icon: FaFilm },
     // { path: "/tvshows", label: "TV Shows", icon: FaTv },
   ];
 
   const utilityItems = [
-    { path: "/dashboard", label: "Dashboard", icon: FaHome },
+    { path: "/", label: "Dashboard", icon: FaHome },
     { path: "/stats", label: "Statistics", icon: FaChartBar },
     // { path: "/watchlist", label: "Watchlist", icon: FaBookmark },
     { path: "/settings", label: "Settings", icon: FaCog },

@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -38,10 +38,10 @@ function App() {
                 <Sidebar />
                 <main className="flex-1 overflow-x-hidden">
                   <Routes>
-                    <Route path="/" element={<MovieList />} />
+                    <Route path="/" element={<Dashboard />} />
                     <Route path="/library" element={<MovieList />} />
                     <Route path="/my-shelf" element={<MyShelf />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/dashboard" element={<Navigate to="/" replace />} />
                     <Route path="/collections" element={<CollectionsView />} />
                     <Route path="/collections/:collectionName" element={<CollectionDetail />} />
                     <Route path="/shelfsections" element={<ShelfSectionsView />} />

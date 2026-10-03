@@ -221,7 +221,7 @@ function Dashboard() {
             <div className="mb-6 md:mb-12">
               <div className="grid grid-cols-3 gap-3 md:gap-6">
                 <Link
-                  to="/"
+                  to="/library"
                   className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
                 >
                   <FaFilm className="text-xl md:text-5xl mb-2 md:mb-4 mx-auto" />
@@ -251,7 +251,7 @@ function Dashboard() {
                 <div className="shrink-0 flex justify-between items-center mb-3 md:mb-6">
                   <h2 className="text-2xl font-bold">Recently Added</h2>
                   <Link
-                    to="/"
+                    to="/library"
                     className="text-indigo-400 hover:text-indigo-300 transition-colors"
                   >
                     View All →
