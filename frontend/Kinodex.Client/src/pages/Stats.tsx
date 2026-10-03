@@ -16,8 +16,12 @@ import ChartCard from "../components/ChartCard";
 function Stats() {
   const { getToken } = useAuth();
   const [movies, setMovies] = useState<Movie[]>([]);
-  const [startMonth, setStartMonth] = useState("");
-  const [endMonth, setEndMonth] = useState("");
+  const [startMonth, setStartMonth] = useState(
+    () => localStorage.getItem("statsMonthlySpendStart") || "",
+  );
+  const [endMonth, setEndMonth] = useState(
+    () => localStorage.getItem("statsMonthlySpendEnd") || "",
+  );
   const [loading, setLoading] = useState(true);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
@@ -42,6 +46,12 @@ function Stats() {
     };
     fetchMovies();
   }, []);
+
+  // Save monthly spending range to localStorage
+  useEffect(() => {
+    localStorage.setItem("statsMonthlySpendStart", startMonth);
+    localStorage.setItem("statsMonthlySpendEnd", endMonth);
+  }, [startMonth, endMonth]);
 
   const watched = movies.filter((m) => m.hasWatched).length;
   const notWatched = movies.length - watched;
@@ -150,20 +160,39 @@ function Stats() {
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       counts[key] = (counts[key] || 0) + (m.purchasePrice || 0);
     });
-    return Object.entries(counts)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, total]) => {
-        const [year, month] = key.split("-");
-        const label = new Date(
-          parseInt(year),
-          parseInt(month) - 1,
-        ).toLocaleString("default", {
-          month: "short",
-          year: "2-digit",
-        });
-        return { key, month: label, total: parseFloat(total.toFixed(2)) };
+    const keys = Object.keys(counts).sort();
+    if (keys.length === 0) return [];
+
+    // Include every month from the first to the last, so a month with no spending shows as $0
+    const [firstYear, firstMonth] = keys[0].split("-").map(Number);
+    const [lastYear, lastMonth] = keys[keys.length - 1].split("-").map(Number);
+    const months = [];
+    for (
+      let date = new Date(firstYear, firstMonth - 1);
+      date <= new Date(lastYear, lastMonth - 1);
+      date.setMonth(date.getMonth() + 1)
+    ) {
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      const label = date.toLocaleString("default", {
+        month: "short",
+        year: "2-digit",
       });
+      months.push({
+        key,
+        month: label,
+        total: parseFloat((counts[key] || 0).toFixed(2)),
+      });
+    }
+    return months;
   })();
+
+  // Drop a saved month that now falls outside the first-to-last month range
+  useEffect(() => {
+    if (loading) return;
+    const keys = new Set(allMonthlyData.map((d) => d.key));
+    if (startMonth && !keys.has(startMonth)) setStartMonth("");
+    if (endMonth && !keys.has(endMonth)) setEndMonth("");
+  }, [loading, movies]);
 
   const monthlySpendData = allMonthlyData.filter((d) => {
     if (startMonth && d.key < startMonth) return false;
