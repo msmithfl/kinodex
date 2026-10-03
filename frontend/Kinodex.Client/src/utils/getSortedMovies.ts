@@ -1,6 +1,9 @@
 import type { Movie, SortOption } from '../types'
 
-export const getSortedMovies = (movies: Movie[], sortBy: SortOption, sortDirection: 'asc' | 'desc') => {
+// The fields sorting reads, so TV shows can be sorted the same way as movies
+type Sortable = Pick<Movie, 'title' | 'year' | 'formats' | 'condition' | 'rating' | 'purchasePrice' | 'createdAt'>;
+
+export const getSortedMovies = <T extends Sortable>(movies: T[], sortBy: SortOption, sortDirection: 'asc' | 'desc'): T[] => {
     const sortedMovies = [...movies];
     
     switch (sortBy) {

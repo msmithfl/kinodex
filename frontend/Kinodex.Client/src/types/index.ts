@@ -32,6 +32,47 @@ export interface TMDBMovie {
   genre_ids: number[];
 }
 
+// One transaction: a complete set, a single season, or anything in between.
+// The same season may appear in more than one purchase (e.g. a DVD later upgraded to Blu-ray).
+export interface TvShowPurchase {
+  id?: number;
+  clientKey?: string; // Form-only identity for purchases not yet saved; the API ignores it
+  seasons: number[];
+  price: number;
+  upcNumber: string;
+  formats: string[];
+  condition: string;
+  purchasedAt: string; // YYYY-MM-DD, a calendar date with no time zone
+}
+
+export interface TvShow {
+  id?: number;
+  userId?: string; // Set by the API from the signed-in user
+  title: string;
+  hasWatched: boolean;
+  rating: number;
+  review: string;
+  year: number; // First air year
+  genres: string[];
+  posterPath: string;
+  backdropPath: string;
+  productPosterPath: string;
+  tmdbId?: number;
+  totalSeasons: number; // Season count from TMDB, 0 when unknown
+  isOnPlex: boolean;
+  createdAt?: string;
+  purchases: TvShowPurchase[];
+}
+
+export interface TMDBTvShow {
+  id: number;
+  name: string;
+  first_air_date: string;
+  poster_path: string;
+  backdrop_path: string;
+  genre_ids: number[];
+}
+
 export interface CollectionListItem {
   id?: number;
   collectionId: number;

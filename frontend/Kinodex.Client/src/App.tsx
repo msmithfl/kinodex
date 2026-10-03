@@ -4,6 +4,8 @@ import Sidebar from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import MovieList from "./pages/MovieList";
+import TvShowList from "./pages/TvShowList";
+import TvShowDetail from "./pages/TvShowDetail";
 import MovieDetail from "./pages/MovieDetail";
 import CollectionsView from "./pages/CollectionsView";
 import CollectionDetail from "./pages/CollectionDetail";
@@ -40,6 +42,8 @@ function App() {
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/library" element={<MovieList />} />
+                    <Route path="/tv-shows" element={<TvShowList />} />
+                    <Route path="/tv-shows/:id" element={<TvShowDetail />} />
                     <Route path="/my-shelf" element={<MyShelf />} />
                     <Route path="/dashboard" element={<Navigate to="/" replace />} />
                     <Route path="/collections" element={<CollectionsView />} />

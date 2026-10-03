@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   FaFilm,
   FaCog,
-  // FaTv,
+  FaTv,
   // FaLink,
   FaDownload,
   FaChartPie,
@@ -21,8 +21,8 @@ function Sidebar() {
   };
 
   const navItems = [
-    { path: "/library", label: "Library", icon: FaFilm },
-    // { path: "/tvshows", label: "TV Shows", icon: FaTv },
+    { path: "/library", label: "Movies", icon: FaFilm },
+    { path: "/tv-shows", label: "TV Shows", icon: FaTv },
   ];
 
   const utilityItems = [
