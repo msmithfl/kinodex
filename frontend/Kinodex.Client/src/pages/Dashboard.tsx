@@ -8,7 +8,9 @@ import {
   FaFilm,
   FaDownload,
   FaChartPie,
+  FaPlus,
 } from "react-icons/fa";
+import { AddMovieModal } from "../components/AddMovieModal";
 
 interface Stats {
   total: number;
@@ -24,6 +26,11 @@ interface MonthSpend {
   spend: number;
   count: number;
 }
+
+// On mobile each card is a third of the row (less the gaps), so three fit and the rest scroll;
+// on desktop all four share the row
+const quickActionClass =
+  "shrink-0 snap-start w-[calc((100%-1.5rem)/3)] md:w-auto md:flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center";
 
 // Total purchase price of movies added in the given calendar month
 function getMonthSpend(movies: Movie[], monthStart: Date): MonthSpend {
@@ -54,6 +61,7 @@ function Dashboard() {
   });
   const [recentMovies, setRecentMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
   // Size the page to the viewport so Recently Added scrolls instead of running off screen
   const container = useFillViewportHeight<HTMLDivElement>();
 
@@ -219,10 +227,11 @@ function Dashboard() {
 
             {/* Quick Actions */}
             <div className="mb-6 md:mb-12">
-              <div className="grid grid-cols-3 gap-3 md:gap-6">
+              {/* Mobile: three cards fit across and the rest scroll. Desktop: all fit, no scrolling. Padding leaves room for the hover scale. */}
+              <div className="flex gap-3 md:gap-6 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none scroll-px-2 -m-2 p-2">
                 <Link
                   to="/library"
-                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
+                  className={quickActionClass}
                 >
                   <div className="h-6 md:h-12 mb-2 md:mb-4 flex items-center justify-center">
                     <FaFilm className="text-xl md:text-5xl" />
@@ -230,9 +239,20 @@ function Dashboard() {
                   <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">Library</h3>
                 </Link>
 
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(true)}
+                  className={`${quickActionClass} cursor-pointer`}
+                >
+                  <div className="h-6 md:h-12 mb-2 md:mb-4 flex items-center justify-center">
+                    <FaPlus className="text-2xl md:text-5xl" />
+                  </div>
+                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">Add</h3>
+                </button>
+
                 <Link
                   to="/stats"
-                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
+                  className={quickActionClass}
                 >
                   <div className="h-6 md:h-12 mb-2 md:mb-4 flex items-center justify-center">
                     <FaChartPie className="text-2xl md:text-5xl" />
@@ -241,7 +261,7 @@ function Dashboard() {
                 </Link>
                 <Link
                   to="/export"
-                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
+                  className={quickActionClass}
                 >
                   <div className="h-6 md:h-12 mb-2 md:mb-4 flex items-center justify-center">
                     <FaDownload className="text-2xl md:text-5xl" />
@@ -303,6 +323,9 @@ function Dashboard() {
           </>
         )}
       </div>
+      {showAddModal && (
+        <AddMovieModal onClose={() => setShowAddModal(false)} />
+      )}
     </div>
   );
 }

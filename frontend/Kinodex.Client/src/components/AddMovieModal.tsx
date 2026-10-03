@@ -283,7 +283,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
 
       if (response.ok) {
         onClose();
-        window.location.reload();
+        window.location.href = "/library";
       } else {
         setSubmitError(`Failed to add movie (${response.status}). Please try again.`);
       }
