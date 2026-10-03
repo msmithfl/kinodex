@@ -12,6 +12,7 @@ import ShelfSectionDetail from "./pages/ShelfSectionDetail";
 import GenresView from "./pages/GenresView";
 import GenreDetail from "./pages/GenreDetail";
 import MatchMovies from "./pages/MatchMovies";
+import Kinodes from "./pages/Kinodes";
 import CustomersView from "./pages/CustomersView";
 import CheckoutsView from "./pages/CheckoutsView";
 import MyShelf from "./pages/MyShelf";
@@ -49,6 +50,8 @@ function App() {
                     <Route path="/genres" element={<GenresView />} />
                     <Route path="/genres/:genreName" element={<GenreDetail />} />
                     <Route path="/match-movies" element={<MatchMovies />} />
+                    <Route path="/kinodes" element={<Kinodes />} />
+                    <Route path="/kinodes/:movieId" element={<Kinodes />} />
                     <Route path="/checkout" element={<CheckoutsView />} />
                     <Route path="/customer" element={<CustomersView />} />
                     <Route path="/movie/:id" element={<MovieDetail />} />

@@ -7,6 +7,7 @@ import {
   FaDownload,
   FaChartPie,
 } from "react-icons/fa";
+import { FaCircleNodes } from "react-icons/fa6";
 // import { LuClipboardPen } from "react-icons/lu";
 // import { IoPersonCircleSharp } from "react-icons/io5";
 import { MdDashboard } from "react-icons/md";
@@ -23,6 +24,7 @@ function Sidebar() {
   const navItems = [
     { path: "/", label: "Library", icon: FaFilm },
     // { path: "/tvshows", label: "TV Shows", icon: FaTv },
+    { path: "/kinodes", label: "Kinodes", icon: FaCircleNodes },
   ];
 
   const utilityItems = [

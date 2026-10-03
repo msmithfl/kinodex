@@ -224,6 +224,7 @@ public class TmdbMatchingService
             }
             catch (Exception ex)
             {
+                // swallowing the exception
                 result.Errors.Add($"Error processing '{movie.Title}': {ex.Message}");
             }
         }
