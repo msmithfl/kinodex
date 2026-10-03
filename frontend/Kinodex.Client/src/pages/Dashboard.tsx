@@ -224,7 +224,9 @@ function Dashboard() {
                   to="/library"
                   className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
                 >
-                  <FaFilm className="text-xl md:text-5xl mb-2 md:mb-4 mx-auto" />
+                  <div className="h-6 md:h-12 mb-2 md:mb-4 flex items-center justify-center">
+                    <FaFilm className="text-xl md:text-5xl" />
+                  </div>
                   <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">Library</h3>
                 </Link>
 
@@ -232,14 +234,18 @@ function Dashboard() {
                   to="/stats"
                   className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
                 >
-                  <FaChartPie className="text-2xl md:text-5xl mb-2 md:mb-4 mx-auto" />
+                  <div className="h-6 md:h-12 mb-2 md:mb-4 flex items-center justify-center">
+                    <FaChartPie className="text-2xl md:text-5xl" />
+                  </div>
                   <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">Stats</h3>
                 </Link>
                 <Link
                   to="/export"
                   className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
                 >
-                  <FaDownload className="text-2xl md:text-5xl mb-2 md:mb-4 mx-auto" />
+                  <div className="h-6 md:h-12 mb-2 md:mb-4 flex items-center justify-center">
+                    <FaDownload className="text-2xl md:text-5xl" />
+                  </div>
                   <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">CSV</h3>
                 </Link>
               </div>
