@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import Counter from "../components/Counter";
@@ -95,6 +95,8 @@ function MovieList() {
   const [shelfSections, setShelfSections] = useState<string[]>([]);
   const [collections, setCollections] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerTop, setContainerTop] = useState<number | null>(null);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const API_URL = `${API_BASE}/api/movies`;
@@ -116,6 +118,19 @@ function MovieList() {
   useEffect(() => {
     localStorage.setItem("movieListColumns", JSON.stringify(visibleColumns));
   }, [visibleColumns]);
+
+  // Size the list to fill the viewport below the header and sub-navigation
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (!containerRef.current) return;
+      setContainerTop(
+        containerRef.current.getBoundingClientRect().top + window.scrollY,
+      );
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [loading]);
 
   // Save sorting preferences to localStorage
   useEffect(() => {
@@ -367,7 +382,15 @@ function MovieList() {
       <SubNavigation />
       <FloatingAddButton onClick={() => setShowModal(true)} />
       {showModal && <AddMovieModal onClose={() => setShowModal(false)} />}
-      <div className="flex flex-col h-[calc(100vh-9rem)]">
+      <div
+        ref={containerRef}
+        className="flex flex-col h-[calc(100dvh-9rem)]"
+        style={
+          containerTop !== null
+            ? { height: `calc(100dvh - ${containerTop}px)` }
+            : undefined
+        }
+      >
         {/* Fixed header section */}
         <div className="shrink-0 mx-6 mt-4 md:mx-12">
           {movies.length > 0 && (
