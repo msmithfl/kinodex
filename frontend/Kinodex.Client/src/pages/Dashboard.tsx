@@ -14,6 +14,31 @@ interface Stats {
   dvd: number;
   bluray: number;
   fourK: number;
+  thisMonth: MonthSpend;
+  lastMonth: MonthSpend;
+}
+
+interface MonthSpend {
+  label: string;
+  spend: number;
+  count: number;
+}
+
+// Total purchase price of movies added in the given calendar month
+function getMonthSpend(movies: Movie[], monthStart: Date): MonthSpend {
+  const added = movies.filter((m) => {
+    if (!m.createdAt) return false;
+    const date = new Date(m.createdAt);
+    return (
+      date.getFullYear() === monthStart.getFullYear() &&
+      date.getMonth() === monthStart.getMonth()
+    );
+  });
+  return {
+    label: monthStart.toLocaleString("default", { month: "long" }),
+    spend: added.reduce((sum, m) => sum + (m.purchasePrice || 0), 0),
+    count: added.length,
+  };
 }
 
 function Dashboard() {
@@ -23,6 +48,8 @@ function Dashboard() {
     dvd: 0,
     bluray: 0,
     fourK: 0,
+    thisMonth: { label: "", spend: 0, count: 0 },
+    lastMonth: { label: "", spend: 0, count: 0 },
   });
   const [recentMovies, setRecentMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +70,8 @@ function Dashboard() {
       if (response.ok) {
         const movies: Movie[] = await response.json();
 
+        const now = new Date();
+
         // Calculate stats - count by highest format (first alphabetically)
         const stats = {
           total: movies.length,
@@ -61,6 +90,14 @@ function Dashboard() {
               m.formats.length > 0 ? [...m.formats].sort()[0] : "";
             return highestFormat === "4K";
           }).length,
+          thisMonth: getMonthSpend(
+            movies,
+            new Date(now.getFullYear(), now.getMonth()),
+          ),
+          lastMonth: getMonthSpend(
+            movies,
+            new Date(now.getFullYear(), now.getMonth() - 1),
+          ),
         };
         setStats(stats);
 
@@ -90,7 +127,7 @@ function Dashboard() {
         ) : (
           <>
             {/* Stats Dashboard */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mt-6 mb-12">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mt-4 md:mt-6 mb-3 md:mb-6">
               <div className="bg-linear-to-br from-indigo-600 to-indigo-700 rounded-lg shadow-lg p-3 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -148,30 +185,49 @@ function Dashboard() {
               </div>
             </div>
 
+            {/* Spending This Month and Last Month */}
+            <div className="bg-linear-to-br from-green-600 to-green-700 rounded-lg shadow-lg p-3 md:p-6 mb-6 md:mb-12">
+              <div className="grid grid-cols-2 divide-x divide-green-500">
+                {[stats.thisMonth, stats.lastMonth].map((month, idx) => (
+                  <div key={idx} className={idx === 0 ? "pr-3 md:pr-6" : "pl-3 md:pl-6"}>
+                    <p className="text-green-200 text-xs md:text-sm font-medium">
+                      Spent in {month.label}
+                    </p>
+                    <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">
+                      ${month.spend.toFixed(2)}
+                    </p>
+                    {/* <p className="text-green-200 text-xs md:text-sm mt-1">
+                      {month.count} movie{month.count !== 1 ? "s" : ""} added
+                    </p> */}
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Quick Actions */}
-            <div className="mb-12">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="mb-6 md:mb-12">
+              <div className="grid grid-cols-3 gap-3 md:gap-6">
                 <Link
                   to="/"
-                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-8 transition-all duration-200 transform hover:scale-105 text-center"
+                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
                 >
-                  <FaFilm className="text-5xl mb-4 mx-auto" />
-                  <h3 className="text-xl font-semibold mb-2">Library</h3>
+                  <FaFilm className="text-xl md:text-5xl mb-2 md:mb-4 mx-auto" />
+                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">Library</h3>
                 </Link>
 
                 <Link
                   to="/stats"
-                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-8 transition-all duration-200 transform hover:scale-105 text-center"
+                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
                 >
-                  <FaChartPie className="text-5xl mb-4 mx-auto" />
-                  <h3 className="text-xl font-semibold mb-2">Statistics</h3>
+                  <FaChartPie className="text-2xl md:text-5xl mb-2 md:mb-4 mx-auto" />
+                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">Statistics</h3>
                 </Link>
                 <Link
                   to="/export"
-                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-8 transition-all duration-200 transform hover:scale-105 text-center"
+                  className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
                 >
-                  <FaDownload className="text-5xl mb-4 mx-auto" />
-                  <h3 className="text-xl font-semibold mb-2">Export/Import</h3>
+                  <FaDownload className="text-2xl md:text-5xl mb-2 md:mb-4 mx-auto" />
+                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">CSV Export</h3>
                 </Link>
               </div>
             </div>
@@ -179,7 +235,7 @@ function Dashboard() {
             {/* Recently Added */}
             {recentMovies.length > 0 && (
               <div className="pb-10 md:pb-0">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-center mb-3 md:mb-6">
                   <h2 className="text-2xl font-bold">Recently Added</h2>
                   <Link
                     to="/"
