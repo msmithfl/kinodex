@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Kinodex.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Kinodex.Api.Migrations
 {
     [DbContext(typeof(MovieDbContext))]
-    partial class MovieDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261003180646_AddTvShows")]
+    partial class AddTvShows
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -295,8 +298,16 @@ namespace Kinodex.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<List<string>>("Formats")
+                        .IsRequired()
+                        .HasColumnType("text[]");
 
                     b.PrimitiveCollection<List<string>>("Genres")
                         .IsRequired()
@@ -316,12 +327,19 @@ namespace Kinodex.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<float>("PurchasePrice")
+                        .HasColumnType("real");
+
                     b.Property<float>("Rating")
                         .HasColumnType("real");
 
                     b.Property<string>("Review")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.PrimitiveCollection<List<int>>("Seasons")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -333,6 +351,10 @@ namespace Kinodex.Api.Migrations
                     b.Property<int>("TotalSeasons")
                         .HasColumnType("integer");
 
+                    b.Property<string>("UpcNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -343,47 +365,6 @@ namespace Kinodex.Api.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TvShows");
-                });
-
-            modelBuilder.Entity("Kinodex.Api.Models.TvShowPurchase", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Condition")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.PrimitiveCollection<List<string>>("Formats")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.Property<decimal>("Price")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
-
-                    b.Property<DateOnly>("PurchasedAt")
-                        .HasColumnType("date");
-
-                    b.PrimitiveCollection<List<int>>("Seasons")
-                        .IsRequired()
-                        .HasColumnType("integer[]");
-
-                    b.Property<int>("TvShowId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("UpcNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TvShowId");
-
-                    b.ToTable("TvShowPurchases");
                 });
 
             modelBuilder.Entity("Kinodex.Api.Models.User", b =>
@@ -443,15 +424,6 @@ namespace Kinodex.Api.Migrations
                     b.Navigation("Collection");
                 });
 
-            modelBuilder.Entity("Kinodex.Api.Models.TvShowPurchase", b =>
-                {
-                    b.HasOne("Kinodex.Api.Models.TvShow", null)
-                        .WithMany("Purchases")
-                        .HasForeignKey("TvShowId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Kinodex.Api.Models.Customer", b =>
                 {
                     b.Navigation("Checkouts");
@@ -460,11 +432,6 @@ namespace Kinodex.Api.Migrations
             modelBuilder.Entity("Kinodex.Api.Models.Movie", b =>
                 {
                     b.Navigation("Checkouts");
-                });
-
-            modelBuilder.Entity("Kinodex.Api.Models.TvShow", b =>
-                {
-                    b.Navigation("Purchases");
                 });
 #pragma warning restore 612, 618
         }

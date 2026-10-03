@@ -140,6 +140,7 @@ if (!app.Environment.IsDevelopment())
 // Map movie endpoints
 app.MapWebhookEndpoints();
 app.MapMovieEndpoints();
+app.MapTvShowEndpoints();
 app.MapCollectionEndpoints();
 app.MapShelfSectionEndpoints();
 app.MapUpcEndpoints();

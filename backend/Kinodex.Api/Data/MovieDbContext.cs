@@ -12,6 +12,8 @@ public class MovieDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Movie> Movies => Set<Movie>();
+    public DbSet<TvShow> TvShows => Set<TvShow>();
+    public DbSet<TvShowPurchase> TvShowPurchases => Set<TvShowPurchase>();
     public DbSet<Collection> Collections => Set<Collection>();
     public DbSet<ShelfSection> ShelfSections => Set<ShelfSection>();
     public DbSet<CollectionListItem> CollectionListItems => Set<CollectionListItem>();
