@@ -3,6 +3,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import type { Movie } from "../types";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import {
   FaFilm,
   FaDownload,
@@ -53,6 +54,8 @@ function Dashboard() {
   });
   const [recentMovies, setRecentMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  // Size the page to the viewport so Recently Added scrolls instead of running off screen
+  const container = useFillViewportHeight<HTMLDivElement>();
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const API_URL = `${API_BASE}/api/movies`;
@@ -109,7 +112,7 @@ function Dashboard() {
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
             );
           })
-          .slice(0, 5);
+          .slice(0, 10);
         setRecentMovies(recent);
       }
     } catch (error) {
@@ -120,8 +123,12 @@ function Dashboard() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] pt-2">
-      <div className="flex-1 mx-auto px-8 w-full max-w-7xl">
+    <div
+      ref={container.ref}
+      className="flex h-[calc(100dvh-5rem)] pt-2"
+      style={container.style}
+    >
+      <div className="flex-1 flex flex-col min-h-0 mx-auto px-8 w-full max-w-7xl">
         {loading ? (
           <LoadingSpinner />
         ) : (
@@ -188,10 +195,16 @@ function Dashboard() {
             {/* Spending This Month and Last Month */}
             <div className="bg-linear-to-br from-green-600 to-green-700 rounded-lg shadow-lg p-3 md:p-6 mb-6 md:mb-12">
               <div className="grid grid-cols-2 divide-x divide-green-500">
-                {[stats.thisMonth, stats.lastMonth].map((month, idx) => (
+                {[
+                  { title: "This Month", month: stats.thisMonth },
+                  { title: "Last Month", month: stats.lastMonth },
+                ].map(({ title, month }, idx) => (
                   <div key={idx} className={idx === 0 ? "pr-3 md:pr-6" : "pl-3 md:pl-6"}>
+                    <p className="text-white text-sm md:text-base font-semibold">
+                      {title}
+                    </p>
                     <p className="text-green-200 text-xs md:text-sm font-medium">
-                      Spent in {month.label}
+                      {month.label}
                     </p>
                     <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">
                       ${month.spend.toFixed(2)}
@@ -220,22 +233,22 @@ function Dashboard() {
                   className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
                 >
                   <FaChartPie className="text-2xl md:text-5xl mb-2 md:mb-4 mx-auto" />
-                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">Statistics</h3>
+                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">Stats</h3>
                 </Link>
                 <Link
                   to="/export"
                   className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center"
                 >
                   <FaDownload className="text-2xl md:text-5xl mb-2 md:mb-4 mx-auto" />
-                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">CSV Export</h3>
+                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">CSV</h3>
                 </Link>
               </div>
             </div>
 
             {/* Recently Added */}
             {recentMovies.length > 0 && (
-              <div className="pb-10 md:pb-0">
-                <div className="flex justify-between items-center mb-3 md:mb-6">
+              <div className="flex-1 min-h-48 flex flex-col pb-4 md:pb-8">
+                <div className="shrink-0 flex justify-between items-center mb-3 md:mb-6">
                   <h2 className="text-2xl font-bold">Recently Added</h2>
                   <Link
                     to="/"
@@ -244,7 +257,7 @@ function Dashboard() {
                     View All →
                   </Link>
                 </div>
-                <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+                <div className="min-h-0 bg-gray-800 rounded-lg shadow-lg overflow-y-auto">
                   <div className="divide-y divide-gray-700">
                     {recentMovies.map((movie) => (
                       <Link
