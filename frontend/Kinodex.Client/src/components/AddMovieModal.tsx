@@ -1,7 +1,6 @@
 import { IoClose } from "react-icons/io5";
 import { FaArrowRight } from "react-icons/fa";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import type { Movie, TMDBMovie } from "../types";
 import { GENRE_MAP, searchTMDB } from "../utils/tmdbApi";
 import MovieForm from "./MovieForm";
@@ -14,7 +13,6 @@ interface AddMovieModalProps {
 }
 
 export function AddMovieModal({ onClose }: AddMovieModalProps) {
-  const navigate = useNavigate();
   const { user } = useUser();
   const { getToken } = useAuth();
   const [search, setSearch] = useState("");
@@ -419,7 +417,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
               addCollection={addCollection}
               addShelfSection={addShelfSection}
               onSubmit={handleSubmit}
-              onCancel={() => navigate("/")}
+              onCancel={onClose}
               submitButtonText="Add to Collection"
               showScanButton={true}
               onScanClick={handleScanClick}

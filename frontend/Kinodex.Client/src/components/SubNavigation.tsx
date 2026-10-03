@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa6";
 
 const NAV_LINKS = [
-  { to: "/", label: "Library" },
+  { to: "/library", label: "Library" },
   { to: "/collections", label: "Collections" },
   { to: "/genres", label: "Genres" },
   { to: "/shelfsections", label: "Shelves" },
