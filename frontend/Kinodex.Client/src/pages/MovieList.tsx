@@ -460,7 +460,7 @@ function MovieList() {
                   </div>
 
                   {/* Table / poster view, styled like the other pill switches */}
-                  <div className="inline-flex bg-gray-800 rounded-lg p-1 shrink-0">
+                  <div className="inline-flex bg-gray-800 rounded-lg p-0.5 shrink-0">
                     {(
                       [
                         { id: "table", label: "Table view", icon: FaTableList },
