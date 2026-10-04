@@ -19,6 +19,10 @@ import { getRelativeTimeString } from "../utils/dateUtils";
 import { formatSeasons } from "../utils/formatSeasons";
 import { allFormats, ownedSeasons, totalPaid } from "../utils/tvShowPurchases";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
+import { isMobile } from "../utils/isMobile";
+import { IoCameraOutline } from "react-icons/io5";
+import BarcodeScanner from "../components/BarcodeScanner";
+import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 
 function TvShowList() {
   const { getToken } = useAuth();
@@ -36,6 +40,8 @@ function TvShowList() {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   // Size the list to fill the viewport below the header
   const container = useFillViewportHeight<HTMLDivElement>([loading]);
 
@@ -80,6 +86,20 @@ function TvShowList() {
     }
   };
 
+  const handleScanClick = () => {
+    if (isMobile()) {
+      setShowScanner(true);
+    } else {
+      setShowMobileOnlyMessage(true);
+    }
+  };
+
+  // A scanned barcode goes into the search, which matches any purchase's UPC
+  const handleBarcodeDetected = (code: string) => {
+    setSearchQuery(code);
+    setShowScanner(false);
+  };
+
   // Table rows carry the purchase-derived figures, so the shared sorter can sort by them
   const rows = shows.map((show) => ({
     ...show,
@@ -121,6 +141,17 @@ function TvShowList() {
       {showAddModal && (
         <AddTvShowModal onClose={() => setShowAddModal(false)} />
       )}
+      {showScanner && (
+        <BarcodeScanner
+          onDetected={handleBarcodeDetected}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+      {showMobileOnlyMessage && (
+        <MobileOnlyMessage
+          setShowMobileOnlyMessage={setShowMobileOnlyMessage}
+        />
+      )}
 
       <div
         ref={container.ref}
@@ -131,15 +162,25 @@ function TvShowList() {
         <div className="shrink-0 mx-6 mt-4 md:mx-12">
           {shows.length > 0 && (
             <div className="mb-4 space-y-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search by title or UPC..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 pl-10 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-                <FaMagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search by title or UPC..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-3 pl-10 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                  <FaMagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleScanClick}
+                  className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer flex items-center justify-center"
+                  title="Scan barcode"
+                >
+                  <IoCameraOutline className="w-6 h-6" />
+                </button>
               </div>
               <Counter count={filteredShows.length} />
             </div>
