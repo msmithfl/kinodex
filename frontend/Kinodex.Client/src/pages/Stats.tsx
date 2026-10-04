@@ -280,7 +280,7 @@ function Stats() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)] pt-2">
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-20 py-8">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-20 pt-2 md:pt-4 pb-8">
 
         {loading ? (
           <LoadingSpinner />

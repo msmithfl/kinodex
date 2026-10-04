@@ -1,19 +1,17 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaChevronDown, FaChevronUp } from "react-icons/fa6";
 
 const NAV_LINKS = [
   { to: "/library", label: "Library" },
   { to: "/collections", label: "Collections" },
   { to: "/genres", label: "Genres" },
   { to: "/shelfsections", label: "Shelves" },
-  { to: "/my-shelf", label: "My Shelf" },
+  // { to: "/my-shelf", label: "My Shelf" },
 ];
 
 function SubNavigation() {
   const location = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => {
     return (
@@ -21,75 +19,40 @@ function SubNavigation() {
     );
   };
 
-  const activeLink = NAV_LINKS.find((l) => isActive(l.to)) ?? NAV_LINKS[0];
-
-  // Close dropdown when clicking outside
+  // On narrow screens the control scrolls sideways; bring the current page's tab into view
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setMobileOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Close dropdown on navigation
-  useEffect(() => {
-    setMobileOpen(false);
+    const container = scrollRef.current;
+    const active = container?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!container || !active) return;
+    const offset =
+      active.offsetLeft - (container.clientWidth - active.offsetWidth) / 2;
+    container.scrollLeft = Math.max(0, offset);
   }, [location.pathname]);
 
   return (
     <nav>
       <div className="max-w-7xl mx-auto px-4">
-        {/* Desktop */}
-        <div className="hidden md:flex justify-center gap-8 pt-6">
-          {NAV_LINKS.map(({ to, label }) => (
-            <Link
-              key={to}
-              to={to}
-              className={`text-gray-300 hover:text-white transition-colors font-medium pb-1 ${
-                isActive(to)
-                  ? "border-b-2 hover:border-white border-indigo-500 text-indigo-500"
-                  : ""
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
-
-        {/* Mobile dropdown */}
-        <div
-          className="md:hidden pt-4 relative flex justify-center"
-          ref={dropdownRef}
-        >
-          <button
-            onClick={() => setMobileOpen((prev) => !prev)}
-            className="flex items-center gap-2 font-semibold text-base focus:outline-none cursor-pointer"
+        {/* Segmented control, matching the scope switch on the Stats page */}
+        <div className="flex justify-center pt-4">
+          <div
+            ref={scrollRef}
+            className="relative inline-flex max-w-full overflow-x-auto bg-gray-800 rounded-lg p-1"
           >
-            {activeLink.label}
-            {mobileOpen ? <FaChevronUp /> : <FaChevronDown />}
-          </button>
-
-          {mobileOpen && (
-            <div className="absolute top-full mt-1 z-50 bg-gray-800 rounded-lg shadow-lg py-1 min-w-40 border border-gray-700">
-              {NAV_LINKS.map(({ to, label }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className={`block text-center px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors font-medium ${
-                    isActive(to) ? "text-indigo-400" : ""
-                  }`}
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-          )}
+            {NAV_LINKS.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                aria-current={isActive(to) ? "page" : undefined}
+                className={`shrink-0 whitespace-nowrap px-3 md:px-4 py-1.5 text-sm font-medium rounded-md transition ${
+                  isActive(to)
+                    ? "bg-indigo-600 text-white"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </nav>
