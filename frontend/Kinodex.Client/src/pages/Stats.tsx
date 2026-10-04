@@ -217,6 +217,8 @@ function Stats() {
   ];
 
   const totalSpend = spend.reduce((sum, e) => sum + e.amount, 0);
+  const sumSpend = (kind: "movie" | "tv") =>
+    allSpend.filter((e) => e.kind === kind).reduce((sum, e) => sum + e.amount, 0);
   const ratedItems = items.filter((m) => m.rating > 0);
   const avgRating =
     ratedItems.length > 0
@@ -230,6 +232,18 @@ function Stats() {
   }));
 
   const onPlexCount = items.filter((m) => m.isOnPlex).length;
+
+  // A small labelled figure in the lower half of a summary card
+  const summaryStat = (
+    label: string,
+    value: string | number,
+    valueClass = "text-white",
+  ) => (
+    <div className="px-2 min-w-0">
+      <p className={`text-lg font-semibold ${valueClass}`}>{value}</p>
+      <p className="text-gray-400 text-xs truncate">{label}</p>
+    </div>
+  );
 
   const allMonthlyData = (() => {
     const counts: Record<string, number> = {};
@@ -306,25 +320,40 @@ function Stats() {
               </div>
             </div>
 
-            {/* Summary cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 md:mb-10">
-              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center">
-                <p className="text-gray-400 text-sm mb-1">Total {itemNoun}</p>
-                <p className="text-4xl font-bold text-white">{items.length}</p>
-                {scope === "all" && (
-                  <p className="text-gray-400 text-xs mt-1">
-                    {movies.length} movie{movies.length !== 1 ? "s" : ""} ·{" "}
-                    {shows.length} TV show{shows.length !== 1 ? "s" : ""}
+            {/* Summary cards: spending, collection, ratings. Stacked until desktop, where they share a row at equal height */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4 md:mb-10">
+              {/* Total Spent, with the Movies / TV split on All */}
+              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5">
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm mb-1">Total Spent</p>
+                  <p className="text-4xl font-bold text-green-400">
+                    ${totalSpend.toFixed(2)}
                   </p>
+                </div>
+                {scope === "all" && (
+                  <div className="grid grid-cols-2 divide-x divide-gray-700 border-t border-gray-700 mt-3 pt-3 text-center">
+                    {summaryStat("Movies", `$${sumSpend("movie").toFixed(2)}`)}
+                    {summaryStat("TV Shows", `$${sumSpend("tv").toFixed(2)}`)}
+                  </div>
                 )}
               </div>
-              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center">
-                <p className="text-gray-400 text-sm mb-1">On Jellyfin</p>
-                <p className="text-4xl font-bold text-indigo-400">
-                  {onPlexCount}
-                </p>
+
+              {/* Collection: the title count, the Movies / TV split (on All), and how many are on Jellyfin */}
+              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5">
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm mb-1">Total {itemNoun}</p>
+                  <p className="text-4xl font-bold text-white">{items.length}</p>
+                </div>
+                {/* On Movies or TV Shows the split would just repeat the total, so only On Jellyfin shows */}
+                <div
+                  className={`grid ${scope === "all" ? "grid-cols-3" : "grid-cols-1"} divide-x divide-gray-700 border-t border-gray-700 mt-3 pt-3 text-center`}
+                >
+                  {scope === "all" && summaryStat("Movies", movies.length)}
+                  {scope === "all" && summaryStat("TV Shows", shows.length)}
+                  {summaryStat("On Jellyfin", onPlexCount, "text-indigo-400")}
+                </div>
               </div>
-              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 col-span-2 md:col-span-1">
+              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5">
                 <div className="flex items-baseline justify-between mb-2">
                   <p className="text-gray-400 text-sm">Ratings</p>
                   <p className="text-yellow-400 text-sm font-bold">
@@ -357,12 +386,6 @@ function Stats() {
                     />
                   </BarChart>
                 </ResponsiveContainer>
-              </div>
-              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center  col-span-2 md:col-span-1">
-                <p className="text-gray-400 text-sm mb-1">Total Spent</p>
-                <p className="text-4xl font-bold text-green-400">
-                  ${totalSpend.toFixed(2)}
-                </p>
               </div>
             </div>
 
