@@ -434,7 +434,7 @@ function MovieList() {
                       ) && (
                         <button
                           onClick={handleClearFilters}
-                          className="absolute -left-8.5 top-1/2 -translate-y-1/2 z-10 w-5 h-5  rounded-full flex items-center justify-center transition-colors cursor-pointer"
+                          className="absolute -left-5.5 md:-left-8.5 top-1/2 -translate-y-1/2 z-10 w-5 h-5  rounded-full flex items-center justify-center transition-colors cursor-pointer"
                           title="Clear filters"
                         >
                           <IoMdCloseCircle className="w-5 h-5 text-white" />
