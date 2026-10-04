@@ -37,7 +37,7 @@ function SubNavigation() {
         <div className="flex justify-center pt-4">
           <div
             ref={scrollRef}
-            className="relative inline-flex max-w-full overflow-x-auto bg-gray-800 rounded-lg p-1"
+            className="relative inline-flex max-w-full overflow-x-auto bg-gray-800 rounded-lg p-0.5"
           >
             {NAV_LINKS.map(({ to, label }) => (
               <Link
