@@ -10,12 +10,61 @@ import {
   CartesianGrid,
 } from "recharts";
 import LoadingSpinner from "../components/LoadingSpinner";
-import type { Movie } from "../types";
+import type { Movie, TvShow } from "../types";
 import ChartCard from "../components/ChartCard";
+import { allFormats } from "../utils/tvShowPurchases";
+import { movieSpend, tvSpend } from "../utils/spending";
+
+type Scope = "all" | "movies" | "tv";
+
+const SCOPES: { id: Scope; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "movies", label: "Movies" },
+  { id: "tv", label: "TV Shows" },
+];
+
+// The fields the charts read, shared by movies and TV shows
+interface StatItem {
+  kind: "movie" | "tv";
+  rating: number;
+  hasWatched: boolean;
+  isOnPlex: boolean;
+  year: number;
+  genres: string[];
+  formats: string[];
+  conditions: string[]; // A movie has one; a TV show has one per purchase
+}
+
+const movieItem = (m: Movie): StatItem => ({
+  kind: "movie",
+  rating: m.rating,
+  hasWatched: m.hasWatched,
+  isOnPlex: m.isOnPlex,
+  year: m.year,
+  genres: m.genres,
+  formats: m.formats,
+  conditions: m.condition ? [m.condition] : [],
+});
+
+const tvItem = (s: TvShow): StatItem => ({
+  kind: "tv",
+  rating: s.rating,
+  hasWatched: s.hasWatched,
+  isOnPlex: s.isOnPlex,
+  year: s.year,
+  genres: s.genres,
+  formats: allFormats(s.purchases),
+  conditions: s.purchases.map((p) => p.condition).filter(Boolean),
+});
 
 function Stats() {
   const { getToken } = useAuth();
   const [movies, setMovies] = useState<Movie[]>([]);
+  const [shows, setShows] = useState<TvShow[]>([]);
+  const [scope, setScope] = useState<Scope>(() => {
+    const saved = localStorage.getItem("statsScope");
+    return saved === "movies" || saved === "tv" ? saved : "all";
+  });
   const [startMonth, setStartMonth] = useState(
     () => localStorage.getItem("statsMonthlySpendStart") || "",
   );
@@ -25,36 +74,64 @@ function Stats() {
   const [loading, setLoading] = useState(true);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const API_URL = `${API_BASE}/api/movies`;
 
   useEffect(() => {
-    const fetchMovies = async () => {
+    // Each list is fetched on its own so one failing still shows the other
+    const fetchList = async <T,>(path: string, token: string | null): Promise<T[]> => {
       try {
-        const token = await getToken();
-        const response = await fetch(API_URL, {
+        const response = await fetch(`${API_BASE}${path}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (response.ok) {
-          const data: Movie[] = await response.json();
-          setMovies(data);
-        }
+        return response.ok ? await response.json() : [];
       } catch (error) {
-        console.error("Error fetching movies:", error);
+        console.error(`Error fetching ${path}:`, error);
+        return [];
+      }
+    };
+
+    const fetchData = async () => {
+      try {
+        const token = await getToken();
+        const [movieData, showData] = await Promise.all([
+          fetchList<Movie>("/api/movies", token),
+          fetchList<TvShow>("/api/tvshows", token),
+        ]);
+        setMovies(movieData);
+        setShows(showData);
       } finally {
         setLoading(false);
       }
     };
-    fetchMovies();
+    fetchData();
   }, []);
 
-  // Save monthly spending range to localStorage
+  // Save the scope and monthly spending range to localStorage
+  useEffect(() => {
+    localStorage.setItem("statsScope", scope);
+  }, [scope]);
+
   useEffect(() => {
     localStorage.setItem("statsMonthlySpendStart", startMonth);
     localStorage.setItem("statsMonthlySpendEnd", endMonth);
   }, [startMonth, endMonth]);
 
-  const watched = movies.filter((m) => m.hasWatched).length;
-  const notWatched = movies.length - watched;
+  const items: StatItem[] = [
+    ...(scope !== "tv" ? movies.map(movieItem) : []),
+    ...(scope !== "movies" ? shows.map(tvItem) : []),
+  ];
+  const allSpend = [...movieSpend(movies), ...tvSpend(shows)];
+  const spend = allSpend.filter(
+    (e) =>
+      scope === "all" ||
+      (scope === "movies" && e.kind === "movie") ||
+      (scope === "tv" && e.kind === "tv"),
+  );
+
+  const itemNoun =
+    scope === "movies" ? "Movies" : scope === "tv" ? "TV Shows" : "Titles";
+
+  const watched = items.filter((m) => m.hasWatched).length;
+  const notWatched = items.length - watched;
 
   const watchedData = [
     { name: "Watched", value: watched },
@@ -63,7 +140,7 @@ function Stats() {
 
   const formatData = (() => {
     const counts: Record<string, number> = {};
-    movies.forEach((m) => {
+    items.forEach((m) => {
       m.formats.forEach((fmt) => {
         counts[fmt] = (counts[fmt] || 0) + 1;
       });
@@ -73,7 +150,7 @@ function Stats() {
 
   const genreDataFull = (() => {
     const counts: Record<string, number> = {};
-    movies.forEach((m) => {
+    items.forEach((m) => {
       m.genres.forEach((g) => {
         counts[g] = (counts[g] || 0) + 1;
       });
@@ -87,15 +164,17 @@ function Stats() {
 
   const conditionData = (() => {
     const counts: Record<string, number> = {};
-    movies.forEach((m) => {
-      counts[m.condition] = (counts[m.condition] || 0) + 1;
+    items.forEach((m) => {
+      m.conditions.forEach((c) => {
+        counts[c] = (counts[c] || 0) + 1;
+      });
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   })();
 
   const decadeData = (() => {
     const counts: Record<string, number> = {};
-    movies.forEach((m) => {
+    items.forEach((m) => {
       if (!m.year) return;
       const decade = `${Math.floor(m.year / 10) * 10}s`;
       counts[decade] = (counts[decade] || 0) + 1;
@@ -137,30 +216,29 @@ function Stats() {
     "#14b8a6",
   ];
 
-  const totalSpend = movies.reduce((sum, m) => sum + (m.purchasePrice || 0), 0);
-  const ratedMovies = movies.filter((m) => m.rating > 0);
+  const totalSpend = spend.reduce((sum, e) => sum + e.amount, 0);
+  const ratedItems = items.filter((m) => m.rating > 0);
   const avgRating =
-    ratedMovies.length > 0
-      ? ratedMovies.reduce((sum, m) => sum + m.rating, 0) / ratedMovies.length
+    ratedItems.length > 0
+      ? ratedItems.reduce((sum, m) => sum + m.rating, 0) / ratedItems.length
       : 0;
 
   const ratingBuckets = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0];
   const ratingDistData = ratingBuckets.map((r) => ({
     label: r % 1 === 0 ? r.toFixed(0) : r.toFixed(1),
-    count: movies.filter((m) => m.rating === r).length,
+    count: items.filter((m) => m.rating === r).length,
   }));
 
-  const onPlexCount = movies.filter((m) => m.isOnPlex).length;
+  const onPlexCount = items.filter((m) => m.isOnPlex).length;
 
   const allMonthlyData = (() => {
     const counts: Record<string, number> = {};
-    movies.forEach((m) => {
-      if (!m.createdAt) return;
-      const date = new Date(m.createdAt);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-      counts[key] = (counts[key] || 0) + (m.purchasePrice || 0);
+    spend.forEach((e) => {
+      counts[e.month] = (counts[e.month] || 0) + e.amount;
     });
-    const keys = Object.keys(counts).sort();
+    // The month range spans movies and TV together, so switching scope keeps the same
+    // From/To options and a saved range; months with nothing in scope show as $0
+    const keys = [...new Set(allSpend.map((e) => e.month))].sort();
     if (keys.length === 0) return [];
 
     // Include every month from the first to the last, so a month with no spending shows as $0
@@ -192,7 +270,7 @@ function Stats() {
     const keys = new Set(allMonthlyData.map((d) => d.key));
     if (startMonth && !keys.has(startMonth)) setStartMonth("");
     if (endMonth && !keys.has(endMonth)) setEndMonth("");
-  }, [loading, movies]);
+  }, [loading, movies, shows]);
 
   const monthlySpendData = allMonthlyData.filter((d) => {
     if (startMonth && d.key < startMonth) return false;
@@ -208,11 +286,37 @@ function Stats() {
           <LoadingSpinner />
         ) : (
           <>
+            {/* Scope */}
+            <div className="flex justify-center md:justify-start mb-4">
+              <div className="inline-flex bg-gray-800 rounded-lg p-1">
+                {SCOPES.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setScope(s.id)}
+                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition cursor-pointer ${
+                      scope === s.id
+                        ? "bg-indigo-600 text-white"
+                        : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Summary cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 md:mb-10">
               <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center">
-                <p className="text-gray-400 text-sm mb-1">Total Movies</p>
-                <p className="text-4xl font-bold text-white">{movies.length}</p>
+                <p className="text-gray-400 text-sm mb-1">Total {itemNoun}</p>
+                <p className="text-4xl font-bold text-white">{items.length}</p>
+                {scope === "all" && (
+                  <p className="text-gray-400 text-xs mt-1">
+                    {movies.length} movie{movies.length !== 1 ? "s" : ""} ·{" "}
+                    {shows.length} TV show{shows.length !== 1 ? "s" : ""}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5 text-center">
                 <p className="text-gray-400 text-sm mb-1">On Jellyfin</p>
@@ -242,7 +346,7 @@ function Stats() {
                         borderRadius: "8px",
                         color: "#fff",
                       }}
-                      formatter={(value: number | undefined) => [value ?? 0, "Movies"]}
+                      formatter={(value: number | undefined) => [value ?? 0, itemNoun]}
                       labelFormatter={(label) => `★ ${label}`}
                     />
                     <Bar

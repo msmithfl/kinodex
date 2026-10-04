@@ -2,8 +2,15 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
-import type { Movie } from "../types";
+import type { Movie, TvShow } from "../types";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
+import { allFormats } from "../utils/tvShowPurchases";
+import {
+  monthKey,
+  movieSpend,
+  tvSpend,
+  type SpendEntry,
+} from "../utils/spending";
 import {
   FaFilm,
   FaDownload,
@@ -13,7 +20,8 @@ import {
 import { AddMovieModal } from "../components/AddMovieModal";
 
 interface Stats {
-  total: number;
+  movies: number;
+  tvShows: number;
   dvd: number;
   bluray: number;
   fourK: number;
@@ -27,108 +35,181 @@ interface MonthSpend {
   count: number;
 }
 
+// A movie or TV show in the Recently Added list
+interface RecentItem {
+  key: string;
+  title: string;
+  formats: string[];
+  createdAt?: string;
+  to: string;
+  isTv: boolean;
+}
+
 // On mobile each card is a third of the row (less the gaps), so three fit and the rest scroll;
 // on desktop all four share the row
 const quickActionClass =
   "shrink-0 snap-start w-[calc((100%-1.5rem)/3)] md:w-auto md:flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center";
 
-// Total purchase price of movies added in the given calendar month
-function getMonthSpend(movies: Movie[], monthStart: Date): MonthSpend {
-  const added = movies.filter((m) => {
-    if (!m.createdAt) return false;
-    const date = new Date(m.createdAt);
-    return (
-      date.getFullYear() === monthStart.getFullYear() &&
-      date.getMonth() === monthStart.getMonth()
-    );
-  });
+// Total spent in the given calendar month, across movies and TV purchases
+function getMonthSpend(entries: SpendEntry[], monthStart: Date): MonthSpend {
+  const key = monthKey(monthStart);
+  const inMonth = entries.filter((e) => e.month === key);
   return {
     label: monthStart.toLocaleString("default", { month: "long" }),
-    spend: added.reduce((sum, m) => sum + (m.purchasePrice || 0), 0),
-    count: added.length,
+    spend: inMonth.reduce((sum, e) => sum + e.amount, 0),
+    count: inMonth.length,
   };
 }
+
+// Best format first: 4K < Blu-ray < DVD alphabetically
+const highestFormat = (formats: string[]) =>
+  formats.length > 0 ? [...formats].sort()[0] : "";
 
 function Dashboard() {
   const { getToken } = useAuth();
   const [stats, setStats] = useState<Stats>({
-    total: 0,
+    movies: 0,
+    tvShows: 0,
     dvd: 0,
     bluray: 0,
     fourK: 0,
     thisMonth: { label: "", spend: 0, count: 0 },
     lastMonth: { label: "", spend: 0, count: 0 },
   });
-  const [recentMovies, setRecentMovies] = useState<Movie[]>([]);
+  const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   // Size the page to the viewport so Recently Added scrolls instead of running off screen
   const container = useFillViewportHeight<HTMLDivElement>();
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const API_URL = `${API_BASE}/api/movies`;
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  // Each list is fetched on its own so one failing still shows the other
+  const fetchList = async <T,>(path: string, token: string | null): Promise<T[]> => {
+    try {
+      const response = await fetch(`${API_BASE}${path}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.ok ? await response.json() : [];
+    } catch (error) {
+      console.error(`Error fetching ${path}:`, error);
+      return [];
+    }
+  };
+
   const fetchData = async () => {
     try {
       const token = await getToken();
-      const response = await fetch(API_URL, {
-        headers: { Authorization: `Bearer ${token}` },
+      const [movies, shows] = await Promise.all([
+        fetchList<Movie>("/api/movies", token),
+        fetchList<TvShow>("/api/tvshows", token),
+      ]);
+
+      const now = new Date();
+      const spend = [...movieSpend(movies), ...tvSpend(shows)];
+
+      // Format cards count every movie and show by its best format
+      const bestFormats = [
+        ...movies.map((m) => highestFormat(m.formats)),
+        ...shows.map((s) => highestFormat(allFormats(s.purchases))),
+      ];
+
+      setStats({
+        movies: movies.length,
+        tvShows: shows.length,
+        dvd: bestFormats.filter((f) => f === "DVD").length,
+        bluray: bestFormats.filter((f) => f === "Blu-ray").length,
+        fourK: bestFormats.filter((f) => f === "4K").length,
+        thisMonth: getMonthSpend(
+          spend,
+          new Date(now.getFullYear(), now.getMonth()),
+        ),
+        lastMonth: getMonthSpend(
+          spend,
+          new Date(now.getFullYear(), now.getMonth() - 1),
+        ),
       });
-      if (response.ok) {
-        const movies: Movie[] = await response.json();
 
-        const now = new Date();
-
-        // Calculate stats - count by highest format (first alphabetically)
-        const stats = {
-          total: movies.length,
-          dvd: movies.filter((m) => {
-            const highestFormat =
-              m.formats.length > 0 ? [...m.formats].sort()[0] : "";
-            return highestFormat === "DVD";
-          }).length,
-          bluray: movies.filter((m) => {
-            const highestFormat =
-              m.formats.length > 0 ? [...m.formats].sort()[0] : "";
-            return highestFormat === "Blu-ray";
-          }).length,
-          fourK: movies.filter((m) => {
-            const highestFormat =
-              m.formats.length > 0 ? [...m.formats].sort()[0] : "";
-            return highestFormat === "4K";
-          }).length,
-          thisMonth: getMonthSpend(
-            movies,
-            new Date(now.getFullYear(), now.getMonth()),
-          ),
-          lastMonth: getMonthSpend(
-            movies,
-            new Date(now.getFullYear(), now.getMonth() - 1),
-          ),
-        };
-        setStats(stats);
-
-        // Get 5 most recent movies
-        const recent = movies
-          .sort((a, b) => {
-            if (!a.createdAt || !b.createdAt) return 0;
-            return (
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
-          })
-          .slice(0, 10);
-        setRecentMovies(recent);
-      }
+      // 10 most recently added movies and shows
+      const recent: RecentItem[] = [
+        ...movies.map((m) => ({
+          key: `movie-${m.id}`,
+          title: m.title,
+          formats: [...m.formats].sort(),
+          createdAt: m.createdAt,
+          to: `/movie/${m.id}`,
+          isTv: false,
+        })),
+        ...shows.map((s) => ({
+          key: `tv-${s.id}`,
+          title: s.title,
+          formats: allFormats(s.purchases),
+          createdAt: s.createdAt,
+          to: `/tv-shows/${s.id}`,
+          isTv: true,
+        })),
+      ]
+        .sort((a, b) => {
+          if (!a.createdAt || !b.createdAt) return 0;
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        })
+        .slice(0, 10);
+      setRecentItems(recent);
     } catch (error) {
-      console.error("Error fetching movies:", error);
+      console.error("Error loading dashboard:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  const statCards = [
+    {
+      label: "Total Movies",
+      value: stats.movies,
+      icon: "🎬",
+      gradient: "from-indigo-600 to-indigo-700",
+      labelColor: "text-indigo-200",
+      span: "col-span-3 lg:col-span-1",
+    },
+    {
+      label: "TV Shows",
+      value: stats.tvShows,
+      icon: "📺",
+      gradient: "from-rose-600 to-rose-700",
+      labelColor: "text-rose-200",
+      span: "col-span-3 lg:col-span-1",
+    },
+    {
+      label: "DVD",
+      value: stats.dvd,
+      icon: "💿",
+      gradient: "from-purple-600 to-purple-700",
+      labelColor: "text-purple-200",
+      span: "col-span-2 lg:col-span-1",
+    },
+    {
+      label: "Blu-ray",
+      value: stats.bluray,
+      icon: "📀",
+      gradient: "from-blue-600 to-blue-700",
+      labelColor: "text-blue-200",
+      span: "col-span-2 lg:col-span-1",
+    },
+    {
+      label: "4K Ultra HD",
+      value: stats.fourK,
+      icon: "💎",
+      gradient: "from-cyan-600 to-cyan-700",
+      labelColor: "text-cyan-200",
+      span: "col-span-2 lg:col-span-1",
+    },
+  ];
 
   return (
     <div
@@ -141,63 +222,26 @@ function Dashboard() {
           <LoadingSpinner />
         ) : (
           <>
-            {/* Stats Dashboard */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mt-4 md:mt-6 mb-3 md:mb-6">
-              <div className="bg-linear-to-br from-indigo-600 to-indigo-700 rounded-lg shadow-lg p-3 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-indigo-200 text-xs md:text-sm font-medium">
-                      Total Movies
-                    </p>
-                    <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">
-                      {stats.total}
-                    </p>
+            {/* Stats Dashboard: mobile has Movies and TV Shows on one row and the three formats below; desktop has all five in a row */}
+            <div className="grid grid-cols-6 lg:grid-cols-5 gap-3 md:gap-6 mt-4 md:mt-6 mb-3 md:mb-6">
+              {statCards.map((card) => (
+                <div
+                  key={card.label}
+                  className={`${card.span} bg-linear-to-br ${card.gradient} rounded-lg shadow-lg p-3 md:p-6`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className={`${card.labelColor} text-xs md:text-sm font-medium truncate`}>
+                        {card.label}
+                      </p>
+                      <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">
+                        {card.value}
+                      </p>
+                    </div>
+                    <div className="text-3xl md:text-5xl">{card.icon}</div>
                   </div>
-                  <div className="text-3xl md:text-5xl">🎬</div>
                 </div>
-              </div>
-
-              <div className="bg-linear-to-br from-purple-600 to-purple-700 rounded-lg shadow-lg p-3 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-200 text-xs md:text-sm font-medium">
-                      DVD
-                    </p>
-                    <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">
-                      {stats.dvd}
-                    </p>
-                  </div>
-                  <div className="text-3xl md:text-5xl">💿</div>
-                </div>
-              </div>
-
-              <div className="bg-linear-to-br from-blue-600 to-blue-700 rounded-lg shadow-lg p-3 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-200 text-xs md:text-sm font-medium">
-                      Blu-ray
-                    </p>
-                    <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">
-                      {stats.bluray}
-                    </p>
-                  </div>
-                  <div className="text-3xl md:text-5xl">📀</div>
-                </div>
-              </div>
-
-              <div className="bg-linear-to-br from-cyan-600 to-cyan-700 rounded-lg shadow-lg p-3 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-cyan-200 text-xs md:text-sm font-medium">
-                      4K Ultra HD
-                    </p>
-                    <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">
-                      {stats.fourK}
-                    </p>
-                  </div>
-                  <div className="text-3xl md:text-5xl">💎</div>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Spending This Month and Last Month */}
@@ -272,7 +316,7 @@ function Dashboard() {
             </div>
 
             {/* Recently Added */}
-            {recentMovies.length > 0 && (
+            {recentItems.length > 0 && (
               <div className="flex-1 min-h-48 flex flex-col pb-4 md:pb-8">
                 <div className="shrink-0 flex justify-between items-center mb-3 md:mb-6">
                   <h2 className="text-2xl font-bold">Recently Added</h2>
@@ -285,24 +329,29 @@ function Dashboard() {
                 </div>
                 <div className="min-h-0 bg-gray-800 rounded-lg shadow-lg overflow-y-auto">
                   <div className="divide-y divide-gray-700">
-                    {recentMovies.map((movie) => (
+                    {recentItems.map((item) => (
                       <Link
-                        key={movie.id}
-                        to={`/movie/${movie.id}`}
+                        key={item.key}
+                        to={item.to}
                         className="flex items-center justify-between p-4 hover:bg-gray-700 transition-colors"
                       >
                         <div className="flex-1 flex items-center gap-3 min-w-0">
                           <h3
                             className="text-lg font-semibold text-white truncate max-w-sm"
-                            title={movie.title}
+                            title={item.title}
                           >
-                            {movie.title}
+                            {item.title}
                           </h3>
-                          {movie.formats && movie.formats.length > 0 ? (
+                          {item.isTv && (
+                            <span className="shrink-0 border border-rose-400 text-rose-300 px-2 py-0.5 rounded text-xs font-semibold">
+                              TV
+                            </span>
+                          )}
+                          {item.formats.length > 0 ? (
                             <span className="inline-flex gap-1 whitespace-nowrap">
-                              {[...movie.formats].sort().map((fmt, idx) => (
+                              {item.formats.map((fmt) => (
                                 <span
-                                  key={idx}
+                                  key={fmt}
                                   className="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-medium"
                                 >
                                   {fmt}
