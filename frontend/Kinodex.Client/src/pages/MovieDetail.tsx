@@ -85,6 +85,27 @@ function MovieDetail() {
     );
   }
 
+  // Edit and delete, placed per screen size: over the backdrop on mobile, at the bottom on tablet,
+  // and in the header's bottom-right corner on desktop
+  const actionButtons = (
+    <>
+      <button
+        onClick={() => setShowModal(true)}
+        className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+        aria-label="Edit movie"
+      >
+        <FaEdit className="w-5 h-5" />
+      </button>
+      <button
+        onClick={handleDeleteClick}
+        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+        aria-label="Delete movie"
+      >
+        <FaTrash className="w-5 h-5" />
+      </button>
+    </>
+  );
+
   return (
     <div className="relative h-[calc(100vh-5rem)] flex flex-col">
       {movie.backdropPath && (
@@ -118,7 +139,15 @@ function MovieDetail() {
                 className="absolute inset-0 w-full h-full object-cover object-center"
               />
               <div className="absolute inset-x-0 top-0 -bottom-0.5 bg-linear-to-b from-gray-900/20 to-gray-900" />
+              {/* Mobile: edit and delete over the backdrop's top-left corner */}
+              <div className="absolute top-3 left-3 flex gap-1 rounded-md bg-gray-900/70 backdrop-blur-sm pointer-events-auto">
+                {actionButtons}
+              </div>
             </div>
+          )}
+          {/* Mobile without a backdrop: same buttons, top-left above the title */}
+          {!movie.backdropPath && (
+            <div className="md:hidden flex gap-1 px-2 pt-2">{actionButtons}</div>
           )}
           <div className="mx-auto max-w-4xl lg:max-w-6xl pt-2 md:pt-6 lg:px-6">
             {/* Mobile and tablet: one column, title block beside the poster at the top.
@@ -130,7 +159,11 @@ function MovieDetail() {
               <div className="px-4 pb-4 border-b-[0.5px] border-white/20 lg:contents">
                 <div className="flex justify-between md:justify-start gap-4 md:gap-0 lg:contents">
                   {/* Title, Year, Rating, Genres. Desktop: title, year and TMDB on one line, genres below, stars below that */}
-                  <div className="md:ml-10 lg:ml-0 flex flex-col justify-center lg:flex-row lg:flex-wrap lg:justify-start lg:items-center lg:gap-x-4 lg:gap-y-1 lg:col-span-2 lg:row-start-1 lg:px-4 lg:pb-3 lg:border-b-[0.5px] lg:border-white/20">
+                  <div className="md:ml-10 lg:ml-0 flex flex-col justify-center lg:flex-row lg:flex-wrap lg:justify-start lg:items-center lg:gap-x-4 lg:gap-y-1 lg:col-span-2 lg:row-start-1 lg:px-4 lg:pb-3 lg:border-b-[0.5px] lg:border-white/20 lg:relative">
+                    {/* Desktop: edit and delete in the header's bottom-right corner */}
+                    <div className="hidden lg:flex absolute right-4 bottom-2 gap-1">
+                      {actionButtons}
+                    </div>
                     <div className="flex items-center lg:order-1">
                       <h1 className="text-xl lg:text-3xl font-bold text-white">
                         {movie.title}
@@ -450,21 +483,9 @@ function MovieDetail() {
                       </p>
                     )}
                   </div>
-                  <div className="flex justify-center gap-2 mt-2">
-                    <button
-                      onClick={() => setShowModal(true)}
-                      className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                      aria-label="Edit movie"
-                    >
-                      <FaEdit className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={handleDeleteClick}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                      aria-label="Delete movie"
-                    >
-                      <FaTrash className="w-5 h-5" />
-                    </button>
+                  {/* Tablet only; mobile and desktop show these near the top */}
+                  <div className="hidden md:flex lg:hidden justify-center gap-2 mt-2">
+                    {actionButtons}
                   </div>
                 </div>
               </div>
