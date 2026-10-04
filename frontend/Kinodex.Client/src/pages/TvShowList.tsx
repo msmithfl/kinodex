@@ -121,8 +121,14 @@ function TvShowList() {
       ),
   );
 
+  // Keep the sub-navigation on screen while loading, as the movie pages do, so it doesn't blink
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <>
+        <SubNavigation />
+        <LoadingSpinner />
+      </>
+    );
   }
 
   const sortHeader = (label: string, sortKey: SortOption, className = "") => (
@@ -138,7 +144,7 @@ function TvShowList() {
 
   return (
     <>
-    <SubNavigation />
+      <SubNavigation />
       <FloatingAddButton onClick={() => setShowAddModal(true)} />
       {showAddModal && (
         <AddTvShowModal onClose={() => setShowAddModal(false)} />
