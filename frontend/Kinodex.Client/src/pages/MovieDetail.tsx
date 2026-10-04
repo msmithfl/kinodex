@@ -120,20 +120,24 @@ function MovieDetail() {
               <div className="absolute inset-x-0 top-0 -bottom-0.5 bg-linear-to-b from-gray-900/20 to-gray-900" />
             </div>
           )}
-          <div className="mx-auto max-w-4xl pt-2 md:pt-6">
-            <div className="overflow-hidden">
+          <div className="mx-auto max-w-4xl lg:max-w-6xl pt-2 md:pt-6 lg:px-6">
+            {/* Mobile and tablet: one column, title block beside the poster at the top.
+                Desktop: a grid with the title block across the top, details on the left and the poster on the right.
+                The header's wrappers use lg:contents so the title block and poster become grid items on desktop
+                without changing the mobile markup. Mirrors TvShowDetail. */}
+            <div className="overflow-hidden lg:overflow-visible lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-x-10 lg:gap-y-4 lg:items-start">
               {/* Movie Details Header */}
-              <div className="px-4 pb-4 border-b-[0.5px] border-white/20">
-                <div className="flex justify-between md:justify-start gap-4 md:gap-0">
-                  {/* Title, Year, Rating, Genres - Center */}
-                  <div className="md:ml-10 flex flex-col justify-center lg:space-y-4">
-                    <div className="flex items-center">
+              <div className="px-4 pb-4 border-b-[0.5px] border-white/20 lg:contents">
+                <div className="flex justify-between md:justify-start gap-4 md:gap-0 lg:contents">
+                  {/* Title, Year, Rating, Genres. Desktop: title, year and TMDB on one line, genres below, stars below that */}
+                  <div className="md:ml-10 lg:ml-0 flex flex-col justify-center lg:flex-row lg:flex-wrap lg:justify-start lg:items-center lg:gap-x-4 lg:gap-y-1 lg:col-span-2 lg:row-start-1 lg:px-4 lg:pb-3 lg:border-b-[0.5px] lg:border-white/20">
+                    <div className="flex items-center lg:order-1">
                       <h1 className="text-xl lg:text-3xl font-bold text-white">
                         {movie.title}
                       </h1>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 lg:gap-3 lg:order-2">
                       <p className="text-sm lg:text-xl text-white">
                         {movie.year || (
                           <span className="text-gray-500">Not set</span>
@@ -153,12 +157,12 @@ function MovieDetail() {
                         <img
                           src="/tmdb-icon.png"
                           alt="TMDB"
-                          className="w-8 h-8 lg:w-10 lg:h-10 hover:opacity-80 transition-opacity"
+                          className="w-8 h-8 hover:opacity-80 transition-opacity"
                         />
                       </a>
                     </div>
 
-                    <div>
+                    <div className="lg:order-4 lg:basis-full">
                       <div className="flex gap-1 items-center">
                         {[1, 2, 3, 4, 5].map((star) => {
                           const isFullStar = movie.rating >= star;
@@ -167,11 +171,11 @@ function MovieDetail() {
                           return (
                             <div key={star}>
                               {isFullStar ? (
-                                <TiStarFullOutline className="w-6 h-6 lg:w-8 lg:h-8 text-yellow-400" />
+                                <TiStarFullOutline className="w-6 h-6 text-yellow-400" />
                               ) : isHalfStar ? (
-                                <TiStarHalfOutline className="w-6 h-6 lg:w-8 lg:h-8 text-yellow-400" />
+                                <TiStarHalfOutline className="w-6 h-6 text-yellow-400" />
                               ) : (
-                                <TiStarOutline className="w-6 h-6 lg:w-8 lg:h-8 text-gray-500" />
+                                <TiStarOutline className="w-6 h-6 text-gray-500" />
                               )}
                             </div>
                           );
@@ -179,14 +183,14 @@ function MovieDetail() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="lg:order-3 lg:basis-full">
                       {movie.genres && movie.genres.length > 0 ? (
                         <div className="flex flex-wrap gap-1 lg:gap-2">
                           {movie.genres.map((genre, idx) => (
                             <Link
                               key={idx}
                               to={`/genres/${encodeURIComponent(genre)}`}
-                              className="text-sm mt-1 cursor-pointer hover:underline"
+                              className="text-sm mt-1 lg:mt-0 cursor-pointer hover:underline"
                             >
                               {genre}
                               {idx < movie.genres.length - 1 ? "," : ""}
@@ -200,13 +204,13 @@ function MovieDetail() {
                       )}
                     </div>
                   </div>
-                  {/* Poster */}
-                  <div className="lg:order-first">
+                  {/* Poster; desktop: right column, stays in view while the details scroll */}
+                  <div className="lg:col-start-2 lg:row-start-2 lg:sticky lg:top-4">
                     {movie.posterPath ? (
                       <img
                         src={movie.posterPath}
                         alt={`${movie.title} poster`}
-                        className="border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-60 object-cover"
+                        className="border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-60 lg:max-w-none lg:w-full object-cover"
                         onError={(e) => {
                           e.currentTarget.src =
                             "https://via.placeholder.com/300x450?text=No+Poster";
@@ -223,7 +227,8 @@ function MovieDetail() {
                 </div>
               </div>
 
-              <div>
+              {/* Details column */}
+              <div className="min-w-0 lg:col-start-1 lg:row-start-2">
                 {/* Physical Details Section */}
                 <div className="mb-8">
                   <div>
