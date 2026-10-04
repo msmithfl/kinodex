@@ -3,7 +3,13 @@ import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { FaArrowUpShortWide, FaArrowDownWideShort } from "react-icons/fa6";
 import type { SortOption } from "../types";
 
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+export interface SortDropdownOption {
+  value: SortOption;
+  label: string;
+}
+
+// Movie sort options; other lists (e.g. TV shows) pass their own
+const SORT_OPTIONS: SortDropdownOption[] = [
   { value: "alphabetic", label: "Title" },
   { value: "year", label: "Year" },
   { value: "format", label: "Format" },
@@ -19,10 +25,16 @@ interface SortDropdownProps {
   // Same behaviour as clicking a table header: a new option sorts ascending,
   // the current option flips the direction
   onSortChange: (sortBy: SortOption) => void;
+  options?: SortDropdownOption[];
 }
 
 // Sorting for views without sortable table headers; styled to match FilterDropdown
-function SortDropdown({ sortBy, sortDirection, onSortChange }: SortDropdownProps) {
+function SortDropdown({
+  sortBy,
+  sortDirection,
+  onSortChange,
+  options = SORT_OPTIONS,
+}: SortDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -50,7 +62,7 @@ function SortDropdown({ sortBy, sortDirection, onSortChange }: SortDropdownProps
   const ButtonIcon =
     sortDirection === "asc" ? FaArrowUpShortWide : FaArrowDownWideShort;
   const currentLabel =
-    SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? "Sort";
+    options.find((o) => o.value === sortBy)?.label ?? "Sort";
 
   return (
     <div ref={dropdownRef} className="relative">
@@ -65,7 +77,7 @@ function SortDropdown({ sortBy, sortDirection, onSortChange }: SortDropdownProps
 
       {isOpen && (
         <div className="text-sm absolute left-0 mt-2 w-46 bg-gray-800 border border-gray-600 rounded-md shadow-lg z-20">
-          {SORT_OPTIONS.map((option) => {
+          {options.map((option) => {
             const isSelected = option.value === sortBy;
             return (
               <button

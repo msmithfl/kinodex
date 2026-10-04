@@ -14,25 +14,33 @@ interface MoviePosterCardProps {
   showShelf?: boolean;
   // Show the title and details under the poster at all times instead of on hover
   captionBelow?: boolean;
+  // Where the card links; defaults to the movie's page (TV shows pass their own)
+  to?: string;
+  // Replaces the caption's year · formats line
+  subtitle?: string;
 }
 
 function MoviePosterCard({
   movie,
   showShelf = false,
   captionBelow = false,
+  to,
+  subtitle,
 }: MoviePosterCardProps) {
   if (captionBelow) {
-    const details = [
-      movie.year || null,
-      movie.formats && movie.formats.length > 0
-        ? [...movie.formats].sort().join(", ")
-        : null,
-    ]
-      .filter(Boolean)
-      .join(" · ");
+    const details =
+      subtitle ??
+      [
+        movie.year || null,
+        movie.formats && movie.formats.length > 0
+          ? [...movie.formats].sort().join(", ")
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" · ");
 
     return (
-      <Link to={`/movie/${movie.id}`} className="group flex flex-col min-w-0">
+      <Link to={to ?? `/movie/${movie.id}`} className="group flex flex-col min-w-0">
         {/* Hover: the outline turns indigo and a dark overlay fades in; no zoom */}
         <div className="relative aspect-2/3 rounded border border-white/20 overflow-hidden shadow-lg transition-colors duration-200 group-hover:border-indigo-500">
           {movie.posterPath ? (

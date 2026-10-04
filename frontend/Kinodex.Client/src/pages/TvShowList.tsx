@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
+import { FaMagnifyingGlass, FaCheck, FaTableList } from "react-icons/fa6";
+import { FaImage } from "react-icons/fa";
+import MoviePosterCard from "../components/MovieCardPoster";
+import SortDropdown, { type SortDropdownOption } from "../components/SortDropdown";
 import { LuTable2 } from "react-icons/lu";
 import {
   TiStarOutline,
@@ -25,6 +28,16 @@ import { IoCameraOutline } from "react-icons/io5";
 import BarcodeScanner from "../components/BarcodeScanner";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import SubNavigation from "../components/SubNavigation";
+
+// Matches the sortable table columns; TV has no condition, and its price is the total paid
+const TV_SORT_OPTIONS: SortDropdownOption[] = [
+  { value: "alphabetic", label: "Title" },
+  { value: "year", label: "Year" },
+  { value: "format", label: "Format" },
+  { value: "rating", label: "Rating" },
+  { value: "purchasePrice", label: "Total Paid" },
+  { value: "date", label: "Date Added" },
+];
 
 interface VisibleColumns {
   seasons: boolean;
@@ -72,6 +85,25 @@ function TvShowList() {
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
+    try {
+      return localStorage.getItem("tvShowListView") === "poster"
+        ? "poster"
+        : "table";
+    } catch {
+      return "table";
+    }
+  });
+
+  const handleViewModeChange = (mode: "table" | "poster") => {
+    setViewMode(mode);
+    setShowColumnMenu(false);
+    try {
+      localStorage.setItem("tvShowListView", mode);
+    } catch {
+      // Storage unavailable; the choice just isn't remembered
+    }
+  };
   const [visibleColumns, setVisibleColumns] = useState<VisibleColumns>(() => {
     try {
       const saved = localStorage.getItem("tvShowListColumns");
@@ -239,7 +271,46 @@ function TvShowList() {
                   <IoCameraOutline className="w-6 h-6" />
                 </button>
               </div>
-              <Counter count={filteredShows.length} />
+              <div className="flex items-center justify-between gap-3 sm:gap-6">
+                <div className="flex items-center gap-2 sm:gap-4">
+                  {/* Poster view has no table headers to click, so it gets a sort menu */}
+                  {viewMode === "poster" && (
+                    <SortDropdown
+                      sortBy={sortBy}
+                      sortDirection={sortDirection}
+                      onSortChange={handleColumnClick}
+                      options={TV_SORT_OPTIONS}
+                    />
+                  )}
+                  <Counter count={filteredShows.length} />
+                </div>
+
+                {/* Table / poster view, styled like the other pill switches */}
+                <div className="inline-flex bg-gray-800 rounded-lg p-1 shrink-0">
+                  {(
+                    [
+                      { id: "table", label: "Table view", icon: FaTableList },
+                      { id: "poster", label: "Poster view", icon: FaImage },
+                    ] as const
+                  ).map(({ id, label, icon: Icon }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => handleViewModeChange(id)}
+                      aria-pressed={viewMode === id}
+                      title={label}
+                      aria-label={label}
+                      className={`px-3 py-1.5 rounded-md transition cursor-pointer ${
+                        viewMode === id
+                          ? "bg-indigo-600 text-white"
+                          : "text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -250,6 +321,30 @@ function TvShowList() {
             <EmptyState message={loadError} />
           ) : shows.length === 0 ? (
             <EmptyState message="No TV shows in your collection yet." />
+          ) : viewMode === "poster" ? (
+            // Poster view: the same searched and sorted shows as the table
+            <div className="h-full overflow-y-auto px-6 md:px-12 pb-8">
+              {filteredShows.length === 0 ? (
+                <EmptyState message="No TV shows match your search." />
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8">
+                  {filteredShows.map((show) => {
+                    const seasons = formatSeasons(show.owned, show.totalSeasons);
+                    return (
+                      <MoviePosterCard
+                        key={show.id}
+                        movie={show}
+                        to={`/tv-shows/${show.id}`}
+                        subtitle={[show.year || null, seasons === "-" ? null : seasons]
+                          .filter(Boolean)
+                          .join(" · ")}
+                        captionBelow
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           ) : (
             <div className="h-full bg-gray-900 overflow-hidden flex flex-col">
               <div className="flex-1 overflow-y-auto">
