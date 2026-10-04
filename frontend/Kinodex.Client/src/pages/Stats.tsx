@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import LoadingSpinner from "../components/LoadingSpinner";
 import type { Movie, TvShow } from "../types";
-import ChartCard from "../components/ChartCard";
+import ChartBreakdown from "../components/ChartBreakdown";
 import { allFormats } from "../utils/tvShowPurchases";
 import { movieSpend, tvSpend } from "../utils/spending";
 
@@ -366,107 +366,108 @@ function Stats() {
               </div>
             </div>
 
-            {/* Monthly Spend bar chart */}
-            <div className="bg-gray-800 rounded-lg p-6 mb-4 md:mb-8">
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <h2 className="text-xl font-semibold">Monthly Spending</h2>
-                <div className="flex items-center gap-3 text-sm">
-                  <label className="text-gray-400">From</label>
-                  <select
-                    value={startMonth}
-                    onChange={(e) => {
-                      setStartMonth(e.target.value);
-                      if (endMonth && e.target.value > endMonth)
-                        setEndMonth("");
-                    }}
-                    className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="">All</option>
-                    {allMonthlyData.map((d) => (
-                      <option key={d.key} value={d.key}>
-                        {d.month}
-                      </option>
-                    ))}
-                  </select>
-                  <label className="text-gray-400">To</label>
-                  <select
-                    value={endMonth}
-                    onChange={(e) => setEndMonth(e.target.value)}
-                    className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="">All</option>
-                    {allMonthlyData
-                      .filter((d) => !startMonth || d.key >= startMonth)
-                      .map((d) => (
+            {/* Spending and the breakdown donut: stacked on mobile, side by side on desktop,
+                where the grid stretches both cards to the same height */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
+              {/* Monthly Spend bar chart */}
+              <div className="bg-gray-800 rounded-lg p-6 min-w-0">
+                {/* min-h-9 and the divider match the Breakdown header so both charts start at the same line */}
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-4 min-h-9 pb-3 border-b border-gray-700">
+                  <h2 className="text-xl font-semibold">Monthly Spending</h2>
+                  <div className="flex items-center gap-3 text-sm">
+                    <label className="text-gray-400">From</label>
+                    <select
+                      value={startMonth}
+                      onChange={(e) => {
+                        setStartMonth(e.target.value);
+                        if (endMonth && e.target.value > endMonth)
+                          setEndMonth("");
+                      }}
+                      className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="">All</option>
+                      {allMonthlyData.map((d) => (
                         <option key={d.key} value={d.key}>
                           {d.month}
                         </option>
                       ))}
-                  </select>
+                    </select>
+                    <label className="text-gray-400">To</label>
+                    <select
+                      value={endMonth}
+                      onChange={(e) => setEndMonth(e.target.value)}
+                      className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="">All</option>
+                      {allMonthlyData
+                        .filter((d) => !startMonth || d.key >= startMonth)
+                        .map((d) => (
+                          <option key={d.key} value={d.key}>
+                            {d.month}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
                 </div>
+                {monthlySpendData.length === 0 ? (
+                  <p className="text-gray-400 text-center py-12">No data yet.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={monthlySpendData}
+                      margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis
+                        dataKey="month"
+                        tick={{ fill: "#9ca3af", fontSize: 12 }}
+                      />
+                      <YAxis
+                        tick={{ fill: "#9ca3af", fontSize: 12 }}
+                        tickFormatter={(v) => `$${v}`}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#1f2937",
+                          border: "none",
+                          borderRadius: "8px",
+                          color: "#fff",
+                        }}
+                        formatter={(value: number | undefined) => [
+                          `$${(value ?? 0).toFixed(2)}`,
+                          "Spent",
+                        ]}
+                      />
+                      <Bar dataKey="total" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
               </div>
-              {monthlySpendData.length === 0 ? (
-                <p className="text-gray-400 text-center py-12">No data yet.</p>
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart
-                    data={monthlySpendData}
-                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fill: "#9ca3af", fontSize: 12 }}
-                    />
-                    <YAxis
-                      tick={{ fill: "#9ca3af", fontSize: 12 }}
-                      tickFormatter={(v) => `$${v}`}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1f2937",
-                        border: "none",
-                        borderRadius: "8px",
-                        color: "#fff",
-                      }}
-                      formatter={(value: number | undefined) => [
-                        `$${(value ?? 0).toFixed(2)}`,
-                        "Spent",
-                      ]}
-                    />
-                    <Bar dataKey="total" fill="#6366f1" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </div>
 
-            {/* Charts grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
-              <ChartCard
-                title="Watched"
-                data={watchedData}
-                colors={WATCHED_COLORS}
-              />
-              <ChartCard
-                title="Formats"
-                data={formatData}
-                colors={FORMAT_COLORS}
-              />
-              <ChartCard
-                title="Top Genres"
-                data={genreData}
-                fullData={genreDataFull}
-                colors={GENRE_COLORS}
-              />
-              <ChartCard
-                title="Decades"
-                data={decadeData}
-                colors={DECADE_COLORS}
-              />
-              <ChartCard
-                title="Condition"
-                data={conditionData}
-                colors={CONDITION_COLORS}
+              {/* Breakdown donut, one dataset at a time */}
+              <ChartBreakdown
+                title="Collection Breakdown"
+                storageKey="statsBreakdown"
+                countLabel={(n) =>
+                  scope === "movies"
+                    ? `${n} movie${n !== 1 ? "s" : ""}`
+                    : scope === "tv"
+                      ? `${n} TV show${n !== 1 ? "s" : ""}`
+                      : `${n} title${n !== 1 ? "s" : ""}`
+                }
+                options={[
+                  { id: "watched", label: "Watched", data: watchedData, colors: WATCHED_COLORS },
+                  { id: "formats", label: "Formats", data: formatData, colors: FORMAT_COLORS },
+                  {
+                    id: "genres",
+                    label: "Top Genres",
+                    data: genreData,
+                    fullData: genreDataFull,
+                    colors: GENRE_COLORS,
+                  },
+                  { id: "decades", label: "Decades", data: decadeData, colors: DECADE_COLORS },
+                  { id: "condition", label: "Condition", data: conditionData, colors: CONDITION_COLORS },
+                ]}
               />
             </div>
           </>
