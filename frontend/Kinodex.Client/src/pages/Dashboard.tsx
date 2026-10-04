@@ -45,10 +45,10 @@ interface RecentItem {
   isTv: boolean;
 }
 
-// On mobile each card is a third of the row (less the gaps), so three fit and the rest scroll;
-// on desktop all four share the row
+// On mobile each card is 26% of the row, so three fit with part of the fourth peeking in
+// to show the row scrolls; from tablet up the cards share the row
 const quickActionClass =
-  "shrink-0 snap-start w-[calc((100%-1.5rem)/3)] md:w-auto md:flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center";
+  "shrink-0 snap-start w-[26%] md:w-auto md:flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center";
 
 // Total spent in the given calendar month, across movies and TV purchases
 function getMonthSpend(entries: SpendEntry[], monthStart: Date): MonthSpend {
@@ -168,48 +168,34 @@ function Dashboard() {
     }
   };
 
-  const statCards = [
-    {
-      label: "Total Movies",
-      value: stats.movies,
-      icon: "🎬",
-      gradient: "from-indigo-600 to-indigo-700",
-      labelColor: "text-indigo-200",
-      span: "col-span-3 lg:col-span-1",
-    },
-    {
-      label: "TV Shows",
-      value: stats.tvShows,
-      icon: "📺",
-      gradient: "from-rose-600 to-rose-700",
-      labelColor: "text-rose-200",
-      span: "col-span-3 lg:col-span-1",
-    },
-    {
-      label: "DVD",
-      value: stats.dvd,
-      icon: "💿",
-      gradient: "from-purple-600 to-purple-700",
-      labelColor: "text-purple-200",
-      span: "col-span-2 lg:col-span-1",
-    },
-    {
-      label: "Blu-ray",
-      value: stats.bluray,
-      icon: "📀",
-      gradient: "from-blue-600 to-blue-700",
-      labelColor: "text-blue-200",
-      span: "col-span-2 lg:col-span-1",
-    },
-    {
-      label: "4K Ultra HD",
-      value: stats.fourK,
-      icon: "💎",
-      gradient: "from-cyan-600 to-cyan-700",
-      labelColor: "text-cyan-200",
-      span: "col-span-2 lg:col-span-1",
-    },
+  // The collection section has two rows: titles, then disc formats
+  const titleCounts = [
+    { label: "Total Movies", value: stats.movies, icon: "🎬" },
+    { label: "TV Shows", value: stats.tvShows, icon: "📺" },
   ];
+  const formatCounts = [
+    { label: "DVD", value: stats.dvd, icon: "💿" },
+    { label: "Blu-ray", value: stats.bluray, icon: "📀" },
+    { label: "4K Ultra HD", value: stats.fourK, icon: "💎" },
+  ];
+
+  const countCell = ({
+    label,
+    value,
+    icon,
+  }: {
+    label: string;
+    value: number;
+    icon: string;
+  }) => (
+    <div key={label} className="p-3 min-w-0">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="text-base leading-none">{icon}</span>
+        <p className="text-gray-400 text-xs font-medium truncate">{label}</p>
+      </div>
+      <p className="text-xl md:text-2xl font-bold text-white mt-1">{value}</p>
+    </div>
+  );
 
   return (
     <div
@@ -217,62 +203,55 @@ function Dashboard() {
       className="flex h-[calc(100dvh-5rem)] pt-2"
       style={container.style}
     >
-      <div className="flex-1 flex flex-col min-h-0 mx-auto px-8 w-full max-w-7xl">
+      {/* Same content width as the Stats page */}
+      <div className="flex-1 flex flex-col min-h-0 w-full px-4 md:px-20">
         {loading ? (
           <LoadingSpinner />
         ) : (
-          <>
-            {/* Stats Dashboard: mobile has Movies and TV Shows on one row and the three formats below; desktop has all five in a row */}
-            <div className="grid grid-cols-6 lg:grid-cols-5 gap-3 md:gap-6 mt-4 md:mt-6 mb-3 md:mb-6">
-              {statCards.map((card) => (
-                <div
-                  key={card.label}
-                  className={`${card.span} bg-linear-to-br ${card.gradient} rounded-lg shadow-lg p-3 md:p-6`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className={`${card.labelColor} text-xs md:text-sm font-medium truncate`}>
-                        {card.label}
+          // Mobile: one column; the page fits the screen and Recently Added scrolls in what's left.
+          // Desktop: two columns; collection data on the left, Recently Added filling the right.
+          <div className="flex-1 min-h-0 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] lg:gap-8 mt-4 md:mt-6">
+            {/* Left column */}
+            {/* lg:px-2/-mx-2 makes room for the quick actions' -m-2 hover margin, so the column never scrolls sideways */}
+            <div className="shrink-0 flex flex-col gap-3 md:gap-6 lg:min-h-0 lg:overflow-y-auto lg:overflow-x-hidden lg:px-2 lg:-mx-2 lg:pb-8">
+              {/* Spending This Month and Last Month */}
+              <div className="bg-linear-to-br from-green-600 to-green-700 rounded-lg shadow-lg p-3 md:p-6">
+                <div className="grid grid-cols-2 divide-x divide-green-500">
+                  {[
+                    { title: "This Month", month: stats.thisMonth },
+                    { title: "Last Month", month: stats.lastMonth },
+                  ].map(({ title, month }, idx) => (
+                    <div key={idx} className={idx === 0 ? "pr-3 md:pr-6" : "pl-3 md:pl-6"}>
+                      <p className="text-white text-sm md:text-base font-semibold">
+                        {title}
+                      </p>
+                      <p className="text-green-200 text-xs md:text-sm font-medium">
+                        {month.label}
                       </p>
                       <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">
-                        {card.value}
+                        ${month.spend.toFixed(2)}
                       </p>
+                      {/* <p className="text-green-200 text-xs md:text-sm mt-1">
+                        {month.count} movie{month.count !== 1 ? "s" : ""} added
+                      </p> */}
                     </div>
-                    <div className="text-3xl md:text-5xl">{card.icon}</div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-
-            {/* Spending This Month and Last Month */}
-            <div className="bg-linear-to-br from-green-600 to-green-700 rounded-lg shadow-lg p-3 md:p-6 mb-6 md:mb-12">
-              <div className="grid grid-cols-2 divide-x divide-green-500">
-                {[
-                  { title: "This Month", month: stats.thisMonth },
-                  { title: "Last Month", month: stats.lastMonth },
-                ].map(({ title, month }, idx) => (
-                  <div key={idx} className={idx === 0 ? "pr-3 md:pr-6" : "pl-3 md:pl-6"}>
-                    <p className="text-white text-sm md:text-base font-semibold">
-                      {title}
-                    </p>
-                    <p className="text-green-200 text-xs md:text-sm font-medium">
-                      {month.label}
-                    </p>
-                    <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">
-                      ${month.spend.toFixed(2)}
-                    </p>
-                    {/* <p className="text-green-200 text-xs md:text-sm mt-1">
-                      {month.count} movie{month.count !== 1 ? "s" : ""} added
-                    </p> */}
-                  </div>
-                ))}
               </div>
-            </div>
 
-            {/* Quick Actions */}
-            <div className="mb-6 md:mb-12">
-              {/* Mobile: three cards fit across and the rest scroll. Desktop: all fit, no scrolling. Padding leaves room for the hover scale. */}
-              <div className="flex gap-3 md:gap-6 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none scroll-px-2 -m-2 p-2">
+              {/* Collection breakdown: one section, titles on top and disc formats below */}
+              <div className="bg-gray-800 rounded-lg shadow-lg">
+                <div className="grid grid-cols-2 divide-x divide-gray-700">
+                  {titleCounts.map(countCell)}
+                </div>
+                <div className="grid grid-cols-3 divide-x divide-gray-700 border-t border-gray-700">
+                  {formatCounts.map(countCell)}
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              {/* Mobile: three cards fit across and the rest scroll. Tablet: four in a row. Desktop: a 2x2 grid in the left column. Padding leaves room for the hover scale. */}
+              <div className="flex lg:grid lg:grid-cols-2 gap-3 md:gap-6 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none scroll-px-2 -m-2 p-2">
                 <Link
                   to="/library"
                   className={quickActionClass}
@@ -315,10 +294,10 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Recently Added */}
+            {/* Right column: Recently Added */}
             {recentItems.length > 0 && (
-              <div className="flex-1 min-h-48 flex flex-col pb-4 md:pb-8">
-                <div className="shrink-0 flex justify-between items-center mb-3 md:mb-6">
+              <div className="flex-1 min-h-48 lg:min-h-0 flex flex-col pb-4 md:pb-8">
+                <div className="shrink-0 flex justify-between items-center mb-3 md:mb-4">
                   <h2 className="text-2xl font-bold">Recently Added</h2>
                   <Link
                     to="/library"
@@ -369,7 +348,7 @@ function Dashboard() {
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
       {showAddModal && (
