@@ -105,7 +105,7 @@ function MovieDetail() {
         </>
       )}
       <div className="relative z-10 flex flex-col flex-1 min-h-0">
-        <div className="hidden md:block relative z-20 md:z-auto">
+        <div className="hidden relative z-20 md:z-auto">
           <SubNavigation />
         </div>
         <div className="absolute inset-0 overflow-y-auto z-10 md:relative md:inset-auto md:flex-1 md:min-h-0 md:z-auto">
@@ -120,7 +120,7 @@ function MovieDetail() {
               <div className="absolute inset-x-0 top-0 -bottom-0.5 bg-linear-to-b from-gray-900/20 to-gray-900" />
             </div>
           )}
-          <div className="mx-auto max-w-4xl pt-2">
+          <div className="mx-auto max-w-4xl pt-2 md:pt-6">
             <div className="overflow-hidden">
               {/* Movie Details Header */}
               <div className="px-4 pb-4 border-b-[0.5px] border-white/20">
