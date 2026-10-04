@@ -142,18 +142,22 @@ function TvShowDetail() {
               <div className="absolute inset-x-0 top-0 -bottom-0.5 bg-linear-to-b from-gray-900/20 to-gray-900" />
             </div>
           )}
-          <div className="mx-auto max-w-4xl pt-2 md:pt-6">
-            <div className="overflow-hidden">
+          <div className="mx-auto max-w-4xl lg:max-w-6xl pt-2 md:pt-6 lg:px-6">
+            {/* Mobile and tablet: one column, title block beside the poster at the top.
+                Desktop: a grid with the title block across the top, details on the left and the poster on the right.
+                The header's wrappers use lg:contents so the title block and poster become grid items on desktop
+                without changing the mobile markup. */}
+            <div className="overflow-hidden lg:overflow-visible lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-x-10 lg:gap-y-4 lg:items-start">
               {/* Show Details Header */}
-              <div className="px-4 pb-4 border-b-[0.5px] border-white/20">
-                <div className="flex justify-between md:justify-start gap-4 md:gap-0">
-                  {/* Title, Year, Rating, Genres */}
-                  <div className="md:ml-10 flex flex-col justify-center lg:space-y-4">
-                    <h1 className="text-xl lg:text-3xl font-bold text-white">
+              <div className="px-4 pb-4 border-b-[0.5px] border-white/20 lg:contents">
+                <div className="flex justify-between md:justify-start gap-4 md:gap-0 lg:contents">
+                  {/* Title, Year, Rating, Genres. Desktop: title, year and TMDB on one line, genres below, stars below that */}
+                  <div className="md:ml-10 lg:ml-0 flex flex-col justify-center lg:flex-row lg:flex-wrap lg:justify-start lg:items-center lg:gap-x-4 lg:gap-y-1 lg:col-span-2 lg:row-start-1 lg:px-4 lg:pb-3 lg:border-b-[0.5px] lg:border-white/20">
+                    <h1 className="text-xl lg:text-3xl font-bold text-white lg:order-1">
                       {show.title}
                     </h1>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 lg:gap-3 lg:order-2">
                       <p className="text-sm lg:text-xl text-white">
                         {show.year || (
                           <span className="text-gray-500">Not set</span>
@@ -173,32 +177,32 @@ function TvShowDetail() {
                         <img
                           src="/tmdb-icon.png"
                           alt="TMDB"
-                          className="w-8 h-8 lg:w-10 lg:h-10 hover:opacity-80 transition-opacity"
+                          className="w-8 h-8 hover:opacity-80 transition-opacity"
                         />
                       </a>
                     </div>
 
-                    <div className="flex gap-1 items-center">
+                    <div className="flex gap-1 items-center lg:order-4 lg:basis-full">
                       {[1, 2, 3, 4, 5].map((star) => {
                         const isFullStar = show.rating >= star;
                         const isHalfStar = show.rating === star - 0.5;
                         return (
                           <div key={star}>
                             {isFullStar ? (
-                              <TiStarFullOutline className="w-6 h-6 lg:w-8 lg:h-8 text-yellow-400" />
+                              <TiStarFullOutline className="w-6 h-6 text-yellow-400" />
                             ) : isHalfStar ? (
-                              <TiStarHalfOutline className="w-6 h-6 lg:w-8 lg:h-8 text-yellow-400" />
+                              <TiStarHalfOutline className="w-6 h-6 text-yellow-400" />
                             ) : (
-                              <TiStarOutline className="w-6 h-6 lg:w-8 lg:h-8 text-gray-500" />
+                              <TiStarOutline className="w-6 h-6 text-gray-500" />
                             )}
                           </div>
                         );
                       })}
                     </div>
 
-                    <div>
+                    <div className="lg:order-3 lg:basis-full">
                       {show.genres.length > 0 ? (
-                        <p className="text-sm mt-1">{show.genres.join(", ")}</p>
+                        <p className="text-sm mt-1 lg:mt-0">{show.genres.join(", ")}</p>
                       ) : (
                         <p className="text-gray-500 italic text-sm lg:text-base">
                           No genres
@@ -206,13 +210,13 @@ function TvShowDetail() {
                       )}
                     </div>
                   </div>
-                  {/* Poster */}
-                  <div className="lg:order-first">
+                  {/* Poster; desktop: right column, stays in view while the details scroll */}
+                  <div className="lg:col-start-2 lg:row-start-2 lg:sticky lg:top-4">
                     {show.posterPath ? (
                       <img
                         src={show.posterPath}
                         alt={`${show.title} poster`}
-                        className="border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-60 object-cover"
+                        className="border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-60 lg:max-w-none lg:w-full object-cover"
                         onError={(e) => {
                           e.currentTarget.src =
                             "https://via.placeholder.com/300x450?text=No+Poster";
@@ -229,237 +233,240 @@ function TvShowDetail() {
                 </div>
               </div>
 
-              <div className="mb-8">
-                {/* Seasons */}
-                <div className="p-4 border-b-[0.5px] border-white/20">
-                  <div className="flex items-baseline justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-400">
-                      Seasons Owned
-                    </h3>
-                    {show.totalSeasons > 0 && (
-                      <span className="text-xs text-gray-400">
-                        {ownsEverySeason(show)
-                          ? "Complete series"
-                          : `${owned.length} of ${show.totalSeasons} seasons`}
-                      </span>
-                    )}
-                  </div>
-                  {show.totalSeasons > 0 ? (
-                    <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
-                      {allSeasons.map((season) => {
-                        const isOwned = owned.includes(season);
-                        return (
-                          <span
-                            key={season}
-                            title={isOwned ? `Season ${season}: owned` : `Season ${season}: not owned`}
-                            className={`px-2 py-1.5 text-center text-sm font-medium border ${
-                              isOwned
-                                ? "bg-indigo-600 border-indigo-500 text-white"
-                                : "bg-gray-800 border-gray-700 text-gray-500"
-                            }`}
-                          >
-                            S{season}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  ) : owned.length > 0 ? (
-                    <p className="text-white">
-                      {formatSeasons(owned, show.totalSeasons)}
-                    </p>
-                  ) : (
-                    <p className="text-gray-500 italic">None</p>
-                  )}
-                </div>
-
-                {/* Purchases */}
-                <div className="p-4 border-b-[0.5px] border-white/20">
-                  <div className="flex items-baseline justify-between mb-3">
-                    <h3 className="text-sm font-medium text-gray-400">
-                      Purchases
-                    </h3>
-                    {show.purchases.length > 0 && (
-                      <span className="text-sm text-gray-300">
-                        Total paid{" "}
-                        <span className="font-mono text-green-400">
-                          ${totalPaid(show.purchases).toFixed(2)}
+              {/* Details column */}
+              <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+                <div className="mb-8">
+                  {/* Seasons */}
+                  <div className="p-4 border-b-[0.5px] border-white/20">
+                    <div className="flex items-baseline justify-between mb-2">
+                      <h3 className="text-sm font-medium text-gray-400">
+                        Seasons Owned
+                      </h3>
+                      {show.totalSeasons > 0 && (
+                        <span className="text-xs text-gray-400">
+                          {ownsEverySeason(show)
+                            ? "Complete series"
+                            : `${owned.length} of ${show.totalSeasons} seasons`}
                         </span>
-                      </span>
+                      )}
+                    </div>
+                    {show.totalSeasons > 0 ? (
+                      <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+                        {allSeasons.map((season) => {
+                          const isOwned = owned.includes(season);
+                          return (
+                            <span
+                              key={season}
+                              title={isOwned ? `Season ${season}: owned` : `Season ${season}: not owned`}
+                              className={`px-2 py-1.5 text-center text-sm font-medium border ${
+                                isOwned
+                                  ? "bg-indigo-600 border-indigo-500 text-white"
+                                  : "bg-gray-800 border-gray-700 text-gray-500"
+                              }`}
+                            >
+                              S{season}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    ) : owned.length > 0 ? (
+                      <p className="text-white">
+                        {formatSeasons(owned, show.totalSeasons)}
+                      </p>
+                    ) : (
+                      <p className="text-gray-500 italic">None</p>
                     )}
                   </div>
-                  {show.purchases.length > 0 ? (
-                    <div className="divide-y divide-white/10 border-[0.5px] border-white/20 rounded">
-                      {show.purchases.map((purchase, idx) => {
-                        const key = purchaseKey(purchase, idx);
-                        return (
-                          <div
-                            key={key}
-                            className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-3"
-                          >
-                            <div className="min-w-24">
-                              <p className="text-white font-medium">
-                                {formatSeasons(purchase.seasons, show.totalSeasons) === "Complete"
-                                  ? "Complete set"
-                                  : formatSeasons(purchase.seasons, 0)}
+
+                  {/* Purchases */}
+                  <div className="p-4 border-b-[0.5px] border-white/20">
+                    <div className="flex items-baseline justify-between mb-3">
+                      <h3 className="text-sm font-medium text-gray-400">
+                        Purchases
+                      </h3>
+                      {show.purchases.length > 0 && (
+                        <span className="text-sm text-gray-300">
+                          Total paid{" "}
+                          <span className="font-mono text-green-400">
+                            ${totalPaid(show.purchases).toFixed(2)}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                    {show.purchases.length > 0 ? (
+                      <div className="divide-y divide-white/10 border-[0.5px] border-white/20 rounded">
+                        {show.purchases.map((purchase, idx) => {
+                          const key = purchaseKey(purchase, idx);
+                          return (
+                            <div
+                              key={key}
+                              className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-3"
+                            >
+                              <div className="min-w-24">
+                                <p className="text-white font-medium">
+                                  {formatSeasons(purchase.seasons, show.totalSeasons) === "Complete"
+                                    ? "Complete set"
+                                    : formatSeasons(purchase.seasons, 0)}
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                  {formatPurchaseDate(purchase.purchasedAt)}
+                                </p>
+                              </div>
+                              <p className="font-mono text-white min-w-16">
+                                {purchase.price > 0 ? (
+                                  `$${purchase.price.toFixed(2)}`
+                                ) : (
+                                  <span className="text-gray-500">No price</span>
+                                )}
                               </p>
-                              <p className="text-xs text-gray-400">
-                                {formatPurchaseDate(purchase.purchasedAt)}
-                              </p>
-                            </div>
-                            <p className="font-mono text-white min-w-16">
-                              {purchase.price > 0 ? (
-                                `$${purchase.price.toFixed(2)}`
-                              ) : (
-                                <span className="text-gray-500">No price</span>
-                              )}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-3">
-                              {[...purchase.formats].sort().map((fmt) => (
-                                <FormatIcon key={fmt} fmt={fmt} />
-                              ))}
-                            </div>
-                            {purchase.condition && (
-                              <span className="text-sm text-gray-300">
-                                {purchase.condition}
-                              </span>
-                            )}
-                            <div className="flex items-center gap-3 ml-auto">
-                              {purchase.upcNumber ? (
-                                <>
-                                  <div className="relative inline-block">
-                                    <button
-                                      onClick={() => {
-                                        navigator.clipboard.writeText(
-                                          purchase.upcNumber,
-                                        );
-                                        setCopiedKey(key);
-                                        setTimeout(() => setCopiedKey(null), 1500);
-                                      }}
-                                      title="Copy to clipboard"
-                                      className="flex items-center gap-1 text-sm font-mono text-white cursor-pointer"
-                                    >
-                                      <FaBarcode />
-                                      {purchase.upcNumber}
-                                    </button>
-                                    {copiedKey === key && (
-                                      <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
-                                        Copied!
-                                      </span>
-                                    )}
-                                  </div>
-                                  <button
-                                    onClick={() => {
-                                      const query = encodeURIComponent(
-                                        purchase.upcNumber,
-                                      );
-                                      window.open(
-                                        `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&rt=nc&LH_ItemCondition=4`,
-                                        "_blank",
-                                        "noopener,noreferrer",
-                                      );
-                                    }}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded-md transition duration-200 text-xs cursor-pointer"
-                                  >
-                                    Search eBay
-                                  </button>
-                                </>
-                              ) : (
-                                <span className="text-gray-500 text-sm flex items-center gap-1">
-                                  <FaBarcode /> No UPC
+                              <div className="flex flex-wrap items-center gap-3">
+                                {[...purchase.formats].sort().map((fmt) => (
+                                  <FormatIcon key={fmt} fmt={fmt} />
+                                ))}
+                              </div>
+                              {purchase.condition && (
+                                <span className="text-sm text-gray-300">
+                                  {purchase.condition}
                                 </span>
                               )}
+                              <div className="flex items-center gap-3 ml-auto">
+                                {purchase.upcNumber ? (
+                                  <>
+                                    <div className="relative inline-block">
+                                      <button
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(
+                                            purchase.upcNumber,
+                                          );
+                                          setCopiedKey(key);
+                                          setTimeout(() => setCopiedKey(null), 1500);
+                                        }}
+                                        title="Copy to clipboard"
+                                        className="flex items-center gap-1 text-sm font-mono text-white cursor-pointer"
+                                      >
+                                        <FaBarcode />
+                                        {purchase.upcNumber}
+                                      </button>
+                                      {copiedKey === key && (
+                                        <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
+                                          Copied!
+                                        </span>
+                                      )}
+                                    </div>
+                                    <button
+                                      onClick={() => {
+                                        const query = encodeURIComponent(
+                                          purchase.upcNumber,
+                                        );
+                                        window.open(
+                                          `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&rt=nc&LH_ItemCondition=4`,
+                                          "_blank",
+                                          "noopener,noreferrer",
+                                        );
+                                      }}
+                                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded-md transition duration-200 text-xs cursor-pointer"
+                                    >
+                                      Search eBay
+                                    </button>
+                                  </>
+                                ) : (
+                                  <span className="text-gray-500 text-sm flex items-center gap-1">
+                                    <FaBarcode /> No UPC
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 italic">No purchases recorded</p>
+                    )}
+                    {show.productPosterPath && (
+                      <img
+                        src={show.productPosterPath}
+                        alt={`${show.title} product`}
+                        className="mt-4 rounded-lg shadow-md w-24 lg:w-32 h-auto object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="flex p-4 border-b-[0.5px] border-white/20">
+                    <div className="w-1/2">
+                      <h3 className="text-sm font-medium text-gray-400 mb-2">
+                        Watched
+                      </h3>
+                      <p className="text-base text-white flex items-center gap-2">
+                        {show.hasWatched ? (
+                          <>
+                            <LuEye className="w-5 h-5" /> Yes
+                          </>
+                        ) : (
+                          <>
+                            <LuEyeClosed className="w-5 h-5" /> No
+                          </>
+                        )}
+                      </p>
                     </div>
-                  ) : (
-                    <p className="text-gray-500 italic">No purchases recorded</p>
-                  )}
-                  {show.productPosterPath && (
-                    <img
-                      src={show.productPosterPath}
-                      alt={`${show.title} product`}
-                      className="mt-4 rounded-lg shadow-md w-24 lg:w-32 h-auto object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                  )}
-                </div>
-
-                <div className="flex p-4 border-b-[0.5px] border-white/20">
-                  <div className="w-1/2">
-                    <h3 className="text-sm font-medium text-gray-400 mb-2">
-                      Watched
-                    </h3>
-                    <p className="text-base text-white flex items-center gap-2">
-                      {show.hasWatched ? (
-                        <>
-                          <LuEye className="w-5 h-5" /> Yes
-                        </>
-                      ) : (
-                        <>
-                          <LuEyeClosed className="w-5 h-5" /> No
-                        </>
-                      )}
-                    </p>
-                  </div>
-                  <div className="w-1/2">
-                    <h3 className="text-sm font-medium text-gray-400 mb-2">
-                      Streaming
-                    </h3>
-                    <p className="text-base text-white flex items-center gap-2">
-                      {show.isOnPlex ? (
-                        <>
-                          <HiSignal className="w-5 h-5" /> Yes
-                        </>
-                      ) : (
-                        <>
-                          <HiOutlineSignalSlash className="w-5 h-5" /> No
-                        </>
-                      )}
-                    </p>
+                    <div className="w-1/2">
+                      <h3 className="text-sm font-medium text-gray-400 mb-2">
+                        Streaming
+                      </h3>
+                      <p className="text-base text-white flex items-center gap-2">
+                        {show.isOnPlex ? (
+                          <>
+                            <HiSignal className="w-5 h-5" /> Yes
+                          </>
+                        ) : (
+                          <>
+                            <HiOutlineSignalSlash className="w-5 h-5" /> No
+                          </>
+                        )}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Review and actions */}
-              <div className="mb-8">
-                <div className="m-4 p-6 bg-gray-700 rounded-lg">
-                  <h3 className="text-sm font-medium text-gray-400 mb-3">
-                    Review / Notes
-                  </h3>
-                  {show.review ? (
-                    <p className="text-white whitespace-pre-wrap">
-                      {show.review}
-                    </p>
-                  ) : (
-                    <p className="text-gray-500 italic">
-                      No review or notes added
+                {/* Review and actions */}
+                <div className="mb-8">
+                  <div className="m-4 p-6 bg-gray-700 rounded-lg">
+                    <h3 className="text-sm font-medium text-gray-400 mb-3">
+                      Review / Notes
+                    </h3>
+                    {show.review ? (
+                      <p className="text-white whitespace-pre-wrap">
+                        {show.review}
+                      </p>
+                    ) : (
+                      <p className="text-gray-500 italic">
+                        No review or notes added
+                      </p>
+                    )}
+                  </div>
+                  {deleteError && (
+                    <p className="text-red-400 text-sm text-center">
+                      {deleteError}
                     </p>
                   )}
-                </div>
-                {deleteError && (
-                  <p className="text-red-400 text-sm text-center">
-                    {deleteError}
-                  </p>
-                )}
-                <div className="flex justify-center gap-2 mt-2">
-                  <button
-                    onClick={() => setShowEditModal(true)}
-                    className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                    aria-label="Edit TV show"
-                  >
-                    <FaEdit className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                    aria-label="Delete TV show"
-                  >
-                    <FaTrash className="w-5 h-5" />
-                  </button>
+                  <div className="flex justify-center gap-2 mt-2">
+                    <button
+                      onClick={() => setShowEditModal(true)}
+                      className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+                      aria-label="Edit TV show"
+                    >
+                      <FaEdit className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+                      aria-label="Delete TV show"
+                    >
+                      <FaTrash className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
