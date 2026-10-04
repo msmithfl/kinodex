@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaMagnifyingGlass } from "react-icons/fa6";
+import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
+import { LuTable2 } from "react-icons/lu";
 import {
   TiStarOutline,
   TiStarHalfOutline,
@@ -25,6 +26,33 @@ import BarcodeScanner from "../components/BarcodeScanner";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import SubNavigation from "../components/SubNavigation";
 
+interface VisibleColumns {
+  seasons: boolean;
+  year: boolean;
+  format: boolean;
+  rating: boolean;
+  totalPaid: boolean;
+  dateAdded: boolean;
+}
+
+const DEFAULT_COLUMNS: VisibleColumns = {
+  seasons: true,
+  year: true,
+  format: true,
+  rating: true,
+  totalPaid: true,
+  dateAdded: true,
+};
+
+const COLUMN_OPTIONS: { key: keyof VisibleColumns; label: string }[] = [
+  { key: "seasons", label: "Seasons" },
+  { key: "year", label: "Year" },
+  { key: "format", label: "Format" },
+  { key: "rating", label: "Rating" },
+  { key: "totalPaid", label: "Total Paid" },
+  { key: "dateAdded", label: "Date Added" },
+];
+
 function TvShowList() {
   const { getToken } = useAuth();
   const navigate = useNavigate();
@@ -43,6 +71,18 @@ function TvShowList() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
+  const [showColumnMenu, setShowColumnMenu] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState<VisibleColumns>(() => {
+    try {
+      const saved = localStorage.getItem("tvShowListColumns");
+      // Merge over the defaults so a column added later still has a value
+      return saved
+        ? { ...DEFAULT_COLUMNS, ...JSON.parse(saved) }
+        : DEFAULT_COLUMNS;
+    } catch {
+      return DEFAULT_COLUMNS;
+    }
+  });
   // Size the list to fill the viewport below the header
   const container = useFillViewportHeight<HTMLDivElement>([loading]);
 
@@ -70,6 +110,15 @@ function TvShowList() {
     };
     fetchShows();
   }, []);
+
+  // Save column preferences to localStorage
+  useEffect(() => {
+    localStorage.setItem("tvShowListColumns", JSON.stringify(visibleColumns));
+  }, [visibleColumns]);
+
+  const toggleColumn = (column: keyof VisibleColumns) => {
+    setVisibleColumns((prev) => ({ ...prev, [column]: !prev[column] }));
+  };
 
   // Save sorting preferences to localStorage
   useEffect(() => {
@@ -207,19 +256,54 @@ function TvShowList() {
                 <table className="w-full border-separate border-spacing-0">
                   <thead className="bg-gray-700 sticky top-0 z-10">
                     <tr>
+                      <th className="px-3 py-2 w-12 border-r border-gray-600">
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowColumnMenu(!showColumnMenu)}
+                            className="flex text-gray-300 hover:text-white transition-colors cursor-pointer items-center"
+                            aria-label="Column options"
+                          >
+                            <LuTable2 className="w-5 h-5" />
+                          </button>
+                          {showColumnMenu && (
+                            <div className="text-sm absolute -left-1 mt-2 w-40 border border-gray-600 rounded-md bg-gray-800 shadow-lg z-10">
+                              {COLUMN_OPTIONS.map(({ key, label }) => (
+                                <button
+                                  key={key}
+                                  onClick={() => toggleColumn(key)}
+                                  className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
+                                >
+                                  <span
+                                    className={`font-normal ${visibleColumns[key] ? "text-indigo-400" : "text-white"}`}
+                                  >
+                                    {label}
+                                  </span>
+                                  {visibleColumns[key] && (
+                                    <FaCheck className="w-5 h-5 text-indigo-400" />
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </th>
                       {sortHeader(
                         "Title",
                         "alphabetic",
                         "w-46 max-w-46 md:w-96 md:max-w-96",
                       )}
-                      <th className="px-6 py-2 text-left text-sm font-semibold text-gray-200 border-r border-gray-600 whitespace-nowrap">
-                        Seasons
-                      </th>
-                      {sortHeader("Year", "year")}
-                      {sortHeader("Format", "format")}
-                      {sortHeader("Rating", "rating")}
-                      {sortHeader("Total Paid", "purchasePrice")}
-                      {sortHeader("Date Added", "date")}
+                      {visibleColumns.seasons && (
+                        <th className="px-6 py-2 text-left text-sm font-semibold text-gray-200 border-r border-gray-600 whitespace-nowrap">
+                          Seasons
+                        </th>
+                      )}
+                      {visibleColumns.year && sortHeader("Year", "year")}
+                      {visibleColumns.format && sortHeader("Format", "format")}
+                      {visibleColumns.rating && sortHeader("Rating", "rating")}
+                      {visibleColumns.totalPaid &&
+                        sortHeader("Total Paid", "purchasePrice")}
+                      {visibleColumns.dateAdded &&
+                        sortHeader("Date Added", "date")}
                     </tr>
                   </thead>
                   <tbody>
@@ -229,6 +313,8 @@ function TvShowList() {
                         onClick={() => navigate(`/tv-shows/${show.id}`)}
                         className={`text-sm cursor-pointer ${index % 2 === 0 ? "bg-gray-800" : "bg-gray-900"} hover:bg-gray-700 transition-colors duration-150`}
                       >
+                        {/* Sits under the column menu, as the selection column does on Movies */}
+                        <td className="w-12 bg-gray-900" />
                         <td className="px-6 py-2 text-white w-46 max-w-46 md:w-96 md:max-w-96 align-middle">
                           <Link
                             to={`/tv-shows/${show.id}`}
@@ -239,46 +325,58 @@ function TvShowList() {
                             {show.title}
                           </Link>
                         </td>
-                        <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                          {formatSeasons(show.owned, show.totalSeasons)}
-                        </td>
-                        <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                          {show.year || "-"}
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap align-middle">
-                          {show.formats.length > 0 ? (
-                            show.formats.join(", ")
-                          ) : (
-                            <span className="text-gray-500">-</span>
-                          )}
-                        </td>
-                        <td className="pl-6 py-2 whitespace-nowrap align-middle">
-                          <div className="flex gap-0.5">
-                            {[1, 2, 3, 4, 5].map((star) => {
-                              const isFullStar = show.rating >= star;
-                              const isHalfStar = show.rating === star - 0.5;
-                              return (
-                                <div key={star}>
-                                  {isFullStar ? (
-                                    <TiStarFullOutline className="w-5 h-5 text-yellow-400" />
-                                  ) : isHalfStar ? (
-                                    <TiStarHalfOutline className="w-5 h-5 text-yellow-400" />
-                                  ) : (
-                                    <TiStarOutline className="w-5 h-5 text-gray-500" />
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </td>
-                        <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                          {show.purchasePrice > 0
-                            ? `$${show.purchasePrice.toFixed(2)}`
-                            : "-"}
-                        </td>
-                        <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                          {getRelativeTimeString(show.createdAt)}
-                        </td>
+                        {visibleColumns.seasons && (
+                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
+                            {formatSeasons(show.owned, show.totalSeasons)}
+                          </td>
+                        )}
+                        {visibleColumns.year && (
+                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
+                            {show.year || "-"}
+                          </td>
+                        )}
+                        {visibleColumns.format && (
+                          <td className="px-6 py-2 whitespace-nowrap align-middle">
+                            {show.formats.length > 0 ? (
+                              show.formats.join(", ")
+                            ) : (
+                              <span className="text-gray-500">-</span>
+                            )}
+                          </td>
+                        )}
+                        {visibleColumns.rating && (
+                          <td className="pl-6 py-2 whitespace-nowrap align-middle">
+                            <div className="flex gap-0.5">
+                              {[1, 2, 3, 4, 5].map((star) => {
+                                const isFullStar = show.rating >= star;
+                                const isHalfStar = show.rating === star - 0.5;
+                                return (
+                                  <div key={star}>
+                                    {isFullStar ? (
+                                      <TiStarFullOutline className="w-5 h-5 text-yellow-400" />
+                                    ) : isHalfStar ? (
+                                      <TiStarHalfOutline className="w-5 h-5 text-yellow-400" />
+                                    ) : (
+                                      <TiStarOutline className="w-5 h-5 text-gray-500" />
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </td>
+                        )}
+                        {visibleColumns.totalPaid && (
+                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
+                            {show.purchasePrice > 0
+                              ? `$${show.purchasePrice.toFixed(2)}`
+                              : "-"}
+                          </td>
+                        )}
+                        {visibleColumns.dateAdded && (
+                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
+                            {getRelativeTimeString(show.createdAt)}
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
