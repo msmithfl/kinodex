@@ -80,8 +80,7 @@ function FilterDropdown({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white hover:border-gray-500 transition-colors cursor-pointer"
       >
-        <FaFilter className="w-4 h-4" />
-        <span>Filter</span>
+        <FaFilter className="w-4 h-6" />
         {activeCount > 0 && (
           <span className="ml-1 px-2 py-0.5 bg-indigo-600 text-white text-xs font-medium rounded-full">
             {activeCount}

@@ -6,6 +6,7 @@ import BarcodeScanner from "../components/BarcodeScanner";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SortableTableHeader from "../components/SortableTableHeader";
 import FilterDropdown from "../components/FilterDropdown";
+import SortDropdown from "../components/SortDropdown";
 import ConfirmDialog from "../components/ConfirmDialog";
 import SubNavigation from "../components/SubNavigation";
 import {
@@ -14,7 +15,9 @@ import {
   FaRegCircle,
   FaCheckCircle,
 } from "react-icons/fa";
-import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
+import { FaMagnifyingGlass, FaCheck, FaTableList } from "react-icons/fa6";
+import { FaImage } from "react-icons/fa";
+import MoviePosterCard from "../components/MovieCardPoster";
 import { IoMdCloseCircle } from "react-icons/io";
 import { LuTable2 } from "react-icons/lu";
 import { MdClose } from "react-icons/md";
@@ -62,6 +65,15 @@ function MovieList() {
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
+  const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
+    try {
+      return localStorage.getItem("movieListView") === "poster"
+        ? "poster"
+        : "table";
+    } catch {
+      return "table";
+    }
+  });
   const [visibleColumns, setVisibleColumns] = useState<VisibleColumns>(() => {
     const saved = localStorage.getItem("movieListColumns");
     return saved
@@ -235,6 +247,18 @@ function MovieList() {
     setSelectedMovieIds(new Set());
   };
 
+  // Posters can't be selected, so leaving the table clears any selection and the column menu
+  const handleViewModeChange = (mode: "table" | "poster") => {
+    setViewMode(mode);
+    setSelectedMovieIds(new Set());
+    setShowColumnMenu(false);
+    try {
+      localStorage.setItem("movieListView", mode);
+    } catch {
+      // Storage unavailable; the choice just isn't remembered
+    }
+  };
+
   const handleCheckboxChange = (
     movieId: number | undefined,
     checked: boolean,
@@ -402,15 +426,15 @@ function MovieList() {
 
               {/* Desktop Sort Controls - Conditionally Visible */}
               {selectedMovieIds.size === 0 ? (
-                <div className="items-center justify-between gap-6">
-                  <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between gap-3 sm:gap-6">
+                  <div className="flex items-center gap-2 sm:gap-4">
                     <div className="relative">
                       {Object.values(selectedFilters).some(
                         (arr) => arr.length > 0,
                       ) && (
                         <button
                           onClick={handleClearFilters}
-                          className="absolute -left-8.5 top-1/2 -translate-y-1/2 z-10 w-5 h-5  rounded-full flex items-center justify-center transition-colors cursor-pointer"
+                          className="absolute -left-5.5 md:-left-8.5 top-1/2 -translate-y-1/2 z-10 w-5 h-5  rounded-full flex items-center justify-center transition-colors cursor-pointer"
                           title="Clear filters"
                         >
                           <IoMdCloseCircle className="w-5 h-5 text-white" />
@@ -424,7 +448,41 @@ function MovieList() {
                         />
                       </div>
                     </div>
+                    {/* Poster view has no table headers to click, so it gets a sort menu */}
+                    {viewMode === "poster" && (
+                      <SortDropdown
+                        sortBy={sortBy}
+                        sortDirection={sortDirection}
+                        onSortChange={handleColumnClick}
+                      />
+                    )}
                     <Counter count={filteredMovies.length} />
+                  </div>
+
+                  {/* Table / poster view, styled like the other pill switches */}
+                  <div className="inline-flex bg-gray-800 rounded-lg p-1 shrink-0">
+                    {(
+                      [
+                        { id: "table", label: "Table view", icon: FaTableList },
+                        { id: "poster", label: "Poster view", icon: FaImage },
+                      ] as const
+                    ).map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => handleViewModeChange(id)}
+                        aria-pressed={viewMode === id}
+                        title={label}
+                        aria-label={label}
+                        className={`px-3 py-1.5 rounded-md transition cursor-pointer ${
+                          viewMode === id
+                            ? "bg-indigo-600 text-white"
+                            : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </button>
+                    ))}
                   </div>
                 </div>
               ) : (
@@ -468,6 +526,19 @@ function MovieList() {
         <div className="flex-1 min-h-0">
           {movies.length === 0 ? (
             <EmptyState message="No movies in your collection yet." />
+          ) : viewMode === "poster" ? (
+            // Poster view: the same filtered, searched and sorted movies as the table
+            <div className="h-full overflow-y-auto px-6 md:px-12 pb-8">
+              {filteredMovies.length === 0 ? (
+                <EmptyState message="No movies match your search or filters." />
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8">
+                  {filteredMovies.map((movie) => (
+                    <MoviePosterCard key={movie.id} movie={movie} captionBelow />
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             <div className="h-full bg-gray-900 overflow-hidden flex flex-col">
               {/* Scrollable table body */}
