@@ -2,10 +2,11 @@ import { useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const NAV_LINKS = [
-  { to: "/library", label: "Library" },
+  { to: "/library", label: "Movies" },
+  { to: "/tv-shows", label: "TV Shows" },
   { to: "/collections", label: "Collections" },
   { to: "/genres", label: "Genres" },
-  { to: "/shelfsections", label: "Shelves" },
+  // { to: "/shelfsections", label: "Shelves" },
   // { to: "/my-shelf", label: "My Shelf" },
 ];
 

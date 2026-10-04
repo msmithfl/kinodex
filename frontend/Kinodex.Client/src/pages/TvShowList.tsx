@@ -23,6 +23,7 @@ import { isMobile } from "../utils/isMobile";
 import { IoCameraOutline } from "react-icons/io5";
 import BarcodeScanner from "../components/BarcodeScanner";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
+import SubNavigation from "../components/SubNavigation";
 
 function TvShowList() {
   const { getToken } = useAuth();
@@ -137,6 +138,7 @@ function TvShowList() {
 
   return (
     <>
+    <SubNavigation />
       <FloatingAddButton onClick={() => setShowAddModal(true)} />
       {showAddModal && (
         <AddTvShowModal onClose={() => setShowAddModal(false)} />
