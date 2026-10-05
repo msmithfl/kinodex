@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { FormatIcon } from "../utils/formatIcon";
 
 interface Movie {
   id?: number;
@@ -28,16 +29,8 @@ function MoviePosterCard({
   subtitle,
 }: MoviePosterCardProps) {
   if (captionBelow) {
-    const details =
-      subtitle ??
-      [
-        movie.year || null,
-        movie.formats && movie.formats.length > 0
-          ? [...movie.formats].sort().join(", ")
-          : null,
-      ]
-        .filter(Boolean)
-        .join(" · ");
+    // Formats aren't repeated here; they show as icons on the poster on hover
+    const details = subtitle ?? (movie.year ? String(movie.year) : "");
 
     return (
       <Link to={to ?? `/movie/${movie.id}`} className="group flex flex-col min-w-0">
@@ -61,6 +54,14 @@ function MoviePosterCard({
             </div>
           )}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-200 pointer-events-none" />
+          {/* Format icons in the bottom-left corner, shown with the hover overlay; sized down to suit the poster */}
+          {movie.formats && movie.formats.length > 0 && (
+            <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none [&_svg]:w-5 [&_svg]:h-5 [&_svg]:drop-shadow">
+              {[...movie.formats].sort().map((fmt) => (
+                <FormatIcon key={fmt} fmt={fmt} />
+              ))}
+            </div>
+          )}
         </div>
         <h3
           className="mt-2 text-white text-xs md:text-sm font-semibold leading-tight truncate group-hover:underline"
