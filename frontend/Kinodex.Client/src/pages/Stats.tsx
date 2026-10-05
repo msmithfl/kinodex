@@ -302,7 +302,7 @@ function Stats() {
           <>
             {/* Scope */}
             <div className="flex justify-center md:justify-start mb-4">
-              <div className="inline-flex bg-gray-800 rounded-lg p-1">
+              <div className="inline-flex bg-gray-800 rounded-lg p-0.5">
                 {SCOPES.map((s) => (
                   <button
                     key={s.id}
