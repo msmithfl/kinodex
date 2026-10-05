@@ -13,6 +13,7 @@ import {
 } from "../utils/spending";
 import {
   FaFilm,
+  FaTv,
   FaDownload,
   FaChartPie,
   FaPlus,
@@ -39,10 +40,9 @@ interface MonthSpend {
 interface RecentItem {
   key: string;
   title: string;
-  formats: string[];
   createdAt?: string;
   to: string;
-  isTv: boolean;
+  isTv: boolean; // Picks the sidebar's Movies or TV Shows icon
 }
 
 // On mobile each card is 26% of the row, so three fit with part of the fourth peeking in
@@ -139,7 +139,6 @@ function Dashboard() {
         ...movies.map((m) => ({
           key: `movie-${m.id}`,
           title: m.title,
-          formats: [...m.formats].sort(),
           createdAt: m.createdAt,
           to: `/movie/${m.id}`,
           isTv: false,
@@ -147,7 +146,6 @@ function Dashboard() {
         ...shows.map((s) => ({
           key: `tv-${s.id}`,
           title: s.title,
-          formats: allFormats(s.purchases),
           createdAt: s.createdAt,
           to: `/tv-shows/${s.id}`,
           isTv: true,
@@ -170,30 +168,20 @@ function Dashboard() {
 
   // The collection section has two rows: titles, then disc formats
   const titleCounts = [
-    { label: "Total Movies", value: stats.movies, icon: "🎬" },
-    { label: "TV Shows", value: stats.tvShows, icon: "📺" },
+    { label: "Movies", value: stats.movies },
+    { label: "TV Shows", value: stats.tvShows },
   ];
   const formatCounts = [
-    { label: "DVD", value: stats.dvd, icon: "💿" },
-    { label: "Blu-ray", value: stats.bluray, icon: "📀" },
-    { label: "4K Ultra HD", value: stats.fourK, icon: "💎" },
+    { label: "DVD", value: stats.dvd },
+    { label: "Blu-ray", value: stats.bluray },
+    { label: "4K Ultra HD", value: stats.fourK },
   ];
 
-  const countCell = ({
-    label,
-    value,
-    icon,
-  }: {
-    label: string;
-    value: number;
-    icon: string;
-  }) => (
-    <div key={label} className="p-3 min-w-0">
-      <div className="flex items-center gap-1.5 min-w-0">
-        <span className="text-base leading-none">{icon}</span>
-        <p className="text-gray-400 text-xs font-medium truncate">{label}</p>
-      </div>
-      <p className="text-xl md:text-2xl font-bold text-white mt-1">{value}</p>
+  // Same figure style as the Stats page's summary cards: number on top, small grey label below
+  const countCell = ({ label, value }: { label: string; value: number }) => (
+    <div key={label} className="px-2 min-w-0">
+      <p className="text-lg font-semibold text-white">{value}</p>
+      <p className="text-gray-400 text-xs truncate">{label}</p>
     </div>
   );
 
@@ -240,11 +228,11 @@ function Dashboard() {
               </div>
 
               {/* Collection breakdown: one section, titles on top and disc formats below */}
-              <div className="bg-gray-800 rounded-lg shadow-lg">
+              <div className="bg-gray-800 rounded-lg shadow-lg p-5 text-center">
                 <div className="grid grid-cols-2 divide-x divide-gray-700">
                   {titleCounts.map(countCell)}
                 </div>
-                <div className="grid grid-cols-3 divide-x divide-gray-700 border-t border-gray-700">
+                <div className="grid grid-cols-3 divide-x divide-gray-700 border-t border-gray-700 mt-3 pt-3">
                   {formatCounts.map(countCell)}
                 </div>
               </div>
@@ -314,32 +302,25 @@ function Dashboard() {
                         to={item.to}
                         className="flex items-center justify-between p-4 hover:bg-gray-700 transition-colors"
                       >
-                        <div className="flex-1 flex items-center gap-3 min-w-0">
+                        <div className="flex-1 min-w-0 flex items-center gap-3">
+                          {/* Same icons as the sidebar's Movies and TV Shows items */}
+                          {item.isTv ? (
+                            <FaTv
+                              className="w-5 h-5 shrink-0 text-gray-400"
+                              title="TV show"
+                            />
+                          ) : (
+                            <FaFilm
+                              className="w-5 h-5 shrink-0 text-gray-400"
+                              title="Movie"
+                            />
+                          )}
                           <h3
-                            className="text-lg font-semibold text-white truncate max-w-sm"
+                            className="min-w-0 text-lg font-semibold text-white truncate"
                             title={item.title}
                           >
                             {item.title}
                           </h3>
-                          {item.isTv && (
-                            <span className="shrink-0 border border-rose-400 text-rose-300 px-2 py-0.5 rounded text-xs font-semibold">
-                              TV
-                            </span>
-                          )}
-                          {item.formats.length > 0 ? (
-                            <span className="inline-flex gap-1 whitespace-nowrap">
-                              {item.formats.map((fmt) => (
-                                <span
-                                  key={fmt}
-                                  className="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-medium"
-                                >
-                                  {fmt}
-                                </span>
-                              ))}
-                            </span>
-                          ) : (
-                            <span className="text-gray-500 text-sm">-</span>
-                          )}
                         </div>
                         <div className="text-gray-400">→</div>
                       </Link>
