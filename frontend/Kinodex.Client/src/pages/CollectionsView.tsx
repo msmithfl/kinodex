@@ -7,6 +7,10 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
 import type { Movie, Collection } from "../types";
 
+// Same grid as the movie list's poster view
+const POSTER_GRID =
+  "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8";
+
 function CollectionsView() {
   const { getToken } = useAuth();
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -70,6 +74,12 @@ function CollectionsView() {
         movie.collections && movie.collections.includes(collectionName),
     ).length;
   };
+
+  // Cover for a collection's card: the earliest-released movie in it that has a poster
+  const getCoverPath = (collectionName: string) =>
+    movies
+      .filter((m) => m.posterPath && m.collections?.includes(collectionName))
+      .sort((a, b) => (a.year || 9999) - (b.year || 9999))[0]?.posterPath;
 
   const getCompletionPercentage = (
     collectionId: number,
@@ -140,14 +150,14 @@ function CollectionsView() {
           <>
               {/* Standard Collections Section */}
               <div className="mb-12 pt-2">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className={POSTER_GRID}>
+                    {/* New collection: poster-shaped to line up with the cards */}
                     <button
                       onClick={() => setShowCreateInput(true)}
-                      className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 border-2 border-dashed border-gray-600 hover:border-indigo-500 flex items-center justify-center cursor-pointer"
+                      className="aspect-2/3 bg-gray-800 hover:bg-gray-700 rounded border-2 border-dashed border-gray-600 hover:border-indigo-500 flex items-center justify-center transition-colors cursor-pointer"
+                      aria-label="New collection"
                     >
-                      <div className="text-center">
-                        <div className="text-5xl text-gray-500 mb-2">+</div>
-                      </div>
+                      <span className="text-5xl text-gray-500">+</span>
                     </button>
                     {collections
                       .filter((c) => !c.isDirectorCollection)
@@ -165,6 +175,8 @@ function CollectionsView() {
                             movieCount={movieCount}
                             completionPercentage={completionPercentage}
                             urlPath="collections"
+                            poster
+                            coverPath={getCoverPath(collection.name)}
                           />
                         );
                       })}
@@ -177,7 +189,7 @@ function CollectionsView() {
                   <div className="flex mb-4 gap-4">
                     <h2 className="text-2xl font-bold">Director Collections</h2>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  <div className={POSTER_GRID}>
                     {collections
                       .filter((c) => c.isDirectorCollection)
                       .map((collection) => {
@@ -194,6 +206,8 @@ function CollectionsView() {
                             movieCount={movieCount}
                             completionPercentage={completionPercentage}
                             urlPath="collections"
+                            poster
+                            coverPath={getCoverPath(collection.name)}
                           />
                         );
                       })}
