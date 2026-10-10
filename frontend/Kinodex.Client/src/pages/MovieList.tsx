@@ -19,7 +19,6 @@ import {
 import { FaMagnifyingGlass, FaCheck, FaTableList } from "react-icons/fa6";
 import { FaImage } from "react-icons/fa";
 import MoviePosterCard from "../components/MovieCardPoster";
-import { IoMdCloseCircle } from "react-icons/io";
 import { LuTable2 } from "react-icons/lu";
 import { MdClose } from "react-icons/md";
 import {
@@ -438,25 +437,13 @@ function MovieList() {
               {selectedMovieIds.size === 0 ? (
                 <div className="flex items-center justify-between gap-3 sm:gap-6">
                   <div className="flex items-center gap-2 sm:gap-4">
-                    <div className="relative">
-                      {Object.values(selectedFilters).some(
-                        (arr) => arr.length > 0,
-                      ) && (
-                        <button
-                          onClick={handleClearFilters}
-                          className="absolute -left-5.5 md:-left-8.5 top-1/2 -translate-y-1/2 z-10 w-5 h-5  rounded-full flex items-center justify-center transition-colors cursor-pointer"
-                          title="Clear filters"
-                        >
-                          <IoMdCloseCircle className="w-5 h-5 text-white" />
-                        </button>
-                      )}
-                      <div onClick={() => setShowColumnMenu(false)}>
-                        <FilterDropdown
-                          categories={filterCategories}
-                          selectedFilters={selectedFilters}
-                          onFilterChange={handleFilterChange}
-                        />
-                      </div>
+                    <div onClick={() => setShowColumnMenu(false)}>
+                      <FilterDropdown
+                        categories={filterCategories}
+                        selectedFilters={selectedFilters}
+                        onFilterChange={handleFilterChange}
+                        onResetFilters={handleClearFilters}
+                      />
                     </div>
                     {/* Poster view has no table headers to click, so it gets a sort menu */}
                     {viewMode === "poster" && (
@@ -550,9 +537,12 @@ function MovieList() {
               )}
             </div>
           ) : (
-            <div className="h-full bg-gray-900 overflow-hidden flex flex-col">
-              {/* Scrollable table body */}
-              <div className="flex-1 overflow-y-auto">
+            <div className="h-full bg-gray-900 overflow-x-auto overflow-y-hidden overscroll-x-contain">
+              {/* Two scroll areas so a swipe moves the table one way at a time: the outer one only
+                  scrolls sideways, the inner one only up and down. Touch browsers lock each gesture
+                  to the area matching its starting direction. The vertical one is inside so the
+                  sticky header still sticks, while moving sideways with the columns. */}
+              <div className="h-full w-max min-w-full overflow-y-auto overflow-x-hidden overscroll-y-contain">
                 <table className="w-full border-separate border-spacing-0">
                   <thead className="bg-gray-700 sticky top-0 z-10">
                     <tr>
@@ -722,7 +712,7 @@ function MovieList() {
                         className={`text-sm group ${index % 2 === 0 ? "bg-gray-800" : "bg-gray-900"} hover:bg-gray-700 transition-colors duration-150 focus:outline-none focus-within:outline-none`}
                       >
                         <td
-                          className="w-12 text-center bg-gray-900"
+                          className="w-12 text-center"
                           onClick={() =>
                             handleCheckboxChange(
                               movie.id,
