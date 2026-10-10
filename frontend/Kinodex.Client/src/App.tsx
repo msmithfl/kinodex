@@ -19,6 +19,7 @@ import CustomersView from "./pages/CustomersView";
 import CheckoutsView from "./pages/CheckoutsView";
 import MyShelf from "./pages/MyShelf";
 import Stats from "./pages/Stats";
+import SearchPage from "./pages/SearchPage";
 import CsvExport from "./pages/CsvExport";
 import SignUpPage from "./pages/SignUpPage";
 import SignInPage from "./pages/SignInPage";
@@ -58,6 +59,7 @@ function App() {
                     <Route path="/checkout" element={<CheckoutsView />} />
                     <Route path="/customer" element={<CustomersView />} />
                     <Route path="/movie/:id" element={<MovieDetail />} />
+                    <Route path="/search" element={<SearchPage />} />
                     <Route path="/stats" element={<Stats />} />
                     <Route path="/export" element={<CsvExport />} />
                   </Routes>
