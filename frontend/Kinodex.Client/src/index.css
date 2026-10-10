@@ -7,7 +7,7 @@
 }
 @media (width < 48rem) {
   :root {
-    --bottom-nav-height: calc(4rem + env(safe-area-inset-bottom));
+    --bottom-nav-height: calc(4.5rem + env(safe-area-inset-bottom));
   }
 }
 
