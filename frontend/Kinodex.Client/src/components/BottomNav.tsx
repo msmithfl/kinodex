@@ -1,18 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaHome, FaChartPie, FaPlus } from "react-icons/fa";
+import { FaFilm, FaPlus } from "react-icons/fa";
+import { MdDashboard } from "react-icons/md";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { IoCameraOutline } from "react-icons/io5";
 import { AddItemModal } from "./AddItemModal";
 import BarcodeScanner from "./BarcodeScanner";
-
-// The list the bar's search and camera actions apply to: TV pages search TV shows,
-// everything else movies. (Add asks which instead.)
-const useActiveList = () => {
-  const { pathname } = useLocation();
-  const onTvShows = pathname === "/tv-shows" || pathname.startsWith("/tv-shows/");
-  return { listPath: onTvShows ? "/tv-shows" : "/library" };
-};
 
 // Mobile-only bar fixed to the bottom of the screen; the sidebar covers these on wider screens.
 // Its height is reserved through the --bottom-nav-height CSS variable (index.css) so pages
@@ -20,18 +13,19 @@ const useActiveList = () => {
 function BottomNav() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { listPath } = useActiveList();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
 
-  // A scanned barcode is searched in the current list (movies, or TV shows on TV pages)
+  // A scanned barcode opens the Search page with it, which covers movies and TV shows
+  // and shows the code in its search box so it can be cleared
   const handleBarcodeDetected = (code: string) => {
     setShowScanner(false);
-    navigate(`${listPath}?search=${encodeURIComponent(code)}`);
+    navigate(`/search?q=${encodeURIComponent(code)}`);
   };
 
+  // Icon-only items; pb-3 lifts the icons off the bottom edge. Each keeps an aria-label for screen readers.
   const itemClass = (active: boolean) =>
-    `flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
+    `flex items-center justify-center pb-3 transition-colors ${
       active ? "text-indigo-400" : "text-gray-400 hover:text-white"
     }`;
 
@@ -42,24 +36,27 @@ function BottomNav() {
         className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-gray-800 border-t border-white/10 pb-[env(safe-area-inset-bottom)]"
       >
         <div className="grid grid-cols-5 h-16">
-          <Link to="/" className={itemClass(pathname === "/")}>
-            <FaHome className="w-5 h-5" />
-            Home
+          <Link
+            to="/library"
+            className={itemClass(pathname === "/library")}
+            aria-label="Library"
+          >
+            <FaFilm className="w-6 h-6" />
           </Link>
 
           <Link
-            to={`${listPath}?focus=search`}
-            className={itemClass(false)}
+            to="/search"
+            className={itemClass(pathname === "/search")}
+            aria-label="Search"
           >
-            <FaMagnifyingGlass className="w-5 h-5" />
-            Search
+            <FaMagnifyingGlass className="w-6 h-6" />
           </Link>
 
           {/* Add sits in the middle and stands out */}
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
-            className="flex items-center justify-center cursor-pointer"
+            className="flex items-center justify-center pb-3 cursor-pointer"
             aria-label="Add a movie or TV show"
           >
             <span className="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg transition-colors">
@@ -71,14 +68,13 @@ function BottomNav() {
             type="button"
             onClick={() => setShowScanner(true)}
             className={`${itemClass(false)} cursor-pointer`}
+            aria-label="Scan a barcode"
           >
-            <IoCameraOutline className="w-6 h-6" />
-            Scan
+            <IoCameraOutline className="w-7 h-7" />
           </button>
 
-          <Link to="/stats" className={itemClass(pathname === "/stats")}>
-            <FaChartPie className="w-5 h-5" />
-            Stats
+          <Link to="/" className={itemClass(pathname === "/")} aria-label="Dashboard">
+            <MdDashboard className="w-6 h-6" />
           </Link>
         </div>
       </nav>
