@@ -16,12 +16,15 @@ interface FilterDropdownProps {
   categories: FilterCategory[];
   selectedFilters: Record<string, string[]>;
   onFilterChange: (categoryId: string, values: string[]) => void;
+  // Shows a "Reset filters" link at the bottom of the menu
+  onResetFilters?: () => void;
 }
 
 function FilterDropdown({
   categories,
   selectedFilters,
   onFilterChange,
+  onResetFilters,
 }: FilterDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentLevel, setCurrentLevel] = useState<"root" | string>("root");
@@ -78,9 +81,9 @@ function FilterDropdown({
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white hover:border-gray-500 transition-colors cursor-pointer"
+        className="flex items-center gap-2 px-2 py-1.5 bg-gray-800 border border-gray-600 rounded-md text-white hover:border-gray-500 transition-colors cursor-pointer"
       >
-        <FaFilter className="w-4 h-6" />
+        <FaFilter className="w-4" />
         {activeCount > 0 && (
           <span className="ml-1 px-2 py-0.5 bg-indigo-600 text-white text-xs font-medium rounded-full">
             {activeCount}
@@ -153,6 +156,24 @@ function FilterDropdown({
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* Reset: greyed out until a filter is set */}
+          {onResetFilters && (
+            <div className="border-t border-gray-600">
+              <button
+                type="button"
+                onClick={onResetFilters}
+                disabled={activeCount === 0}
+                className={`w-full px-3 py-2 text-left transition-colors ${
+                  activeCount > 0
+                    ? "text-indigo-400 hover:text-indigo-300 hover:bg-gray-700 cursor-pointer"
+                    : "text-gray-500 cursor-default"
+                }`}
+              >
+                Reset filters
+              </button>
             </div>
           )}
         </div>

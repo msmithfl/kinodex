@@ -354,8 +354,12 @@ function TvShowList() {
               )}
             </div>
           ) : (
-            <div className="h-full bg-gray-900 overflow-hidden flex flex-col">
-              <div className="flex-1 overflow-y-auto">
+            <div className="h-full bg-gray-900 overflow-x-auto overflow-y-hidden overscroll-x-contain">
+              {/* Two scroll areas so a swipe moves the table one way at a time: the outer one only
+                  scrolls sideways, the inner one only up and down. Touch browsers lock each gesture
+                  to the area matching its starting direction. The vertical one is inside so the
+                  sticky header still sticks, while moving sideways with the columns. */}
+              <div className="h-full w-max min-w-full overflow-y-auto overflow-x-hidden overscroll-y-contain">
                 <table className="w-full border-separate border-spacing-0">
                   <thead className="bg-gray-700 sticky top-0 z-10">
                     <tr>
@@ -417,7 +421,7 @@ function TvShowList() {
                         className={`text-sm cursor-pointer ${index % 2 === 0 ? "bg-gray-800" : "bg-gray-900"} hover:bg-gray-700 transition-colors duration-150`}
                       >
                         {/* Sits under the column menu, as the selection column does on Movies */}
-                        <td className="w-12 bg-gray-900" />
+                        <td className="w-12" />
                         <td className="px-6 py-2 text-white w-46 max-w-46 md:w-96 md:max-w-96 align-middle">
                           <Link
                             to={`/tv-shows/${show.id}`}
