@@ -20,7 +20,8 @@ function BottomNav() {
   // and shows the code in its search box so it can be cleared
   const handleBarcodeDetected = (code: string) => {
     setShowScanner(false);
-    navigate(`/search?q=${encodeURIComponent(code)}`);
+    // `external` tells the Search page to put the code in its box, even if it's already open
+    navigate(`/search?q=${encodeURIComponent(code)}`, { state: { external: true } });
   };
 
   // Icon-only items; pb-10 lifts the icons off the bottom edge. Each keeps an aria-label for screen readers.

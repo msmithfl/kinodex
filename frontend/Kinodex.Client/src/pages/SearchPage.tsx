@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { FaFilm, FaTv } from "react-icons/fa";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { IoCameraOutline } from "react-icons/io5";
 import { MdClose } from "react-icons/md";
-import LoadingSpinner from "../components/LoadingSpinner";
 import BarcodeScanner from "../components/BarcodeScanner";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import type { Movie, TvShow } from "../types";
@@ -56,10 +55,30 @@ const tvItem = (s: TvShow): SearchItem => {
 
 // One place to search the whole collection, movies and TV shows, by title or UPC.
 // The search text lives in the URL (?q=) so coming back from a result keeps it.
+const SEARCH_DEBOUNCE_MS = 250;
+
 function SearchPage() {
   const { getToken } = useAuth();
   const [params, setParams] = useSearchParams();
+  // The URL holds the settled search, which drives the results
   const query = params.get("q") ?? "";
+
+  // The box owns its text so every keystroke shows instantly; the URL (and the results) follow
+  // once typing pauses. The box never copies the URL back while you type: URL updates land a render
+  // late, and copying them back briefly restored letters that had just been deleted.
+  // It takes the URL's text when the page opens (e.g. coming back from a result)...
+  const [text, setText] = useState(query);
+  // ...and when another part of the app sends a search here on purpose (the bottom bar's barcode
+  // scan), marked by `external` in the navigation state. Each such navigation is handled once.
+  const location = useLocation();
+  const externalKey = (location.state as { external?: boolean } | null)?.external
+    ? location.key
+    : null;
+  const [handledExternalKey, setHandledExternalKey] = useState(externalKey);
+  if (externalKey && externalKey !== handledExternalKey) {
+    setHandledExternalKey(externalKey);
+    setText(query);
+  }
 
   const [items, setItems] = useState<SearchItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,6 +127,19 @@ function SearchPage() {
     setParams(q ? { q } : {}, { replace: true });
   };
 
+  // Push the typed text to the URL once typing has paused
+  useEffect(() => {
+    if (text === query) return;
+    const timer = window.setTimeout(() => updateQuery(text), SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [text]);
+
+  // Set the box and the search together, with no wait (clearing, scanning)
+  const setQueryNow = (q: string) => {
+    setText(q);
+    updateQuery(q);
+  };
+
   const handleScanClick = () => {
     if (isMobile()) {
       setShowScanner(true);
@@ -118,7 +150,7 @@ function SearchPage() {
 
   const handleBarcodeDetected = (code: string) => {
     setShowScanner(false);
-    updateQuery(code);
+    setQueryNow(code);
   };
 
   const needle = query.trim().toLowerCase();
@@ -146,16 +178,16 @@ function SearchPage() {
             ref={inputRef}
             type="search"
             placeholder="Search movies and TV shows by title or UPC..."
-            value={query}
-            onChange={(e) => updateQuery(e.target.value)}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
             className="w-full px-4 py-3 pl-10 pr-10 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent [&::-webkit-search-cancel-button]:hidden"
           />
           <FaMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-          {query && (
+          {text && (
             <button
               type="button"
               onClick={() => {
-                updateQuery("");
+                setQueryNow("");
                 inputRef.current?.focus();
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer"
@@ -185,14 +217,13 @@ function SearchPage() {
         )}
       </div>
 
-      {/* Results */}
-      {loading ? (
-        <LoadingSpinner />
-      ) : !needle ? (
+      {/* Results. No spinner while the collection loads: the hint shows, and a search typed
+          meanwhile just waits (rather than briefly claiming nothing matches) */}
+      {!needle ? (
         <p className="text-gray-400 text-center py-12">
           Search your whole collection by title or barcode.
         </p>
-      ) : results.length === 0 ? (
+      ) : loading ? null : results.length === 0 ? (
         <p className="text-gray-400 text-center py-12">
           Nothing in your collection matches "{query.trim()}".
         </p>
