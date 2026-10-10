@@ -146,14 +146,8 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
       <div className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4">
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4">
           <h3 className="text-xl font-bold text-white">Scan Barcode</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl font-bold"
-          >
-            ×
-          </button>
         </div>
 
         {error ? (
@@ -192,6 +186,15 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
               <p className="text-gray-500 text-xs text-center">
                 Best results: barcode fills about 60-80% of the scanning area
               </p>
+            </div>
+            {/* Close sits at the bottom centre, within easy reach of a thumb */}
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={onClose}
+                className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition cursor-pointer"
+              >
+                Close
+              </button>
             </div>
           </>
         )}
