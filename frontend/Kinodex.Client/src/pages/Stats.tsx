@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
 import {
   Tooltip,
@@ -72,6 +73,8 @@ function Stats() {
     () => localStorage.getItem("statsMonthlySpendEnd") || "",
   );
   const [loading, setLoading] = useState(true);
+  // Fills the screen below the header and above the mobile bottom bar
+  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
 
@@ -293,7 +296,7 @@ function Stats() {
   });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] pt-2">
+    <div ref={viewport.ref} className="flex flex-col h-[calc(100dvh-5rem)] pt-2" style={viewport.style}>
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-20 pt-2 md:pt-4 pb-8">
 
         {loading ? (

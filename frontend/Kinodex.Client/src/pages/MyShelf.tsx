@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import SubNavigation from "../components/SubNavigation";
@@ -43,6 +44,8 @@ function MyShelf() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [sectionOrder, setSectionOrder] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  // Fills the screen below the header and above the mobile bottom bar
+  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
 
@@ -110,7 +113,7 @@ function MyShelf() {
   return (
     <>
       <SubNavigation />
-      <div className="flex flex-col h-[calc(100vh-9rem)] pt-2">
+      <div ref={viewport.ref} className="flex flex-col h-[calc(100dvh-9rem)] pt-2" style={viewport.style}>
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-10 pb-8">
           <div className="space-y-8">
             {rows.map((row, rowIdx) => (

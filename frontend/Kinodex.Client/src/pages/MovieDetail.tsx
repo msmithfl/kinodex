@@ -11,6 +11,7 @@ import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import ConfirmDialog from "../components/ConfirmDialog";
 import type { Movie } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { EditMovieModal } from "../components/EditMovieModal";
 import SubNavigation from "../components/SubNavigation";
 import { FormatIcon } from "../utils/formatIcon";
@@ -21,6 +22,8 @@ function MovieDetail() {
   const { id } = useParams<{ id: string }>();
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
+  // Size the page to the viewport below the header and above the mobile bottom bar
+  const container = useFillViewportHeight<HTMLDivElement>([loading]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -107,7 +110,11 @@ function MovieDetail() {
   );
 
   return (
-    <div className="relative h-[calc(100vh-5rem)] flex flex-col">
+    <div
+      ref={container.ref}
+      className="relative h-[calc(100dvh-5rem)] flex flex-col"
+      style={container.style}
+    >
       {movie.backdropPath && (
         <>
           {/* Desktop: fixed background scoped to this container */}
