@@ -8,6 +8,10 @@ interface CollectionCardProps {
   movieCount: number;
   completionPercentage: number | null;
   urlPath: string;
+  // Poster-shaped card, styled like the movie list's poster view
+  poster?: boolean;
+  // Cover image for the poster layout, e.g. a poster from one of the collection's movies
+  coverPath?: string;
 }
 
 function CollectionCard({
@@ -15,7 +19,65 @@ function CollectionCard({
   movieCount,
   completionPercentage,
   urlPath,
+  poster = false,
+  coverPath,
 }: CollectionCardProps) {
+  if (poster) {
+    const details = [
+      `${movieCount} movie${movieCount !== 1 ? "s" : ""}`,
+      completionPercentage !== null ? `${completionPercentage}% complete` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
+    return (
+      <Link
+        to={`/${urlPath}/${encodeURIComponent(collection.name)}`}
+        className="group flex flex-col min-w-0"
+      >
+        {/* Hover: the outline turns indigo and a dark overlay fades in; no zoom */}
+        <div className="relative aspect-2/3 rounded border border-white/20 overflow-hidden shadow-lg bg-gray-800 transition-colors duration-200 group-hover:border-indigo-500">
+          {coverPath ? (
+            <img
+              src={coverPath}
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-4xl font-bold text-gray-600">
+                {collection.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-200 pointer-events-none" />
+
+          <span className="absolute top-1.5 right-1.5 bg-indigo-600 text-white px-2 py-0.5 rounded-full text-xs font-medium shadow">
+            {movieCount}
+          </span>
+
+          {/* Completion along the bottom edge, when the collection has a checklist */}
+          {completionPercentage !== null && (
+            <div className="absolute bottom-0 inset-x-0 h-1.5 bg-gray-900/70">
+              <div
+                className="h-full bg-indigo-500 transition-all duration-300"
+                style={{ width: `${completionPercentage}%` }}
+              />
+            </div>
+          )}
+        </div>
+        <h3
+          className="mt-2 text-white text-xs md:text-sm font-semibold leading-tight truncate group-hover:underline"
+          title={collection.name}
+        >
+          {collection.name}
+        </h3>
+        <p className="text-gray-400 text-xs mt-0.5 truncate">{details}</p>
+      </Link>
+    );
+  }
+
   return (
     <Link
       to={`/${urlPath}/${encodeURIComponent(collection.name)}`}
