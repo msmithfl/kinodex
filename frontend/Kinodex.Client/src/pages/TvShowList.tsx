@@ -257,7 +257,8 @@ function TvShowList() {
         <div className="shrink-0 mx-6 mt-4 md:mx-12">
           {shows.length > 0 && (
             <div className="mb-4 space-y-4">
-              <div className="flex gap-2">
+              {/* Search and scan: desktop only; on mobile the bottom bar's Search page and Scan cover these */}
+              <div className="hidden md:flex gap-2">
                 <div className="relative flex-1">
                   <input
                     type="text"
