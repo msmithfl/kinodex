@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
 import { useAuth } from "@clerk/clerk-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaMagnifyingGlass, FaCheck, FaTableList } from "react-icons/fa6";
 import { FaImage } from "react-icons/fa";
 import MoviePosterCard from "../components/MovieCardPoster";
@@ -15,8 +16,6 @@ import Counter from "../components/Counter";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SortableTableHeader from "../components/SortableTableHeader";
 import EmptyState from "../components/EmptyState";
-import FloatingAddButton from "../components/FloatingAddButton";
-import { AddTvShowModal } from "../components/AddTvShowModal";
 import type { SortOption, TvShow } from "../types";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { getRelativeTimeString } from "../utils/dateUtils";
@@ -80,9 +79,20 @@ function TvShowList() {
     const saved = localStorage.getItem("tvShowListSortDirection");
     return (saved as "asc" | "desc") || "asc";
   });
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
+  // Search text; the bottom bar can open this page already searching (?search=) or focused (?focus=search)
+  const {
+    query: searchQuery,
+    setQuery: setSearchQuery,
+    focusSearch,
+  } = useUrlSearchQuery();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const location = useLocation();
+
+  // The bottom bar's Search button links here with ?focus=search; focus the box once it's on screen.
+  // location.key makes a repeat tap refocus it even when already on this page.
+  useEffect(() => {
+    if (focusSearch && !loading) searchInputRef.current?.focus();
+  }, [focusSearch, loading, location.key]);  const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
   const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
@@ -226,10 +236,6 @@ function TvShowList() {
   return (
     <>
       <SubNavigation />
-      <FloatingAddButton onClick={() => setShowAddModal(true)} />
-      {showAddModal && (
-        <AddTvShowModal onClose={() => setShowAddModal(false)} />
-      )}
       {showScanner && (
         <BarcodeScanner
           onDetected={handleBarcodeDetected}
@@ -255,6 +261,7 @@ function TvShowList() {
                 <div className="relative flex-1">
                   <input
                     type="text"
+                    ref={searchInputRef}
                     placeholder="Search by title or UPC..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}

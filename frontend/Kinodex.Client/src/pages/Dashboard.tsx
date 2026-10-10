@@ -18,7 +18,7 @@ import {
   FaChartPie,
   FaPlus,
 } from "react-icons/fa";
-import { AddMovieModal } from "../components/AddMovieModal";
+import { AddItemModal } from "../components/AddItemModal";
 
 interface Stats {
   movies: number;
@@ -333,7 +333,7 @@ function Dashboard() {
         )}
       </div>
       {showAddModal && (
-        <AddMovieModal onClose={() => setShowAddModal(false)} />
+        <AddItemModal onClose={() => setShowAddModal(false)} />
       )}
     </div>
   );

@@ -1,5 +1,16 @@
 @import 'tailwindcss';
 
+/* Height of the mobile bottom bar (BottomNav), reserved so pages aren't hidden behind it.
+   0 from md up, where the bar is hidden. */
+:root {
+  --bottom-nav-height: 0px;
+}
+@media (width < 48rem) {
+  :root {
+    --bottom-nav-height: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
 *:focus {
   outline: none !important;
   box-shadow: none !important;

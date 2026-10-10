@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, DependencyList } from "react";
 
-// Sizes an element to fill the viewport from its top edge down to the bottom of the screen.
+// Sizes an element to fill the viewport from its top edge down to the bottom of the screen,
+// stopping above the mobile bottom bar (--bottom-nav-height, 0 on wider screens).
 // Pass deps that change the element's position (e.g. a loading flag) so it is re-measured.
 export function useFillViewportHeight<T extends HTMLElement>(
   deps: DependencyList = [],
@@ -20,7 +21,9 @@ export function useFillViewportHeight<T extends HTMLElement>(
   }, deps);
 
   const style: CSSProperties | undefined =
-    top !== null ? { height: `calc(100dvh - ${top}px)` } : undefined;
+    top !== null
+      ? { height: `calc(100dvh - ${top}px - var(--bottom-nav-height, 0px))` }
+      : undefined;
 
   return { ref, style };
 }
