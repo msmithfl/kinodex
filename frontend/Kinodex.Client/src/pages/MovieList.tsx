@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import Counter from "../components/Counter";
 import BarcodeScanner from "../components/BarcodeScanner";
@@ -37,8 +38,6 @@ import { applyFilters } from "../utils/applyFilters";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { isMobile } from "../utils/isMobile";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
-import FloatingAddButton from "../components/FloatingAddButton";
-import { AddMovieModal } from "../components/AddMovieModal";
 
 interface VisibleColumns {
   year: boolean;
@@ -61,8 +60,20 @@ function MovieList() {
     const saved = localStorage.getItem("movieListSortDirection");
     return (saved as "asc" | "desc") || "asc";
   });
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showScanner, setShowScanner] = useState(false);
+  // Search text; the bottom bar can open this page already searching (?search=) or focused (?focus=search)
+  const {
+    query: searchQuery,
+    setQuery: setSearchQuery,
+    focusSearch,
+  } = useUrlSearchQuery();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const location = useLocation();
+
+  // The bottom bar's Search button links here with ?focus=search; focus the box once it's on screen.
+  // location.key makes a repeat tap refocus it even when already on this page.
+  useEffect(() => {
+    if (focusSearch && !loading) searchInputRef.current?.focus();
+  }, [focusSearch, loading, location.key]);  const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
   const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
@@ -107,7 +118,6 @@ function MovieList() {
   });
   const [shelfSections, setShelfSections] = useState<string[]>([]);
   const [collections, setCollections] = useState<string[]>([]);
-  const [showModal, setShowModal] = useState(false);
   // Size the list to fill the viewport below the header and sub-navigation
   const container = useFillViewportHeight<HTMLDivElement>([loading]);
 
@@ -392,8 +402,6 @@ function MovieList() {
   return (
     <>
       <SubNavigation />
-      <FloatingAddButton onClick={() => setShowModal(true)} />
-      {showModal && <AddMovieModal onClose={() => setShowModal(false)} />}
       <div
         ref={container.ref}
         className="flex flex-col h-[calc(100dvh-9rem)]"
@@ -407,6 +415,7 @@ function MovieList() {
                 <div className="relative flex-1">
                   <input
                     type="text"
+                    ref={searchInputRef}
                     placeholder="Search by title or UPC..."
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}

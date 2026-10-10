@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
+import BottomNav from "./components/BottomNav";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import MovieList from "./pages/MovieList";
@@ -38,7 +39,8 @@ function App() {
               <Header />
               <div className="flex flex-1">
                 <Sidebar />
-                <main className="flex-1 overflow-x-hidden">
+                {/* Bottom padding keeps every page clear of the mobile bottom bar */}
+                <main className="flex-1 overflow-x-hidden pb-(--bottom-nav-height)">
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/library" element={<MovieList />} />
@@ -61,6 +63,7 @@ function App() {
                   </Routes>
                 </main>
               </div>
+              <BottomNav />
             </div>
           </ProtectedRoute>
         }
