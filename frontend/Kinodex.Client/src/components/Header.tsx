@@ -14,8 +14,7 @@ import {
   // FaBookmark,
 } from "react-icons/fa";
 import AuthButton from "./AuthButton";
-import { AddMovieModal } from "./AddMovieModal";
-import { AddTvShowModal } from "./AddTvShowModal";
+import { AddItemModal } from "./AddItemModal";
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -28,8 +27,6 @@ function Header() {
     );
   };
 
-  // The add button adds whatever kind of item the current page lists
-  const onTvShows = isActive("/tv-shows");
 
   const navItems = [
     { path: "/library", label: "Movies", icon: FaFilm },
@@ -62,7 +59,7 @@ function Header() {
               onClick={() => setShowModal(true)}
               className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 cursor-pointer"
             >
-              {onTvShows ? "+ Add TV Show" : "+ Add Movie"}
+              + Add
             </button>
             <AuthButton />
           </nav>
@@ -142,12 +139,7 @@ function Header() {
           </nav>
         )}
       </div>
-      {showModal &&
-        (onTvShows ? (
-          <AddTvShowModal onClose={() => setShowModal(false)} />
-        ) : (
-          <AddMovieModal onClose={() => setShowModal(false)} />
-        ))}
+      {showModal && <AddItemModal onClose={() => setShowModal(false)} />}
     </header>
   );
 }
