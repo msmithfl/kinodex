@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { LuGripVertical } from "react-icons/lu";
 
 const SHELF_ORDER_KEY = "shelf-section-order";
@@ -13,6 +14,8 @@ function ShelfSectionsView() {
   const [shelfSections, setShelfSections] = useState<ShelfSection[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  // Fills the screen below the header and above the mobile bottom bar
+  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
   const [showCreateInput, setShowCreateInput] = useState(false);
   const [newSectionName, setNewSectionName] = useState("");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -212,7 +215,7 @@ function ShelfSectionsView() {
   return (
     <>
       <SubNavigation />
-      <div className="flex h-[calc(100vh-9rem)] pt-2">
+      <div ref={viewport.ref} className="flex h-[calc(100dvh-9rem)] pt-2" style={viewport.style}>
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pt-2">
           {/* Reorder toolbar */}
           <div className="flex justify-end items-center mb-4 gap-2">

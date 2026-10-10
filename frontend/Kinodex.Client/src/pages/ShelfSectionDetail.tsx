@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
 import { useParams, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -19,6 +20,8 @@ function ShelfSectionDetail() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [section, setSection] = useState<ShelfSection | null>(null);
   const [loading, setLoading] = useState(true);
+  // Fills the screen below the header and above the mobile bottom bar
+  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -207,7 +210,7 @@ function ShelfSectionDetail() {
   return (
     <>
       <SubNavigation />
-      <div className="flex h-[calc(100vh-9rem)] mt-2">
+      <div ref={viewport.ref} className="flex h-[calc(100dvh-9rem)] mt-2" style={viewport.style}>
         <div className="flex-1 min-h-0 overflow-y-auto px-4 md:px-12">
           <div>
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">

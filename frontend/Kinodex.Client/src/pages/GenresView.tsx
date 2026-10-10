@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
 import CollectionCard from "../components/CollectionCard";
 import EmptyState from "../components/EmptyState";
@@ -11,6 +12,8 @@ function GenresView() {
   const [genres, setGenres] = useState<string[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  // Fills the screen below the header and above the mobile bottom bar
+  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const MOVIES_URL = `${API_BASE}/api/movies`;
@@ -65,7 +68,7 @@ function GenresView() {
   return (
     <>
       <SubNavigation />
-      <div className="flex h-[calc(100vh-9rem)] pt-2">
+      <div ref={viewport.ref} className="flex h-[calc(100dvh-9rem)] pt-2" style={viewport.style}>
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pt-2">
           {genres.length === 0 ? (
             <EmptyState message="No genres yet." />

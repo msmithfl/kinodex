@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
 import { useParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
@@ -16,6 +17,8 @@ function GenreDetail() {
   const { genreName } = useParams<{ genreName: string }>();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  // Fills the screen below the header and above the mobile bottom bar
+  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
 
   // View mode state
   const [viewMode, setViewMode] = useState<"detail" | "poster">(() => {
@@ -91,7 +94,7 @@ function GenreDetail() {
   return (
     <>
       <SubNavigation />
-      <div className="flex h-[calc(100vh-9rem)] mt-2">
+      <div ref={viewport.ref} className="flex h-[calc(100dvh-9rem)] mt-2" style={viewport.style}>
         <div className="flex-1 min-h-0 overflow-y-auto px-4 md:px-12">
           <div>
             <div className="flex items-center gap-4">

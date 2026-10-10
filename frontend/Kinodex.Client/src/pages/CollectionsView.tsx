@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
 import type { CollectionListItem } from "../types";
 import CollectionCard from "../components/CollectionCard";
@@ -11,6 +12,8 @@ function CollectionsView() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  // Fills the screen below the header and above the mobile bottom bar
+  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
   const [showCreateInput, setShowCreateInput] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
   const [collectionListItems, setCollectionListItems] = useState<
@@ -130,7 +133,7 @@ function CollectionsView() {
   return (
     <>
       <SubNavigation />
-      <div className="flex flex-col h-[calc(100vh-9rem)] pt-2">
+      <div ref={viewport.ref} className="flex flex-col h-[calc(100dvh-9rem)] pt-2" style={viewport.style}>
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-10 pb-8">
         {/* Scrollable content section */}
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
