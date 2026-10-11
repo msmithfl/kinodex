@@ -10,6 +10,13 @@ export const applyFilters = (movies: Movie[], selectedFilters: Record<string, st
       );
     }
     
+    // Genre filter: movies in any of the chosen genres
+    if (selectedFilters.genre && selectedFilters.genre.length > 0) {
+      filtered = filtered.filter(movie =>
+        (movie.genres ?? []).some(genre => selectedFilters.genre.includes(genre))
+      );
+    }
+
     // HDD Number filter
     if (selectedFilters.hdd && selectedFilters.hdd.length > 0) {
       filtered = filtered.filter(movie => {
