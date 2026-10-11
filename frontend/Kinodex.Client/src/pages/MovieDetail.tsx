@@ -9,6 +9,7 @@ import { FaEdit, FaTrash } from "react-icons/fa";
 import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import ConfirmDialog from "../components/ConfirmDialog";
+import ImageLightbox from "../components/ImageLightbox";
 import type { Movie } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
@@ -27,6 +28,7 @@ function MovieDetail() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showPosterLightbox, setShowPosterLightbox] = useState(false);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const API_URL = `${API_BASE}/api/movies`;
@@ -247,15 +249,23 @@ function MovieDetail() {
                   {/* Poster; desktop: right column, stays in view while the details scroll */}
                   <div className="lg:col-start-2 lg:row-start-2 lg:sticky lg:top-4">
                     {movie.posterPath ? (
-                      <img
-                        src={movie.posterPath}
-                        alt={`${movie.title} poster`}
-                        className="border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-60 lg:max-w-none lg:w-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src =
-                            "https://via.placeholder.com/300x450?text=No+Poster";
-                        }}
-                      />
+                      // Click to see the poster large
+                      <button
+                        type="button"
+                        onClick={() => setShowPosterLightbox(true)}
+                        className="block cursor-zoom-in"
+                        aria-label={`Enlarge the ${movie.title} poster`}
+                      >
+                        <img
+                          src={movie.posterPath}
+                          alt={`${movie.title} poster`}
+                          className="border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-60 lg:max-w-none lg:w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "https://via.placeholder.com/300x450?text=No+Poster";
+                          }}
+                        />
+                      </button>
                     ) : (
                       <div className="bg-gray-700 border-[0.5px] border-white/20 rounded-lg flex items-center justify-center h-full min-h-75">
                         <p className="text-gray-500 text-xs lg:text-base">
@@ -499,6 +509,14 @@ function MovieDetail() {
             </div>
             {showModal && (
               <EditMovieModal onClose={() => setShowModal(false)} />
+            )}
+
+            {showPosterLightbox && movie.posterPath && (
+              <ImageLightbox
+                src={movie.posterPath}
+                alt={`${movie.title} poster`}
+                onClose={() => setShowPosterLightbox(false)}
+              />
             )}
 
             <ConfirmDialog

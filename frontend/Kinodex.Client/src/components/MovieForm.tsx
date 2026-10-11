@@ -9,6 +9,7 @@ import { IoCameraOutline } from "react-icons/io5";
 import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import { FaPlus, FaMinus } from "react-icons/fa6";
 import { Genres, type Movie } from "../types";
+import ImagePicker from "./ImagePicker";
 
 interface MovieFormProps {
   formData: Movie;
@@ -186,7 +187,7 @@ function MovieForm({
   const tabs: { id: Tab; label: string }[] = [
     { id: "details", label: "Movie Details" },
     { id: "physical", label: "Physical" },
-    { id: "poster", label: "Poster" },
+    { id: "poster", label: "Images" },
   ];
 
   const inputClass =
@@ -781,8 +782,8 @@ function MovieForm({
         {/* Poster Details */}
         {activeTab === "poster" && (
           <div className="space-y-2 pb-2">
-            {/* Movie Poster */}
-            <div className="flex gap-4 items-end">
+            {/* Movie Poster: preview beside the URL and the TMDB poster picker */}
+            <div className="flex gap-4 items-start">
               <div className="w-24 h-36 rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
                 {formData.posterPath ? (
                   <img
@@ -811,11 +812,65 @@ function MovieForm({
                   placeholder="https://example.com/movie-poster.jpg"
                   className={inputClass}
                 />
+                {/* Swap in another of TMDB's posters for this movie; keyed so a new TMDB ID starts it fresh */}
+                <div className="mt-2">
+                  <ImagePicker
+                    key={formData.tmdbId ?? "none"}
+                    kind="movie"
+                    imageType="poster"
+                    tmdbId={formData.tmdbId}
+                    selected={formData.posterPath}
+                    onSelect={(posterPath) => setFormData({ ...formData, posterPath })}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Product Poster */}
-            <div className="flex gap-4 items-end">
+            {/* Backdrop: wide preview beside the URL and the TMDB backdrop picker */}
+            <div className="flex gap-4 items-start">
+              <div className="w-24 aspect-video rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
+                {formData.backdropPath ? (
+                  <img
+                    src={formData.backdropPath}
+                    alt="Backdrop preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => (e.currentTarget.style.display = "none")}
+                  />
+                ) : (
+                  <span className="text-gray-600 text-xs text-center px-1">
+                    No backdrop
+                  </span>
+                )}
+              </div>
+              <div className="flex-1">
+                <label htmlFor="backdropPath" className={labelClass}>
+                  Backdrop URL
+                </label>
+                <input
+                  type="text"
+                  id="backdropPath"
+                  value={formData.backdropPath}
+                  onChange={(e) =>
+                    setFormData({ ...formData, backdropPath: e.target.value })
+                  }
+                  placeholder="https://example.com/backdrop.jpg"
+                  className={inputClass}
+                />
+                {/* Swap in another of TMDB's backdrops for this movie; keyed so a new TMDB ID starts it fresh */}
+                <div className="mt-2">
+                  <ImagePicker
+                    key={formData.tmdbId ?? "none"}
+                    kind="movie"
+                    imageType="backdrop"
+                    tmdbId={formData.tmdbId}
+                    selected={formData.backdropPath}
+                    onSelect={(backdropPath) => setFormData({ ...formData, backdropPath })}
+                  />
+                </div>
+              </div>
+            </div>
+            {/* Product Poster: field at the top beside the preview, like the poster row */}
+            <div className="flex gap-4 items-start">
               <div className="w-24 h-36 rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
                 {formData.productPosterPath ? (
                   <img

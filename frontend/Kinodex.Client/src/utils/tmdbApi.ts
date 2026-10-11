@@ -85,6 +85,23 @@ export async function searchTMDBTv(query: string, year?: string): Promise<TMDBTv
   return data?.results?.slice(0, 10) ?? [];
 }
 
+// Every poster or backdrop TMDB has for a movie or TV show, as image paths (e.g. "/abc123.jpg"),
+// best voted first. English and language-neutral images only, so any text on them is readable.
+export async function getTMDBImages(
+  kind: "movie" | "tv",
+  tmdbId: number,
+  imageType: "poster" | "backdrop",
+): Promise<string[]> {
+  type TmdbImage = { file_path: string; vote_average: number; vote_count: number };
+  const data = await tmdbGet<{ posters?: TmdbImage[]; backdrops?: TmdbImage[] }>(
+    `/${kind}/${tmdbId}/images?include_image_language=en,null`,
+  );
+  const images = (imageType === "poster" ? data?.posters : data?.backdrops) ?? [];
+  return images
+    .sort((a, b) => b.vote_average - a.vote_average || b.vote_count - a.vote_count)
+    .map((p) => p.file_path);
+}
+
 // TV search results don't include a season count, so it comes from the show's details
 export async function getTMDBTvSeasonCount(tmdbId: number): Promise<number> {
   const data = await tmdbGet<{ number_of_seasons?: number }>(`/tv/${tmdbId}?language=en-US`);

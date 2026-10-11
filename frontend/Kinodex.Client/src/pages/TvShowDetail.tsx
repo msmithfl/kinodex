@@ -11,6 +11,7 @@ import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import { FaBarcode } from "react-icons/fa6";
 import ConfirmDialog from "../components/ConfirmDialog";
+import ImageLightbox from "../components/ImageLightbox";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { EditTvShowModal } from "../components/EditTvShowModal";
 import type { TvShow } from "../types";
@@ -37,6 +38,7 @@ function TvShowDetail() {
   // Which purchase's UPC was just copied, for the "Copied!" hint
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showPosterLightbox, setShowPosterLightbox] = useState(false);
   // Size the page to the viewport below the header
   const container = useFillViewportHeight<HTMLDivElement>([loading]);
 
@@ -252,15 +254,23 @@ function TvShowDetail() {
                   {/* Poster; desktop: right column, stays in view while the details scroll */}
                   <div className="lg:col-start-2 lg:row-start-2 lg:sticky lg:top-4">
                     {show.posterPath ? (
-                      <img
-                        src={show.posterPath}
-                        alt={`${show.title} poster`}
-                        className="border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-60 lg:max-w-none lg:w-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src =
-                            "https://via.placeholder.com/300x450?text=No+Poster";
-                        }}
-                      />
+                      // Click to see the poster large
+                      <button
+                        type="button"
+                        onClick={() => setShowPosterLightbox(true)}
+                        className="block cursor-zoom-in"
+                        aria-label={`Enlarge the ${show.title} poster`}
+                      >
+                        <img
+                          src={show.posterPath}
+                          alt={`${show.title} poster`}
+                          className="border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-60 lg:max-w-none lg:w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "https://via.placeholder.com/300x450?text=No+Poster";
+                          }}
+                        />
+                      </button>
                     ) : (
                       <div className="bg-gray-700 border-[0.5px] border-white/20 rounded-lg flex items-center justify-center h-full min-h-75 px-4">
                         <p className="text-gray-500 text-xs lg:text-base">
@@ -492,6 +502,14 @@ function TvShowDetail() {
                 </div>
               </div>
             </div>
+
+            {showPosterLightbox && show.posterPath && (
+              <ImageLightbox
+                src={show.posterPath}
+                alt={`${show.title} poster`}
+                onClose={() => setShowPosterLightbox(false)}
+              />
+            )}
 
             {showEditModal && (
               <EditTvShowModal
