@@ -18,6 +18,7 @@ import {
   totalPaid,
 } from "../utils/tvShowPurchases";
 import TvShowPurchaseEditor from "./TvShowPurchaseEditor";
+import ImagePicker from "./ImagePicker";
 
 const MAX_SEASONS = 100;
 
@@ -34,7 +35,7 @@ type Tab = "details" | "purchases" | "poster";
 const tabs: { id: Tab; label: string }[] = [
   { id: "details", label: "Show Details" },
   { id: "purchases", label: "Purchases" },
-  { id: "poster", label: "Poster" },
+  { id: "poster", label: "Images" },
 ];
 
 const inputClass =
@@ -327,7 +328,8 @@ function TvShowForm({
               </div>
             </div>
 
-            <div className="flex items-start justify-center gap-12 sm:gap-16">
+            {/* Watched and Streaming side by side; on phones Rating wraps to its own centred row */}
+            <div className="flex flex-wrap items-start justify-center gap-x-12 gap-y-4 sm:gap-x-16">
               {/* Watched */}
               <div className="flex flex-col items-center">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -376,7 +378,7 @@ function TvShowForm({
                 </button>
               </div>
               {/* Rating */}
-              <div>
+              <div className="w-full sm:w-auto flex flex-col items-center sm:items-start">
                 <label className={labelClass}>Rating</label>
                 <div className="flex">
                   {[1, 2, 3, 4, 5].map((star) => {
@@ -554,8 +556,8 @@ function TvShowForm({
         {/* Poster Details */}
         {activeTab === "poster" && (
           <div className="space-y-2 pb-2">
-            {/* Show Poster */}
-            <div className="flex gap-4 items-end">
+            {/* Show Poster: preview beside the URL and the TMDB poster picker */}
+            <div className="flex gap-4 items-start">
               <div className="w-24 h-36 rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
                 {formData.posterPath ? (
                   <img
@@ -584,11 +586,65 @@ function TvShowForm({
                   placeholder="https://example.com/show-poster.jpg"
                   className={inputClass}
                 />
+                {/* Swap in another of TMDB's posters for this show; keyed so a new TMDB ID starts it fresh */}
+                <div className="mt-2">
+                  <ImagePicker
+                    key={formData.tmdbId ?? "none"}
+                    kind="tv"
+                    imageType="poster"
+                    tmdbId={formData.tmdbId}
+                    selected={formData.posterPath}
+                    onSelect={(posterPath) => setFormData({ ...formData, posterPath })}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Product Poster */}
-            <div className="flex gap-4 items-end">
+            {/* Backdrop: wide preview beside the URL and the TMDB backdrop picker */}
+            <div className="flex gap-4 items-start">
+              <div className="w-24 aspect-video rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
+                {formData.backdropPath ? (
+                  <img
+                    src={formData.backdropPath}
+                    alt="Backdrop preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => (e.currentTarget.style.display = "none")}
+                  />
+                ) : (
+                  <span className="text-gray-600 text-xs text-center px-1">
+                    No backdrop
+                  </span>
+                )}
+              </div>
+              <div className="flex-1">
+                <label htmlFor="backdropPath" className={labelClass}>
+                  Backdrop URL
+                </label>
+                <input
+                  type="text"
+                  id="backdropPath"
+                  value={formData.backdropPath}
+                  onChange={(e) =>
+                    setFormData({ ...formData, backdropPath: e.target.value })
+                  }
+                  placeholder="https://example.com/backdrop.jpg"
+                  className={inputClass}
+                />
+                {/* Swap in another of TMDB's backdrops for this show; keyed so a new TMDB ID starts it fresh */}
+                <div className="mt-2">
+                  <ImagePicker
+                    key={formData.tmdbId ?? "none"}
+                    kind="tv"
+                    imageType="backdrop"
+                    tmdbId={formData.tmdbId}
+                    selected={formData.backdropPath}
+                    onSelect={(backdropPath) => setFormData({ ...formData, backdropPath })}
+                  />
+                </div>
+              </div>
+            </div>
+            {/* Product Poster: field at the top beside the preview, like the poster row */}
+            <div className="flex gap-4 items-start">
               <div className="w-24 h-36 rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
                 {formData.productPosterPath ? (
                   <img
