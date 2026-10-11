@@ -11,7 +11,7 @@ const IMAGE_TYPES = {
     noun: "poster",
     thumbSize: "w185",
     saveSize: "w500",
-    grid: "grid-cols-4 sm:grid-cols-6",
+    grid: "grid-cols-3 sm:grid-cols-5 md:grid-cols-6",
     aspect: "aspect-2/3",
   },
   backdrop: {
@@ -23,7 +23,7 @@ const IMAGE_TYPES = {
   },
 } as const;
 
-interface ImagePickerProps {
+interface ImagePickerOptions {
   kind: "movie" | "tv";
   imageType: keyof typeof IMAGE_TYPES;
   tmdbId?: number;
@@ -32,27 +32,36 @@ interface ImagePickerProps {
 }
 
 // Lets the user swap a poster or backdrop for any other TMDB has for the same movie or show.
-// Images load on demand, so opening the form doesn't call TMDB.
-function ImagePicker({ kind, imageType, tmdbId, selected, onSelect }: ImagePickerProps) {
+// Returns the toggle button and the image grid separately so a form can put the button beside
+// its URL field and the grid full width underneath. Images load on demand, the first time the
+// grid opens.
+export function useImagePicker({
+  kind,
+  imageType,
+  tmdbId,
+  selected,
+  onSelect,
+}: ImagePickerOptions) {
   const type = IMAGE_TYPES[imageType];
   const [images, setImages] = useState<string[] | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  if (!tmdbId) {
-    return (
-      <p className="text-xs text-gray-400">
-        Add a TMDB ID on the details tab to choose from TMDB's {type.noun}s.
-      </p>
-    );
+  // A different TMDB ID means a different title: drop the loaded images and close the grid
+  const [loadedFor, setLoadedFor] = useState(tmdbId);
+  if (tmdbId !== loadedFor) {
+    setLoadedFor(tmdbId);
+    setImages(null);
+    setOpen(false);
+    setError("");
   }
 
-  const loadImages = async () => {
+  const loadImages = async (id: number) => {
     setLoading(true);
     setError("");
     try {
-      const paths = await getTMDBImages(kind, tmdbId, imageType);
+      const paths = await getTMDBImages(kind, id, imageType);
       setImages(paths);
       if (paths.length === 0) setError(`TMDB has no other ${type.noun}s for this title.`);
     } catch {
@@ -69,37 +78,45 @@ function ImagePicker({ kind, imageType, tmdbId, selected, onSelect }: ImagePicke
       return;
     }
     setOpen(true);
-    if (images === null) await loadImages();
+    if (images === null && tmdbId) await loadImages(tmdbId);
   };
 
-  return (
+  const button = !tmdbId ? (
+    <p className="text-xs text-gray-400">
+      Add a TMDB ID on the details tab to choose from TMDB's {type.noun}s.
+    </p>
+  ) : (
+    <button
+      type="button"
+      onClick={toggle}
+      disabled={loading}
+      aria-expanded={open}
+      className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-md transition cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+    >
+      {loading
+        ? `Loading ${type.noun}s...`
+        : open
+          ? `Close ${type.noun} selection`
+          : `Choose a different ${type.noun}`}
+    </button>
+  );
+
+  const grid = !open ? null : (
     <div>
-      <button
-        type="button"
-        onClick={toggle}
-        disabled={loading}
-        aria-expanded={open}
-        className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-md transition cursor-pointer disabled:opacity-60 disabled:cursor-wait"
-      >
-        {loading
-          ? `Loading ${type.noun}s...`
-          : open
-            ? `Close ${type.noun} selection`
-            : `Choose a different ${type.noun}`}
-      </button>
-      {open && error && <p className="text-xs text-gray-400 mt-2">{error}</p>}
-      {open && images && images.length > 0 && (
-        <div className={`mt-2 grid ${type.grid} gap-2 max-h-72 overflow-y-auto pr-1`}>
+      {error && <p className="text-xs text-gray-400">{error}</p>}
+      {images && images.length > 0 && (
+        <div className={`grid ${type.grid} gap-2 max-h-80 overflow-y-auto pr-1`}>
           {images.map((path) => {
             const url = `${TMDB_IMAGE}/${type.saveSize}${path}`;
             const isSelected = selected === url;
             return (
+              // Full width with a fixed shape, so rows size correctly and never overlap
               <button
                 key={path}
                 type="button"
                 onClick={() => onSelect(url)}
                 aria-pressed={isSelected}
-                className={`relative ${type.aspect} rounded overflow-hidden border-2 transition cursor-pointer ${
+                className={`relative block w-full ${type.aspect} rounded overflow-hidden border-2 transition cursor-pointer ${
                   isSelected ? "border-indigo-500" : "border-transparent hover:border-gray-400"
                 }`}
               >
@@ -107,7 +124,7 @@ function ImagePicker({ kind, imageType, tmdbId, selected, onSelect }: ImagePicke
                   src={`${TMDB_IMAGE}/${type.thumbSize}${path}`}
                   alt=""
                   loading="lazy"
-                  className="w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
                 {isSelected && (
                   <span className="absolute top-1 right-1 bg-indigo-600 text-white rounded-full p-1">
@@ -121,6 +138,6 @@ function ImagePicker({ kind, imageType, tmdbId, selected, onSelect }: ImagePicke
       )}
     </div>
   );
-}
 
-export default ImagePicker;
+  return { button, grid };
+}

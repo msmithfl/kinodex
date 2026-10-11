@@ -18,7 +18,7 @@ import {
   totalPaid,
 } from "../utils/tvShowPurchases";
 import TvShowPurchaseEditor from "./TvShowPurchaseEditor";
-import ImagePicker from "./ImagePicker";
+import { useImagePicker } from "./useImagePicker";
 
 const MAX_SEASONS = 100;
 
@@ -51,6 +51,21 @@ function TvShowForm({
 }: TvShowFormProps) {
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [validationError, setValidationError] = useState<string>("");
+  // TMDB poster and backdrop choosers for the Images tab
+  const posterPicker = useImagePicker({
+    kind: "tv",
+    imageType: "poster",
+    tmdbId: formData.tmdbId,
+    selected: formData.posterPath,
+    onSelect: (posterPath) => setFormData((prev) => ({ ...prev, posterPath })),
+  });
+  const backdropPicker = useImagePicker({
+    kind: "tv",
+    imageType: "backdrop",
+    tmdbId: formData.tmdbId,
+    selected: formData.backdropPath,
+    onSelect: (backdropPath) => setFormData((prev) => ({ ...prev, backdropPath })),
+  });
   const [yearInput, setYearInput] = useState<string>(formData.year.toString());
   const [tmdbInput, setTmdbInput] = useState<string>(
     formData.tmdbId?.toString() || "",
@@ -586,19 +601,11 @@ function TvShowForm({
                   placeholder="https://example.com/show-poster.jpg"
                   className={inputClass}
                 />
-                {/* Swap in another of TMDB's posters for this show; keyed so a new TMDB ID starts it fresh */}
-                <div className="mt-2">
-                  <ImagePicker
-                    key={formData.tmdbId ?? "none"}
-                    kind="tv"
-                    imageType="poster"
-                    tmdbId={formData.tmdbId}
-                    selected={formData.posterPath}
-                    onSelect={(posterPath) => setFormData({ ...formData, posterPath })}
-                  />
-                </div>
+                {/* Swap in another of TMDB's posters; the grid opens full width below this row */}
+                <div className="mt-2">{posterPicker.button}</div>
               </div>
             </div>
+            {posterPicker.grid}
 
             {/* Backdrop: wide preview beside the URL and the TMDB backdrop picker */}
             <div className="flex gap-4 items-start">
@@ -630,19 +637,11 @@ function TvShowForm({
                   placeholder="https://example.com/backdrop.jpg"
                   className={inputClass}
                 />
-                {/* Swap in another of TMDB's backdrops for this show; keyed so a new TMDB ID starts it fresh */}
-                <div className="mt-2">
-                  <ImagePicker
-                    key={formData.tmdbId ?? "none"}
-                    kind="tv"
-                    imageType="backdrop"
-                    tmdbId={formData.tmdbId}
-                    selected={formData.backdropPath}
-                    onSelect={(backdropPath) => setFormData({ ...formData, backdropPath })}
-                  />
-                </div>
+                {/* Swap in another of TMDB's backdrops; the grid opens full width below this row */}
+                <div className="mt-2">{backdropPicker.button}</div>
               </div>
             </div>
+            {backdropPicker.grid}
             {/* Product Poster: field at the top beside the preview, like the poster row */}
             <div className="flex gap-4 items-start">
               <div className="w-24 h-36 rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
