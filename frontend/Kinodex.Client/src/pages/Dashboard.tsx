@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth, useUser, UserButton } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import type { Movie, TvShow } from "../types";
@@ -17,6 +17,7 @@ import {
   FaDownload,
   FaChartPie,
   FaPlus,
+  FaCog,
 } from "react-icons/fa";
 import { AddItemModal } from "../components/AddItemModal";
 
@@ -67,6 +68,7 @@ const highestFormat = (formats: string[]) =>
 
 function Dashboard() {
   const { getToken } = useAuth();
+  const { user } = useUser();
   const [stats, setStats] = useState<Stats>({
     movies: 0,
     tvShows: 0,
@@ -202,6 +204,27 @@ function Dashboard() {
             {/* Left column */}
             {/* lg:px-2/-mx-2 makes room for the quick actions' -m-2 hover margin, so the column never scrolls sideways */}
             <div className="shrink-0 flex flex-col gap-3 md:gap-6 lg:min-h-0 lg:overflow-y-auto lg:overflow-x-hidden lg:px-2 lg:-mx-2 lg:pb-8">
+              {/* Who's signed in: account badge (opens the Clerk account menu) and name, Settings on the right */}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Double Clerk's default 28px avatar. A style object rather than Tailwind classes:
+                      Tailwind v4's layered utilities lose to Clerk's own unlayered styles. */}
+                  <UserButton
+                    appearance={{ elements: { avatarBox: { width: "3.5rem", height: "3.5rem" } } }}
+                  />
+                  <p className="text-lg font-semibold text-white truncate">
+                    {user?.username || user?.firstName || "Welcome"}
+                  </p>
+                </div>
+                <Link
+                  to="/settings"
+                  className="shrink-0 flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-md transition-colors"
+                >
+                  <FaCog className="w-4 h-4" />
+                  Settings
+                </Link>
+              </div>
+
               {/* Spending This Month and Last Month */}
               <div className="bg-linear-to-br from-green-600 to-green-700 rounded-lg shadow-lg p-3 md:p-6">
                 <div className="grid grid-cols-2 divide-x divide-green-500">
@@ -284,45 +307,35 @@ function Dashboard() {
 
             {/* Right column: Recently Added */}
             {recentItems.length > 0 && (
-              <div className="flex-1 min-h-48 lg:min-h-0 flex flex-col pb-4 md:pb-8">
-                <div className="shrink-0 flex justify-between items-center mb-3 md:mb-4">
-                  <h2 className="text-2xl font-bold">Recently Added</h2>
-                  <Link
-                    to="/library"
-                    className="text-indigo-400 hover:text-indigo-300 transition-colors"
-                  >
-                    View All →
-                  </Link>
-                </div>
+              <div className="flex-1 min-h-48 lg:min-h-0 flex flex-col pb-6 md:pb-8">
+                {/* pb-6 on mobile matches the 24px above the content (pt-2 + mt-4) */}
+                <h2 className="shrink-0 text-2xl font-bold mb-3 md:mb-4">Recently Added</h2>
                 <div className="min-h-0 bg-gray-800 rounded-lg shadow-lg overflow-y-auto">
                   <div className="divide-y divide-gray-700">
                     {recentItems.map((item) => (
                       <Link
                         key={item.key}
                         to={item.to}
-                        className="flex items-center justify-between p-4 hover:bg-gray-700 transition-colors"
+                        className="flex items-center gap-3 p-4 hover:bg-gray-700 transition-colors"
                       >
-                        <div className="flex-1 min-w-0 flex items-center gap-3">
-                          {/* Same icons as the sidebar's Movies and TV Shows items */}
-                          {item.isTv ? (
-                            <FaTv
-                              className="w-5 h-5 shrink-0 text-gray-400"
-                              title="TV show"
-                            />
-                          ) : (
-                            <FaFilm
-                              className="w-5 h-5 shrink-0 text-gray-400"
-                              title="Movie"
-                            />
-                          )}
-                          <h3
-                            className="min-w-0 text-lg font-semibold text-white truncate"
-                            title={item.title}
-                          >
-                            {item.title}
-                          </h3>
-                        </div>
-                        <div className="text-gray-400">→</div>
+                        {/* Same icons as the sidebar's Movies and TV Shows items */}
+                        {item.isTv ? (
+                          <FaTv
+                            className="w-5 h-5 shrink-0 text-gray-400"
+                            title="TV show"
+                          />
+                        ) : (
+                          <FaFilm
+                            className="w-5 h-5 shrink-0 text-gray-400"
+                            title="Movie"
+                          />
+                        )}
+                        <h3
+                          className="min-w-0 text-lg font-semibold text-white truncate"
+                          title={item.title}
+                        >
+                          {item.title}
+                        </h3>
                       </Link>
                     ))}
                   </div>
