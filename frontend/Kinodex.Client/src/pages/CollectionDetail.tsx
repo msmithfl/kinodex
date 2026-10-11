@@ -434,21 +434,6 @@ function CollectionDetail() {
                         />
                       </div>
                     </div>
-                    {listItems.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400">
-                        <span>{listItems.length} total in checklist</span>
-                        <span>•</span>
-                        <span
-                          className={
-                            completionPercentage === 100
-                              ? "text-green-400 font-semibold"
-                              : ""
-                          }
-                        >
-                          {completionPercentage}% complete
-                        </span>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -463,7 +448,7 @@ function CollectionDetail() {
               <div
                 className={
                   viewMode === "poster"
-                    ? "grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-1.5 md:gap-y-10"
+                    ? "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8"
                     : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2"
                 }
               >
@@ -471,7 +456,7 @@ function CollectionDetail() {
                   .sort((a, b) => a.year - b.year)
                   .map((movie) =>
                     viewMode === "poster" ? (
-                      <MoviePosterCard key={movie.id} movie={movie} />
+                      <MoviePosterCard key={movie.id} movie={movie} captionBelow />
                     ) : (
                       <MovieDetailCard key={movie.id} movie={movie} showYear />
                     ),
@@ -581,15 +566,26 @@ function CollectionDetail() {
               {/* List Items */}
               {listItems.length > 0 ? (
                 <div>
-                  <h3 className="text-lg font-semibold mb-3">
-                    Checklist (
-                    {
-                      listItems.filter((item) =>
-                        isMovieOwned(item.title, item.year),
-                      ).length
-                    }{" "}
-                    of {listItems.length})
-                  </h3>
+                  <div className="flex items-baseline justify-between gap-3 mb-3">
+                    <h3 className="text-lg font-semibold">
+                      Checklist (
+                      {
+                        listItems.filter((item) =>
+                          isMovieOwned(item.title, item.year),
+                        ).length
+                      }{" "}
+                      of {listItems.length})
+                    </h3>
+                    <span
+                      className={`text-sm ${
+                        completionPercentage === 100
+                          ? "text-green-400 font-semibold"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {completionPercentage}% complete
+                    </span>
+                  </div>
                   <div className="space-y-2 overflow-y-auto max-h-96">
                     {listItems
                       .sort((a, b) => a.year - b.year)

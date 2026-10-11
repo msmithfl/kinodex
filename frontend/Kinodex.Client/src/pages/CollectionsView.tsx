@@ -72,13 +72,6 @@ function CollectionsView() {
     }
   };
 
-  const getMovieCount = (collectionName: string) => {
-    return movies.filter(
-      (movie) =>
-        movie.collections && movie.collections.includes(collectionName),
-    ).length;
-  };
-
   // Cover for a collection's card: the earliest-released movie in it that has a poster
   const getCoverPath = (collectionName: string) =>
     movies
@@ -175,7 +168,6 @@ function CollectionsView() {
                     {collections
                       .filter((c) => !c.isDirectorCollection)
                       .map((collection) => {
-                        const movieCount = getMovieCount(collection.name);
                         const completionPercentage = getCompletionPercentage(
                           collection.id,
                           collection.name,
@@ -185,12 +177,9 @@ function CollectionsView() {
                           <CollectionCard
                             key={collection.id}
                             collection={collection}
-                            movieCount={movieCount}
                             completionPercentage={
                               settings.showCollectionCompletion ? completionPercentage : null
                             }
-                            urlPath="collections"
-                            poster
                             coverPath={getCoverPath(collection.name)}
                           />
                         );
@@ -208,7 +197,6 @@ function CollectionsView() {
                     {collections
                       .filter((c) => c.isDirectorCollection)
                       .map((collection) => {
-                        const movieCount = getMovieCount(collection.name);
                         const completionPercentage = getCompletionPercentage(
                           collection.id,
                           collection.name,
@@ -218,12 +206,9 @@ function CollectionsView() {
                           <CollectionCard
                             key={collection.id}
                             collection={collection}
-                            movieCount={movieCount}
                             completionPercentage={
                               settings.showCollectionCompletion ? completionPercentage : null
                             }
-                            urlPath="collections"
-                            poster
                             coverPath={getCoverPath(collection.name)}
                           />
                         );
