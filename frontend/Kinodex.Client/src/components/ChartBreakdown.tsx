@@ -8,6 +8,8 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { PieLabelRenderProps } from "recharts";
+import ViewToggle from "./ViewToggle";
+import { CHART_VIEW_OPTIONS } from "../utils/viewOptions";
 
 function renderCustomLabel({
   cx,
@@ -120,23 +122,14 @@ export default function ChartBreakdown({
   return (
     <div className="bg-gray-800 rounded-lg p-6">
       {/* min-h-9 matches the Monthly Spending header, whose month pickers make it taller */}
-      {/* Styled to mirror the Monthly Spending header and its From/To pickers */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4 min-h-9 pb-3 border-b border-gray-700">
         <h2 className="text-xl font-semibold">{title}</h2>
-        <div className="flex items-center gap-3 text-sm">
-          <label htmlFor={`${storageKey}-view`} className="text-gray-400">
-            View
-          </label>
-          <select
-            id={`${storageKey}-view`}
-            value={showTable ? "table" : "donut"}
-            onChange={(e) => setShowTable(e.target.value === "table")}
-            className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
-          >
-            <option value="donut">Donut</option>
-            <option value="table">Table</option>
-          </select>
-        </div>
+        {/* Donut / table, with the same pill switch as the Movies and TV Shows lists */}
+        <ViewToggle
+          value={showTable ? "table" : "donut"}
+          options={CHART_VIEW_OPTIONS}
+          onChange={(view) => setShowTable(view === "table")}
+        />
       </div>
       <div className="flex flex-col md:flex-row gap-4">
         {/* Dataset picker; a divider separates it from the chart (below it on mobile, beside it from tablet up) */}

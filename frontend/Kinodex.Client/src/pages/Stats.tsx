@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
 import {
@@ -306,20 +306,33 @@ function Stats() {
             {/* Scope */}
             <div className="flex justify-center md:justify-start mb-4">
               <div className="inline-flex bg-gray-800 rounded-lg p-0.5">
-                {SCOPES.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setScope(s.id)}
-                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition cursor-pointer ${
-                      scope === s.id
-                        ? "bg-indigo-600 text-white"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
+                {SCOPES.map((s, index) => {
+                  // Light dividers between options, hidden beside the selected one (as in the sub-navigation).
+                  // `invisible` keeps their space so the options don't shift.
+                  const besideActive =
+                    scope === s.id || (index > 0 && scope === SCOPES[index - 1].id);
+                  return (
+                    <Fragment key={s.id}>
+                      {index > 0 && (
+                        <span
+                          aria-hidden="true"
+                          className={`shrink-0 self-center w-px h-4 bg-white/15 ${besideActive ? "invisible" : ""}`}
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setScope(s.id)}
+                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition cursor-pointer ${
+                          scope === s.id
+                            ? "bg-indigo-600 text-white"
+                            : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    </Fragment>
+                  );
+                })}
               </div>
             </div>
 

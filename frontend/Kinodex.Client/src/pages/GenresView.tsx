@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
-import CollectionCard from "../components/CollectionCard";
+import GenreCard, { GENRE_OVERLAYS } from "../components/GenreCard";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
@@ -56,6 +56,23 @@ function GenresView() {
     ).length;
   };
 
+  // Artwork for each genre's card: the highest-rated movie in it with an image, skipping movies
+  // already used for an earlier genre so the same film doesn't repeat. Wide backdrops suit the
+  // wide cards, so they're preferred over posters.
+  const genreImages: Record<string, string | undefined> = {};
+  const usedMovieIds = new Set<number | undefined>();
+  const imageOf = (m: Movie) => m.backdropPath || m.posterPath;
+  for (const genre of genres) {
+    const candidates = movies
+      .filter((m) => m.genres?.includes(genre) && imageOf(m))
+      .sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title));
+    const pick = candidates.find((m) => !usedMovieIds.has(m.id)) ?? candidates[0];
+    if (pick) {
+      usedMovieIds.add(pick.id);
+      genreImages[genre] = imageOf(pick);
+    }
+  }
+
   if (loading) {
     return (
       <>
@@ -74,18 +91,15 @@ function GenresView() {
             <EmptyState message="No genres yet." />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {genres.map((genre) => {
-                const movieCount = getMovieCount(genre);
-                return (
-                  <CollectionCard
-                    key={genre}
-                    collection={{ id: 0, name: genre }}
-                    movieCount={movieCount}
-                    completionPercentage={null}
-                    urlPath="genres"
-                  />
-                );
-              })}
+              {genres.map((genre, index) => (
+                <GenreCard
+                  key={genre}
+                  name={genre}
+                  movieCount={getMovieCount(genre)}
+                  imagePath={genreImages[genre]}
+                  overlay={GENRE_OVERLAYS[index % GENRE_OVERLAYS.length]}
+                />
+              ))}
             </div>
           )}
         </div>
