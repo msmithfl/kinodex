@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import type { Movie, TvShow } from "../types";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
-import { allFormats } from "../utils/tvShowPurchases";
 import {
   monthKey,
   movieSpend,
@@ -20,13 +19,9 @@ import {
   FaCog,
 } from "react-icons/fa";
 import { AddItemModal } from "../components/AddItemModal";
+import AccountMenuButton from "../components/AccountMenuButton";
 
 interface Stats {
-  movies: number;
-  tvShows: number;
-  dvd: number;
-  bluray: number;
-  fourK: number;
   thisMonth: MonthSpend;
   lastMonth: MonthSpend;
 }
@@ -62,19 +57,10 @@ function getMonthSpend(entries: SpendEntry[], monthStart: Date): MonthSpend {
   };
 }
 
-// Best format first: 4K < Blu-ray < DVD alphabetically
-const highestFormat = (formats: string[]) =>
-  formats.length > 0 ? [...formats].sort()[0] : "";
-
 function Dashboard() {
   const { getToken } = useAuth();
   const { user } = useUser();
   const [stats, setStats] = useState<Stats>({
-    movies: 0,
-    tvShows: 0,
-    dvd: 0,
-    bluray: 0,
-    fourK: 0,
     thisMonth: { label: "", spend: 0, count: 0 },
     lastMonth: { label: "", spend: 0, count: 0 },
   });
@@ -114,18 +100,7 @@ function Dashboard() {
       const now = new Date();
       const spend = [...movieSpend(movies), ...tvSpend(shows)];
 
-      // Format cards count every movie and show by its best format
-      const bestFormats = [
-        ...movies.map((m) => highestFormat(m.formats)),
-        ...shows.map((s) => highestFormat(allFormats(s.purchases))),
-      ];
-
       setStats({
-        movies: movies.length,
-        tvShows: shows.length,
-        dvd: bestFormats.filter((f) => f === "DVD").length,
-        bluray: bestFormats.filter((f) => f === "Blu-ray").length,
-        fourK: bestFormats.filter((f) => f === "4K").length,
         thisMonth: getMonthSpend(
           spend,
           new Date(now.getFullYear(), now.getMonth()),
@@ -136,7 +111,7 @@ function Dashboard() {
         ),
       });
 
-      // 10 most recently added movies and shows
+      // 20 most recently added movies and shows; enough to fill the list, which scrolls if longer
       const recent: RecentItem[] = [
         ...movies.map((m) => ({
           key: `movie-${m.id}`,
@@ -159,7 +134,7 @@ function Dashboard() {
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
         })
-        .slice(0, 10);
+        .slice(0, 20);
       setRecentItems(recent);
     } catch (error) {
       console.error("Error loading dashboard:", error);
@@ -168,24 +143,6 @@ function Dashboard() {
     }
   };
 
-  // The collection section has two rows: titles, then disc formats
-  const titleCounts = [
-    { label: "Movies", value: stats.movies },
-    { label: "TV Shows", value: stats.tvShows },
-  ];
-  const formatCounts = [
-    { label: "DVD", value: stats.dvd },
-    { label: "Blu-ray", value: stats.bluray },
-    { label: "4K Ultra HD", value: stats.fourK },
-  ];
-
-  // Same figure style as the Stats page's summary cards: number on top, small grey label below
-  const countCell = ({ label, value }: { label: string; value: number }) => (
-    <div key={label} className="px-2 min-w-0">
-      <p className="text-lg font-semibold text-white">{value}</p>
-      <p className="text-gray-400 text-xs truncate">{label}</p>
-    </div>
-  );
 
   return (
     <div
@@ -204,14 +161,22 @@ function Dashboard() {
             {/* Left column */}
             {/* lg:px-2/-mx-2 makes room for the quick actions' -m-2 hover margin, so the column never scrolls sideways */}
             <div className="shrink-0 flex flex-col gap-3 md:gap-6 lg:min-h-0 lg:overflow-y-auto lg:overflow-x-hidden lg:px-2 lg:-mx-2 lg:pb-8">
-              {/* Who's signed in: account badge (opens the Clerk account menu) and name, Settings on the right */}
-              <div className="flex items-center justify-between gap-4">
+              {/* Who's signed in: account badge (opens the Clerk account menu) and name, Settings on the right.
+                  mb-2 on phones adds to the column's 12px gap so the row has room to breathe */}
+              <div className="flex items-center justify-between gap-4 mb-2 md:mb-0">
                 <div className="flex items-center gap-3 min-w-0">
-                  {/* Double Clerk's default 28px avatar. A style object rather than Tailwind classes:
-                      Tailwind v4's layered utilities lose to Clerk's own unlayered styles. */}
-                  <UserButton
-                    appearance={{ elements: { avatarBox: { width: "3.5rem", height: "3.5rem" } } }}
-                  />
+                  {/* Mobile and tablet: Clerk's own button, at double its default 28px. A style object
+                      rather than Tailwind classes: Tailwind v4's layered utilities lose to Clerk's
+                      own unlayered styles. */}
+                  <div className="lg:hidden flex">
+                    <UserButton
+                      appearance={{ elements: { avatarBox: { width: "3.5rem", height: "3.5rem" } } }}
+                    />
+                  </div>
+                  {/* Desktop: same size, but its account menu opens to the right */}
+                  <div className="hidden lg:flex">
+                    <AccountMenuButton size={56} />
+                  </div>
                   <p className="text-lg font-semibold text-white truncate">
                     {user?.username || user?.firstName || "Welcome"}
                   </p>
@@ -250,15 +215,6 @@ function Dashboard() {
                 </div>
               </div>
 
-              {/* Collection breakdown: one section, titles on top and disc formats below */}
-              <div className="bg-gray-800 rounded-lg shadow-lg p-5 text-center">
-                <div className="grid grid-cols-2 divide-x divide-gray-700">
-                  {titleCounts.map(countCell)}
-                </div>
-                <div className="grid grid-cols-3 divide-x divide-gray-700 border-t border-gray-700 mt-3 pt-3">
-                  {formatCounts.map(countCell)}
-                </div>
-              </div>
 
               {/* Quick Actions */}
               {/* Mobile: three cards fit across and the rest scroll. Tablet: four in a row. Desktop: a 2x2 grid in the left column. Padding leaves room for the hover scale. */}
@@ -310,7 +266,8 @@ function Dashboard() {
               <div className="flex-1 min-h-48 lg:min-h-0 flex flex-col pb-6 md:pb-8">
                 {/* pb-6 on mobile matches the 24px above the content (pt-2 + mt-4) */}
                 <h2 className="shrink-0 text-2xl font-bold mb-3 md:mb-4">Recently Added</h2>
-                <div className="min-h-0 bg-gray-800 rounded-lg shadow-lg overflow-y-auto">
+                {/* flex-1 fills the space down to the bottom of the screen; the rows scroll inside it */}
+                <div className="flex-1 min-h-0 bg-gray-800 rounded-lg shadow-lg overflow-y-auto">
                   <div className="divide-y divide-gray-700">
                     {recentItems.map((item) => (
                       <Link

@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
 import {
@@ -15,14 +15,6 @@ import type { Movie, TvShow } from "../types";
 import ChartBreakdown from "../components/ChartBreakdown";
 import { allFormats } from "../utils/tvShowPurchases";
 import { movieSpend, tvSpend } from "../utils/spending";
-
-type Scope = "all" | "movies" | "tv";
-
-const SCOPES: { id: Scope; label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "movies", label: "Movies" },
-  { id: "tv", label: "TV Shows" },
-];
 
 // The fields the charts read, shared by movies and TV shows
 interface StatItem {
@@ -62,10 +54,6 @@ function Stats() {
   const { getToken } = useAuth();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [shows, setShows] = useState<TvShow[]>([]);
-  const [scope, setScope] = useState<Scope>(() => {
-    const saved = localStorage.getItem("statsScope");
-    return saved === "movies" || saved === "tv" ? saved : "all";
-  });
   const [startMonth, setStartMonth] = useState(
     () => localStorage.getItem("statsMonthlySpendStart") || "",
   );
@@ -108,30 +96,15 @@ function Stats() {
     fetchData();
   }, []);
 
-  // Save the scope and monthly spending range to localStorage
-  useEffect(() => {
-    localStorage.setItem("statsScope", scope);
-  }, [scope]);
-
+  // Save the monthly spending range to localStorage
   useEffect(() => {
     localStorage.setItem("statsMonthlySpendStart", startMonth);
     localStorage.setItem("statsMonthlySpendEnd", endMonth);
   }, [startMonth, endMonth]);
 
-  const items: StatItem[] = [
-    ...(scope !== "tv" ? movies.map(movieItem) : []),
-    ...(scope !== "movies" ? shows.map(tvItem) : []),
-  ];
-  const allSpend = [...movieSpend(movies), ...tvSpend(shows)];
-  const spend = allSpend.filter(
-    (e) =>
-      scope === "all" ||
-      (scope === "movies" && e.kind === "movie") ||
-      (scope === "tv" && e.kind === "tv"),
-  );
-
-  const itemNoun =
-    scope === "movies" ? "Movies" : scope === "tv" ? "TV Shows" : "Titles";
+  // Every stat covers movies and TV shows together
+  const items: StatItem[] = [...movies.map(movieItem), ...shows.map(tvItem)];
+  const spend = [...movieSpend(movies), ...tvSpend(shows)];
 
   const watched = items.filter((m) => m.hasWatched).length;
   const notWatched = items.length - watched;
@@ -221,7 +194,7 @@ function Stats() {
 
   const totalSpend = spend.reduce((sum, e) => sum + e.amount, 0);
   const sumSpend = (kind: "movie" | "tv") =>
-    allSpend.filter((e) => e.kind === kind).reduce((sum, e) => sum + e.amount, 0);
+    spend.filter((e) => e.kind === kind).reduce((sum, e) => sum + e.amount, 0);
   const ratedItems = items.filter((m) => m.rating > 0);
   const avgRating =
     ratedItems.length > 0
@@ -253,9 +226,7 @@ function Stats() {
     spend.forEach((e) => {
       counts[e.month] = (counts[e.month] || 0) + e.amount;
     });
-    // The month range spans movies and TV together, so switching scope keeps the same
-    // From/To options and a saved range; months with nothing in scope show as $0
-    const keys = [...new Set(allSpend.map((e) => e.month))].sort();
+    const keys = [...new Set(spend.map((e) => e.month))].sort();
     if (keys.length === 0) return [];
 
     // Include every month from the first to the last, so a month with no spending shows as $0
@@ -303,42 +274,9 @@ function Stats() {
           <LoadingSpinner />
         ) : (
           <>
-            {/* Scope */}
-            <div className="flex justify-center md:justify-start mb-4">
-              <div className="inline-flex bg-gray-800 rounded-lg p-0.5">
-                {SCOPES.map((s, index) => {
-                  // Light dividers between options, hidden beside the selected one (as in the sub-navigation).
-                  // `invisible` keeps their space so the options don't shift.
-                  const besideActive =
-                    scope === s.id || (index > 0 && scope === SCOPES[index - 1].id);
-                  return (
-                    <Fragment key={s.id}>
-                      {index > 0 && (
-                        <span
-                          aria-hidden="true"
-                          className={`shrink-0 self-center w-px h-4 bg-white/15 ${besideActive ? "invisible" : ""}`}
-                        />
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setScope(s.id)}
-                        className={`px-4 py-1.5 text-sm font-medium rounded-md transition cursor-pointer ${
-                          scope === s.id
-                            ? "bg-indigo-600 text-white"
-                            : "text-gray-400 hover:text-white"
-                        }`}
-                      >
-                        {s.label}
-                      </button>
-                    </Fragment>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Summary cards: spending, collection, ratings. Stacked until desktop, where they share a row at equal height */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4 md:mb-10">
-              {/* Total Spent, with the Movies / TV split on All */}
+              {/* Total Spent, with the Movies / TV split */}
               <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5">
                 <div className="text-center">
                   <p className="text-gray-400 text-sm mb-1">Total Spent</p>
@@ -346,26 +284,21 @@ function Stats() {
                     ${totalSpend.toFixed(2)}
                   </p>
                 </div>
-                {scope === "all" && (
-                  <div className="grid grid-cols-2 divide-x divide-gray-700 border-t border-gray-700 mt-3 pt-3 text-center">
-                    {summaryStat("Movies", `$${sumSpend("movie").toFixed(2)}`)}
-                    {summaryStat("TV Shows", `$${sumSpend("tv").toFixed(2)}`)}
-                  </div>
-                )}
+                <div className="grid grid-cols-2 divide-x divide-gray-700 border-t border-gray-700 mt-3 pt-3 text-center">
+                  {summaryStat("Movies", `$${sumSpend("movie").toFixed(2)}`)}
+                  {summaryStat("TV Shows", `$${sumSpend("tv").toFixed(2)}`)}
+                </div>
               </div>
 
-              {/* Collection: the title count, the Movies / TV split (on All), and how many are on Jellyfin */}
+              {/* Collection: the title count, the Movies / TV split, and how many are on Jellyfin */}
               <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5">
                 <div className="text-center">
-                  <p className="text-gray-400 text-sm mb-1">Total {itemNoun}</p>
+                  <p className="text-gray-400 text-sm mb-1">Total Titles</p>
                   <p className="text-4xl font-bold text-white">{items.length}</p>
                 </div>
-                {/* On Movies or TV Shows the split would just repeat the total, so only On Jellyfin shows */}
-                <div
-                  className={`grid ${scope === "all" ? "grid-cols-3" : "grid-cols-1"} divide-x divide-gray-700 border-t border-gray-700 mt-3 pt-3 text-center`}
-                >
-                  {scope === "all" && summaryStat("Movies", movies.length)}
-                  {scope === "all" && summaryStat("TV Shows", shows.length)}
+                <div className="grid grid-cols-3 divide-x divide-gray-700 border-t border-gray-700 mt-3 pt-3 text-center">
+                  {summaryStat("Movies", movies.length)}
+                  {summaryStat("TV Shows", shows.length)}
                   {summaryStat("On Jellyfin", onPlexCount, "text-indigo-400")}
                 </div>
               </div>
@@ -391,7 +324,7 @@ function Stats() {
                         borderRadius: "8px",
                         color: "#fff",
                       }}
-                      formatter={(value: number | undefined) => [value ?? 0, itemNoun]}
+                      formatter={(value: number | undefined) => [value ?? 0, "Titles"]}
                       labelFormatter={(label) => `★ ${label}`}
                     />
                     <Bar
@@ -487,13 +420,7 @@ function Stats() {
               <ChartBreakdown
                 title="Collection Breakdown"
                 storageKey="statsBreakdown"
-                countLabel={(n) =>
-                  scope === "movies"
-                    ? `${n} movie${n !== 1 ? "s" : ""}`
-                    : scope === "tv"
-                      ? `${n} TV show${n !== 1 ? "s" : ""}`
-                      : `${n} title${n !== 1 ? "s" : ""}`
-                }
+                countLabel={(n) => `${n} title${n !== 1 ? "s" : ""}`}
                 options={[
                   { id: "watched", label: "Watched", data: watchedData, colors: WATCHED_COLORS },
                   { id: "formats", label: "Formats", data: formatData, colors: FORMAT_COLORS },
