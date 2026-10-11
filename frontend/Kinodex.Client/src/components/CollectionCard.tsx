@@ -14,6 +14,45 @@ interface CollectionCardProps {
   coverPath?: string;
 }
 
+// A small circular progress ring with the percentage in the middle
+function CompletionRing({ percent }: { percent: number }) {
+  const radius = 15;
+  const circumference = 2 * Math.PI * radius;
+  const filled = (Math.min(Math.max(percent, 0), 100) / 100) * circumference;
+
+  return (
+    <div
+      className="relative w-9 h-9 rounded-full bg-gray-900/80 shadow"
+      title={`${percent}% complete`}
+      aria-label={`${percent}% complete`}
+    >
+      <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+        <circle
+          cx="18"
+          cy="18"
+          r={radius}
+          fill="none"
+          strokeWidth="3"
+          className="stroke-gray-600"
+        />
+        <circle
+          cx="18"
+          cy="18"
+          r={radius}
+          fill="none"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={`${filled} ${circumference}`}
+          className="stroke-indigo-500 transition-all duration-300"
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white">
+        {percent}%
+      </span>
+    </div>
+  );
+}
+
 function CollectionCard({
   collection,
   movieCount,
@@ -23,13 +62,6 @@ function CollectionCard({
   coverPath,
 }: CollectionCardProps) {
   if (poster) {
-    const details = [
-      `${movieCount} movie${movieCount !== 1 ? "s" : ""}`,
-      completionPercentage !== null ? `${completionPercentage}% complete` : null,
-    ]
-      .filter(Boolean)
-      .join(" · ");
-
     return (
       <Link
         to={`/${urlPath}/${encodeURIComponent(collection.name)}`}
@@ -53,17 +85,10 @@ function CollectionCard({
           )}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-200 pointer-events-none" />
 
-          <span className="absolute top-1.5 right-1.5 bg-indigo-600 text-white px-2 py-0.5 rounded-full text-xs font-medium shadow">
-            {movieCount}
-          </span>
-
-          {/* Completion along the bottom edge, when the collection has a checklist */}
+          {/* Completion ring in the top-right corner, when the collection has a checklist */}
           {completionPercentage !== null && (
-            <div className="absolute bottom-0 inset-x-0 h-1.5 bg-gray-900/70">
-              <div
-                className="h-full bg-indigo-500 transition-all duration-300"
-                style={{ width: `${completionPercentage}%` }}
-              />
+            <div className="absolute top-1.5 right-1.5">
+              <CompletionRing percent={completionPercentage} />
             </div>
           )}
         </div>
@@ -73,7 +98,6 @@ function CollectionCard({
         >
           {collection.name}
         </h3>
-        <p className="text-gray-400 text-xs mt-0.5 truncate">{details}</p>
       </Link>
     );
   }

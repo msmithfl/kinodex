@@ -20,6 +20,7 @@ function CollectionsView() {
   const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
   const [showCreateInput, setShowCreateInput] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState("");
+  const [newIsDirector, setNewIsDirector] = useState(false);
   const [collectionListItems, setCollectionListItems] = useState<
     Record<number, CollectionListItem[]>
   >({});
@@ -99,6 +100,13 @@ function CollectionsView() {
     return Math.round((ownedCount / listItems.length) * 100);
   };
 
+  // Closing the new-collection modal also resets it for next time
+  const closeCreateModal = () => {
+    setShowCreateInput(false);
+    setNewCollectionName("");
+    setNewIsDirector(false);
+  };
+
   const createCollection = async () => {
     if (
       newCollectionName &&
@@ -112,7 +120,10 @@ function CollectionsView() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ name: newCollectionName }),
+          body: JSON.stringify({
+            name: newCollectionName,
+            isDirectorCollection: newIsDirector,
+          }),
         });
 
         if (response.ok) {
@@ -122,8 +133,7 @@ function CollectionsView() {
               a.name.localeCompare(b.name),
             ),
           );
-          setNewCollectionName("");
-          setShowCreateInput(false);
+          closeCreateModal();
         }
       } catch (error) {
         console.error("Error creating collection:", error);
@@ -222,10 +232,7 @@ function CollectionsView() {
       {showCreateInput && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-          onClick={() => {
-            setShowCreateInput(false);
-            setNewCollectionName("");
-          }}
+          onClick={closeCreateModal}
         >
           <div
             className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4"
@@ -241,6 +248,16 @@ function CollectionsView() {
               autoFocus
               className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
             />
+            {/* Same option as editing a collection, so it can be set up front */}
+            <label className="flex items-center gap-2 text-gray-300 cursor-pointer mb-4">
+              <input
+                type="checkbox"
+                checked={newIsDirector}
+                onChange={(e) => setNewIsDirector(e.target.checked)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span>Director Collection</span>
+            </label>
             <div className="flex gap-3">
               <button
                 onClick={createCollection}
@@ -249,10 +266,7 @@ function CollectionsView() {
                 Create
               </button>
               <button
-                onClick={() => {
-                  setShowCreateInput(false);
-                  setNewCollectionName("");
-                }}
+                onClick={closeCreateModal}
                 className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
               >
                 Cancel
