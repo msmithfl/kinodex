@@ -17,6 +17,14 @@ export function buildFilterCategories(
       ],
     },
     {
+      // Every genre that appears in the collection
+      id: 'genre',
+      label: 'Genre',
+      options: Array.from(new Set(movies.flatMap(m => m.genres ?? [])))
+        .sort()
+        .map(genre => ({ label: genre, value: genre })),
+    },
+    {
       id: 'condition',
       label: 'Condition',
       options: Array.from(new Set(movies.map(m => m.condition)))
