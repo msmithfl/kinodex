@@ -9,7 +9,7 @@ import { IoCameraOutline } from "react-icons/io5";
 import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import { FaPlus, FaMinus } from "react-icons/fa6";
 import { Genres, type Movie } from "../types";
-import ImagePicker from "./ImagePicker";
+import { useImagePicker } from "./useImagePicker";
 
 interface MovieFormProps {
   formData: Movie;
@@ -57,6 +57,21 @@ function MovieForm({
 }: MovieFormProps) {
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [validationError, setValidationError] = useState<string>("");
+  // TMDB poster and backdrop choosers for the Images tab
+  const posterPicker = useImagePicker({
+    kind: "movie",
+    imageType: "poster",
+    tmdbId: formData.tmdbId,
+    selected: formData.posterPath,
+    onSelect: (posterPath) => setFormData((prev) => ({ ...prev, posterPath })),
+  });
+  const backdropPicker = useImagePicker({
+    kind: "movie",
+    imageType: "backdrop",
+    tmdbId: formData.tmdbId,
+    selected: formData.backdropPath,
+    onSelect: (backdropPath) => setFormData((prev) => ({ ...prev, backdropPath })),
+  });
   const [yearInput, setYearInput] = useState<string>(formData.year.toString());
   const [shelfInput, setShelfInput] = useState<string>(
     formData.shelfNumber.toString(),
@@ -812,19 +827,11 @@ function MovieForm({
                   placeholder="https://example.com/movie-poster.jpg"
                   className={inputClass}
                 />
-                {/* Swap in another of TMDB's posters for this movie; keyed so a new TMDB ID starts it fresh */}
-                <div className="mt-2">
-                  <ImagePicker
-                    key={formData.tmdbId ?? "none"}
-                    kind="movie"
-                    imageType="poster"
-                    tmdbId={formData.tmdbId}
-                    selected={formData.posterPath}
-                    onSelect={(posterPath) => setFormData({ ...formData, posterPath })}
-                  />
-                </div>
+                {/* Swap in another of TMDB's posters; the grid opens full width below this row */}
+                <div className="mt-2">{posterPicker.button}</div>
               </div>
             </div>
+            {posterPicker.grid}
 
             {/* Backdrop: wide preview beside the URL and the TMDB backdrop picker */}
             <div className="flex gap-4 items-start">
@@ -856,19 +863,11 @@ function MovieForm({
                   placeholder="https://example.com/backdrop.jpg"
                   className={inputClass}
                 />
-                {/* Swap in another of TMDB's backdrops for this movie; keyed so a new TMDB ID starts it fresh */}
-                <div className="mt-2">
-                  <ImagePicker
-                    key={formData.tmdbId ?? "none"}
-                    kind="movie"
-                    imageType="backdrop"
-                    tmdbId={formData.tmdbId}
-                    selected={formData.backdropPath}
-                    onSelect={(backdropPath) => setFormData({ ...formData, backdropPath })}
-                  />
-                </div>
+                {/* Swap in another of TMDB's backdrops; the grid opens full width below this row */}
+                <div className="mt-2">{backdropPicker.button}</div>
               </div>
             </div>
+            {backdropPicker.grid}
             {/* Product Poster: field at the top beside the preview, like the poster row */}
             <div className="flex gap-4 items-start">
               <div className="w-24 h-36 rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
