@@ -16,8 +16,9 @@ import {
   FaRegCircle,
   FaCheckCircle,
 } from "react-icons/fa";
-import { FaMagnifyingGlass, FaCheck, FaTableList } from "react-icons/fa6";
-import { FaImage } from "react-icons/fa";
+import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
+import ViewToggle from "../components/ViewToggle";
+import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
 import MoviePosterCard from "../components/MovieCardPoster";
 import { LuTable2 } from "react-icons/lu";
 import { MdClose } from "react-icons/md";
@@ -456,31 +457,12 @@ function MovieList() {
                     <Counter count={filteredMovies.length} />
                   </div>
 
-                  {/* Table / poster view, styled like the other pill switches */}
-                  <div className="inline-flex bg-gray-800 rounded-lg p-0.5 shrink-0">
-                    {(
-                      [
-                        { id: "table", label: "Table view", icon: FaTableList },
-                        { id: "poster", label: "Poster view", icon: FaImage },
-                      ] as const
-                    ).map(({ id, label, icon: Icon }) => (
-                      <button
-                        key={id}
-                        type="button"
-                        onClick={() => handleViewModeChange(id)}
-                        aria-pressed={viewMode === id}
-                        title={label}
-                        aria-label={label}
-                        className={`px-3 py-1.5 rounded-md transition cursor-pointer ${
-                          viewMode === id
-                            ? "bg-indigo-600 text-white"
-                            : "text-gray-400 hover:text-white"
-                        }`}
-                      >
-                        <Icon className="w-4 h-4" />
-                      </button>
-                    ))}
-                  </div>
+                  {/* Table / poster view */}
+                  <ViewToggle
+                    value={viewMode}
+                    options={TABLE_VIEW_OPTIONS}
+                    onChange={handleViewModeChange}
+                  />
                 </div>
               ) : (
                 <div className="flex items-center justify-between py-1 px-3 md:px-6 bg-yellow-900/30 border border-yellow-600 rounded-lg">

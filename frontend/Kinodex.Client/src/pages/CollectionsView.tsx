@@ -5,6 +5,7 @@ import type { CollectionListItem } from "../types";
 import CollectionCard from "../components/CollectionCard";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
+import { useSettings } from "../settings/useSettings";
 import type { Movie, Collection } from "../types";
 
 // Same grid as the movie list's poster view
@@ -13,6 +14,8 @@ const POSTER_GRID =
 
 function CollectionsView() {
   const { getToken } = useAuth();
+  // "Show completion on collection posters" from the Settings page
+  const { settings } = useSettings();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
@@ -183,7 +186,9 @@ function CollectionsView() {
                             key={collection.id}
                             collection={collection}
                             movieCount={movieCount}
-                            completionPercentage={completionPercentage}
+                            completionPercentage={
+                              settings.showCollectionCompletion ? completionPercentage : null
+                            }
                             urlPath="collections"
                             poster
                             coverPath={getCoverPath(collection.name)}
@@ -214,7 +219,9 @@ function CollectionsView() {
                             key={collection.id}
                             collection={collection}
                             movieCount={movieCount}
-                            completionPercentage={completionPercentage}
+                            completionPercentage={
+                              settings.showCollectionCompletion ? completionPercentage : null
+                            }
                             urlPath="collections"
                             poster
                             coverPath={getCoverPath(collection.name)}
