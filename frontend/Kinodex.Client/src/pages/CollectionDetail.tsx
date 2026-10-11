@@ -8,8 +8,9 @@ import MovieDetailCard from "../components/MovieCardDetail";
 import MoviePosterCard from "../components/MovieCardPoster";
 import { searchTMDB } from "../utils/tmdbApi";
 import type { TMDBMovie, CollectionListItem } from "../types";
-import { FaTrash, FaCheck, FaImage, FaEllipsisV } from "react-icons/fa";
-import { FaTableList, FaChevronDown, FaChevronUp } from "react-icons/fa6";
+import { FaTrash, FaEllipsisV } from "react-icons/fa";
+import ViewToggle from "../components/ViewToggle";
+import { DETAIL_VIEW_OPTIONS } from "../utils/viewOptions";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
@@ -36,14 +37,12 @@ function CollectionDetail() {
   const [searchResults, setSearchResults] = useState<TMDBMovie[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<number | null>(null);
-  const viewDropdownRef = useRef<HTMLDivElement>(null);
 
   // View mode state
   const [viewMode, setViewMode] = useState<"detail" | "poster">(() => {
     const saved = localStorage.getItem("movieViewMode");
     return saved === "poster" || saved === "detail" ? saved : "detail";
   });
-  const [isViewDropdownOpen, setIsViewDropdownOpen] = useState(false);
 
   // Actions dropdown state
   const [isActionsDropdownOpen, setIsActionsDropdownOpen] = useState(false);
@@ -52,7 +51,6 @@ function CollectionDetail() {
   const handleViewModeChange = (mode: "detail" | "poster") => {
     setViewMode(mode);
     localStorage.setItem("movieViewMode", mode);
-    setIsViewDropdownOpen(false);
   };
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
@@ -63,15 +61,9 @@ function CollectionDetail() {
     fetchMovies();
   }, [collectionName]);
 
-  // Close dropdown when clicking outside
+  // Close the actions menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        viewDropdownRef.current &&
-        !viewDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsViewDropdownOpen(false);
-      }
       if (
         actionsDropdownRef.current &&
         !actionsDropdownRef.current.contains(event.target as Node)
@@ -80,18 +72,17 @@ function CollectionDetail() {
       }
     };
 
-    if (isViewDropdownOpen || isActionsDropdownOpen) {
+    if (isActionsDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }
-  }, [isViewDropdownOpen, isActionsDropdownOpen]);
+  }, [isActionsDropdownOpen]);
 
-  // Close dropdown when editing starts
+  // Close the actions menu when editing starts
   useEffect(() => {
     if (isEditing) {
-      setIsViewDropdownOpen(false);
       setIsActionsDropdownOpen(false);
     }
   }, [isEditing]);
@@ -435,53 +426,12 @@ function CollectionDetail() {
                           )}
                         </div>
                       )}
-                      <div
-                        ref={viewDropdownRef}
-                        className="ml-auto relative mb-2"
-                      >
-                        <button
-                          onClick={() =>
-                            setIsViewDropdownOpen(!isViewDropdownOpen)
-                          }
-                          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm font-medium flex items-center gap-2 cursor-pointer"
-                        >
-                          {viewMode === "poster" ? (
-                            <FaImage className="w-5 h-5" />
-                          ) : (
-                            <FaTableList className="w-5 h-5" />
-                          )}
-                          {isViewDropdownOpen ? (
-                            <FaChevronUp className="w-3 h-3" />
-                          ) : (
-                            <FaChevronDown className="w-3 h-3" />
-                          )}
-                        </button>
-                        {isViewDropdownOpen && (
-                          <div className="absolute right-0 mt-2 w-36 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10">
-                            <button
-                              onClick={() => handleViewModeChange("poster")}
-                              className="w-full px-4 py-3 text-left hover:bg-gray-600 transition-colors flex items-center justify-between border-b border-gray-600 cursor-pointer"
-                            >
-                              <div className="flex items-center gap-3">
-                                <span>Poster View</span>
-                              </div>
-                              {viewMode === "poster" && (
-                                <FaCheck className="w-4 h-4 text-white" />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleViewModeChange("detail")}
-                              className="w-full px-4 py-3 text-left hover:bg-gray-600 transition-colors flex items-center justify-between cursor-pointer"
-                            >
-                              <div className="flex items-center gap-3">
-                                <span>Detail View</span>
-                              </div>
-                              {viewMode === "detail" && (
-                                <FaCheck className="w-4 h-4 text-white" />
-                              )}
-                            </button>
-                          </div>
-                        )}
+                      <div className="ml-auto mb-2">
+                        <ViewToggle
+                          value={viewMode}
+                          options={DETAIL_VIEW_OPTIONS}
+                          onChange={handleViewModeChange}
+                        />
                       </div>
                     </div>
                     {listItems.length > 0 && (

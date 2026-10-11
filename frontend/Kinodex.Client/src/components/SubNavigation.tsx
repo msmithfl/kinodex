@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { Fragment, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 const NAV_LINKS = [
@@ -39,20 +39,33 @@ function SubNavigation() {
             ref={scrollRef}
             className="relative inline-flex max-w-full overflow-x-auto bg-gray-800 rounded-lg p-0.5"
           >
-            {NAV_LINKS.map(({ to, label }) => (
-              <Link
-                key={to}
-                to={to}
-                aria-current={isActive(to) ? "page" : undefined}
-                className={`shrink-0 whitespace-nowrap px-3 md:px-4 py-1.5 text-sm font-medium rounded-md transition ${
-                  isActive(to)
-                    ? "bg-indigo-600 text-white"
-                    : "text-gray-400 hover:text-white"
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
+            {NAV_LINKS.map(({ to, label }, index) => {
+              // A light divider between tabs, hidden beside the selected tab's pill.
+              // `invisible` keeps its space so the tabs don't shift when the selection changes.
+              const besideActive =
+                isActive(to) || (index > 0 && isActive(NAV_LINKS[index - 1].to));
+              return (
+                <Fragment key={to}>
+                  {index > 0 && (
+                    <span
+                      aria-hidden="true"
+                      className={`shrink-0 self-center w-px h-4 bg-white/15 ${besideActive ? "invisible" : ""}`}
+                    />
+                  )}
+                  <Link
+                    to={to}
+                    aria-current={isActive(to) ? "page" : undefined}
+                    className={`shrink-0 whitespace-nowrap px-3 md:px-4 py-1.5 text-sm font-medium rounded-md transition ${
+                      isActive(to)
+                        ? "bg-indigo-600 text-white"
+                        : "text-gray-400 hover:text-white"
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                </Fragment>
+              );
+            })}
           </div>
         </div>
       </div>

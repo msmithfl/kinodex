@@ -413,6 +413,19 @@ namespace Kinodex.Api.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Kinodex.Api.Models.UserSettings", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("ShowCollectionCompletion")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserSettings");
+                });
+
             modelBuilder.Entity("Kinodex.Api.Models.Checkout", b =>
                 {
                     b.HasOne("Kinodex.Api.Models.Customer", "Customer")
