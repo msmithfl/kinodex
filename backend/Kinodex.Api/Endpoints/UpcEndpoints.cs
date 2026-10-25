@@ -65,12 +65,6 @@ public static class UpcEndpoints
                 }
             }
 
-            // Failures aren't saved, so the UPC is looked up again next time
-            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-                return Results.Json(
-                    new { message = "Today's product image lookups are used up. Try again tomorrow." },
-                    statusCode: StatusCodes.Status429TooManyRequests);
-
             var body = await response.Content.ReadAsStringAsync();
             UpcItemDbResponse? result;
             try
@@ -80,6 +74,29 @@ public static class UpcEndpoints
             catch (JsonException)
             {
                 result = null;
+            }
+
+            // Failures aren't saved, so the UPC is looked up again next time
+            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            {
+                // Logged so the host's logs show which limit was hit and what UPCitemdb reported
+                var limit = response.Headers.TryGetValues("x-ratelimit-limit", out var l) ? l.FirstOrDefault() : null;
+                var reset = response.Headers.TryGetValues("x-ratelimit-reset", out var r) ? r.FirstOrDefault() : null;
+                Console.WriteLine(
+                    $"UPCitemdb 429 for UPC {upc}: code={result?.Code ?? "?"}, message={result?.Message ?? "?"}, " +
+                    $"limit={limit ?? "?"}, remaining={remaining ?? "?"}, reset={reset ?? "?"}");
+
+                // TOO_FAST is the short burst limit; EXCEED_LIMIT (or nothing left) is the daily one
+                var burst = result?.Code == "TOO_FAST" || (int.TryParse(remaining, out var left) && left > 0);
+                var resetsAt = long.TryParse(reset, out var resetUnix)
+                    ? DateTimeOffset.FromUnixTimeSeconds(resetUnix).UtcDateTime.ToString("HH:mm") + " UTC"
+                    : null;
+                var message = burst
+                    ? "Too many product lookups in a short time. Wait a minute and try again."
+                    : resetsAt is not null
+                        ? $"Today's product image lookups are used up. They reset at {resetsAt}."
+                        : "Today's product image lookups are used up. Try again tomorrow.";
+                return Results.Json(new { message, code = result?.Code }, statusCode: StatusCodes.Status429TooManyRequests);
             }
 
             if (result?.Code == "INVALID_UPC")

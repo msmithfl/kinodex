@@ -50,8 +50,11 @@ export function useProductImagePicker({ upc, selected, onSelect }: ProductImageP
         headers: { Authorization: `Bearer ${token}` },
       });
       const body = await response.json().catch(() => null);
-      if (response.ok && body) {
+      if (response.ok && body && typeof body.found === "boolean" && Array.isArray(body.images)) {
         setResult(body);
+      } else if (response.ok) {
+        // An older API passes UPCitemdb's raw reply through instead of this shape
+        setError("The server's product lookup is out of date. Redeploy the API and try again.");
       } else {
         // The server explains the limit, a bad UPC or an unreachable service
         setError(body?.message ?? `Product lookup failed (${response.status}).`);
@@ -103,7 +106,7 @@ export function useProductImagePicker({ upc, selected, onSelect }: ProductImageP
           ) : null}
           {result.cached
             ? "From saved results"
-            : result.remaining !== null
+            : typeof result.remaining === "number"
               ? `${result.remaining} lookups left today`
               : "Looked up just now"}
         </p>
