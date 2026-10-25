@@ -9,11 +9,14 @@ import { MobileOnlyMessage } from "./MobileOnlyMessage";
 
 interface EditMovieModalProps {
   onClose: () => void;
+  // The movie to edit; falls back to the /movie/:id route's id
+  movieId?: string;
 }
 
-export function EditMovieModal({ onClose }: EditMovieModalProps) {
+export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
   const { getToken } = useAuth();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
+  const id = movieId ?? params.id;
   const [_loading, setLoading] = useState(true);
   const [formData, setFormData] = useState<Movie>({
     userId: "",

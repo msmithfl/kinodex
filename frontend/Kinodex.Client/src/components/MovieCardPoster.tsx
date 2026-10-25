@@ -19,7 +19,13 @@ interface MoviePosterCardProps {
   to?: string;
   // Replaces the caption's year · formats line
   subtitle?: string;
+  // Runs on a plain click (e.g. to open a drawer); ctrl/cmd/shift-clicks still follow the link
+  onOpen?: () => void;
 }
+
+// A plain left click, not one asking for a new tab or window
+const isPlainClick = (e: React.MouseEvent) =>
+  e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
 
 function MoviePosterCard({
   movie,
@@ -27,13 +33,25 @@ function MoviePosterCard({
   captionBelow = false,
   to,
   subtitle,
+  onOpen,
 }: MoviePosterCardProps) {
+  const handleClick = (e: React.MouseEvent) => {
+    if (onOpen && isPlainClick(e)) {
+      e.preventDefault();
+      onOpen();
+    }
+  };
+
   if (captionBelow) {
     // Formats aren't repeated here; they show as icons on the poster on hover
     const details = subtitle ?? (movie.year ? String(movie.year) : "");
 
     return (
-      <Link to={to ?? `/movie/${movie.id}`} className="group flex flex-col min-w-0">
+      <Link
+        to={to ?? `/movie/${movie.id}`}
+        onClick={handleClick}
+        className="group flex flex-col min-w-0"
+      >
         {/* Hover: the outline turns indigo and a dark overlay fades in; no zoom */}
         <div className="relative aspect-2/3 rounded border border-white/20 overflow-hidden shadow-lg transition-colors duration-200 group-hover:border-indigo-500">
           {movie.posterPath ? (

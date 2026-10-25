@@ -1,5 +1,57 @@
 @import 'tailwindcss';
 
+/* Side drawer slide-in. Defined as an animation without a fill mode so no transform is left on
+   the panel afterwards: a lingering transform would make the panel the containing block for
+   `position: fixed` pop-ups inside it (edit, delete confirm), trapping them in the panel. */
+@keyframes drawer-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.animate-drawer-in {
+  animation: drawer-in 200ms ease-out;
+}
+
+/* Closing: slides back out. `forwards` holds it off-screen until the drawer is removed. */
+@keyframes drawer-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+.animate-drawer-out {
+  animation: drawer-out 200ms ease-in forwards;
+}
+
+/* The dimmed backdrop behind the drawer fades in and out with it */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.animate-fade-in {
+  animation: fade-in 200ms ease-out;
+}
+.animate-fade-out {
+  animation: fade-out 200ms ease-in forwards;
+}
+
 /* Height of the mobile bottom bar (BottomNav), reserved so pages aren't hidden behind it.
    0 from md up, where the bar is hidden. */
 :root {
