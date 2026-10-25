@@ -345,7 +345,7 @@ function CollectionDetail({
       <div className="relative flex h-full">
         {/* The backdrop, faded behind the top of the drawer */}
         {backdropUrl && (
-          <div className="absolute inset-x-0 top-0 h-72 pointer-events-none" aria-hidden="true">
+          <div className="absolute inset-x-0 top-0 h-96 pointer-events-none" aria-hidden="true">
             <img
               src={backdropUrl}
               alt=""
@@ -354,13 +354,18 @@ function CollectionDetail({
             <div className="absolute inset-x-0 top-0 -bottom-0.5 bg-linear-to-b from-gray-900/20 to-gray-900" />
           </div>
         )}
-        <div className="relative flex-1 min-h-0 overflow-y-auto px-4 md:px-6 pt-4 md:pt-6 pb-8">
+        {/* With a backdrop, the header starts lower (about 100px) so more of it shows above the title */}
+        <div
+          className={`relative flex-1 min-h-0 overflow-y-auto px-4 md:px-6 pt-4 pb-8 ${backdropUrl ? "md:pt-30" : "md:pt-6"}`}
+        >
           <div>
             {/* Mobile: pr-12 keeps clear of the drawer's close button in the top-right corner */}
             {/* Mobile: edit and delete above the title, level with the drawer's close button in the
                 top-right corner (-mt-1 centres these 36px buttons on it, at 30px from the top) */}
             {collection && (
-              <div className="md:hidden flex w-fit -mt-1 mb-6 rounded-md bg-gray-900/70 backdrop-blur-sm">
+              <div
+                className={`md:hidden flex w-fit -mt-1 rounded-md bg-gray-900/70 backdrop-blur-sm ${backdropUrl ? "mb-20" : "mb-6"}`}
+              >
                 {actionButtons}
               </div>
             )}
