@@ -10,4 +10,4 @@ Current features include:
 - Collection list tracking
 - CSV export/import
 
-![Alt text](/frontend/Kinodex.Client/public/library-screenshot.png)
+![Alt text](/frontend/Kinodex.Client/public/kinodex10-25.png)
