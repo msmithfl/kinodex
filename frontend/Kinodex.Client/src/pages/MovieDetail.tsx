@@ -27,6 +27,14 @@ interface MovieDetailProps {
   onDeleted?: () => void;
 }
 
+// The movie drawer's sections, shown as tabs under its header
+type DrawerTab = "details" | "ledger" | "log";
+const DRAWER_TABS: { id: DrawerTab; label: string }[] = [
+  { id: "details", label: "Details" },
+  { id: "ledger", label: "Ledger" },
+  { id: "log", label: "Log" },
+];
+
 function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
   const navigate = useNavigate();
   const params = useParams<{ id: string }>();
@@ -47,7 +55,9 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showPosterLightbox, setShowPosterLightbox] = useState(false);
-
+  const [showProductLightbox, setShowProductLightbox] = useState(false);
+  // Drawer only: which section shows under the header
+  const [tab, setTab] = useState<DrawerTab>("details");
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const API_URL = `${API_BASE}/api/movies`;
 
@@ -129,6 +139,187 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
         className="w-8 h-8 hover:opacity-80 transition-opacity"
       />
     </a>
+  );
+
+  // The UPC, copied to the clipboard on click with a brief "Copied!" note
+  const copyUpc = () => {
+    navigator.clipboard.writeText(movie.upcNumber);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  // One labelled value in the drawer's details grid
+  const field = (label: string, value: React.ReactNode) => (
+    <div className="min-w-0">
+      <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</dt>
+      <dd className="mt-1 text-sm text-white truncate">{value}</dd>
+    </div>
+  );
+  const notSet = <span className="text-gray-500">Not set</span>;
+
+  // The drawer's Details tab: everything from the page's sections, packed to fit without
+  // scrolling - a grid of short values, then the disc (barcode, eBay), collections and notes
+  const drawerDetails = (
+    <div className="px-4 md:px-6 py-4 flex flex-col gap-4">
+      {/* The copy, then where it lives */}
+      <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
+        {field(
+          "Formats",
+          movie.formats && movie.formats.length > 0 ? (
+            <span className="flex flex-wrap gap-2">
+              {[...movie.formats].sort().map((fmt, idx) => (
+                <FormatIcon key={idx} fmt={fmt} />
+              ))}
+            </span>
+          ) : (
+            <span className="text-gray-500">None</span>
+          ),
+        )}
+        {field("Condition", movie.condition || notSet)}
+        {field(
+          "Paid",
+          movie.purchasePrice > 0 ? (
+            <span className="font-mono">${movie.purchasePrice.toFixed(2)}</span>
+          ) : (
+            notSet
+          ),
+        )}
+        {field(
+          "Watched",
+          <span className="flex items-center gap-1.5">
+            {movie.hasWatched ? (
+              <>
+                <LuEye className="w-4 h-4" /> Yes
+              </>
+            ) : (
+              <>
+                <LuEyeClosed className="w-4 h-4" /> No
+              </>
+            )}
+          </span>,
+        )}
+        {field(
+          "Shelf",
+          <Link
+            to={`/shelfsections/${encodeURIComponent(movie.shelfSection || "Unshelved")}`}
+            className="hover:underline"
+          >
+            {movie.shelfSection || "Unshelved"}
+          </Link>,
+        )}
+        {field(
+          "Shelf #",
+          movie.shelfNumber > 0 ? <span className="font-mono">{movie.shelfNumber}</span> : notSet,
+        )}
+        {field(
+          "HDD #",
+          movie.hdDriveNumber > 0 ? <span className="font-mono">{movie.hdDriveNumber}</span> : notSet,
+        )}
+        {field(
+          "Streaming",
+          <span className="flex items-center gap-1.5">
+            {movie.isOnPlex ? (
+              <>
+                <HiSignal className="w-4 h-4" /> Yes
+              </>
+            ) : (
+              <>
+                <HiOutlineSignalSlash className="w-4 h-4" /> No
+              </>
+            )}
+          </span>,
+        )}
+      </dl>
+
+      {/* The disc: product shot, barcode (click to copy) and an eBay sold-listings search */}
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/60 border border-white/10">
+        {movie.productPosterPath && (
+          <button
+            type="button"
+            onClick={() => setShowProductLightbox(true)}
+            className="shrink-0 cursor-zoom-in"
+            aria-label={`Enlarge the ${movie.title} product image`}
+          >
+            <img
+              src={movie.productPosterPath}
+              alt={`${movie.title} product`}
+              className="h-14 w-auto rounded shadow object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          </button>
+        )}
+        <div className="relative min-w-0">
+          {movie.upcNumber ? (
+            <button
+              onClick={copyUpc}
+              title="Copy to clipboard"
+              className="flex items-center gap-1.5 font-mono text-sm text-white hover:text-indigo-300 cursor-pointer"
+            >
+              <FaBarcode className="shrink-0" />
+              <span className="truncate">{movie.upcNumber}</span>
+            </button>
+          ) : (
+            <span className="flex items-center gap-1.5 text-sm text-gray-500">
+              <FaBarcode className="shrink-0" /> No UPC
+            </span>
+          )}
+          {copied && (
+            <span className="absolute top-full mt-1 left-0 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
+              Copied!
+            </span>
+          )}
+        </div>
+        {movie.upcNumber && (
+          <button
+            onClick={() => {
+              const query = encodeURIComponent(`${movie.upcNumber}`);
+              window.open(
+                `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&rt=nc&LH_ItemCondition=4`,
+                "_blank",
+                "noopener,noreferrer",
+              );
+            }}
+            className="ml-auto shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3 rounded-md transition duration-200 text-xs cursor-pointer"
+          >
+            Search eBay
+          </button>
+        )}
+      </div>
+
+      {/* Collections, as links that open each one's drawer */}
+      <div>
+        <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400">Collections</h3>
+        {movie.collections && movie.collections.length > 0 ? (
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {movie.collections.map((col, idx) => (
+              <Link
+                key={idx}
+                to={`/collections?collection=${encodeURIComponent(col)}`}
+                className="px-2.5 py-0.5 rounded-full text-sm bg-gray-700 hover:bg-gray-600 transition-colors"
+              >
+                {col}
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-1 text-sm text-gray-500">None</p>
+        )}
+      </div>
+
+      {/* Review / notes */}
+      <div className="p-3 rounded-lg bg-gray-800/60 border border-white/10">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400">
+          Review / Notes
+        </h3>
+        {movie.review ? (
+          <p className="mt-1 text-sm text-white whitespace-pre-wrap">{movie.review}</p>
+        ) : (
+          <p className="mt-1 text-sm text-gray-500 italic">No review or notes added</p>
+        )}
+      </div>
+    </div>
   );
 
   // Edit and delete, placed per screen size: over the backdrop on mobile, at the bottom on tablet,
@@ -320,236 +511,295 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
 
               {/* Details column */}
               <div className={layout("min-w-0 lg:col-start-1 lg:row-start-2", "min-w-0")}>
-                {/* Physical Details Section */}
-                <div className="mb-8">
-                  <div>
-                    <div className="flex p-4 border-b-[0.5px] border-white/20">
-                      <div className="w-1/2">
-                        <h3 className="text-sm font-medium text-gray-400 mb-2">
-                          Formats
-                        </h3>
-                        {movie.formats && movie.formats.length > 0 ? (
-                          <div className="flex flex-wrap gap-3">
-                            {[...movie.formats].sort().map((fmt, idx) => (
-                              <FormatIcon key={idx} fmt={fmt} />
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-gray-500 italic">None</p>
-                        )}
-                      </div>
-                      <div className="w-1/2">
-                        <h3 className="text-sm font-medium text-gray-400 mb-2">
-                          Condition
-                        </h3>
-                        <span>{movie.condition}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex p-4 border-b-[0.5px] border-white/20">
-                      <div className="w-1/2 flex flex-col justify-between">
-                        <div className="mb-4">
-                          <h3 className="text-sm font-medium text-gray-400 mb-2">
-                            Purchase Price
-                          </h3>
-                          <p className="text-base font-mono text-white">
-                            {movie.purchasePrice > 0 ? (
-                              `$${movie.purchasePrice.toFixed(2)}`
+                {/* Drawer: tabs under the header; the page shows the details alone */}
+                {inDrawer && (
+                  <div
+                    role="tablist"
+                    aria-label="Movie sections"
+                    className="flex gap-6 px-4 md:px-6 border-b-[0.5px] border-white/20"
+                  >
+                    {DRAWER_TABS.map(({ id: tabId, label }) => (
+                      <button
+                        key={tabId}
+                        type="button"
+                        role="tab"
+                        aria-selected={tab === tabId}
+                        onClick={() => setTab(tabId)}
+                        className={`-mb-px py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+                          tab === tabId
+                            ? "border-indigo-500 text-white"
+                            : "border-transparent text-gray-400 hover:text-gray-200"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {inDrawer && tab === "ledger" && (
+                  // Placeholder for the lending ledger
+                  <div className="px-4 md:px-6 py-12 text-center text-gray-400">
+                    <p className="font-medium text-gray-300">Lending ledger</p>
+                    <p className="text-sm mt-1">Who's borrowed this movie and when. Coming soon.</p>
+                  </div>
+                )}
+                {inDrawer && tab === "log" && (
+                  // Placeholder for the watch log
+                  <div className="px-4 md:px-6 py-12 text-center text-gray-400">
+                    <p className="font-medium text-gray-300">Watch log</p>
+                    <p className="text-sm mt-1">Each time you've watched this movie. Coming soon.</p>
+                  </div>
+                )}
+                {inDrawer && tab === "details" && drawerDetails}
+                {!inDrawer && (
+                  <>
+                    {/* Physical Details Section */}
+                    <div className="mb-8">
+                      <div>
+                        <div className="flex p-4 border-b-[0.5px] border-white/20">
+                          <div className="w-1/2">
+                            <h3 className="text-sm font-medium text-gray-400 mb-2">
+                              Formats
+                            </h3>
+                            {movie.formats && movie.formats.length > 0 ? (
+                              <div className="flex flex-wrap gap-3">
+                                {[...movie.formats].sort().map((fmt, idx) => (
+                                  <FormatIcon key={idx} fmt={fmt} />
+                                ))}
+                              </div>
                             ) : (
-                              <span className="text-gray-500">Not set</span>
+                              <p className="text-gray-500 italic">None</p>
+                            )}
+                          </div>
+                          <div className="w-1/2">
+                            <h3 className="text-sm font-medium text-gray-400 mb-2">
+                              Condition
+                            </h3>
+                            <span>{movie.condition}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex p-4 border-b-[0.5px] border-white/20">
+                          <div className="w-1/2 flex flex-col justify-between">
+                            <div className="mb-4">
+                              <h3 className="text-sm font-medium text-gray-400 mb-2">
+                                Purchase Price
+                              </h3>
+                              <p className="text-base font-mono text-white">
+                                {movie.purchasePrice > 0 ? (
+                                  `$${movie.purchasePrice.toFixed(2)}`
+                                ) : (
+                                  <span className="text-gray-500">Not set</span>
+                                )}
+                              </p>
+                            </div>
+                            <div>
+                              {/* <h3 className="text-sm font-medium text-gray-400 mb-2">
+                              UPC Number
+                            </h3> */}
+                              <div className="relative inline-block">
+                                <button
+                                  onClick={() => {
+                                    const query = encodeURIComponent(
+                                      `${movie.upcNumber}`,
+                                    );
+                                    window.open(
+                                      `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&rt=nc&LH_ItemCondition=4`,
+                                      "_blank",
+                                      "noopener,noreferrer",
+                                    );
+                                  }}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 text-xs lg:text-sm cursor-pointer w-auto lg:w-full"
+                                >
+                                  Search eBay
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="w-1/2 flex items-end">
+                            {/* Product Image & eBay Button - Right */}
+                            <div className="flex flex-col items-start gap-4">
+                              {movie.productPosterPath && (
+                                <button
+                                  type="button"
+                                  onClick={() => setShowProductLightbox(true)}
+                                  className="block cursor-zoom-in"
+                                  aria-label={`Enlarge the ${movie.title} product image`}
+                                >
+                                  <img
+                                    src={movie.productPosterPath}
+                                    alt={`${movie.title} product`}
+                                    className="rounded-lg shadow-md w-24 lg:w-32 h-auto object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                </button>
+                              )}
+                              <div className="relative inline-block">
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(movie.upcNumber);
+                                    setCopied(true);
+                                    setTimeout(() => setCopied(false), 1500);
+                                  }}
+                                  title="Copy to clipboard"
+                                  className="text-base font-mono text-white rounded-md cursor-pointer transition-colors"
+                                >
+                                  <div className="flex items-center gap-1">
+                                    <FaBarcode />
+                                    <p className="text-base font-mono text-white">
+                                      {movie.upcNumber}
+                                    </p>
+                                  </div>
+                                </button>
+                                {copied && (
+                                  <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
+                                    Copied!
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex p-4 border-b-[0.5px] border-white/20">
+                          <div className="w-1/2">
+                            <h3 className="text-sm font-medium text-gray-400 mb-2">
+                              Shelf Section
+                            </h3>
+                            <Link
+                              to={`/shelfsections/${encodeURIComponent(movie.shelfSection || "Unshelved")}`}
+                              className="cursor-pointer hover:underline"
+                            >
+                              {movie.shelfSection || "Unshelved"}
+                            </Link>
+                          </div>
+                          <div className="w-1/2">
+                            <h3 className="text-sm font-medium text-gray-400 mb-2">
+                              Shelf Number
+                            </h3>
+                            <p className="text-base font-mono text-white">
+                              {movie.shelfNumber > 0 ? (
+                                `${movie.shelfNumber}`
+                              ) : (
+                                <span className="text-gray-500">Not set</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex p-4 border-b-[0.5px] border-white/20">
+                          <div className="w-1/2">
+                            <h3 className="text-sm font-medium text-gray-400 mb-2">
+                              HDD Number
+                            </h3>
+                            <p className="text-base font-mono text-white">
+                              {movie.hdDriveNumber > 0 ? (
+                                `${movie.hdDriveNumber}`
+                              ) : (
+                                <span className="text-gray-500">Not set</span>
+                              )}
+                            </p>
+                          </div>
+
+                          <div className="w-1/2">
+                            <h3 className="text-sm font-medium text-gray-400 mb-2">
+                              Streaming
+                            </h3>
+                            <p className="text-base text-white flex items-center gap-2">
+                              {movie.isOnPlex ? (
+                                <>
+                                  <HiSignal className="w-5 h-5" /> Yes
+                                </>
+                              ) : (
+                                <>
+                                  <HiOutlineSignalSlash className="w-5 h-5" /> No
+                                </>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Location Details Section */}
+                        <div className="flex p-4 border-b-[0.5px] border-white/20">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-400 mb-2">
+                              Collections
+                            </h3>
+                            {movie.collections && movie.collections.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {movie.collections.map((col, idx) => (
+                                  <Link
+                                    key={idx}
+                                    to={`/collections?collection=${encodeURIComponent(col)}`}
+                                    className="cursor-pointer hover:underline"
+                                  >
+                                    {col}
+                                    {idx < movie.collections.length - 1 ? "," : ""}
+                                  </Link>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-gray-500 italic">None</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col p-4 border-b-[0.5px] border-white/20">
+                          <h3 className="text-sm font-medium text-gray-400 mb-2">
+                            Watched
+                          </h3>
+                          <p className="text-base text-white flex items-center gap-2">
+                            {movie.hasWatched ? (
+                              <>
+                                <LuEye className="w-5 h-5" /> Yes
+                              </>
+                            ) : (
+                              <>
+                                <LuEyeClosed className="w-5 h-5" /> No
+                              </>
                             )}
                           </p>
                         </div>
-                        <div>
-                          {/* <h3 className="text-sm font-medium text-gray-400 mb-2">
-                          UPC Number
-                        </h3> */}
-                          <div className="relative inline-block">
-                            <button
-                              onClick={() => {
-                                const query = encodeURIComponent(
-                                  `${movie.upcNumber}`,
-                                );
-                                window.open(
-                                  `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&rt=nc&LH_ItemCondition=4`,
-                                  "_blank",
-                                  "noopener,noreferrer",
-                                );
-                              }}
-                              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200 text-xs lg:text-sm cursor-pointer w-auto lg:w-full"
-                            >
-                              Search eBay
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="w-1/2 flex items-end">
-                        {/* Product Image & eBay Button - Right */}
-                        <div className="flex flex-col items-start gap-4">
-                          {movie.productPosterPath && (
-                            <img
-                              src={movie.productPosterPath}
-                              alt={`${movie.title} product`}
-                              className="rounded-lg shadow-md w-24 lg:w-32 h-auto object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                              }}
-                            />
-                          )}
-                          <div className="relative inline-block">
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(movie.upcNumber);
-                                setCopied(true);
-                                setTimeout(() => setCopied(false), 1500);
-                              }}
-                              title="Copy to clipboard"
-                              className="text-base font-mono text-white rounded-md cursor-pointer transition-colors"
-                            >
-                              <div className="flex items-center gap-1">
-                                <FaBarcode />
-                                <p className="text-base font-mono text-white">
-                                  {movie.upcNumber}
-                                </p>
-                              </div>
-                            </button>
-                            {copied && (
-                              <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
-                                Copied!
-                              </span>
-                            )}
-                          </div>
-                        </div>
                       </div>
                     </div>
 
-                    <div className="flex p-4 border-b-[0.5px] border-white/20">
-                      <div className="w-1/2">
-                        <h3 className="text-sm font-medium text-gray-400 mb-2">
-                          Shelf Section
+                    {/* Metadata Section */}
+                    <div className="mb-8">
+                      <div className="m-4 p-6 bg-gray-700 rounded-lg">
+                        <h3 className="text-sm font-medium text-gray-400 mb-3">
+                          Review / Notes
                         </h3>
-                        <Link
-                          to={`/shelfsections/${encodeURIComponent(movie.shelfSection || "Unshelved")}`}
-                          className="cursor-pointer hover:underline"
-                        >
-                          {movie.shelfSection || "Unshelved"}
-                        </Link>
-                      </div>
-                      <div className="w-1/2">
-                        <h3 className="text-sm font-medium text-gray-400 mb-2">
-                          Shelf Number
-                        </h3>
-                        <p className="text-base font-mono text-white">
-                          {movie.shelfNumber > 0 ? (
-                            `${movie.shelfNumber}`
-                          ) : (
-                            <span className="text-gray-500">Not set</span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex p-4 border-b-[0.5px] border-white/20">
-                      <div className="w-1/2">
-                        <h3 className="text-sm font-medium text-gray-400 mb-2">
-                          HDD Number
-                        </h3>
-                        <p className="text-base font-mono text-white">
-                          {movie.hdDriveNumber > 0 ? (
-                            `${movie.hdDriveNumber}`
-                          ) : (
-                            <span className="text-gray-500">Not set</span>
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="w-1/2">
-                        <h3 className="text-sm font-medium text-gray-400 mb-2">
-                          Streaming
-                        </h3>
-                        <p className="text-base text-white flex items-center gap-2">
-                          {movie.isOnPlex ? (
-                            <>
-                              <HiSignal className="w-5 h-5" /> Yes
-                            </>
-                          ) : (
-                            <>
-                              <HiOutlineSignalSlash className="w-5 h-5" /> No
-                            </>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Location Details Section */}
-                    <div className="flex p-4 border-b-[0.5px] border-white/20">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-400 mb-2">
-                          Collections
-                        </h3>
-                        {movie.collections && movie.collections.length > 0 ? (
-                          <div className="flex flex-wrap gap-2">
-                            {movie.collections.map((col, idx) => (
-                              <Link
-                                key={idx}
-                                to={`/collections?collection=${encodeURIComponent(col)}`}
-                                className="cursor-pointer hover:underline"
-                              >
-                                {col}
-                                {idx < movie.collections.length - 1 ? "," : ""}
-                              </Link>
-                            ))}
-                          </div>
+                        {movie.review ? (
+                          <p className="text-white whitespace-pre-wrap">
+                            {movie.review}
+                          </p>
                         ) : (
-                          <p className="text-gray-500 italic">None</p>
+                          <p className="text-gray-500 italic">
+                            No review or notes added
+                          </p>
                         )}
                       </div>
+                      {/* Tablet only; mobile and desktop show these near the top */}
+                      <div className={layout("hidden md:flex lg:hidden justify-center gap-2 mt-2", "hidden")}>
+                        {actionButtons}
+                      </div>
                     </div>
-
-                    <div className="flex flex-col p-4 border-b-[0.5px] border-white/20">
-                      <h3 className="text-sm font-medium text-gray-400 mb-2">
-                        Watched
-                      </h3>
-                      <p className="text-base text-white flex items-center gap-2">
-                        {movie.hasWatched ? (
-                          <>
-                            <LuEye className="w-5 h-5" /> Yes
-                          </>
-                        ) : (
-                          <>
-                            <LuEyeClosed className="w-5 h-5" /> No
-                          </>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Metadata Section */}
-                <div className="mb-8">
-                  <div className="m-4 p-6 bg-gray-700 rounded-lg">
-                    <h3 className="text-sm font-medium text-gray-400 mb-3">
-                      Review / Notes
-                    </h3>
-                    {movie.review ? (
-                      <p className="text-white whitespace-pre-wrap">
-                        {movie.review}
-                      </p>
-                    ) : (
-                      <p className="text-gray-500 italic">
-                        No review or notes added
-                      </p>
-                    )}
-                  </div>
-                  {/* Tablet only; mobile and desktop show these near the top */}
-                  <div className={layout("hidden md:flex lg:hidden justify-center gap-2 mt-2", "hidden")}>
-                    {actionButtons}
-                  </div>
-                </div>
+                  </>
+                )}
               </div>
             </div>
             {showModal && (
               <EditMovieModal movieId={id} onClose={() => setShowModal(false)} />
+            )}
+
+            {showProductLightbox && movie.productPosterPath && (
+              <ImageLightbox
+                src={movie.productPosterPath}
+                alt={`${movie.title} product`}
+                onClose={() => setShowProductLightbox(false)}
+              />
             )}
 
             {showPosterLightbox && movie.posterPath && (
