@@ -307,6 +307,9 @@ function CollectionDetail({
 
   // The collection's movies in release order
   const sortedMovies = [...movies].sort((a, b) => a.year - b.year);
+  // The collection's own backdrop, or else the first movie's (in release order) that has one
+  const backdropUrl =
+    collection?.backdropUrl || sortedMovies.find((m) => m.backdropPath)?.backdropPath;
 
   // Edit and delete: floating beside the drawer's close button from tablet up, in the header on mobile
   const actionButtons = (
@@ -341,10 +344,10 @@ function CollectionDetail({
         )}
       <div className="relative flex h-full">
         {/* The backdrop, faded behind the top of the drawer */}
-        {collection?.backdropUrl && (
+        {backdropUrl && (
           <div className="absolute inset-x-0 top-0 h-72 pointer-events-none" aria-hidden="true">
             <img
-              src={collection.backdropUrl}
+              src={backdropUrl}
               alt=""
               className="w-full h-full object-cover object-center opacity-30"
             />
