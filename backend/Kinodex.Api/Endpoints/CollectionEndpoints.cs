@@ -41,6 +41,7 @@ public static class CollectionEndpoints
             collection.Name = newName;
             collection.IsDirectorCollection = request.IsDirectorCollection;
             collection.ImageUrl = request.ImageUrl;
+            collection.BackdropUrl = request.BackdropUrl;
 
             // Update all movies that have this collection
             var moviesWithCollection = await db.Movies
@@ -81,4 +82,4 @@ public static class CollectionEndpoints
     }
 }
 
-public record UpdateCollectionRequest(string Name, bool IsDirectorCollection, string? ImageUrl);
+public record UpdateCollectionRequest(string Name, bool IsDirectorCollection, string? ImageUrl, string? BackdropUrl);

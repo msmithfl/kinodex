@@ -3,12 +3,12 @@ import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
 import { useParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
-import MovieDetailCard from "../components/MovieCardDetail";
+import SimpleMovieTable from "../components/SimpleMovieTable";
 import MoviePosterCard from "../components/MovieCardPoster";
 //import Counter from '../components/Counter'
 import LoadingSpinner from "../components/LoadingSpinner";
 import ViewToggle from "../components/ViewToggle";
-import { DETAIL_VIEW_OPTIONS } from "../utils/viewOptions";
+import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
 import SubNavigation from "../components/SubNavigation";
 import Drawer from "../components/Drawer";
 import MovieDetail from "./MovieDetail";
@@ -25,14 +25,21 @@ function GenreDetail() {
   // The movie open in the side drawer (?movie=)
   const { openId: openMovieId, open: openMovie, close: closeMovie } = useDrawerParam("movie");
 
-  // View mode state
-  const [viewMode, setViewMode] = useState<"detail" | "poster">(() => {
-    const saved = localStorage.getItem("movieViewMode");
-    return saved === "poster" || saved === "detail" ? saved : "detail";
+  // A table like the Movies and TV Shows lists, or a poster grid
+  const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
+    try {
+      return localStorage.getItem("genreViewMode") === "poster" ? "poster" : "table";
+    } catch {
+      return "table";
+    }
   });
-  const handleViewModeChange = (mode: "detail" | "poster") => {
+  const handleViewModeChange = (mode: "table" | "poster") => {
     setViewMode(mode);
-    localStorage.setItem("movieViewMode", mode);
+    try {
+      localStorage.setItem("genreViewMode", mode);
+    } catch {
+      // Storage unavailable; the choice just isn't remembered
+    }
   };
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
@@ -97,7 +104,7 @@ function GenreDetail() {
               <div className="ml-auto mb-2">
                 <ViewToggle
                   value={viewMode}
-                  options={DETAIL_VIEW_OPTIONS}
+                  options={TABLE_VIEW_OPTIONS}
                   onChange={handleViewModeChange}
                 />
               </div>
@@ -108,32 +115,19 @@ function GenreDetail() {
           <div>
             {movies.length === 0 ? (
               <EmptyState message="No movies in this genre yet." />
-            ) : (
-              <div
-                className={
-                  viewMode === "poster"
-                    ? "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8"
-                    : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2"
-                }
-              >
-                {movies.map((movie) =>
-                  viewMode === "poster" ? (
-                    <MoviePosterCard
-                      key={movie.id}
-                      movie={movie}
-                      captionBelow
-                      onOpen={() => openMovie(movie.id)}
-                    />
-                  ) : (
-                    <MovieDetailCard
-                      key={movie.id}
-                      movie={movie}
-                      showYear
-                      onOpen={() => openMovie(movie.id)}
-                    />
-                  ),
-                )}
+            ) : viewMode === "poster" ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8">
+                {movies.map((movie) => (
+                  <MoviePosterCard
+                    key={movie.id}
+                    movie={movie}
+                    captionBelow
+                    onOpen={() => openMovie(movie.id)}
+                  />
+                ))}
               </div>
+            ) : (
+              <SimpleMovieTable movies={movies} onOpen={openMovie} />
             )}
           </div>
         </div>
