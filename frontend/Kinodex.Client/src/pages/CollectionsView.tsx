@@ -7,6 +7,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
 import { useSettings } from "../settings/useSettings";
 import CollectionFormModal from "../components/CollectionFormModal";
+import { isChecklistItemOwned } from "../utils/checklist";
 import Drawer from "../components/Drawer";
 import CollectionDetail from "./CollectionDetail";
 import MovieDetail from "./MovieDetail";
@@ -100,12 +101,10 @@ function CollectionsView() {
     const listItems = collectionListItems[collectionId] || [];
     if (listItems.length === 0) return null;
 
+    // Same check as the collection's own checklist: the movie must be in this collection
+    const inCollection = movies.filter((m) => m.collections?.includes(collectionName));
     const ownedCount = listItems.filter((item) =>
-      movies.some(
-        (m) =>
-          m.title.toLowerCase() === item.title.toLowerCase() &&
-          m.collections?.includes(collectionName),
-      ),
+      isChecklistItemOwned(item, inCollection),
     ).length;
 
     return Math.round((ownedCount / listItems.length) * 100);
