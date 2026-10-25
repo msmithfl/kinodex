@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { IoClose } from "react-icons/io5";
-import { searchTMDBPeople, type TMDBPerson } from "../utils/tmdbApi";
-import type { Collection, Movie } from "../types";
+import { IoChevronBack, IoClose } from "react-icons/io5";
+import { getTMDBImages, searchTMDB, searchTMDBPeople, type TMDBPerson } from "../utils/tmdbApi";
+import type { Collection, Movie, TMDBMovie } from "../types";
 
 interface CollectionFormModalProps {
   // The collection to edit; leave out to create a new one
   collection?: Collection;
-  movies: Movie[]; // Movies to search for a normal collection's cover
+  movies: Movie[]; // The user's movies, to search for a cover poster
   existingNames: string[]; // Names already taken (the edited collection's own name is allowed)
   onClose: () => void;
   onSaved: (collection: Collection) => void;
@@ -20,7 +20,8 @@ const MAX_POSTER_RESULTS = 10;
 
 // Creates or edits a collection. The name and the cover are set separately: a normal collection
 // searches movies for a poster; a director collection searches TMDB for the director's photo.
-// Without a cover, the card uses one of the collection's posters.
+// Without a cover, the card uses one of the collection's posters. The backdrop, shown behind the
+// collection's details, is picked from a TMDB movie's backdrops.
 function CollectionFormModal({
   collection,
   movies,
@@ -39,6 +40,11 @@ function CollectionFormModal({
     collection?.imageUrl ? { url: collection.imageUrl, label: "Current cover" } : null,
   );
   const [query, setQuery] = useState("");
+  // The backdrop, shown behind the collection's details
+  const [backdrop, setBackdrop] = useState<{ url: string; label: string } | null>(
+    collection?.backdropUrl ? { url: collection.backdropUrl, label: "Current backdrop" } : null,
+  );
+  const [backdropQuery, setBackdropQuery] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -51,6 +57,38 @@ function CollectionFormModal({
       .sort((a, b) => a.title.localeCompare(b.title))
       .slice(0, MAX_POSTER_RESULTS);
   }, [movies, query, kind]);
+
+  // Backdrop: search TMDB for a movie (debounced), then pick from that movie's backdrops
+  const [tmdbMovies, setTmdbMovies] = useState<TMDBMovie[]>([]);
+  const [searchingMovies, setSearchingMovies] = useState(false);
+  const [backdropMovie, setBackdropMovie] = useState<TMDBMovie | null>(null);
+  // The chosen movie's backdrop image paths; null while they load
+  const [backdropOptions, setBackdropOptions] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    const q = backdropQuery.trim();
+    if (!q) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setSearchingMovies(true);
+      const results = await searchTMDB(q);
+      if (cancelled) return;
+      setTmdbMovies(results);
+      setSearchingMovies(false);
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [backdropQuery]);
+
+  const chooseBackdropMovie = async (movie: TMDBMovie) => {
+    setBackdropMovie(movie);
+    setBackdropOptions(null);
+    const paths = await getTMDBImages("movie", movie.id, "backdrop");
+    // Fall back to the backdrop the search result came with when TMDB lists none
+    setBackdropOptions(paths.length > 0 ? paths : movie.backdrop_path ? [movie.backdrop_path] : []);
+  };
 
   // Director collection: TMDB people search, debounced; only people with a photo can be a cover
   const [people, setPeople] = useState<TMDBPerson[]>([]);
@@ -107,6 +145,7 @@ function CollectionFormModal({
             name: trimmedName,
             isDirectorCollection: kind === "director",
             imageUrl: cover?.url ?? null,
+            backdropUrl: backdrop?.url ?? null,
           }),
         },
       );
@@ -196,9 +235,7 @@ function CollectionFormModal({
                 placeholder={
                   kind === "director"
                     ? "Search TMDB for the director"
-                    : editing
-                      ? "Search this collection's movies"
-                      : "Search your movies"
+                    : "Search your movies"
                 }
                 className={`${inputClass} mt-1`}
               />
@@ -245,6 +282,116 @@ function CollectionFormModal({
                 </ul>
               )}
             </>
+          )}
+
+          <span className="block text-sm text-gray-300 mt-4">Backdrop</span>
+          {backdrop ? (
+            <div className="flex items-center gap-3 mt-1 p-2 rounded-md bg-gray-700/60 border border-gray-600">
+              <img src={backdrop.url} alt="" className="w-24 aspect-video rounded object-cover shrink-0" />
+              <span className="flex-1 min-w-0 truncate">{backdrop.label}</span>
+              <button
+                type="button"
+                onClick={() => setBackdrop(null)}
+                className="p-1.5 rounded-full text-gray-400 hover:text-white hover:bg-gray-600 cursor-pointer"
+                aria-label="Remove backdrop"
+              >
+                <IoClose className="w-5 h-5" />
+              </button>
+            </div>
+          ) : (
+            backdropMovie ? (
+              // Step 2: the chosen movie's backdrops
+              <>
+                <div className="flex items-center gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setBackdropMovie(null)}
+                    className="flex items-center gap-1 text-sm text-indigo-400 hover:text-indigo-300 cursor-pointer"
+                  >
+                    <IoChevronBack className="w-4 h-4" />
+                    Back
+                  </button>
+                  <span className="flex-1 min-w-0 truncate text-sm text-gray-300">
+                    {backdropMovie.title}
+                  </span>
+                </div>
+                {backdropOptions === null ? (
+                  <p className="text-sm text-gray-400 py-4 text-center">Loading backdrops…</p>
+                ) : backdropOptions.length === 0 ? (
+                  <p className="text-sm text-gray-400 py-4 text-center">TMDB has no backdrops for this movie.</p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {backdropOptions.map((path) => (
+                      <button
+                        key={path}
+                        type="button"
+                        onClick={() =>
+                          setBackdrop({
+                            url: `https://image.tmdb.org/t/p/w1280${path}`,
+                            label: backdropMovie.title,
+                          })
+                        }
+                        className="aspect-video rounded overflow-hidden border border-white/20 hover:border-indigo-400 cursor-pointer bg-gray-700"
+                      >
+                        <img
+                          src={`https://image.tmdb.org/t/p/w300${path}`}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              // Step 1: search TMDB for the movie
+              <>
+                <input
+                  type="search"
+                  value={backdropQuery}
+                  onChange={(e) => setBackdropQuery(e.target.value)}
+                  placeholder="Search TMDB for a movie"
+                  className={`${inputClass} mt-1`}
+                />
+                {!backdropQuery.trim() ? (
+                  <p className="text-xs text-gray-500 mt-2">Optional: shown behind the collection's details.</p>
+                ) : searchingMovies && tmdbMovies.length === 0 ? (
+                  <p className="text-sm text-gray-400 py-4 text-center">Searching…</p>
+                ) : tmdbMovies.length === 0 ? (
+                  <p className="text-sm text-gray-400 py-4 text-center">No movies found on TMDB.</p>
+                ) : (
+                  <ul className="flex flex-col gap-1 mt-2">
+                    {tmdbMovies.map((movie) => (
+                      <li key={movie.id}>
+                        <button
+                          type="button"
+                          onClick={() => chooseBackdropMovie(movie)}
+                          className="w-full flex items-center gap-3 p-2 rounded-md text-left cursor-pointer transition-colors hover:bg-gray-700"
+                        >
+                          {movie.poster_path ? (
+                            <img
+                              src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                              alt=""
+                              className="w-10 aspect-2/3 rounded object-cover shrink-0"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-10 aspect-2/3 rounded bg-gray-700 shrink-0" />
+                          )}
+                          <span className="flex-1 min-w-0 truncate font-medium">{movie.title}</span>
+                          {movie.release_date && (
+                            <span className="text-sm text-gray-400 shrink-0">
+                              {movie.release_date.slice(0, 4)}
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )
           )}
         </div>
 

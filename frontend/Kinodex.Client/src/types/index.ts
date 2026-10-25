@@ -88,6 +88,8 @@ export interface Collection {
   isDirectorCollection: boolean;
   // Cover chosen at creation: a movie poster or the director's photo; null uses a movie's poster
   imageUrl?: string | null;
+  // Wide image behind the collection's details, from one of the user's movies
+  backdropUrl?: string | null;
   createdAt: string;
 }
 

@@ -5,13 +5,13 @@ import { useAuth } from "@clerk/clerk-react";
 import ConfirmDialog from "../components/ConfirmDialog";
 import CollectionFormModal from "../components/CollectionFormModal";
 import Counter from "../components/Counter";
-import MovieDetailCard from "../components/MovieCardDetail";
+import SimpleMovieTable from "../components/SimpleMovieTable";
 import MoviePosterCard from "../components/MovieCardPoster";
 import { searchTMDB } from "../utils/tmdbApi";
 import type { TMDBMovie, CollectionListItem } from "../types";
 import { FaTrash, FaEdit } from "react-icons/fa";
 import ViewToggle from "../components/ViewToggle";
-import { DETAIL_VIEW_OPTIONS } from "../utils/viewOptions";
+import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import type { Movie, Collection } from "../types";
@@ -34,6 +34,8 @@ function CollectionDetail({
 }: CollectionDetailProps) {
   const { getToken } = useAuth();
   const [movies, setMovies] = useState<Movie[]>([]);
+  // Every movie the user owns, for picking the collection's cover or backdrop in the edit form
+  const [allMovies, setAllMovies] = useState<Movie[]>([]);
   const [collection, setCollection] = useState<Collection | null>(null);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -50,17 +52,25 @@ function CollectionDetail({
   const searchTimeoutRef = useRef<number | null>(null);
 
   // View mode state
-  const [viewMode, setViewMode] = useState<"detail" | "poster">(() => {
-    const saved = localStorage.getItem("movieViewMode");
-    return saved === "poster" || saved === "detail" ? saved : "detail";
+  // A table like the Movies and TV Shows lists, or a poster grid
+  const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
+    try {
+      return localStorage.getItem("collectionViewMode") === "poster" ? "poster" : "table";
+    } catch {
+      return "table";
+    }
   });
 
   // From tablet up the drawer floats edit and delete beside its close button, outside the panel
   const actionsSlot = useContext(DrawerActionsSlotContext);
 
-  const handleViewModeChange = (mode: "detail" | "poster") => {
+  const handleViewModeChange = (mode: "table" | "poster") => {
     setViewMode(mode);
-    localStorage.setItem("movieViewMode", mode);
+    try {
+      localStorage.setItem("collectionViewMode", mode);
+    } catch {
+      // Storage unavailable; the choice just isn't remembered
+    }
   };
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
@@ -85,6 +95,7 @@ function CollectionDetail({
 
       if (moviesRes.ok) {
         const data = await moviesRes.json();
+        setAllMovies(data);
         const filtered = data.filter(
           (movie: Movie) =>
             movie.collections &&
@@ -294,6 +305,9 @@ function CollectionDetail({
     return <LoadingSpinner />;
   }
 
+  // The collection's movies in release order
+  const sortedMovies = [...movies].sort((a, b) => a.year - b.year);
+
   // Edit and delete: floating beside the drawer's close button from tablet up, in the header on mobile
   const actionButtons = (
     <>
@@ -325,18 +339,30 @@ function CollectionDetail({
           </div>,
           actionsSlot,
         )}
-      <div className="flex h-full">
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 pt-4 md:pt-6 pb-8">
+      <div className="relative flex h-full">
+        {/* The backdrop, faded behind the top of the drawer */}
+        {collection?.backdropUrl && (
+          <div className="absolute inset-x-0 top-0 h-72 pointer-events-none" aria-hidden="true">
+            <img
+              src={collection.backdropUrl}
+              alt=""
+              className="w-full h-full object-cover object-center opacity-30"
+            />
+            <div className="absolute inset-x-0 top-0 -bottom-0.5 bg-linear-to-b from-gray-900/20 to-gray-900" />
+          </div>
+        )}
+        <div className="relative flex-1 min-h-0 overflow-y-auto px-4 md:px-6 pt-4 md:pt-6 pb-8">
           <div>
             {/* Mobile: pr-12 keeps clear of the drawer's close button in the top-right corner */}
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 pr-12 md:pr-0">
               <div className="flex-1">
                   <div>
                     <div className="flex items-center gap-4">
-                      <h1 className="text-3xl font-bold mb-2">
-                        {collectionName}
-                      </h1>
-                      <Counter count={movies.length} className="mb-2" />
+                      {/* Title with the movie count underneath */}
+                      <div className="min-w-0 flex flex-col items-start gap-1 mb-2">
+                        <h1 className="text-3xl font-bold">{collectionName}</h1>
+                        <Counter count={movies.length} />
+                      </div>
                       {/* Mobile: edit and delete beside the title */}
                       {collection && (
                         <div className="md:hidden flex mb-2">{actionButtons}</div>
@@ -344,7 +370,7 @@ function CollectionDetail({
                       <div className="ml-auto mb-2">
                         <ViewToggle
                           value={viewMode}
-                          options={DETAIL_VIEW_OPTIONS}
+                          options={TABLE_VIEW_OPTIONS}
                           onChange={handleViewModeChange}
                         />
                       </div>
@@ -358,34 +384,19 @@ function CollectionDetail({
           <div className="mb-12">
             {movies.length === 0 ? (
               <EmptyState message="No movies in this collection yet." />
-            ) : (
-              <div
-                className={
-                  viewMode === "poster"
-                    ? "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8"
-                    : "grid grid-cols-1 sm:grid-cols-2 gap-2"
-                }
-              >
-                {movies
-                  .sort((a, b) => a.year - b.year)
-                  .map((movie) =>
-                    viewMode === "poster" ? (
-                      <MoviePosterCard
-                        key={movie.id}
-                        movie={movie}
-                        captionBelow
-                        onOpen={() => onOpenMovie(movie.id)}
-                      />
-                    ) : (
-                      <MovieDetailCard
-                        key={movie.id}
-                        movie={movie}
-                        showYear
-                        onOpen={() => onOpenMovie(movie.id)}
-                      />
-                    ),
-                  )}
+            ) : viewMode === "poster" ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8">
+                {sortedMovies.map((movie) => (
+                  <MoviePosterCard
+                    key={movie.id}
+                    movie={movie}
+                    captionBelow
+                    onOpen={() => onOpenMovie(movie.id)}
+                  />
+                ))}
               </div>
+            ) : (
+              <SimpleMovieTable movies={sortedMovies} onOpen={onOpenMovie} />
             )}
           </div>
 
@@ -568,7 +579,7 @@ function CollectionDetail({
           {showEditModal && collection && (
             <CollectionFormModal
               collection={collection}
-              movies={movies}
+              movies={allMovies}
               existingNames={allNames}
               onClose={() => setShowEditModal(false)}
               onSaved={(updated) => {
