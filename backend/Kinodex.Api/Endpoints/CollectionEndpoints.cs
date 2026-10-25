@@ -28,17 +28,19 @@ public static class CollectionEndpoints
             return Results.Created($"/api/collections/{collection.Id}", collection);
         });
 
-        group.MapPut("/{id}", async (int id, string newName, bool? isDirectorCollection, ClaimsPrincipal user, MovieDbContext db) =>
+        group.MapPut("/{id}", async (int id, UpdateCollectionRequest request, ClaimsPrincipal user, MovieDbContext db) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             var collection = await db.Collections.FindAsync(id);
             if (collection is null || collection.UserId != userId) return Results.NotFound();
 
+            var newName = request.Name.Trim();
+            if (newName.Length == 0) return Results.BadRequest("A collection needs a name.");
+
             var oldName = collection.Name;
             collection.Name = newName;
-
-            if (isDirectorCollection.HasValue)
-                collection.IsDirectorCollection = isDirectorCollection.Value;
+            collection.IsDirectorCollection = request.IsDirectorCollection;
+            collection.ImageUrl = request.ImageUrl;
 
             // Update all movies that have this collection
             var moviesWithCollection = await db.Movies
@@ -78,3 +80,5 @@ public static class CollectionEndpoints
         });
     }
 }
+
+public record UpdateCollectionRequest(string Name, bool IsDirectorCollection, string? ImageUrl);

@@ -4,37 +4,45 @@ import { IoClose } from "react-icons/io5";
 import { searchTMDBPeople, type TMDBPerson } from "../utils/tmdbApi";
 import type { Collection, Movie } from "../types";
 
-interface CreateCollectionModalProps {
-  movies: Movie[]; // The user's movies, to search for a normal collection's cover
-  existingNames: string[]; // Names already taken
+interface CollectionFormModalProps {
+  // The collection to edit; leave out to create a new one
+  collection?: Collection;
+  movies: Movie[]; // Movies to search for a normal collection's cover
+  existingNames: string[]; // Names already taken (the edited collection's own name is allowed)
   onClose: () => void;
-  onCreated: (collection: Collection) => void;
+  onSaved: (collection: Collection) => void;
 }
 
 type CollectionKind = "collection" | "director";
 
-// How many matching posters to offer while searching your movies
+// How many matching posters to offer while searching movies
 const MAX_POSTER_RESULTS = 10;
 
-// Creating a collection sets its cover once, up front. The name and the cover are set separately:
-// a normal collection searches the user's movies for a poster; a director collection searches TMDB
-// for the director's photo. Without a cover, the card uses one of the collection's posters.
-function CreateCollectionModal({
+// Creates or edits a collection. The name and the cover are set separately: a normal collection
+// searches movies for a poster; a director collection searches TMDB for the director's photo.
+// Without a cover, the card uses one of the collection's posters.
+function CollectionFormModal({
+  collection,
   movies,
   existingNames,
   onClose,
-  onCreated,
-}: CreateCollectionModalProps) {
+  onSaved,
+}: CollectionFormModalProps) {
   const { getToken } = useAuth();
-  const [kind, setKind] = useState<CollectionKind>("collection");
-  const [name, setName] = useState("");
+  const editing = collection !== undefined;
+  const [kind, setKind] = useState<CollectionKind>(
+    collection?.isDirectorCollection ? "director" : "collection",
+  );
+  const [name, setName] = useState(collection?.name ?? "");
   // The chosen cover, and what it's of (shown beside the preview)
-  const [cover, setCover] = useState<{ url: string; label: string } | null>(null);
+  const [cover, setCover] = useState<{ url: string; label: string } | null>(
+    collection?.imageUrl ? { url: collection.imageUrl, label: "Current cover" } : null,
+  );
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Normal collection: the user's movies with posters that match the search
+  // Normal collection: movies with posters that match the search
   const posterMatches = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (kind !== "collection" || !q) return [];
@@ -68,41 +76,48 @@ function CreateCollectionModal({
   const switchKind = (next: CollectionKind) => {
     if (next === kind) return;
     setKind(next);
-    // Each kind searches for its cover differently, so neither the search nor the cover carries over
+    // Each kind searches for its cover differently, so the search starts over; the chosen cover is
+    // kept until it's cleared
     setQuery("");
     setPeople([]);
-    setCover(null);
     setError("");
   };
 
   const trimmedName = name.trim();
-  const nameTaken = existingNames.some((n) => n.toLowerCase() === trimmedName.toLowerCase());
-  const canCreate = !!trimmedName && !nameTaken && !saving;
+  const nameTaken = existingNames.some(
+    (n) =>
+      n.toLowerCase() === trimmedName.toLowerCase() &&
+      n.toLowerCase() !== collection?.name.toLowerCase(),
+  );
+  const canSave = !!trimmedName && !nameTaken && !saving;
 
-  const create = async () => {
-    if (!canCreate) return;
+  const save = async () => {
+    if (!canSave) return;
     setSaving(true);
     setError("");
     try {
       const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
       const token = await getToken();
-      const response = await fetch(`${API_BASE}/api/collections`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name: trimmedName,
-          isDirectorCollection: kind === "director",
-          imageUrl: cover?.url ?? null,
-        }),
-      });
+      const response = await fetch(
+        editing ? `${API_BASE}/api/collections/${collection.id}` : `${API_BASE}/api/collections`,
+        {
+          method: editing ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({
+            name: trimmedName,
+            isDirectorCollection: kind === "director",
+            imageUrl: cover?.url ?? null,
+          }),
+        },
+      );
       if (response.ok) {
-        onCreated(await response.json());
+        onSaved(await response.json());
       } else {
-        setError(`Could not create the collection (${response.status}).`);
+        setError(`Could not save the collection (${response.status}).`);
       }
     } catch (err) {
-      console.error("Error creating collection:", err);
-      setError("Could not reach the server to create the collection.");
+      console.error("Error saving collection:", err);
+      setError("Could not reach the server to save the collection.");
     } finally {
       setSaving(false);
     }
@@ -124,11 +139,13 @@ function CreateCollectionModal({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Create new collection"
+        aria-label={editing ? `Edit ${collection.name}` : "Create new collection"}
         className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4 max-h-[90dvh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-2xl font-bold mb-4">Create New Collection</h2>
+        <h2 className="text-2xl font-bold mb-4 truncate">
+          {editing ? `Edit ${collection.name}` : "Create New Collection"}
+        </h2>
 
         <div className="flex p-0.5 mb-4 rounded-full bg-gray-900 border border-white/10">
           <button type="button" className={tabClass(kind === "collection")} onClick={() => switchKind("collection")}>
@@ -146,7 +163,7 @@ function CreateCollectionModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && create()}
+              onKeyDown={(e) => e.key === "Enter" && save()}
               placeholder={kind === "director" ? "e.g. Christopher Nolan" : "e.g. Criterion"}
               autoFocus
               className={`${inputClass} mt-1`}
@@ -176,7 +193,13 @@ function CreateCollectionModal({
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={kind === "director" ? "Search TMDB for the director" : "Search your movies"}
+                placeholder={
+                  kind === "director"
+                    ? "Search TMDB for the director"
+                    : editing
+                      ? "Search this collection's movies"
+                      : "Search your movies"
+                }
                 className={`${inputClass} mt-1`}
               />
               {!hasQuery ? (
@@ -230,11 +253,11 @@ function CreateCollectionModal({
 
         <div className="flex gap-3 mt-4">
           <button
-            onClick={create}
-            disabled={!canCreate}
+            onClick={save}
+            disabled={!canSave}
             className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 disabled:cursor-not-allowed text-white rounded-md transition cursor-pointer font-semibold"
           >
-            {saving ? "Creating…" : "Create"}
+            {saving ? "Saving…" : editing ? "Save" : "Create"}
           </button>
           <button
             onClick={onClose}
@@ -248,4 +271,4 @@ function CreateCollectionModal({
   );
 }
 
-export default CreateCollectionModal;
+export default CollectionFormModal;

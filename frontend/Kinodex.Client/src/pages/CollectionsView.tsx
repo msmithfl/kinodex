@@ -6,7 +6,11 @@ import CollectionCard from "../components/CollectionCard";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
 import { useSettings } from "../settings/useSettings";
-import CreateCollectionModal from "../components/CreateCollectionModal";
+import CollectionFormModal from "../components/CollectionFormModal";
+import Drawer from "../components/Drawer";
+import CollectionDetail from "./CollectionDetail";
+import MovieDetail from "./MovieDetail";
+import { useDrawerParam } from "../utils/useDrawerParam";
 import type { Movie, Collection } from "../types";
 
 // Same grid as the movie list's poster view
@@ -26,6 +30,18 @@ function CollectionsView() {
   const [collectionListItems, setCollectionListItems] = useState<
     Record<number, CollectionListItem[]>
   >({});
+
+  // The collection open in a drawer (?collection=name), and a movie opened from it in a second
+  // drawer on top (?movie=id); Back closes the top one first
+  const {
+    openId: openCollectionName,
+    open: openCollection,
+    close: closeCollection,
+    replace: replaceCollection,
+  } = useDrawerParam("collection");
+  const { openId: openMovieId, open: openMovie, close: closeMovie } = useDrawerParam("movie");
+  // Bumped when a movie is deleted from the top drawer, so the collection's drawer reloads
+  const [collectionVersion, setCollectionVersion] = useState(0);
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   const COLLECTIONS_URL = `${API_BASE}/api/collections`;
@@ -139,6 +155,7 @@ function CollectionsView() {
                               settings.showCollectionCompletion ? completionPercentage : null
                             }
                             coverPath={collection.imageUrl || getCoverPath(collection.name)}
+                            onOpen={() => openCollection(collection.name)}
                           />
                         );
                       })}
@@ -168,6 +185,7 @@ function CollectionsView() {
                               settings.showCollectionCompletion ? completionPercentage : null
                             }
                             coverPath={collection.imageUrl || getCoverPath(collection.name)}
+                            onOpen={() => openCollection(collection.name)}
                           />
                         );
                       })}
@@ -178,12 +196,49 @@ function CollectionsView() {
         </div>
       </div>
 
+      {openCollectionName && (
+        // Closing reloads the cards, which may show a new name, cover or checklist progress
+        <Drawer
+          label="Collection details"
+          onClose={() => {
+            closeCollection();
+            fetchData();
+          }}
+        >
+          <CollectionDetail
+            key={`${openCollectionName}-${collectionVersion}`}
+            collectionName={openCollectionName}
+            onOpenMovie={openMovie}
+            onSaved={(updated) => {
+              replaceCollection(updated.name);
+              fetchData();
+            }}
+            onDeleted={() => {
+              closeCollection();
+              fetchData();
+            }}
+          />
+        </Drawer>
+      )}
+      {openMovieId && (
+        <Drawer label="Movie details" onClose={closeMovie}>
+          <MovieDetail
+            key={openMovieId}
+            movieId={openMovieId}
+            onDeleted={() => {
+              closeMovie();
+              fetchData();
+              setCollectionVersion((v) => v + 1);
+            }}
+          />
+        </Drawer>
+      )}
       {showCreateInput && (
-        <CreateCollectionModal
+        <CollectionFormModal
           movies={movies}
           existingNames={collections.map((c) => c.name)}
           onClose={() => setShowCreateInput(false)}
-          onCreated={(created) => {
+          onSaved={(created) => {
             setCollections((prev) =>
               [...prev, created].sort((a, b) => a.name.localeCompare(b.name)),
             );

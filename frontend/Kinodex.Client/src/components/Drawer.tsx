@@ -40,11 +40,12 @@ function Drawer({ label, onClose, children }: DrawerProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      // Leave Escape to anything open on top (e.g. the poster lightbox), and don't close
-      // mid-typing in a field, where it could throw away an unsaved edit
+      // Leave Escape to anything open on top (e.g. the poster lightbox, or a movie's drawer over a
+      // collection's), and don't close mid-typing in a field, where it could throw away an unsaved edit
       const target = e.target as HTMLElement;
       if (target.closest("input, textarea, select")) return;
-      if (document.querySelectorAll('[role="dialog"]').length > 1) return;
+      const dialogs = document.querySelectorAll('[role="dialog"]');
+      if (dialogs[dialogs.length - 1] !== panelRef.current) return;
       requestClose();
     };
     document.addEventListener("keydown", handleKeyDown);

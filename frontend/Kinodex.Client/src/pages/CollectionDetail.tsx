@@ -1,33 +1,44 @@
-import { useState, useEffect, useRef } from "react";
-import { useFillViewportHeight } from "../utils/useFillViewportHeight";
+import { useState, useEffect, useRef, useContext } from "react";
+import { createPortal } from "react-dom";
+import { DrawerActionsSlotContext } from "../components/drawerActions";
 import { useAuth } from "@clerk/clerk-react";
-import { useParams, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
+import CollectionFormModal from "../components/CollectionFormModal";
 import Counter from "../components/Counter";
 import MovieDetailCard from "../components/MovieCardDetail";
 import MoviePosterCard from "../components/MovieCardPoster";
 import { searchTMDB } from "../utils/tmdbApi";
 import type { TMDBMovie, CollectionListItem } from "../types";
-import { FaTrash, FaEllipsisV } from "react-icons/fa";
+import { FaTrash, FaEdit } from "react-icons/fa";
 import ViewToggle from "../components/ViewToggle";
 import { DETAIL_VIEW_OPTIONS } from "../utils/viewOptions";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
-import SubNavigation from "../components/SubNavigation";
 import type { Movie, Collection } from "../types";
 
-function CollectionDetail() {
+interface CollectionDetailProps {
+  collectionName: string;
+  // A movie in the collection was clicked: open it (in a drawer over this one)
+  onOpenMovie: (movieId?: number) => void;
+  // Edited (possibly under a new name, which whatever tracks the open collection should follow)
+  onSaved: (collection: Collection) => void;
+  onDeleted: () => void;
+}
+
+// A collection's movies and its checklist, shown in a drawer over the Collections page
+function CollectionDetail({
+  collectionName,
+  onOpenMovie,
+  onSaved,
+  onDeleted,
+}: CollectionDetailProps) {
   const { getToken } = useAuth();
-  const { collectionName } = useParams<{ collectionName: string }>();
-  const navigate = useNavigate();
   const [movies, setMovies] = useState<Movie[]>([]);
   const [collection, setCollection] = useState<Collection | null>(null);
   const [loading, setLoading] = useState(true);
-  // Fills the screen below the header and above the mobile bottom bar
-  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState("");
-  const [editedIsDirector, setEditedIsDirector] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  // Every collection's name, so the edit form can stop a rename onto one that's taken
+  const [allNames, setAllNames] = useState<string[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Collection list state
@@ -44,9 +55,8 @@ function CollectionDetail() {
     return saved === "poster" || saved === "detail" ? saved : "detail";
   });
 
-  // Actions dropdown state
-  const [isActionsDropdownOpen, setIsActionsDropdownOpen] = useState(false);
-  const actionsDropdownRef = useRef<HTMLDivElement>(null);
+  // From tablet up the drawer floats edit and delete beside its close button, outside the panel
+  const actionsSlot = useContext(DrawerActionsSlotContext);
 
   const handleViewModeChange = (mode: "detail" | "poster") => {
     setViewMode(mode);
@@ -60,32 +70,6 @@ function CollectionDetail() {
   useEffect(() => {
     fetchMovies();
   }, [collectionName]);
-
-  // Close the actions menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        actionsDropdownRef.current &&
-        !actionsDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsActionsDropdownOpen(false);
-      }
-    };
-
-    if (isActionsDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [isActionsDropdownOpen]);
-
-  // Close the actions menu when editing starts
-  useEffect(() => {
-    if (isEditing) {
-      setIsActionsDropdownOpen(false);
-    }
-  }, [isEditing]);
 
   const fetchMovies = async () => {
     try {
@@ -115,6 +99,7 @@ function CollectionDetail() {
           (c: Collection) => c.name === collectionName,
         );
         setCollection(foundCollection || null);
+        setAllNames(collectionsData.map((c: Collection) => c.name));
 
         // Fetch list items if collection found
         if (foundCollection) {
@@ -147,46 +132,11 @@ function CollectionDetail() {
   };
 
   const handleEditClick = () => {
-    setIsEditing(true);
-    setEditedName(collectionName || "");
-    setEditedIsDirector(collection?.isDirectorCollection || false);
-    setIsActionsDropdownOpen(false);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!collection || !editedName.trim()) return;
-
-    try {
-      const token = await getToken();
-      const response = await fetch(
-        `${COLLECTIONS_URL}/${collection.id}?newName=${encodeURIComponent(editedName)}&isDirectorCollection=${editedIsDirector}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (response.ok) {
-        setIsEditing(false);
-        navigate(`/collections/${encodeURIComponent(editedName)}`);
-      }
-    } catch (error) {
-      console.error("Error updating collection:", error);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setEditedName("");
-    setEditedIsDirector(false);
+    setShowEditModal(true);
   };
 
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
-    setIsActionsDropdownOpen(false);
   };
 
   const handleDeleteConfirm = async () => {
@@ -200,7 +150,7 @@ function CollectionDetail() {
       });
 
       if (response.ok) {
-        navigate("/collections");
+        onDeleted();
       }
     } catch (error) {
       console.error("Error deleting collection:", error);
@@ -341,90 +291,55 @@ function CollectionDetail() {
       : 0;
 
   if (loading) {
-    return (
-      <>
-        <SubNavigation />
-        <LoadingSpinner />
-      </>
-    );
+    return <LoadingSpinner />;
   }
 
-  return (
+  // Edit and delete: floating beside the drawer's close button from tablet up, in the header on mobile
+  const actionButtons = (
     <>
-      <SubNavigation />
-      <div ref={viewport.ref} className="flex h-[calc(100dvh-9rem)] mt-2" style={viewport.style}>
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 md:px-12">
+      <button
+        onClick={handleEditClick}
+        className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+        aria-label="Edit collection"
+      >
+        <FaEdit className="w-5 h-5" />
+      </button>
+      <button
+        onClick={handleDeleteClick}
+        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
+        aria-label="Delete collection"
+      >
+        <FaTrash className="w-5 h-5" />
+      </button>
+    </>
+  );
+
+  return (
+    // Fills the drawer and scrolls within it
+    <>
+      {collection &&
+        actionsSlot &&
+        createPortal(
+          <div className="flex flex-col rounded-full bg-gray-900/80 border border-white/10 shadow-lg backdrop-blur-sm [&>button]:rounded-full [&>button]:p-3">
+            {actionButtons}
+          </div>,
+          actionsSlot,
+        )}
+      <div className="flex h-full">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 pt-4 md:pt-6 pb-8">
           <div>
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            {/* Mobile: pr-12 keeps clear of the drawer's close button in the top-right corner */}
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 pr-12 md:pr-0">
               <div className="flex-1">
-                {isEditing ? (
-                  <div>
-                    <input
-                      type="text"
-                      value={editedName}
-                      onChange={(e) => setEditedName(e.target.value)}
-                      className="w-full md:max-w-md px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white text-2xl font-bold mb-3"
-                      autoFocus
-                    />
-                    <label className="flex items-center gap-2 text-gray-300 cursor-pointer mb-3">
-                      <input
-                        type="checkbox"
-                        checked={editedIsDirector}
-                        onChange={(e) => setEditedIsDirector(e.target.checked)}
-                        className="w-4 h-4 cursor-pointer"
-                      />
-                      <span>Director Collection</span>
-                    </label>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handleSaveEdit}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md transition cursor-pointer"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={handleCancelEdit}
-                        className="bg-gray-600 hover:bg-gray-500 text-white py-2 px-4 rounded-md transition cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
                   <div>
                     <div className="flex items-center gap-4">
                       <h1 className="text-3xl font-bold mb-2">
                         {collectionName}
                       </h1>
                       <Counter count={movies.length} className="mb-2" />
-                      {!isEditing && collection && (
-                        <div ref={actionsDropdownRef} className="relative mb-2">
-                          <button
-                            onClick={() =>
-                              setIsActionsDropdownOpen(!isActionsDropdownOpen)
-                            }
-                            className="text-gray-400 hover:text-gray-300 hover:bg-gray-700 px-2 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                            aria-label="Actions"
-                          >
-                            <FaEllipsisV className="w-4 h-4" />
-                          </button>
-                          {isActionsDropdownOpen && (
-                            <div className="text-sm absolute left-0 mt-2 w-36 bg-gray-700 border border-gray-600 rounded-md shadow-lg z-10">
-                              <button
-                                onClick={handleEditClick}
-                                className="w-full px-4 py-2 text-left hover:bg-gray-600 transition-colors flex items-center gap-3 cursor-pointer"
-                              >
-                                <span>Edit</span>
-                              </button>
-                              <button
-                                onClick={handleDeleteClick}
-                                className="w-full px-4 py-2 text-left hover:bg-gray-600 transition-colors flex items-center gap-3 text-red-400 hover:text-red-300 cursor-pointer"
-                              >
-                                <span>Delete</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                      {/* Mobile: edit and delete beside the title */}
+                      {collection && (
+                        <div className="md:hidden flex mb-2">{actionButtons}</div>
                       )}
                       <div className="ml-auto mb-2">
                         <ViewToggle
@@ -435,7 +350,6 @@ function CollectionDetail() {
                       </div>
                     </div>
                   </div>
-                )}
               </div>
             </div>
           </div>
@@ -448,17 +362,27 @@ function CollectionDetail() {
               <div
                 className={
                   viewMode === "poster"
-                    ? "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8"
-                    : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2"
+                    ? "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8"
+                    : "grid grid-cols-1 sm:grid-cols-2 gap-2"
                 }
               >
                 {movies
                   .sort((a, b) => a.year - b.year)
                   .map((movie) =>
                     viewMode === "poster" ? (
-                      <MoviePosterCard key={movie.id} movie={movie} captionBelow />
+                      <MoviePosterCard
+                        key={movie.id}
+                        movie={movie}
+                        captionBelow
+                        onOpen={() => onOpenMovie(movie.id)}
+                      />
                     ) : (
-                      <MovieDetailCard key={movie.id} movie={movie} showYear />
+                      <MovieDetailCard
+                        key={movie.id}
+                        movie={movie}
+                        showYear
+                        onOpen={() => onOpenMovie(movie.id)}
+                      />
                     ),
                   )}
               </div>
@@ -467,7 +391,7 @@ function CollectionDetail() {
 
           {/* Collection Checklist Manager */}
           {collection && (
-            <div className="mt-8 bg-gray-800 rounded-lg p-6 max-w-4xl justify-center mx-auto">
+            <div className="mt-8 bg-gray-800 rounded-lg p-4 md:p-6">
               <h2 className="text-2xl font-bold mb-4">Collection Checklist</h2>
 
               {/* Search to add movies */}
@@ -639,6 +563,20 @@ function CollectionDetail() {
                 </div>
               )}
             </div>
+          )}
+
+          {showEditModal && collection && (
+            <CollectionFormModal
+              collection={collection}
+              movies={movies}
+              existingNames={allNames}
+              onClose={() => setShowEditModal(false)}
+              onSaved={(updated) => {
+                setShowEditModal(false);
+                setCollection(updated);
+                onSaved(updated);
+              }}
+            />
           )}
 
           <ConfirmDialog
