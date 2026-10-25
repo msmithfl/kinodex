@@ -50,9 +50,6 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const [newShelfSection, setNewShelfSection] = useState("");
   const [submitError, setSubmitError] = useState("");
 
-  const [_showProductImageSelector, _setShowProductImageSelector] =
-    useState(false);
-  const [_scannedUpc, setScannedUpc] = useState("");
   const [_showManualUpcInput, _setShowManualUpcInput] = useState(false);
   const [_manualUpc, _setManualUpc] = useState("");
   const [showScanner, setShowScanner] = useState(false);
@@ -245,9 +242,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
 
   const handleBarcodeDetected = (code: string) => {
     setFormData({ ...formData, upcNumber: code });
-    setScannedUpc(code);
     setShowScanner(false);
-    //setShowProductImageSelector(true);
   };
 
   return (

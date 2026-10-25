@@ -21,4 +21,5 @@ public class MovieDbContext : DbContext
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Checkout> Checkouts => Set<Checkout>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<UpcLookup> UpcLookups => Set<UpcLookup>();
 }
