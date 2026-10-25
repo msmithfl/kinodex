@@ -392,6 +392,40 @@ namespace Kinodex.Api.Migrations
                     b.ToTable("TvShowPurchases");
                 });
 
+            modelBuilder.Entity("Kinodex.Api.Models.UpcLookup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Found")
+                        .HasColumnType("boolean");
+
+                    b.PrimitiveCollection<List<string>>("Images")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<DateTime>("LookedUpAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Upc")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Upc")
+                        .IsUnique();
+
+                    b.ToTable("UpcLookups");
+                });
+
             modelBuilder.Entity("Kinodex.Api.Models.User", b =>
                 {
                     b.Property<string>("Id")

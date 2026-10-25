@@ -10,6 +10,7 @@ import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import { FaPlus, FaMinus } from "react-icons/fa6";
 import { Genres, type Movie } from "../types";
 import { useImagePicker } from "./useImagePicker";
+import { useProductImagePicker } from "./useProductImagePicker";
 
 interface MovieFormProps {
   formData: Movie;
@@ -72,7 +73,12 @@ function MovieForm({
     selected: formData.backdropPath,
     onSelect: (backdropPath) => setFormData((prev) => ({ ...prev, backdropPath })),
   });
-  const [yearInput, setYearInput] = useState<string>(formData.year.toString());
+  // Product (box art) images found by the movie's UPC
+  const productPicker = useProductImagePicker({
+    upc: formData.upcNumber,
+    selected: formData.productPosterPath,
+    onSelect: (productPosterPath) => setFormData((prev) => ({ ...prev, productPosterPath })),
+  });  const [yearInput, setYearInput] = useState<string>(formData.year.toString());
   const [shelfInput, setShelfInput] = useState<string>(
     formData.shelfNumber.toString(),
   );
@@ -901,8 +907,11 @@ function MovieForm({
                   placeholder="https://example.com/product-image.jpg"
                   className={inputClass}
                 />
+                {/* Look up retailer images by UPC; the grid opens full width below this row */}
+                <div className="mt-2">{productPicker.button}</div>
               </div>
             </div>
+            {productPicker.grid}
           </div>
         )}
       </div>
