@@ -492,7 +492,7 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
                             {movie.collections.map((col, idx) => (
                               <Link
                                 key={idx}
-                                to={`/collections/${encodeURIComponent(col)}`}
+                                to={`/collections?collection=${encodeURIComponent(col)}`}
                                 className="cursor-pointer hover:underline"
                               >
                                 {col}

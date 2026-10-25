@@ -9,6 +9,8 @@ interface CollectionCardProps {
   completionPercentage: number | null;
   // Cover image, e.g. a poster from one of the collection's movies
   coverPath?: string;
+  // Runs on a plain click (e.g. to open the collection's drawer); ctrl/cmd-clicks still follow the link
+  onOpen?: () => void;
 }
 
 // A small circular progress ring with the percentage in the middle
@@ -55,10 +57,16 @@ function CollectionCard({
   collection,
   completionPercentage,
   coverPath,
+  onOpen,
 }: CollectionCardProps) {
   return (
     <Link
-      to={`/collections/${encodeURIComponent(collection.name)}`}
+      to={`/collections?collection=${encodeURIComponent(collection.name)}`}
+      onClick={(e) => {
+        if (!onOpen || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        onOpen();
+      }}
       className="group flex flex-col min-w-0"
     >
       {/* Hover: the outline turns indigo and a dark overlay fades in; no zoom */}

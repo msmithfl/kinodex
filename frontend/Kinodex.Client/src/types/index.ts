@@ -86,7 +86,7 @@ export interface Collection {
   id: number;
   name: string;
   isDirectorCollection: boolean;
-  // Director collections: the director's TMDB photo; null until looked up, empty when there's none
+  // Cover chosen at creation: a movie poster or the director's photo; null uses a movie's poster
   imageUrl?: string | null;
   createdAt: string;
 }

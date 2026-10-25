@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import BottomNav from "./components/BottomNav";
@@ -9,7 +9,6 @@ import TvShowList from "./pages/TvShowList";
 import TvShowDetail from "./pages/TvShowDetail";
 import MovieDetail from "./pages/MovieDetail";
 import CollectionsView from "./pages/CollectionsView";
-import CollectionDetail from "./pages/CollectionDetail";
 import ShelfSectionsView from "./pages/ShelfSectionsView";
 import ShelfSectionDetail from "./pages/ShelfSectionDetail";
 import GenresView from "./pages/GenresView";
@@ -25,6 +24,12 @@ import { SettingsProvider } from "./settings/SettingsProvider";
 import CsvExport from "./pages/CsvExport";
 import SignUpPage from "./pages/SignUpPage";
 import SignInPage from "./pages/SignInPage";
+
+// Collections open in a drawer on the Collections page now; old /collections/:name links land there
+function CollectionRedirect() {
+  const { collectionName = "" } = useParams<{ collectionName: string }>();
+  return <Navigate replace to={`/collections?collection=${encodeURIComponent(collectionName)}`} />;
+}
 
 function App() {
   return (
@@ -54,7 +59,7 @@ function App() {
                     <Route path="/my-shelf" element={<MyShelf />} />
                     <Route path="/dashboard" element={<Navigate to="/" replace />} />
                     <Route path="/collections" element={<CollectionsView />} />
-                    <Route path="/collections/:collectionName" element={<CollectionDetail />} />
+                    <Route path="/collections/:collectionName" element={<CollectionRedirect />} />
                     <Route path="/shelfsections" element={<ShelfSectionsView />} />
                     <Route path="/shelfsections/:sectionName" element={<ShelfSectionDetail />} />
                     <Route path="/genres" element={<GenresView />} />

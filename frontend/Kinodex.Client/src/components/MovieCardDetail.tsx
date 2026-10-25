@@ -17,6 +17,8 @@ interface MovieDetailCardProps {
   showYear?: boolean;
   showUpc?: boolean;
   showShelfNumber?: boolean;
+  // Runs on a plain click (e.g. to open a drawer); ctrl/cmd/shift-clicks still follow the link
+  onOpen?: () => void;
 }
 
 function MovieDetailCard({
@@ -24,10 +26,16 @@ function MovieDetailCard({
   showYear = false,
   showUpc = false,
   showShelfNumber = false,
+  onOpen,
 }: MovieDetailCardProps) {
   return (
     <Link
       to={`/movie/${movie.id}`}
+      onClick={(e) => {
+        if (!onOpen || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        onOpen();
+      }}
       className="bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg overflow-hidden transition-all duration-200 transform hover:scale-105 flex gap-4 p-4"
     >
       {movie.posterPath && (

@@ -28,21 +28,19 @@ public static class CollectionEndpoints
             return Results.Created($"/api/collections/{collection.Id}", collection);
         });
 
-        group.MapPut("/{id}", async (int id, string newName, bool? isDirectorCollection, ClaimsPrincipal user, MovieDbContext db) =>
+        group.MapPut("/{id}", async (int id, UpdateCollectionRequest request, ClaimsPrincipal user, MovieDbContext db) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             var collection = await db.Collections.FindAsync(id);
             if (collection is null || collection.UserId != userId) return Results.NotFound();
 
+            var newName = request.Name.Trim();
+            if (newName.Length == 0) return Results.BadRequest("A collection needs a name.");
+
             var oldName = collection.Name;
             collection.Name = newName;
-
-            if (isDirectorCollection.HasValue)
-                collection.IsDirectorCollection = isDirectorCollection.Value;
-
-            // A new name may be a different director, so the photo is looked up again
-            if (newName != oldName || !collection.IsDirectorCollection)
-                collection.ImageUrl = null;
+            collection.IsDirectorCollection = request.IsDirectorCollection;
+            collection.ImageUrl = request.ImageUrl;
 
             // Update all movies that have this collection
             var moviesWithCollection = await db.Movies
@@ -56,18 +54,6 @@ public static class CollectionEndpoints
                     movie.Collections[index] = newName;
             }
 
-            await db.SaveChangesAsync();
-            return Results.Ok(collection);
-        });
-
-        // Saves the cover image found for a collection (an empty string records that there is none)
-        group.MapPut("/{id}/image", async (int id, CollectionImageRequest request, ClaimsPrincipal user, MovieDbContext db) =>
-        {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            var collection = await db.Collections.FindAsync(id);
-            if (collection is null || collection.UserId != userId) return Results.NotFound();
-
-            collection.ImageUrl = request.ImageUrl;
             await db.SaveChangesAsync();
             return Results.Ok(collection);
         });
@@ -95,4 +81,4 @@ public static class CollectionEndpoints
     }
 }
 
-public record CollectionImageRequest(string? ImageUrl);
+public record UpdateCollectionRequest(string Name, bool IsDirectorCollection, string? ImageUrl);
