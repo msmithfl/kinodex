@@ -8,6 +8,7 @@ import Counter from "../components/Counter";
 import SimpleMovieTable from "../components/SimpleMovieTable";
 import MoviePosterCard from "../components/MovieCardPoster";
 import { searchTMDB } from "../utils/tmdbApi";
+import { isChecklistItemOwned } from "../utils/checklist";
 import type { TMDBMovie, CollectionListItem } from "../types";
 import { FaTrash, FaEdit, FaChevronDown } from "react-icons/fa";
 import ViewToggle from "../components/ViewToggle";
@@ -303,16 +304,13 @@ function CollectionDetail({
     }
   };
 
-  const isMovieOwned = (title: string, year: number) => {
-    return movies.some(
-      (m) => m.title.toLowerCase() === title.toLowerCase() && m.year === year,
-    );
-  };
+  // Whether a checklist item is one of this collection's movies (by TMDB id, else title and year)
+  const isOwned = (item: CollectionListItem) => isChecklistItemOwned(item, movies);
 
   const completionPercentage =
     listItems.length > 0
       ? Math.round(
-          (listItems.filter((item) => isMovieOwned(item.title, item.year))
+          (listItems.filter(isOwned)
             .length /
             listItems.length) *
             100,
@@ -545,7 +543,7 @@ function CollectionDetail({
                           Checklist (
                           {
                             listItems.filter((item) =>
-                              isMovieOwned(item.title, item.year),
+                              isOwned(item),
                             ).length
                           }{" "}
                           of {listItems.length})
@@ -564,7 +562,7 @@ function CollectionDetail({
                         {listItems
                           .sort((a, b) => a.year - b.year)
                           .map((item) => {
-                            const owned = isMovieOwned(item.title, item.year);
+                            const owned = isOwned(item);
 
                             return (
                               <div
