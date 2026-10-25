@@ -86,6 +86,8 @@ export interface Collection {
   id: number;
   name: string;
   isDirectorCollection: boolean;
+  // Director collections: the director's TMDB photo; null until looked up, empty when there's none
+  imageUrl?: string | null;
   createdAt: string;
 }
 

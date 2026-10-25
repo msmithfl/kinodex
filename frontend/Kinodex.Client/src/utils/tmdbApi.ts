@@ -102,6 +102,20 @@ export async function getTMDBImages(
     .map((p) => p.file_path);
 }
 
+// A person's photo by name, e.g. a director collection's cover. Prefers people TMDB knows for
+// directing, so a shared name finds the director. Returns null when no one with a photo matches,
+// or undefined when TMDB couldn't be reached (worth trying again later).
+export async function getTMDBPersonPhoto(name: string): Promise<string | null | undefined> {
+  type TmdbPerson = { profile_path: string | null; known_for_department?: string };
+  const data = await tmdbGet<{ results?: TmdbPerson[] }>(
+    `/search/person?query=${encodeURIComponent(name)}&include_adult=false&language=en-US&page=1`,
+  );
+  if (!data) return undefined;
+  const withPhoto = (data.results ?? []).filter((p) => p.profile_path);
+  const person = withPhoto.find((p) => p.known_for_department === "Directing") ?? withPhoto[0];
+  return person ? `https://image.tmdb.org/t/p/h632${person.profile_path}` : null;
+}
+
 // TV search results don't include a season count, so it comes from the show's details
 export async function getTMDBTvSeasonCount(tmdbId: number): Promise<number> {
   const data = await tmdbGet<{ number_of_seasons?: number }>(`/tv/${tmdbId}?language=en-US`);
