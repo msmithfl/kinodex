@@ -6,6 +6,7 @@ import CollectionCard from "../components/CollectionCard";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
 import { useSettings } from "../settings/useSettings";
+import { useDirectorPhotos } from "../utils/useDirectorPhotos";
 import type { Movie, Collection } from "../types";
 
 // Same grid as the movie list's poster view
@@ -77,6 +78,9 @@ function CollectionsView() {
     movies
       .filter((m) => m.posterPath && m.collections?.includes(collectionName))
       .sort((a, b) => (a.year || 9999) - (b.year || 9999))[0]?.posterPath;
+
+  // Director collections use the director's TMDB photo, falling back to the poster cover
+  useDirectorPhotos(collections, setCollections);
 
   const getCompletionPercentage = (
     collectionId: number,
@@ -209,7 +213,9 @@ function CollectionsView() {
                             completionPercentage={
                               settings.showCollectionCompletion ? completionPercentage : null
                             }
-                            coverPath={getCoverPath(collection.name)}
+                            coverPath={
+                              collection.imageUrl || getCoverPath(collection.name)
+                            }
                           />
                         );
                       })}

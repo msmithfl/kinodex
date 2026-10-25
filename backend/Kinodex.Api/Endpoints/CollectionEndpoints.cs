@@ -40,6 +40,10 @@ public static class CollectionEndpoints
             if (isDirectorCollection.HasValue)
                 collection.IsDirectorCollection = isDirectorCollection.Value;
 
+            // A new name may be a different director, so the photo is looked up again
+            if (newName != oldName || !collection.IsDirectorCollection)
+                collection.ImageUrl = null;
+
             // Update all movies that have this collection
             var moviesWithCollection = await db.Movies
                 .Where(m => m.UserId == userId && m.Collections.Contains(oldName))
@@ -52,6 +56,18 @@ public static class CollectionEndpoints
                     movie.Collections[index] = newName;
             }
 
+            await db.SaveChangesAsync();
+            return Results.Ok(collection);
+        });
+
+        // Saves the cover image found for a collection (an empty string records that there is none)
+        group.MapPut("/{id}/image", async (int id, CollectionImageRequest request, ClaimsPrincipal user, MovieDbContext db) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var collection = await db.Collections.FindAsync(id);
+            if (collection is null || collection.UserId != userId) return Results.NotFound();
+
+            collection.ImageUrl = request.ImageUrl;
             await db.SaveChangesAsync();
             return Results.Ok(collection);
         });
@@ -78,3 +94,5 @@ public static class CollectionEndpoints
         });
     }
 }
+
+public record CollectionImageRequest(string? ImageUrl);
