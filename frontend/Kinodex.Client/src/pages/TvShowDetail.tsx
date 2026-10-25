@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
+import { createPortal } from "react-dom";
+import { DrawerActionsSlotContext } from "../components/drawerActions";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import {
@@ -26,11 +28,25 @@ import {
 } from "../utils/tvShowPurchases";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 
-function TvShowDetail() {
-  const navigate = useNavigate();
+interface TvShowDetailProps {
+  // Show this TV show inside a drawer instead of reading the id from the /tv-shows/:id route
+  showId?: string;
+  // Drawer mode: called after the show is deleted, instead of navigating to the list
+  onDeleted?: () => void;
+}
+
+function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {  const navigate = useNavigate();
   const { getToken } = useAuth();
-  const { id } = useParams<{ id: string }>();
-  const [show, setShow] = useState<TvShow | null>(null);
+  const params = useParams<{ id: string }>();
+  const id = showId ?? params.id;
+  const inDrawer = showId !== undefined;
+  // From tablet up the drawer floats edit and delete beside its close button, outside the panel
+  const actionsSlot = useContext(DrawerActionsSlotContext);
+  // The page's layout switches at the window's lg width, which a narrower drawer would also hit.
+  // So the drawer gets its own classes: the poster small on the left, title and year, genres, then
+  // rating and TMDB beside it at the bottom; edit and delete in the header's bottom-right corner.
+  const layout = (pageClasses: string, drawerClasses: string) =>
+    inDrawer ? drawerClasses : pageClasses;  const [show, setShow] = useState<TvShow | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -56,8 +72,10 @@ function TvShowDetail() {
         });
         if (response.ok) {
           setShow(await response.json());
-        } else if (response.status === 404) {
+        } else if (response.status === 404 && !inDrawer) {
           navigate("/tv-shows");
+        } else if (response.status === 404) {
+          setLoadError("TV show not found");
         } else {
           setLoadError(`Could not load this TV show (${response.status}).`);
         }
@@ -81,7 +99,8 @@ function TvShowDetail() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
-        navigate("/tv-shows");
+        if (onDeleted) onDeleted();
+        else navigate("/tv-shows");
       } else {
         setDeleteError(
           `Failed to delete ${show?.title ?? "this TV show"} (${response.status}). Please try again.`,
@@ -106,6 +125,27 @@ function TvShowDetail() {
       </div>
     );
   }
+
+  // The TMDB logo link: beside the year on the page, after the rating in the drawer from tablet up
+  const tmdbLink = (
+    <a
+      href={
+        show.tmdbId
+          ? `https://www.themoviedb.org/tv/${show.tmdbId}`
+          : "https://www.themoviedb.org/"
+      }
+      target="_blank"
+      rel="noopener noreferrer"
+      className="shrink-0"
+      title={show.tmdbId ? "View on TMDB" : "Search on TMDB"}
+    >
+      <img
+        src="/tmdb-icon.png"
+        alt="TMDB"
+        className="w-8 h-8 hover:opacity-80 transition-opacity"
+      />
+    </a>
+  );
 
   // Edit and delete, placed per screen size: over the backdrop on mobile, at the bottom on tablet,
   // and in the header's bottom-right corner on desktop
@@ -132,11 +172,21 @@ function TvShowDetail() {
   const owned = ownedSeasons(show.purchases);
 
   return (
+    // As a page it fills the screen below the header; in a drawer it fills the panel
     <div
-      ref={container.ref}
-      className="relative h-[calc(100dvh-5rem)] flex flex-col"
-      style={container.style}
+      ref={inDrawer ? undefined : container.ref}
+      className={`relative flex flex-col ${inDrawer ? "h-full" : "h-[calc(100dvh-5rem)]"}`}
+      style={inDrawer ? undefined : container.style}
     >
+      {/* Drawer from tablet up: edit and delete float below the close button, outside the panel */}
+      {inDrawer &&
+        actionsSlot &&
+        createPortal(
+          <div className="flex flex-col rounded-full bg-gray-900/80 border border-white/10 shadow-lg backdrop-blur-sm [&>button]:rounded-full [&>button]:p-3">
+            {actionButtons}
+          </div>,
+          actionsSlot,
+        )}
       {show.backdropPath && (
         <>
           {/* Desktop: fixed background scoped to this container */}
@@ -144,9 +194,10 @@ function TvShowDetail() {
             className="hidden md:block absolute inset-0 pointer-events-none opacity-20"
             style={{
               backgroundImage: `url(${show.backdropPath})`,
-              backgroundAttachment: "fixed",
+              // The page pins it to the window; the drawer centres it within the panel instead
+              backgroundAttachment: inDrawer ? "scroll" : "fixed",
               backgroundSize: "cover",
-              backgroundPosition: "top center",
+              backgroundPosition: inDrawer ? "center" : "top center",
             }}
           />
           <div className="hidden md:block absolute inset-0 pointer-events-none bg-linear-to-b from-gray-900/60 via-gray-900/80 to-gray-900" />
@@ -179,51 +230,37 @@ function TvShowDetail() {
               {deleteError}
             </p>
           )}
-          <div className="mx-auto max-w-4xl lg:max-w-6xl pt-2 md:pt-6 lg:px-6">
+          <div className={layout("mx-auto max-w-4xl lg:max-w-6xl pt-2 md:pt-6 lg:px-6", "mx-auto max-w-4xl pt-2 md:pt-6")}>
             {/* Mobile and tablet: one column, title block beside the poster at the top.
                 Desktop: a grid with the title block across the top, details on the left and the poster on the right.
                 The header's wrappers use lg:contents so the title block and poster become grid items on desktop
                 without changing the mobile markup. */}
-            <div className="overflow-hidden lg:overflow-visible lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-x-10 lg:gap-y-4 lg:items-start">
+            <div className={layout("overflow-hidden lg:overflow-visible lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-x-10 lg:gap-y-4 lg:items-start", "overflow-hidden")}>
               {/* Show Details Header */}
-              <div className="px-4 pb-4 border-b-[0.5px] border-white/20 lg:contents">
-                <div className="flex justify-between md:justify-start gap-4 md:gap-0 lg:contents">
+              <div className={layout("px-4 pb-4 border-b-[0.5px] border-white/20 lg:contents", "relative px-4 md:px-6 pb-4 border-b-[0.5px] border-white/20")}>
+                <div className={layout("flex justify-between md:justify-start gap-4 md:gap-0 lg:contents", "flex justify-between md:justify-start gap-4 md:gap-6")}>
                   {/* Title, Year, Rating, Genres. Desktop: title, year and TMDB on one line, genres below, stars below that */}
-                  <div className="md:ml-10 lg:ml-0 flex flex-col justify-center lg:flex-row lg:flex-wrap lg:justify-start lg:items-center lg:gap-x-4 lg:gap-y-1 lg:col-span-2 lg:row-start-1 lg:px-4 lg:pb-3 lg:border-b-[0.5px] lg:border-white/20 lg:relative">
+                  <div className={layout("md:ml-10 lg:ml-0 flex flex-col justify-center lg:flex-row lg:flex-wrap lg:justify-start lg:items-center lg:gap-x-4 lg:gap-y-1 lg:col-span-2 lg:row-start-1 lg:px-4 lg:pb-3 lg:border-b-[0.5px] lg:border-white/20 lg:relative", "min-w-0 flex flex-col justify-center gap-1 md:flex-row md:flex-wrap md:items-center md:justify-start md:content-end md:gap-x-3 md:gap-y-2")}>
                     {/* Desktop: edit and delete in the header's bottom-right corner */}
-                    <div className="hidden lg:flex absolute right-4 bottom-2 gap-1">
+                    <div className={layout("hidden lg:flex absolute right-4 bottom-2 gap-1", "hidden")}>
                       {actionButtons}
                     </div>
-                    <h1 className="text-xl lg:text-3xl font-bold text-white lg:order-1">
+                    <h1 className={layout("text-xl lg:text-3xl font-bold text-white lg:order-1", "text-xl lg:text-3xl font-bold text-white md:order-1")}>
                       {show.title}
                     </h1>
 
-                    <div className="flex items-center gap-4 lg:gap-3 lg:order-2">
+                    <div className={layout("flex items-center gap-4 lg:gap-3 lg:order-2", "flex items-center gap-4 md:gap-3 md:order-2")}>
                       <p className="text-sm lg:text-xl text-white">
                         {show.year || (
                           <span className="text-gray-500">Not set</span>
                         )}
                       </p>
-                      <a
-                        href={
-                          show.tmdbId
-                            ? `https://www.themoviedb.org/tv/${show.tmdbId}`
-                            : "https://www.themoviedb.org/"
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="shrink-0"
-                        title={show.tmdbId ? "View on TMDB" : "Search on TMDB"}
-                      >
-                        <img
-                          src="/tmdb-icon.png"
-                          alt="TMDB"
-                          className="w-8 h-8 hover:opacity-80 transition-opacity"
-                        />
-                      </a>
+                      {/* Beside the year, except in the drawer from tablet up, where it follows the rating */}
+                      <span className={layout("contents", "contents md:hidden")}>{tmdbLink}</span>
+
                     </div>
 
-                    <div className="flex gap-1 items-center lg:order-4 lg:basis-full">
+                    <div className={layout("flex gap-1 items-center lg:order-4 lg:basis-full", "flex gap-1 items-center md:order-4 md:basis-full")}>
                       {[1, 2, 3, 4, 5].map((star) => {
                         const isFullStar = show.rating >= star;
                         const isHalfStar = show.rating === star - 0.5;
@@ -239,9 +276,13 @@ function TvShowDetail() {
                           </div>
                         );
                       })}
+                      {/* Drawer from tablet up: TMDB follows the rating */}
+                      {inDrawer && (
+                        <span className="hidden md:inline-flex ml-2">{tmdbLink}</span>
+                      )}
                     </div>
 
-                    <div className="lg:order-3 lg:basis-full">
+                    <div className={layout("lg:order-3 lg:basis-full", "md:order-3 md:basis-full")}>
                       {show.genres.length > 0 ? (
                         <p className="text-sm mt-1 lg:mt-0">{show.genres.join(", ")}</p>
                       ) : (
@@ -252,7 +293,7 @@ function TvShowDetail() {
                     </div>
                   </div>
                   {/* Poster; desktop: right column, stays in view while the details scroll */}
-                  <div className="lg:col-start-2 lg:row-start-2 lg:sticky lg:top-4">
+                  <div className={layout("lg:col-start-2 lg:row-start-2 lg:sticky lg:top-4", "shrink-0 md:order-first")}>
                     {show.posterPath ? (
                       // Click to see the poster large
                       <button
@@ -264,7 +305,7 @@ function TvShowDetail() {
                         <img
                           src={show.posterPath}
                           alt={`${show.title} poster`}
-                          className="border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-60 lg:max-w-none lg:w-full object-cover"
+                          className={layout("border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-60 lg:max-w-none lg:w-full object-cover", "border-[0.5px] border-white/20 rounded shadow-lg max-w-25 md:max-w-28 object-cover")}
                           onError={(e) => {
                             e.currentTarget.src =
                               "https://via.placeholder.com/300x450?text=No+Poster";
@@ -283,7 +324,7 @@ function TvShowDetail() {
               </div>
 
               {/* Details column */}
-              <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+              <div className={layout("min-w-0 lg:col-start-1 lg:row-start-2", "min-w-0")}>
                 <div className="mb-8">
                   {/* Seasons */}
                   <div className="p-4 border-b-[0.5px] border-white/20">
@@ -496,7 +537,7 @@ function TvShowDetail() {
                     )}
                   </div>
                   {/* Tablet only; mobile and desktop show these near the top */}
-                  <div className="hidden md:flex lg:hidden justify-center gap-2 mt-2">
+                  <div className={layout("hidden md:flex lg:hidden justify-center gap-2 mt-2", "hidden")}>
                     {actionButtons}
                   </div>
                 </div>
@@ -518,8 +559,11 @@ function TvShowDetail() {
                 onSaved={(updated) => {
                   setShow(updated);
                   setShowEditModal(false);
+                  // In the drawer the list behind it shows the old values too; reload like the
+                  // movie edit does (?show= in the URL reopens the drawer)
+                  if (inDrawer) window.location.reload();
                 }}
-                onDeleted={() => navigate("/tv-shows")}
+                onDeleted={() => (onDeleted ? onDeleted() : navigate("/tv-shows"))}
               />
             )}
 

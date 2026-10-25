@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
 import { useAuth } from "@clerk/clerk-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
 import ViewToggle from "../components/ViewToggle";
 import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
@@ -28,6 +28,9 @@ import { IoCameraOutline } from "react-icons/io5";
 import BarcodeScanner from "../components/BarcodeScanner";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import SubNavigation from "../components/SubNavigation";
+import Drawer from "../components/Drawer";
+import TvShowDetail from "./TvShowDetail";
+import { useDrawerParam } from "../utils/useDrawerParam";
 
 // Matches the sortable table columns; TV has no condition, and its price is the total paid
 const TV_SORT_OPTIONS: SortDropdownOption[] = [
@@ -68,7 +71,6 @@ const COLUMN_OPTIONS: { key: keyof VisibleColumns; label: string }[] = [
 
 function TvShowList() {
   const { getToken } = useAuth();
-  const navigate = useNavigate();
   const [shows, setShows] = useState<TvShow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -88,6 +90,9 @@ function TvShowList() {
   } = useUrlSearchQuery();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const location = useLocation();
+
+  // The TV show open in the side drawer (?show=)
+  const { openId: openShowId, open: openShow, close: closeShow } = useDrawerParam("show");
 
   // The bottom bar's Search button links here with ?focus=search; focus the box once it's on screen.
   // location.key makes a repeat tap refocus it even when already on this page.
@@ -237,6 +242,19 @@ function TvShowList() {
   return (
     <>
       <SubNavigation />
+      {openShowId && (
+        <Drawer label="TV show details" onClose={closeShow}>
+          {/* Keyed by id so switching shows starts the details fresh */}
+          <TvShowDetail
+            key={openShowId}
+            showId={openShowId}
+            onDeleted={() => {
+              closeShow();
+              setShows((prev) => prev.filter((s) => String(s.id) !== openShowId));
+            }}
+          />
+        </Drawer>
+      )}
       {showScanner && (
         <BarcodeScanner
           onDetected={handleBarcodeDetected}
@@ -325,6 +343,7 @@ function TvShowList() {
                         key={show.id}
                         movie={show}
                         to={`/tv-shows/${show.id}`}
+                        onOpen={() => openShow(show.id)}
                         subtitle={[show.year || null, seasons === "-" ? null : seasons]
                           .filter(Boolean)
                           .join(" · ")}
@@ -399,7 +418,7 @@ function TvShowList() {
                     {filteredShows.map((show, index) => (
                       <tr
                         key={show.id}
-                        onClick={() => navigate(`/tv-shows/${show.id}`)}
+                        onClick={() => openShow(show.id)}
                         className={`text-sm cursor-pointer ${index % 2 === 0 ? "bg-gray-800" : "bg-gray-900"} hover:bg-gray-700 transition-colors duration-150`}
                       >
                         {/* Sits under the column menu, as the selection column does on Movies */}
@@ -407,7 +426,13 @@ function TvShowList() {
                         <td className="px-6 py-2 text-white w-46 max-w-46 md:w-96 md:max-w-96 align-middle">
                           <Link
                             to={`/tv-shows/${show.id}`}
-                            onClick={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Plain clicks open the drawer; ctrl/cmd-click still opens the full page in a new tab
+                              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                              e.preventDefault();
+                              openShow(show.id);
+                            }}
                             className="inline-block truncate max-w-full align-middle hover:underline"
                             title={show.title}
                           >

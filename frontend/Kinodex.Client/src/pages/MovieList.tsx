@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
 import { Link, useLocation } from "react-router-dom";
+import Drawer from "../components/Drawer";
+import MovieDetail from "./MovieDetail";
+import { useDrawerParam } from "../utils/useDrawerParam";
 import { useAuth } from "@clerk/clerk-react";
 import Counter from "../components/Counter";
 import BarcodeScanner from "../components/BarcodeScanner";
@@ -73,7 +76,16 @@ function MovieList() {
   // location.key makes a repeat tap refocus it even when already on this page.
   useEffect(() => {
     if (focusSearch && !loading) searchInputRef.current?.focus();
-  }, [focusSearch, loading, location.key]);  const [showScanner, setShowScanner] = useState(false);
+  }, [focusSearch, loading, location.key]);
+
+  // The movie open in the side drawer (?movie=)
+  const {
+    openId: openMovieId,
+    open: openMovie,
+    close: closeMovie,
+  } = useDrawerParam("movie");
+
+  const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
   const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
@@ -402,6 +414,19 @@ function MovieList() {
   return (
     <>
       <SubNavigation />
+      {openMovieId && (
+        <Drawer label="Movie details" onClose={closeMovie}>
+          {/* Keyed by id so switching movies starts the details fresh */}
+          <MovieDetail
+            key={openMovieId}
+            movieId={openMovieId}
+            onDeleted={() => {
+              closeMovie();
+              fetchMovies();
+            }}
+          />
+        </Drawer>
+      )}
       <div
         ref={container.ref}
         className="flex flex-col h-[calc(100dvh-9rem)]"
@@ -513,7 +538,12 @@ function MovieList() {
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8">
                   {filteredMovies.map((movie) => (
-                    <MoviePosterCard key={movie.id} movie={movie} captionBelow />
+                    <MoviePosterCard
+                      key={movie.id}
+                      movie={movie}
+                      captionBelow
+                      onOpen={() => openMovie(movie.id)}
+                    />
                   ))}
                 </div>
               )}
@@ -713,6 +743,12 @@ function MovieList() {
                         <td className="px-6 py-2 text-white w-46 max-w-46 md:w-96 md:max-w-96 align-middle">
                           <Link
                             to={`/movie/${movie.id}`}
+                            onClick={(e) => {
+                              // Plain clicks open the drawer; ctrl/cmd-click still opens the full page in a new tab
+                              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                              e.preventDefault();
+                              openMovie(movie.id);
+                            }}
                             className="hover:underline transition-colors inline-block truncate max-w-full align-middle"
                             title={movie.title}
                           >
