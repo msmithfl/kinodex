@@ -357,29 +357,22 @@ function CollectionDetail({
         <div className="relative flex-1 min-h-0 overflow-y-auto px-4 md:px-6 pt-4 md:pt-6 pb-8">
           <div>
             {/* Mobile: pr-12 keeps clear of the drawer's close button in the top-right corner */}
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 pr-12 md:pr-0">
-              <div className="flex-1">
-                  <div>
-                    <div className="flex items-center gap-4">
-                      {/* Title with the movie count underneath */}
-                      <div className="min-w-0 flex flex-col items-start gap-1 mb-2">
-                        <h1 className="text-3xl font-bold">{collectionName}</h1>
-                        <Counter count={movies.length} />
-                      </div>
-                      {/* Mobile: edit and delete beside the title */}
-                      {collection && (
-                        <div className="md:hidden flex mb-2">{actionButtons}</div>
-                      )}
-                      <div className="ml-auto mb-2">
-                        <ViewToggle
-                          value={viewMode}
-                          options={TABLE_VIEW_OPTIONS}
-                          onChange={handleViewModeChange}
-                        />
-                      </div>
-                    </div>
-                  </div>
+            {/* Mobile: edit and delete above the title, level with the drawer's close button in the
+                top-right corner (-mt-1 centres these 36px buttons on it, at 30px from the top) */}
+            {collection && (
+              <div className="md:hidden flex w-fit -mt-1 mb-6 rounded-md bg-gray-900/70 backdrop-blur-sm">
+                {actionButtons}
               </div>
+            )}
+            <h1 className="min-w-0 text-3xl font-bold">{collectionName}</h1>
+            {/* The movie count, with the view toggle on the same line */}
+            <div className="flex items-center justify-between gap-4 mt-1 mb-3">
+              <Counter count={movies.length} />
+              <ViewToggle
+                value={viewMode}
+                options={TABLE_VIEW_OPTIONS}
+                onChange={handleViewModeChange}
+              />
             </div>
           </div>
 
@@ -399,7 +392,12 @@ function CollectionDetail({
                 ))}
               </div>
             ) : (
-              <SimpleMovieTable movies={sortedMovies} onOpen={onOpenMovie} />
+              <SimpleMovieTable
+                movies={sortedMovies}
+                onOpen={onOpenMovie}
+                showRating={false}
+                fitWidth
+              />
             )}
           </div>
 

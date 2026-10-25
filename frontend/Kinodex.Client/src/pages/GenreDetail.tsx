@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import SimpleMovieTable from "../components/SimpleMovieTable";
 import MoviePosterCard from "../components/MovieCardPoster";
-//import Counter from '../components/Counter'
+import Counter from "../components/Counter";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ViewToggle from "../components/ViewToggle";
 import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
@@ -98,16 +98,15 @@ function GenreDetail() {
       <div ref={viewport.ref} className="flex h-[calc(100dvh-9rem)] mt-2" style={viewport.style}>
         <div className="flex-1 min-h-0 overflow-y-auto px-4 md:px-12">
           <div>
-            <div className="flex items-center gap-4">
-              <h1 className="text-3xl font-bold mb-2">{genreName}</h1>
-              {/* <Counter count={movies.length} className="mb-2" /> */}
-              <div className="ml-auto mb-2">
-                <ViewToggle
-                  value={viewMode}
-                  options={TABLE_VIEW_OPTIONS}
-                  onChange={handleViewModeChange}
-                />
-              </div>
+            <h1 className="text-3xl font-bold">{genreName}</h1>
+            {/* The movie count, with the view toggle on the same line */}
+            <div className="flex items-center justify-between gap-4 mt-1 mb-3">
+              <Counter count={movies.length} />
+              <ViewToggle
+                value={viewMode}
+                options={TABLE_VIEW_OPTIONS}
+                onChange={handleViewModeChange}
+              />
             </div>
           </div>
 
