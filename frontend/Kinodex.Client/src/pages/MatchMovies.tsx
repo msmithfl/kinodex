@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { FaCheck, FaTimes, FaSync } from "react-icons/fa";
 import SubNavigation from "../components/SubNavigation";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -6,7 +7,10 @@ import EmptyState from "../components/EmptyState";
 import type { Movie, MatchingResult, MatchSuggestion } from "../types";
 
 function MatchMovies() {
+  const { getToken } = useAuth();
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
+  // The signed-in user's token, for the TMDB matching endpoints
+  const authHeader = async () => ({ Authorization: `Bearer ${await getToken()}` });
 
   const [loading, setLoading] = useState(true);
   const [matching, setMatching] = useState(false);
@@ -25,7 +29,9 @@ function MatchMovies() {
 
   const fetchUnmatchedMovies = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/tmdb/unmatched`);
+      const response = await fetch(`${API_BASE}/api/tmdb/unmatched`, {
+        headers: await authHeader(),
+      });
       if (response.ok) {
         const data = await response.json();
         setUnmatchedMovies(data);
@@ -41,7 +47,10 @@ function MatchMovies() {
     setFilling(true);
     setFillResult(null);
     try {
-      const response = await fetch(`${API_BASE}/api/tmdb/fill-images`, { method: "POST" });
+      const response = await fetch(`${API_BASE}/api/tmdb/fill-images`, {
+        method: "POST",
+        headers: await authHeader(),
+      });
       if (response.ok) {
         const result = await response.json();
         setFillResult(result);
@@ -58,6 +67,7 @@ function MatchMovies() {
     try {
       const response = await fetch(`${API_BASE}/api/tmdb/match`, {
         method: "POST",
+        headers: await authHeader(),
       });
 
       if (response.ok) {
@@ -79,6 +89,7 @@ function MatchMovies() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(await authHeader()),
         },
         body: JSON.stringify({ movieId, tmdbId, posterPath, backdropPath }),
       });

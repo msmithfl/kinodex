@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { createPortal } from "react-dom";
 import { DrawerActionsSlotContext } from "../components/drawerActions";
 import { useNavigate, useParams, Link } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import {
   TiStarOutline,
   TiStarHalfOutline,
@@ -37,6 +38,7 @@ const DRAWER_TABS: { id: DrawerTab; label: string }[] = [
 
 function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
   const navigate = useNavigate();
+  const { getToken } = useAuth();
   const params = useParams<{ id: string }>();
   const id = movieId ?? params.id;
   const inDrawer = movieId !== undefined;
@@ -67,7 +69,10 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
 
   const fetchMovie = async () => {
     try {
-      const response = await fetch(`${API_URL}/${id}`);
+      const token = await getToken();
+      const response = await fetch(`${API_URL}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const data = await response.json();
         setMovie(data);
@@ -89,8 +94,10 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
 
   const handleDeleteConfirm = async () => {
     try {
+      const token = await getToken();
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {

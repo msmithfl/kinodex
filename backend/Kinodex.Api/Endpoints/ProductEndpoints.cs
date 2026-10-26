@@ -8,7 +8,8 @@ public static class ProductEndpoints
 {
     public static void MapProductEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/products");
+        // A shared per-UPC cache (no personal data), but only for signed-in users
+        var group = app.MapGroup("/api/products").RequireAuthorization();
 
         // GET product by UPC
         group.MapGet("/{upc}", async (string upc, MovieDbContext db) =>

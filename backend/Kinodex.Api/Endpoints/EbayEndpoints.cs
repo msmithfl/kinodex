@@ -23,7 +23,8 @@ public static class EbayEndpoints
 
     public static void MapEbayEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/ebay");
+        // Signed-in users only, so strangers can't use the server to scrape eBay
+        var group = app.MapGroup("/api/ebay").RequireAuthorization();
 
         group.MapGet("/sold-average/{upc}", async (string upc, MovieDbContext db) =>
         {

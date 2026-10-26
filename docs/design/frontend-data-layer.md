@@ -4,6 +4,12 @@
 **Last updated:** 2026-10-25
 **Scope:** `frontend/Kinodex.Client` (no backend changes needed)
 
+> **Priority (2026-10-25):** first make the existing core rock solid: movies, TV shows,
+> collections, genres, shelves, stats, dashboard. Phases 1–3 below (collections, movies, TV) are
+> part of that. Phase 4's lending/customers/checkouts pages, the watch log, and everything under
+> [Roadmap context](#roadmap-context) (self-hosting, Jellyfin sign-in, SQLite, Docker) are **on
+> hold** until the core is stable.
+
 ## Summary
 
 Today every page and modal talks to the API on its own: it builds the URL, gets a Clerk token,

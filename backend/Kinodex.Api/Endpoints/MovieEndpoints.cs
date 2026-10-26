@@ -12,7 +12,8 @@ public static class MovieEndpoints
 {
     public static void MapMovieEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/movies");
+        // Every route needs a signed-in user and only touches that user's movies
+        var group = app.MapGroup("/api/movies").RequireAuthorization();
 
         // GET all movies
         group.MapGet("/", async (ClaimsPrincipal user, MovieDbContext db) =>
@@ -24,19 +25,22 @@ public static class MovieEndpoints
                 .ToListAsync();
         }).RequireAuthorization();
 
-        // GET movie by id
-        group.MapGet("/{id}", async (int id, MovieDbContext db) =>
+        // GET movie by id (only the signed-in user's own movies)
+        group.MapGet("/{id}", async (int id, ClaimsPrincipal user, MovieDbContext db) =>
         {
-            return await db.Movies.FindAsync(id) is Movie movie
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            return await db.Movies.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId) is Movie movie
                 ? Results.Ok(movie)
                 : Results.NotFound();
         });
 
-        // POST create movie
-        group.MapPost("/", async (Movie movie, MovieDbContext db) =>
+        // POST create movie, owned by the signed-in user whatever the request says
+        group.MapPost("/", async (Movie movie, ClaimsPrincipal user, MovieDbContext db) =>
         {
             try
             {
+                movie.Id = 0;
+                movie.UserId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
                 db.Movies.Add(movie);
                 await db.SaveChangesAsync();
                 Console.WriteLine($"Created movie ID={movie.Id}, Title={movie.Title}, UserId={movie.UserId}");
@@ -50,12 +54,13 @@ public static class MovieEndpoints
         });
 
         // PUT update movie
-        group.MapPut("/{id}", async (int id, Movie updatedMovie, MovieDbContext db) =>
+        // The owner never changes, and only the owner can edit
+        group.MapPut("/{id}", async (int id, Movie updatedMovie, ClaimsPrincipal user, MovieDbContext db) =>
         {
-            var movie = await db.Movies.FindAsync(id);
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var movie = await db.Movies.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
             if (movie is null) return Results.NotFound();
 
-            movie.UserId = updatedMovie.UserId;
             movie.Title = updatedMovie.Title;
             movie.UpcNumber = updatedMovie.UpcNumber;
             movie.Formats = updatedMovie.Formats;
@@ -81,9 +86,10 @@ public static class MovieEndpoints
         });
 
         // DELETE movie
-        group.MapDelete("/{id}", async (int id, MovieDbContext db) =>
+        group.MapDelete("/{id}", async (int id, ClaimsPrincipal user, MovieDbContext db) =>
         {
-            var movie = await db.Movies.FindAsync(id);
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var movie = await db.Movies.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
             if (movie is null) return Results.NotFound();
 
             db.Movies.Remove(movie);
