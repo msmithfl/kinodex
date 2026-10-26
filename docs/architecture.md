@@ -35,6 +35,7 @@ Kinodex/
     Services/           TmdbMatchingService
     Data/               MovieDbContext, MigrateDbAsync() (runs migrations on startup)
     Migrations/         EF migrations (Postgres)
+  backend/Kinodex.Api.Tests/   xUnit tests: the real API in memory against a throwaway Postgres DB
   frontend/Kinodex.Client/
     src/
       main.tsx          ClerkProvider → App
@@ -209,6 +210,21 @@ HDD number. Collections have `IsDirectorCollection`, `ImageUrl` (cover), `Backdr
 
 ---
 
+### Tests
+
+`backend/Kinodex.Api.Tests` starts the real API in memory (`WebApplicationFactory`), builds a
+temporary database `kinodex_test_…` with the real migrations on the Postgres server from
+`KINODEX_TEST_POSTGRES` (or the API's `appsettings.Development.json`), and drops it afterwards.
+A stand-in sign-in (`X-Test-User` header) lets each test act as any user. They cover sign-in
+being required, per-user ownership for every data area, and the core rules (renaming/deleting
+collections updates movies, settings defaults, UPC validation).
+
+```
+dotnet test backend/Kinodex.Api.Tests -c Release
+```
+
+(`-c Release` because a running API locks the Debug build.)
+
 ## Feature status
 
 - **Core (being stabilized):** movies, TV shows, collections (+ checklists, covers, backdrops),
@@ -225,7 +241,7 @@ Pointers for cleanup, roughly in the order they'd come up:
   drawer edits (see the data-layer design doc).
 - Very large files: `MovieForm` (~920 lines), `MovieList` (~870), `MovieDetail` (~830, page +
   drawer + tabs), `TvShowForm`, `CollectionDetail`, `CheckoutsView`.
-- No automated tests (frontend or backend).
+- No frontend tests; backend tests cover the API (see Tests).
 - `types/index.ts` is hand-maintained to match the API.
 - TMDB token is built into the frontend bundle.
 - `Microsoft.OpenApi` 2.0.0 (pulled in by `Microsoft.AspNetCore.OpenApi`) has a known high-severity
