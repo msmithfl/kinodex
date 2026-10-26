@@ -1,9 +1,5 @@
 import { Link } from "react-router-dom";
-import {
-  TiStarOutline,
-  TiStarHalfOutline,
-  TiStarFullOutline,
-} from "react-icons/ti";
+import { Stars } from "./StarRating";
 import type { Movie } from "../types";
 
 interface SimpleMovieTableProps {
@@ -96,15 +92,7 @@ function SimpleMovieTable({
               {showRating && (
                 <td className={`${pad} py-2 whitespace-nowrap align-middle`}>
                   <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map((star) =>
-                      movie.rating >= star ? (
-                        <TiStarFullOutline key={star} className="w-5 h-5 text-yellow-400" />
-                      ) : movie.rating === star - 0.5 ? (
-                        <TiStarHalfOutline key={star} className="w-5 h-5 text-yellow-400" />
-                      ) : (
-                        <TiStarOutline key={star} className="w-5 h-5 text-gray-500" />
-                      ),
-                    )}
+                    <Stars rating={movie.rating} />
                   </div>
                 </td>
               )}

@@ -4,28 +4,17 @@ import { DrawerActionsSlotContext } from "../components/drawerActions";
 import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../utils/api";
 import { useDeleteTvShow, useTvShow } from "../features/tvShows/api";
-import {
-  TiStarOutline,
-  TiStarHalfOutline,
-  TiStarFullOutline,
-} from "react-icons/ti";
+import { Stars } from "../components/StarRating";
+import TmdbLink from "../components/TmdbLink";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
-import { FaBarcode } from "react-icons/fa6";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ImageLightbox from "../components/ImageLightbox";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { EditTvShowModal } from "../components/EditTvShowModal";
-import { FormatIcon } from "../utils/formatIcon";
-import { formatSeasons } from "../utils/formatSeasons";
-import {
-  formatPurchaseDate,
-  ownedSeasons,
-  ownsEverySeason,
-  purchaseKey,
-  totalPaid,
-} from "../utils/tvShowPurchases";
+import TvShowSeasons from "../features/tvShows/TvShowSeasons";
+import TvShowPurchaseList from "../features/tvShows/TvShowPurchaseList";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 
 interface TvShowDetailProps {
@@ -60,8 +49,6 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {
         : "Could not reach the server to load this TV show.";
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-  // Which purchase's UPC was just copied, for the "Copied!" hint
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPosterLightbox, setShowPosterLightbox] = useState(false);
   // Size the page to the viewport below the header
@@ -107,25 +94,7 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {
   }
 
   // The TMDB logo link: beside the year on the page, after the rating in the drawer from tablet up
-  const tmdbLink = (
-    <a
-      href={
-        show.tmdbId
-          ? `https://www.themoviedb.org/tv/${show.tmdbId}`
-          : "https://www.themoviedb.org/"
-      }
-      target="_blank"
-      rel="noopener noreferrer"
-      className="shrink-0"
-      title={show.tmdbId ? "View on TMDB" : "Search on TMDB"}
-    >
-      <img
-        src="/tmdb-icon.png"
-        alt="TMDB"
-        className="w-8 h-8 hover:opacity-80 transition-opacity"
-      />
-    </a>
-  );
+  const tmdbLink = <TmdbLink kind="tv" tmdbId={show.tmdbId} />;
 
   // Edit and delete, placed per screen size: over the backdrop on mobile, at the bottom on tablet,
   // and in the header's bottom-right corner on desktop
@@ -147,9 +116,6 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {
       </button>
     </>
   );
-
-  const allSeasons = Array.from({ length: show.totalSeasons }, (_, i) => i + 1);
-  const owned = ownedSeasons(show.purchases);
 
   return (
     // As a page it fills the screen below the header; in a drawer it fills the panel
@@ -241,21 +207,7 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {
                     </div>
 
                     <div className={layout("flex gap-1 items-center lg:order-4 lg:basis-full", "flex gap-1 items-center md:order-4 md:basis-full")}>
-                      {[1, 2, 3, 4, 5].map((star) => {
-                        const isFullStar = show.rating >= star;
-                        const isHalfStar = show.rating === star - 0.5;
-                        return (
-                          <div key={star}>
-                            {isFullStar ? (
-                              <TiStarFullOutline className="w-6 h-6 text-yellow-400" />
-                            ) : isHalfStar ? (
-                              <TiStarHalfOutline className="w-6 h-6 text-yellow-400" />
-                            ) : (
-                              <TiStarOutline className="w-6 h-6 text-gray-500" />
-                            )}
-                          </div>
-                        );
-                      })}
+                      <Stars rating={show.rating} size="md" />
                       {/* Drawer from tablet up: TMDB follows the rating */}
                       {inDrawer && (
                         <span className="hidden md:inline-flex ml-2">{tmdbLink}</span>
@@ -306,163 +258,8 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {
               {/* Details column */}
               <div className={layout("min-w-0 lg:col-start-1 lg:row-start-2", "min-w-0")}>
                 <div className="mb-8">
-                  {/* Seasons */}
-                  <div className="p-4 border-b-[0.5px] border-white/20">
-                    <div className="flex items-baseline justify-between mb-2">
-                      <h3 className="text-sm font-medium text-gray-400">
-                        Seasons Owned
-                      </h3>
-                      {show.totalSeasons > 0 && (
-                        <span className="text-xs text-gray-400">
-                          {ownsEverySeason(show)
-                            ? "Complete series"
-                            : `${owned.length} of ${show.totalSeasons} seasons`}
-                        </span>
-                      )}
-                    </div>
-                    {show.totalSeasons > 0 ? (
-                      <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
-                        {allSeasons.map((season) => {
-                          const isOwned = owned.includes(season);
-                          return (
-                            <span
-                              key={season}
-                              title={isOwned ? `Season ${season}: owned` : `Season ${season}: not owned`}
-                              className={`px-2 py-1.5 text-center text-sm font-medium border ${
-                                isOwned
-                                  ? "bg-indigo-600 border-indigo-500 text-white"
-                                  : "bg-gray-800 border-gray-700 text-gray-500"
-                              }`}
-                            >
-                              S{season}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    ) : owned.length > 0 ? (
-                      <p className="text-white">
-                        {formatSeasons(owned, show.totalSeasons)}
-                      </p>
-                    ) : (
-                      <p className="text-gray-500 italic">None</p>
-                    )}
-                  </div>
-
-                  {/* Purchases */}
-                  <div className="p-4 border-b-[0.5px] border-white/20">
-                    <div className="flex items-baseline justify-between mb-3">
-                      <h3 className="text-sm font-medium text-gray-400">
-                        Purchases
-                      </h3>
-                      {show.purchases.length > 0 && (
-                        <span className="text-sm text-gray-300">
-                          Total paid{" "}
-                          <span className="font-mono text-green-400">
-                            ${totalPaid(show.purchases).toFixed(2)}
-                          </span>
-                        </span>
-                      )}
-                    </div>
-                    {show.purchases.length > 0 ? (
-                      <div className="divide-y divide-white/10 border-[0.5px] border-white/20 rounded">
-                        {show.purchases.map((purchase, idx) => {
-                          const key = purchaseKey(purchase, idx);
-                          return (
-                            <div
-                              key={key}
-                              className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-3"
-                            >
-                              <div className="min-w-24">
-                                <p className="text-white font-medium">
-                                  {formatSeasons(purchase.seasons, show.totalSeasons) === "Complete"
-                                    ? "Complete set"
-                                    : formatSeasons(purchase.seasons, 0)}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                  {formatPurchaseDate(purchase.purchasedAt)}
-                                </p>
-                              </div>
-                              <p className="font-mono text-white min-w-16">
-                                {purchase.price > 0 ? (
-                                  `$${purchase.price.toFixed(2)}`
-                                ) : (
-                                  <span className="text-gray-500">No price</span>
-                                )}
-                              </p>
-                              <div className="flex flex-wrap items-center gap-3">
-                                {[...purchase.formats].sort().map((fmt) => (
-                                  <FormatIcon key={fmt} fmt={fmt} />
-                                ))}
-                              </div>
-                              {purchase.condition && (
-                                <span className="text-sm text-gray-300">
-                                  {purchase.condition}
-                                </span>
-                              )}
-                              <div className="flex items-center gap-3 ml-auto">
-                                {purchase.upcNumber ? (
-                                  <>
-                                    <div className="relative inline-block">
-                                      <button
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(
-                                            purchase.upcNumber,
-                                          );
-                                          setCopiedKey(key);
-                                          setTimeout(() => setCopiedKey(null), 1500);
-                                        }}
-                                        title="Copy to clipboard"
-                                        className="flex items-center gap-1 text-sm font-mono text-white cursor-pointer"
-                                      >
-                                        <FaBarcode />
-                                        {purchase.upcNumber}
-                                      </button>
-                                      {copiedKey === key && (
-                                        <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
-                                          Copied!
-                                        </span>
-                                      )}
-                                    </div>
-                                    <button
-                                      onClick={() => {
-                                        const query = encodeURIComponent(
-                                          purchase.upcNumber,
-                                        );
-                                        window.open(
-                                          `https://www.ebay.com/sch/i.html?_nkw=${query}&LH_Sold=1&rt=nc&LH_ItemCondition=4`,
-                                          "_blank",
-                                          "noopener,noreferrer",
-                                        );
-                                      }}
-                                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded-md transition duration-200 text-xs cursor-pointer"
-                                    >
-                                      Search eBay
-                                    </button>
-                                  </>
-                                ) : (
-                                  <span className="text-gray-500 text-sm flex items-center gap-1">
-                                    <FaBarcode /> No UPC
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 italic">No purchases recorded</p>
-                    )}
-                    {show.productPosterPath && (
-                      <img
-                        src={show.productPosterPath}
-                        alt={`${show.title} product`}
-                        className="mt-4 rounded-lg shadow-md w-24 lg:w-32 h-auto object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                    )}
-                  </div>
+                  <TvShowSeasons show={show} />
+                  <TvShowPurchaseList show={show} />
 
                   <div className="flex p-4 border-b-[0.5px] border-white/20">
                     <div className="w-1/2">

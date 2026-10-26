@@ -8,6 +8,7 @@ import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { useMovie, useUpdateMovie } from "../features/movies/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";
 import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
+import { useBackdropClose } from "../utils/useBackdropClose";
 
 interface EditMovieModalProps {
   onClose: () => void;
@@ -41,6 +42,8 @@ const EMPTY_MOVIE: Movie = {
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
 
 export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
+  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
+  const backdropClose = useBackdropClose(onClose);
   const params = useParams<{ id: string }>();
   const id = movieId ?? params.id;
   // From the shared cache (the drawer or list has usually loaded it already)
@@ -143,7 +146,7 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-      onClick={onClose}
+      {...backdropClose}
     >
       <div
         className="flex flex-col mx-2 bg-gray-800 shadow-2xl w-full max-w-3xl h-full max-h-3/4 relative"

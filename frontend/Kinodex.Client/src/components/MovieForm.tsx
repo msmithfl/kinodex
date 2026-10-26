@@ -1,16 +1,18 @@
-import { useState, useEffect, useRef } from "react";
-import {
-  TiStarOutline,
-  TiStarHalfOutline,
-  TiStarFullOutline,
-} from "react-icons/ti";
-import { LuEye, LuEyeClosed } from "react-icons/lu";
-import { IoCameraOutline } from "react-icons/io5";
-import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
-import { FaPlus, FaMinus } from "react-icons/fa6";
-import { Genres, type Movie } from "../types";
+import { useState } from "react";
+import type { Movie } from "../types";
 import { useImagePicker } from "./useImagePicker";
 import { useProductImagePicker } from "./useProductImagePicker";
+import MovieDetailsTab from "../features/movies/form/MovieDetailsTab";
+import MoviePhysicalTab from "../features/movies/form/MoviePhysicalTab";
+import MovieImagesTab from "../features/movies/form/MovieImagesTab";
+
+type Tab = "details" | "physical" | "poster";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "details", label: "Movie Details" },
+  { id: "physical", label: "Physical" },
+  { id: "poster", label: "Images" },
+];
 
 interface MovieFormProps {
   formData: Movie;
@@ -50,8 +52,6 @@ function MovieForm({
   addCollection,
   addShelfSection,
   onSubmit,
-  // onCancel,
-  // submitButtonText = "Save",
   showScanButton = false,
   onScanClick,
 }: MovieFormProps) {
@@ -91,41 +91,6 @@ function MovieForm({
   const [purchasePriceInput, setPurchasePriceInput] = useState<string>(
     formData.purchasePrice.toString(),
   );
-
-  const [genreDropdownOpen, setGenreDropdownOpen] = useState(false);
-  const genreRef = useRef<HTMLDivElement>(null);
-  const [formatDropdownOpen, setFormatDropdownOpen] = useState(false);
-  const formatRef = useRef<HTMLDivElement>(null);
-  const [collectionDropdownOpen, setCollectionDropdownOpen] = useState(false);
-  const collectionRef = useRef<HTMLDivElement>(null);
-  const [shelfSectionDropdownOpen, setShelfSectionDropdownOpen] =
-    useState(false);
-  const shelfSectionRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (genreRef.current && !genreRef.current.contains(e.target as Node)) {
-        setGenreDropdownOpen(false);
-      }
-      if (formatRef.current && !formatRef.current.contains(e.target as Node)) {
-        setFormatDropdownOpen(false);
-      }
-      if (
-        collectionRef.current &&
-        !collectionRef.current.contains(e.target as Node)
-      ) {
-        setCollectionDropdownOpen(false);
-      }
-      if (
-        shelfSectionRef.current &&
-        !shelfSectionRef.current.contains(e.target as Node)
-      ) {
-        setShelfSectionDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Keep the number text boxes in step when the movie data changes from outside them (it loads,
   // or a TMDB result fills it in). Purchase price isn't a trigger, so typing "12." isn't rewritten
@@ -204,23 +169,12 @@ function MovieForm({
     await onSubmit(e);
   };
 
-  type Tab = "details" | "physical" | "poster";
-
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "details", label: "Movie Details" },
-    { id: "physical", label: "Physical" },
-    { id: "poster", label: "Images" },
-  ];
-
-  const inputClass =
-    "w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-gray-500";
-  const labelClass = "block text-sm font-medium text-gray-300 mb-2";
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full w-full">
       {/* Tabs */}
       <div className="flex border-b border-gray-700 mb-4 mt-2 shrink-0">
-        {tabs.map((tab) => (
+        {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -244,671 +198,52 @@ function MovieForm({
 
       {/* Scrollable tab content */}
       <div className="flex-1 overflow-y-auto min-h-0 pr-1">
-        {/* Movie Details */}
         {activeTab === "details" && (
-          <div className="space-y-2 pb-2">
-            {/* Title */}
-            <div>
-              <label htmlFor="title" className={labelClass}>
-                Movie Title *
-              </label>
-              <input
-                type="text"
-                id="title"
-                value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
-                required
-                className={inputClass}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* Year */}
-              <div>
-                <label htmlFor="year" className={labelClass}>
-                  Year
-                </label>
-                <input
-                  type="text"
-                  id="year"
-                  value={yearInput}
-                  onChange={(e) => handleYearChange(e.target.value)}
-                  placeholder="Release year"
-                  className={inputClass}
-                />
-              </div>
-              {/* TMDB ID */}
-              <div>
-                <label htmlFor="tmdbId" className={labelClass}>
-                  TMDB ID
-                </label>
-                <input
-                  type="text"
-                  id="tmdbId"
-                  value={tmdbInput}
-                  onChange={(e) => handleTmdbChange(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-            </div>
-
-            {/* Genres */}
-            <div ref={genreRef}>
-              <label className={labelClass}>Genres</label>
-              <div className="relative bg-gray-700 border border-gray-600 focus-within:border-gray-500">
-                <div
-                  className="flex flex-wrap items-center gap-2 px-3 py-1 min-h-10.5 cursor-pointer"
-                  onClick={() => setGenreDropdownOpen((prev) => !prev)}
-                >
-                  {formData.genres.map((genre, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-purple-600 text-white rounded-full text-sm relative z-10"
-                    >
-                      {genre}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFormData({
-                            ...formData,
-                            genres: formData.genres.filter(
-                              (_, i) => i !== index,
-                            ),
-                          });
-                        }}
-                        className="hover:text-red-300 transition cursor-pointer"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                  {formData.genres.length === 0 && (
-                    <span className="text-gray-400 text-sm"></span>
-                  )}
-                </div>
-
-                {/* Custom dropdown */}
-                {genreDropdownOpen && (
-                  <ul className="absolute top-full left-0 w-full max-h-50 overflow-y-auto bg-gray-800 border border-gray-600 z-50">
-                    {Object.values(Genres)
-                      .filter((g) => !formData.genres.includes(g))
-                      .map((g) => (
-                        <li
-                          key={g}
-                          onClick={() => {
-                            setFormData({
-                              ...formData,
-                              genres: [...formData.genres, g],
-                            });
-                            setGenreDropdownOpen(false);
-                          }}
-                          className="px-3 py-2 text-white text-sm hover:bg-gray-600 cursor-pointer"
-                        >
-                          {g}
-                        </li>
-                      ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-
-            {/* Collections */}
-            <div ref={collectionRef}>
-              <label className={labelClass}>Collections</label>
-              <div className="flex flex-wrap gap-2">
-                <div className="relative bg-gray-700 border border-gray-600 focus-within:border-gray-500 flex-1">
-                  <div
-                    className="flex flex-wrap items-center gap-2 px-3 py-1 min-h-10.5 cursor-pointer"
-                    onClick={() => setCollectionDropdownOpen((prev) => !prev)}
-                  >
-                    {formData.collections.map((col, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded-full text-sm relative z-10"
-                      >
-                        {col}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFormData({
-                              ...formData,
-                              collections: formData.collections.filter(
-                                (_, i) => i !== index,
-                              ),
-                            });
-                          }}
-                          className="hover:text-red-300 transition cursor-pointer"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-
-                  {collectionDropdownOpen && (
-                    <ul className="absolute top-full left-0 w-full max-h-30 overflow-y-auto bg-gray-800 border border-gray-600 z-50">
-                      {collections
-                        .filter(
-                          (col) => !formData.collections.includes(col.name),
-                        )
-                        .map((col) => (
-                          <li
-                            key={col.id}
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                collections: [
-                                  ...formData.collections,
-                                  col.name,
-                                ],
-                              });
-                              setCollectionDropdownOpen(false);
-                            }}
-                            className="px-3 py-2 text-white text-sm hover:bg-gray-600 cursor-pointer"
-                          >
-                            {col.name}
-                          </li>
-                        ))}
-                    </ul>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowCollectionInput(!showCollectionInput)}
-                  className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer shrink-0"
-                >
-                  {showCollectionInput ? <FaMinus /> : <FaPlus />}
-                </button>
-
-                {showCollectionInput && (
-                  <div className="flex gap-2 basis-full sm:basis-0 sm:flex-1">
-                    <input
-                      type="text"
-                      value={newCollection}
-                      onChange={(e) => setNewCollection(e.target.value)}
-                      placeholder="New collection name"
-                      className={inputClass + " flex-1"}
-                    />
-                    <button
-                      type="button"
-                      onClick={addCollection}
-                      className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition cursor-pointer shrink-0"
-                    >
-                      Add
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-start justify-center gap-16">
-              {/* Watched */}
-              <div className="flex flex-col items-center">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Watched
-                </label>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFormData({
-                      ...formData,
-                      hasWatched: !formData.hasWatched,
-                    })
-                  }
-                  className="cursor-pointer"
-                  title={formData.hasWatched ? "Watched" : "Not watched"}
-                >
-                  {formData.hasWatched ? (
-                    <LuEye className="w-8 h-8 text-indigo-400" />
-                  ) : (
-                    <LuEyeClosed className="w-8 h-8 text-gray-500 hover:text-indigo-400" />
-                  )}
-                </button>
-              </div>
-              {/* Rating */}
-              <div>
-                <label className={labelClass}>Rating</label>
-                <div className="flex">
-                  {[1, 2, 3, 4, 5].map((star) => {
-                    const isFullStar = formData.rating >= star;
-                    const isHalfStar = formData.rating === star - 0.5;
-                    return (
-                      <div
-                        key={star}
-                        className="relative cursor-pointer group"
-                        style={{ width: "32px", height: "32px" }}
-                      >
-                        <div
-                          className="absolute left-0 top-0 w-1/2 h-full z-10"
-                          onClick={() =>
-                            setFormData({ ...formData, rating: star - 0.5 })
-                          }
-                          title={`${star - 0.5} stars`}
-                        />
-                        <div
-                          className="absolute right-0 top-0 w-1/2 h-full z-10"
-                          onClick={() =>
-                            setFormData({ ...formData, rating: star })
-                          }
-                          title={`${star} stars`}
-                        />
-                        {isFullStar ? (
-                          <TiStarFullOutline className="w-8 h-8 text-yellow-400 absolute top-0 left-0" />
-                        ) : isHalfStar ? (
-                          <TiStarHalfOutline className="w-8 h-8 text-yellow-400 absolute top-0 left-0" />
-                        ) : (
-                          <TiStarOutline className="w-8 h-8 text-gray-500 group-hover:text-yellow-200 absolute top-0 left-0" />
-                        )}
-                      </div>
-                    );
-                  })}
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, rating: 0 })}
-                    className="ml-2 text-xs text-gray-400 hover:text-white transition cursor-pointer"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Review / Notes */}
-            <div>
-              <label htmlFor="review" className={labelClass}>
-                Review / Notes
-              </label>
-              <textarea
-                id="review"
-                value={formData.review}
-                onChange={(e) =>
-                  setFormData({ ...formData, review: e.target.value })
-                }
-                rows={4}
-                className={inputClass}
-              />
-            </div>
-          </div>
+          <MovieDetailsTab
+            formData={formData}
+            setFormData={setFormData}
+            yearInput={yearInput}
+            onYearChange={handleYearChange}
+            tmdbInput={tmdbInput}
+            onTmdbChange={handleTmdbChange}
+            collections={collections}
+            showCollectionInput={showCollectionInput}
+            setShowCollectionInput={setShowCollectionInput}
+            newCollection={newCollection}
+            setNewCollection={setNewCollection}
+            addCollection={addCollection}
+          />
         )}
 
-        {/* Physical Details */}
         {activeTab === "physical" && (
-          <div className="space-y-2 pb-2">
-            {/* UPC */}
-            <div>
-              <label htmlFor="upc" className={labelClass}>
-                UPC Number
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  id="upc"
-                  value={formData.upcNumber}
-                  onChange={(e) =>
-                    setFormData({ ...formData, upcNumber: e.target.value })
-                  }
-                  className={inputClass + " flex-1"}
-                />
-                {showScanButton && onScanClick && (
-                  <button
-                    type="button"
-                    onClick={onScanClick}
-                    className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
-                    title="Scan barcode"
-                  >
-                    <IoCameraOutline className="w-6 h-6" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Formats */}
-            <div ref={formatRef}>
-              <label className={labelClass}>Formats</label>
-              <div className="relative bg-gray-700 border border-gray-600 focus-within:border-gray-500">
-                <div
-                  className="flex flex-wrap items-center gap-2 px-3 py-2 min-h-10.5 cursor-pointer"
-                  onClick={() => setFormatDropdownOpen((prev) => !prev)}
-                >
-                  {formData.formats.map((fmt, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded-full text-sm relative z-10"
-                    >
-                      {fmt}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFormData({
-                            ...formData,
-                            formats: formData.formats.filter(
-                              (_, i) => i !== index,
-                            ),
-                          });
-                        }}
-                        className="hover:text-red-300 transition cursor-pointer"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-
-                {formatDropdownOpen && (
-                  <ul className="absolute top-full left-0 w-full max-h-30 overflow-y-auto bg-gray-800 border border-gray-600 z-50">
-                    {(["4K", "Blu-ray", "DVD", "VHS", "Digital"] as const)
-                      .filter((f) => !formData.formats.includes(f))
-                      .map((f) => (
-                        <li
-                          key={f}
-                          onClick={() => {
-                            setFormData({
-                              ...formData,
-                              formats: [...formData.formats, f],
-                            });
-                            setFormatDropdownOpen(false);
-                          }}
-                          className="px-3 py-2 text-white text-sm hover:bg-gray-600 cursor-pointer"
-                        >
-                          {f === "4K" ? "4K Ultra HD" : f}
-                        </li>
-                      ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {/* Purchase Price */}
-              <div>
-                <label htmlFor="purchasePrice" className={labelClass}>
-                  Purchase Price
-                </label>
-                <input
-                  type="number"
-                  id="purchasePrice"
-                  value={purchasePriceInput}
-                  onChange={(e) => handlePurchasePriceChange(e.target.value)}
-                  placeholder="0.00"
-                  className={inputClass}
-                />
-              </div>
-
-              {/* Condition */}
-              <div>
-                <label htmlFor="condition" className={labelClass}>
-                  Condition
-                </label>
-                <select
-                  id="condition"
-                  value={formData.condition}
-                  onChange={(e) =>
-                    setFormData({ ...formData, condition: e.target.value })
-                  }
-                  className={inputClass + " cursor-pointer"}
-                >
-                  <option value="Sealed">Sealed</option>
-                  <option value="Like New">Like New</option>
-                  <option value="Good">Good</option>
-                  <option value="Poor">Poor</option>
-                  <option value="Damaged">Damaged</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Shelf Section */}
-            <div ref={shelfSectionRef}>
-              <label className={labelClass}>Shelf Section</label>
-              <div className="flex flex-wrap gap-2">
-                <div className="relative bg-gray-700 border border-gray-600 focus-within:border-gray-500 flex-1">
-                  <div
-                    className="flex flex-wrap items-center gap-2 px-3 py-1 min-h-10.5 cursor-pointer"
-                    onClick={() => setShelfSectionDropdownOpen((prev) => !prev)}
-                  >
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-600 text-white rounded-full text-sm relative z-10">
-                      {formData.shelfSection || "Unshelved"}
-                    </span>
-                  </div>
-
-                  {shelfSectionDropdownOpen && (
-                    <ul className="absolute top-full left-0 w-full max-h-30 overflow-y-auto bg-gray-800 border border-gray-600 z-50">
-                      <li
-                        onClick={() => {
-                          setFormData({
-                            ...formData,
-                            shelfSection: "Unshelved",
-                          });
-                          setShelfSectionDropdownOpen(false);
-                        }}
-                        className="px-3 py-2 text-white text-sm hover:bg-gray-600 cursor-pointer"
-                      >
-                        Unshelved
-                      </li>
-                      {shelfSections.map((section) => (
-                        <li
-                          key={section.id}
-                          onClick={() => {
-                            setFormData({
-                              ...formData,
-                              shelfSection: section.name,
-                            });
-                            setShelfSectionDropdownOpen(false);
-                          }}
-                          className="px-3 py-2 text-white text-sm hover:bg-gray-600 cursor-pointer"
-                        >
-                          {section.name}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setShowShelfSectionInput(!showShelfSectionInput)
-                  }
-                  className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer shrink-0"
-                >
-                  {showShelfSectionInput ? <FaMinus /> : <FaPlus />}
-                </button>
-
-                {showShelfSectionInput && (
-                  <div className="flex gap-2 basis-full sm:basis-0 sm:flex-1">
-                    <input
-                      type="text"
-                      value={newShelfSection}
-                      onChange={(e) => setNewShelfSection(e.target.value)}
-                      placeholder="New shelf section name"
-                      className={inputClass + " flex-1"}
-                    />
-                    <button
-                      type="button"
-                      onClick={addShelfSection}
-                      className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition cursor-pointer shrink-0"
-                    >
-                      Add
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Shelf Number */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="shelfNumber" className={labelClass}>
-                  Shelf Number
-                </label>
-                <input
-                  type="text"
-                  id="shelfNumber"
-                  value={shelfInput}
-                  onChange={(e) => handleShelfChange(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              {/* HDD Number */}
-              <div>
-                <label htmlFor="hdDriveNumber" className={labelClass}>
-                  HDD Number
-                </label>
-                <input
-                  type="text"
-                  id="hdDriveNumber"
-                  value={hddInput}
-                  onChange={(e) => handleHddChange(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-            </div>
-
-            {/* Available on Plex */}
-            <div className="flex flex-col items-center">
-              <label className="block text-sm font-medium text-gray-300 mb-2 mt-2">
-                Available to Stream
-              </label>
-              <button
-                type="button"
-                onClick={() =>
-                  setFormData({ ...formData, isOnPlex: !formData.isOnPlex })
-                }
-                className="cursor-pointer"
-                title={
-                  formData.isOnPlex
-                    ? "Available to stream"
-                    : "Not available to stream"
-                }
-              >
-                {formData.isOnPlex ? (
-                  <HiSignal className="w-8 h-8 text-indigo-400" />
-                ) : (
-                  <HiOutlineSignalSlash className="w-8 h-8 text-gray-500 hover:text-indigo-400" />
-                )}
-              </button>
-            </div>
-          </div>
+          <MoviePhysicalTab
+            formData={formData}
+            setFormData={setFormData}
+            showScanButton={showScanButton}
+            onScanClick={onScanClick}
+            purchasePriceInput={purchasePriceInput}
+            onPurchasePriceChange={handlePurchasePriceChange}
+            shelfInput={shelfInput}
+            onShelfChange={handleShelfChange}
+            hddInput={hddInput}
+            onHddChange={handleHddChange}
+            shelfSections={shelfSections}
+            showShelfSectionInput={showShelfSectionInput}
+            setShowShelfSectionInput={setShowShelfSectionInput}
+            newShelfSection={newShelfSection}
+            setNewShelfSection={setNewShelfSection}
+            addShelfSection={addShelfSection}
+          />
         )}
 
-        {/* Poster Details */}
         {activeTab === "poster" && (
-          <div className="space-y-2 pb-2">
-            {/* Movie Poster: preview beside the URL and the TMDB poster picker */}
-            <div className="flex gap-4 items-start">
-              <div className="w-24 h-36 rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
-                {formData.posterPath ? (
-                  <img
-                    src={formData.posterPath}
-                    alt="Movie poster preview"
-                    className="w-full h-full object-contain"
-                    onError={(e) => (e.currentTarget.style.display = "none")}
-                  />
-                ) : (
-                  <span className="text-gray-600 text-xs text-center px-1">
-                    No poster
-                  </span>
-                )}
-              </div>
-              <div className="flex-1">
-                <label htmlFor="posterPath" className={labelClass}>
-                  Movie Poster URL
-                </label>
-                <input
-                  type="text"
-                  id="posterPath"
-                  value={formData.posterPath}
-                  onChange={(e) =>
-                    setFormData({ ...formData, posterPath: e.target.value })
-                  }
-                  placeholder="https://example.com/movie-poster.jpg"
-                  className={inputClass}
-                />
-                {/* Swap in another of TMDB's posters; the grid opens full width below this row */}
-                <div className="mt-2">{posterPicker.button}</div>
-              </div>
-            </div>
-            {posterPicker.grid}
-
-            {/* Backdrop: wide preview beside the URL and the TMDB backdrop picker */}
-            <div className="flex gap-4 items-start">
-              <div className="w-24 aspect-video rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
-                {formData.backdropPath ? (
-                  <img
-                    src={formData.backdropPath}
-                    alt="Backdrop preview"
-                    className="w-full h-full object-cover"
-                    onError={(e) => (e.currentTarget.style.display = "none")}
-                  />
-                ) : (
-                  <span className="text-gray-600 text-xs text-center px-1">
-                    No backdrop
-                  </span>
-                )}
-              </div>
-              <div className="flex-1">
-                <label htmlFor="backdropPath" className={labelClass}>
-                  Backdrop URL
-                </label>
-                <input
-                  type="text"
-                  id="backdropPath"
-                  value={formData.backdropPath}
-                  onChange={(e) =>
-                    setFormData({ ...formData, backdropPath: e.target.value })
-                  }
-                  placeholder="https://example.com/backdrop.jpg"
-                  className={inputClass}
-                />
-                {/* Swap in another of TMDB's backdrops; the grid opens full width below this row */}
-                <div className="mt-2">{backdropPicker.button}</div>
-              </div>
-            </div>
-            {backdropPicker.grid}
-            {/* Product Poster: field at the top beside the preview, like the poster row */}
-            <div className="flex gap-4 items-start">
-              <div className="w-24 h-36 rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden">
-                {formData.productPosterPath ? (
-                  <img
-                    src={formData.productPosterPath}
-                    alt="Product image preview"
-                    className="w-full h-full object-contain"
-                    onError={(e) => (e.currentTarget.style.display = "none")}
-                  />
-                ) : (
-                  <span className="text-gray-600 text-xs text-center px-1">
-                    No image
-                  </span>
-                )}
-              </div>
-              <div className="flex-1">
-                <label htmlFor="productPosterPath" className={labelClass}>
-                  Product Image URL
-                </label>
-                <input
-                  type="text"
-                  id="productPosterPath"
-                  value={formData.productPosterPath}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      productPosterPath: e.target.value,
-                    })
-                  }
-                  placeholder="https://example.com/product-image.jpg"
-                  className={inputClass}
-                />
-                {/* Look up retailer images by UPC; the grid opens full width below this row */}
-                <div className="mt-2">{productPicker.button}</div>
-              </div>
-            </div>
-            {productPicker.grid}
-          </div>
+          <MovieImagesTab
+            formData={formData}
+            setFormData={setFormData}
+            posterPicker={posterPicker}
+            backdropPicker={backdropPicker}
+            productPicker={productPicker}
+          />
         )}
       </div>
     </form>

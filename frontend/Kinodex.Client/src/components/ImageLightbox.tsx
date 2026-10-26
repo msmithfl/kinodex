@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { IoClose } from "react-icons/io5";
+import { useBackdropClose } from "../utils/useBackdropClose";
 
 interface ImageLightboxProps {
   src: string;
@@ -17,6 +18,8 @@ const largerTmdbImage = (src: string) =>
 // Shows an image large over a dark backdrop. Clicking outside the image, the close button,
 // or Escape closes it.
 function ImageLightbox({ src, alt, onClose }: ImageLightboxProps) {
+  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
+  const backdropClose = useBackdropClose(onClose);
   // Falls back to the original image if the larger size can't be loaded
   const [imageSrc, setImageSrc] = useState(() => largerTmdbImage(src));
 
@@ -33,7 +36,7 @@ function ImageLightbox({ src, alt, onClose }: ImageLightboxProps) {
   return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 cursor-zoom-out"
-      onClick={onClose}
+      {...backdropClose}
       role="dialog"
       aria-modal="true"
       aria-label={alt}
