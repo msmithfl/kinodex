@@ -1,6 +1,8 @@
 import { IoClose } from "react-icons/io5";
 import { useState } from "react";
-import { useAuth } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
+import { ApiError } from "../utils/api";
+import { useCreateTvShow } from "../features/tvShows/api";
 import type { TMDBTvShow, TvShow } from "../types";
 import {
   TV_GENRE_MAP,
@@ -36,17 +38,16 @@ interface AddTvShowModalProps {
 }
 
 export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
-  const { getToken } = useAuth();
+  const navigate = useNavigate();
+  // Adding refreshes every screen listing shows
+  const createTvShow = useCreateTvShow();
+  const saving = createTvShow.isPending;
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<TvShow>(emptyTvShow);
   const [submitError, setSubmitError] = useState("");
-  const [saving, setSaving] = useState(false);
   // Which purchase a barcode scan fills in; null when the scanner is closed
   const [scanPurchaseIndex, setScanPurchaseIndex] = useState<number | null>(null);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
-
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const API_URL = `${API_BASE}/api/tvshows`;
 
   const handleShowSelect = async (show: TMDBTvShow) => {
     const genres = show.genre_ids
@@ -83,35 +84,19 @@ export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
-    setSaving(true);
     try {
-      const token = await getToken();
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        onClose();
-        window.location.href = "/tv-shows";
-      } else {
-        const body = await response.json().catch(() => null);
-        setSubmitError(
-          body?.error ??
-            `Failed to add TV show (${response.status}). Please try again.`,
-        );
-      }
+      await createTvShow.mutateAsync(formData);
+      onClose();
+      navigate("/tv-shows");
     } catch (error) {
       console.error("Error adding TV show:", error);
       setSubmitError(
-        "Could not reach the server. Please check your connection.",
+        !(error instanceof ApiError)
+          ? "Could not reach the server. Please check your connection."
+          : error.status === 400
+            ? error.message
+            : `Failed to add TV show (${error.status}). Please try again.`,
       );
-    } finally {
-      setSaving(false);
     }
   };
 

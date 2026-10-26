@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
-import { useAuth } from "@clerk/clerk-react";
+import { ApiError } from "../utils/api";
+import { useTvShows } from "../features/tvShows/api";
 import { Link, useLocation } from "react-router-dom";
 import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
 import ViewToggle from "../components/ViewToggle";
@@ -17,7 +18,7 @@ import Counter from "../components/Counter";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SortableTableHeader from "../components/SortableTableHeader";
 import EmptyState from "../components/EmptyState";
-import type { SortOption, TvShow } from "../types";
+import type { SortOption } from "../types";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { getRelativeTimeString } from "../utils/dateUtils";
 import { formatSeasons } from "../utils/formatSeasons";
@@ -70,10 +71,13 @@ const COLUMN_OPTIONS: { key: keyof VisibleColumns; label: string }[] = [
 ];
 
 function TvShowList() {
-  const { getToken } = useAuth();
-  const [shows, setShows] = useState<TvShow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+  // Shared with every other screen showing TV shows; saves anywhere refresh it
+  const { data: shows = [], isLoading: loading, error } = useTvShows();
+  const loadError = !error
+    ? ""
+    : error instanceof ApiError
+      ? `Could not load TV shows (${error.status}).`
+      : "Could not reach the server to load TV shows.";
   const [sortBy, setSortBy] = useState<SortOption>(() => {
     const saved = localStorage.getItem("tvShowListSortBy");
     return (saved as SortOption) || "alphabetic";
@@ -98,7 +102,9 @@ function TvShowList() {
   // location.key makes a repeat tap refocus it even when already on this page.
   useEffect(() => {
     if (focusSearch && !loading) searchInputRef.current?.focus();
-  }, [focusSearch, loading, location.key]);  const [showScanner, setShowScanner] = useState(false);
+  }, [focusSearch, loading, location.key]);
+
+  const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
   const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
@@ -132,32 +138,7 @@ function TvShowList() {
     }
   });
   // Size the list to fill the viewport below the header
-  const container = useFillViewportHeight<HTMLDivElement>([loading]);
-
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const API_URL = `${API_BASE}/api/tvshows`;
-
-  useEffect(() => {
-    const fetchShows = async () => {
-      try {
-        const token = await getToken();
-        const response = await fetch(API_URL, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.ok) {
-          setShows(await response.json());
-        } else {
-          setLoadError(`Could not load TV shows (${response.status}).`);
-        }
-      } catch (error) {
-        console.error("Error fetching TV shows:", error);
-        setLoadError("Could not reach the server to load TV shows.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchShows();
-  }, []);
+  const { ref: containerRef, style: containerStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
 
   // Save column preferences to localStorage
   useEffect(() => {
@@ -245,14 +226,7 @@ function TvShowList() {
       {openShowId && (
         <Drawer label="TV show details" onClose={closeShow}>
           {/* Keyed by id so switching shows starts the details fresh */}
-          <TvShowDetail
-            key={openShowId}
-            showId={openShowId}
-            onDeleted={() => {
-              closeShow();
-              setShows((prev) => prev.filter((s) => String(s.id) !== openShowId));
-            }}
-          />
+          <TvShowDetail key={openShowId} showId={openShowId} onDeleted={closeShow} />
         </Drawer>
       )}
       {showScanner && (
@@ -268,9 +242,9 @@ function TvShowList() {
       )}
 
       <div
-        ref={container.ref}
+        ref={containerRef}
         className="flex flex-col h-[calc(100dvh-5rem)]"
-        style={container.style}
+        style={containerStyle}
       >
         {/* Fixed header section */}
         <div className="shrink-0 mx-6 mt-4 md:mx-12">

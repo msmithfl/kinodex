@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
-import { useAuth } from "@clerk/clerk-react";
+import { useMovies } from "../features/movies/api";
+import { useTvShows } from "../features/tvShows/api";
 import {
   Tooltip,
   ResponsiveContainer,
@@ -50,51 +51,25 @@ const tvItem = (s: TvShow): StatItem => ({
   conditions: s.purchases.map((p) => p.condition).filter(Boolean),
 });
 
+// Stable empty lists while loading, so effects that watch the lists don't re-run every render
+const NO_MOVIES: Movie[] = [];
+const NO_SHOWS: TvShow[] = [];
+
 function Stats() {
-  const { getToken } = useAuth();
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [shows, setShows] = useState<TvShow[]>([]);
+  // Separate queries, so one failing still shows the other
+  const { data: movieData, isLoading: moviesLoading } = useMovies();
+  const { data: showData, isLoading: showsLoading } = useTvShows();
+  const movies = movieData ?? NO_MOVIES;
+  const shows = showData ?? NO_SHOWS;
+  const loading = moviesLoading || showsLoading;
   const [startMonth, setStartMonth] = useState(
     () => localStorage.getItem("statsMonthlySpendStart") || "",
   );
   const [endMonth, setEndMonth] = useState(
     () => localStorage.getItem("statsMonthlySpendEnd") || "",
   );
-  const [loading, setLoading] = useState(true);
   // Fills the screen below the header and above the mobile bottom bar
-  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
-
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-
-  useEffect(() => {
-    // Each list is fetched on its own so one failing still shows the other
-    const fetchList = async <T,>(path: string, token: string | null): Promise<T[]> => {
-      try {
-        const response = await fetch(`${API_BASE}${path}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        return response.ok ? await response.json() : [];
-      } catch (error) {
-        console.error(`Error fetching ${path}:`, error);
-        return [];
-      }
-    };
-
-    const fetchData = async () => {
-      try {
-        const token = await getToken();
-        const [movieData, showData] = await Promise.all([
-          fetchList<Movie>("/api/movies", token),
-          fetchList<TvShow>("/api/tvshows", token),
-        ]);
-        setMovies(movieData);
-        setShows(showData);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
 
   // Save the monthly spending range to localStorage
   useEffect(() => {
@@ -252,13 +227,13 @@ function Stats() {
     return months;
   })();
 
-  // Drop a saved month that now falls outside the first-to-last month range
-  useEffect(() => {
-    if (loading) return;
+  // Drop a saved month that now falls outside the first-to-last month range (adjusted while
+  // rendering; once cleared, the checks no longer match, so it settles in one pass)
+  if (!loading) {
     const keys = new Set(allMonthlyData.map((d) => d.key));
     if (startMonth && !keys.has(startMonth)) setStartMonth("");
     if (endMonth && !keys.has(endMonth)) setEndMonth("");
-  }, [loading, movies, shows]);
+  }
 
   const monthlySpendData = allMonthlyData.filter((d) => {
     if (startMonth && d.key < startMonth) return false;
@@ -267,7 +242,7 @@ function Stats() {
   });
 
   return (
-    <div ref={viewport.ref} className="flex flex-col h-[calc(100dvh-5rem)] pt-2" style={viewport.style}>
+    <div ref={viewportRef} className="flex flex-col h-[calc(100dvh-5rem)] pt-2" style={viewportStyle}>
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-20 pt-2 md:pt-4 pb-8">
 
         {loading ? (

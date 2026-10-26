@@ -44,6 +44,7 @@ Kinodex/
       components/       shared UI, modals, forms, cards, Drawer
       utils/            helpers and small hooks
       settings/         per-user settings context
+      features/         per-feature data hooks (and components): collections/, movies/, shelfSections/, tvShows/
       types/index.ts    shared TypeScript types (hand-written to match the API)
     vercel.json         rewrites every path to index.html (client-side routing)
   docs/                 this map + design docs
@@ -113,7 +114,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 | `AddItemModal` | Chooser: add movie or TV show |
 | `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit (Details + Images tabs; TMDB search step, barcode scan, poster/backdrop pickers, product image lookup) |
 | `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` + `TvShowPurchaseEditor` | TV create/edit, with per-purchase seasons and prices |
-| `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop) |
+| `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop); saves via the collections hooks |
 | `BulkEditModal` | Bulk edit from the movie table |
 | `ConfirmDialog`, `ImageLightbox`, `BarcodeScanner`, `MobileOnlyMessage` | Shared helpers |
 | `useImagePicker` / `useProductImagePicker` | Hooks returning a button + grid: TMDB posters/backdrops; UPC product images |
@@ -125,6 +126,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Controls:** `ViewToggle` (+ `utils/viewOptions.ts`), `SortDropdown`, `SortableTableHeader`,
   `FilterDropdown` (+ `utils/filterCategories.ts`, `utils/applyFilters.ts`), `Counter`,
   `SubNavigation`, `EmptyState`, `LoadingSpinner`.
+- **Data layer:** `utils/api.ts`, `utils/queryClient.ts`, `features/*/api.ts` (see below).
 - **Utilities:** `tmdbApi.ts` (browser-side TMDB calls), `useUrlSearchQuery` (search in the URL),
   `useFillViewportHeight` (pages that fill the screen above the bottom nav), `getSortedMovies`,
   `spending.ts` / `tvShowPurchases.ts` / `formatSeasons.ts` (money and season maths),
@@ -132,15 +134,20 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 
 ### How data loading works today
 
-Each page/modal fetches what it needs itself: `useAuth().getToken()` → `fetch(API_BASE + path)`
-with a Bearer header → local `useState`. There's no shared cache or client, so:
+**Converted (movies, TV shows, collections, genres, dashboard, stats, search):** load and save through a shared
+React Query cache: `utils/api.ts` (one client: address + sign-in token + `ApiError`) → hooks in
+`features/{movies,collections,shelfSections,tvShows}/api.ts` → components. Saves mark the
+affected data as out of date and every screen showing it refreshes. The cache empties when the
+signed-in user changes (`components/ClearCacheOnUserChange.tsx`).
 
-- many screens re-download `/api/movies` independently;
-- after changes, screens refresh themselves (`fetchData()` etc.) and a couple use
-  `window.location.reload()` (movie edit; TV edit inside the drawer) so the list behind the
-  drawer updates.
+**Not yet converted (shelf pages, CSV, Match Movies, settings, lending):** each page/modal fetches
+what it needs itself (the ones that change movies or shelves then tell the cache):
+`useAuth().getToken()` → `fetch(API_BASE + path)` with a Bearer header → local `useState`. So:
 
-The proposed replacement is in [design/frontend-data-layer.md](design/frontend-data-layer.md).
+- they re-download their data each visit;
+- after changes they refresh themselves (`fetchData()` etc.).
+
+The remaining phases are in [design/frontend-data-layer.md](design/frontend-data-layer.md).
 
 **Computed in the browser, not the API:** stats, dashboard spending, genre lists (from each
 movie's `genres`), collection completion rings and checklist ownership, filters and sorting.
@@ -237,8 +244,8 @@ dotnet test backend/Kinodex.Api.Tests -c Release
 
 Pointers for cleanup, roughly in the order they'd come up:
 
-- Data loading is duplicated per page; `window.location.reload()` after movie edits and TV
-  drawer edits (see the data-layer design doc).
+- Shelf, CSV, Match Movies, settings and lending pages still load data themselves
+  (data-layer design doc, phase 4).
 - Very large files: `MovieForm` (~920 lines), `MovieList` (~870), `MovieDetail` (~830, page +
   drawer + tabs), `TvShowForm`, `CollectionDetail`, `CheckoutsView`.
 - No frontend tests; backend tests cover the API (see Tests).

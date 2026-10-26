@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { createPortal } from "react-dom";
 import { DrawerActionsSlotContext } from "../components/drawerActions";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
+import { useDeleteMovie, useMovie } from "../features/movies/api";
 import {
   TiStarOutline,
   TiStarHalfOutline,
@@ -13,7 +13,6 @@ import { LuEye, LuEyeClosed } from "react-icons/lu";
 import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ImageLightbox from "../components/ImageLightbox";
-import type { Movie } from "../types";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { EditMovieModal } from "../components/EditMovieModal";
@@ -35,7 +34,6 @@ const DRAWER_TABS: { id: DrawerTab; label: string }[] = [{ id: "details", label:
 
 function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
   const navigate = useNavigate();
-  const { getToken } = useAuth();
   const params = useParams<{ id: string }>();
   const id = movieId ?? params.id;
   const inDrawer = movieId !== undefined;
@@ -46,10 +44,11 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
   // beside them on the right, and the details full width below; actions sit at the bottom.
   const layout = (pageClasses: string, drawerClasses: string) =>
     inDrawer ? drawerClasses : pageClasses;
-  const [movie, setMovie] = useState<Movie | null>(null);
-  const [loading, setLoading] = useState(true);
+  // From the shared cache: opening from a list shows the list's copy straight away
+  const { data: movie, isLoading: loading, isError } = useMovie(id);
+  const deleteMovie = useDeleteMovie();
   // Size the page to the viewport below the header and above the mobile bottom bar
-  const container = useFillViewportHeight<HTMLDivElement>([loading]);
+  const { ref: containerRef, style: containerStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -57,55 +56,27 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
   const [showProductLightbox, setShowProductLightbox] = useState(false);
   // Drawer only: which section shows under the header
   const [tab, setTab] = useState<DrawerTab>("details");
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const API_URL = `${API_BASE}/api/movies`;
-
+  // As a page, a movie that can't be loaded (e.g. not yours, or deleted) goes back to the library;
+  // in a drawer it just shows "Movie not found" in the panel
   useEffect(() => {
-    fetchMovie();
-  }, [id]);
-
-  const fetchMovie = async () => {
-    try {
-      const token = await getToken();
-      const response = await fetch(`${API_URL}/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMovie(data);
-      } else if (!inDrawer) {
-        navigate("/library");
-      }
-      // In a drawer, a missing movie just shows "Movie not found" in the panel
-    } catch (error) {
-      console.error("Error fetching movie:", error);
-      if (!inDrawer) navigate("/library");
-    } finally {
-      setLoading(false);
-    }
-  };
+    if (isError && !inDrawer) navigate("/library");
+  }, [isError, inDrawer, navigate]);
 
   const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
   };
 
-  const handleDeleteConfirm = async () => {
-    try {
-      const token = await getToken();
-      const response = await fetch(`${API_URL}/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
+  const handleDeleteConfirm = () => {
+    if (id === undefined) return;
+    deleteMovie.mutate(id, {
+      // Every list showing the movie refreshes itself
+      onSuccess: () => {
         if (onDeleted) onDeleted();
         else navigate("/library");
-      }
-    } catch (error) {
-      console.error("Error deleting movie:", error);
-    } finally {
-      setShowDeleteConfirm(false);
-    }
+      },
+      onError: (error) => console.error("Error deleting movie:", error),
+      onSettled: () => setShowDeleteConfirm(false),
+    });
   };
 
   const handleDeleteCancel = () => {
@@ -350,9 +321,9 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
   return (
     // As a page it fills the screen below the header; in a drawer it fills the panel
     <div
-      ref={inDrawer ? undefined : container.ref}
+      ref={inDrawer ? undefined : containerRef}
       className={`relative flex flex-col ${inDrawer ? "h-full" : "h-[calc(100dvh-5rem)]"}`}
-      style={inDrawer ? undefined : container.style}
+      style={inDrawer ? undefined : containerStyle}
     >
       {/* Drawer from tablet up: edit and delete float below the close button, outside the panel */}
       {inDrawer &&

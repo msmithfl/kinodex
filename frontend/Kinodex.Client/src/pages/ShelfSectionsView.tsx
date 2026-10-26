@@ -4,12 +4,16 @@ import { LuGripVertical } from "react-icons/lu";
 
 const SHELF_ORDER_KEY = "shelf-section-order";
 import { useAuth } from "@clerk/clerk-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { shelfSectionKeys } from "../features/shelfSections/api";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
 import type { Movie, ShelfSection } from "../types";
 
 function ShelfSectionsView() {
+  // This page saves outside the shared cache (not converted yet), so tell it what changed
+  const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const [shelfSections, setShelfSections] = useState<ShelfSection[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -161,6 +165,7 @@ function ShelfSectionsView() {
     } catch (error) {
       console.error("Error saving order:", error);
     }
+    queryClient.invalidateQueries({ queryKey: shelfSectionKeys.all });
     localStorage.setItem(
       SHELF_ORDER_KEY,
       JSON.stringify(shelfSections.map((s) => s.name)),
@@ -193,6 +198,7 @@ function ShelfSectionsView() {
 
         if (response.ok) {
           const newSection = await response.json();
+          queryClient.invalidateQueries({ queryKey: shelfSectionKeys.all });
           setShelfSections([...shelfSections, newSection]);
           setNewSectionName("");
           setShowCreateInput(false);

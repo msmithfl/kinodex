@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
+import { useMovies } from "../features/movies/api";
+import { useTvShows } from "../features/tvShows/api";
 import { FaFilm, FaTv } from "react-icons/fa";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import { IoCameraOutline } from "react-icons/io5";
@@ -58,7 +59,6 @@ const tvItem = (s: TvShow): SearchItem => {
 const SEARCH_DEBOUNCE_MS = 250;
 
 function SearchPage() {
-  const { getToken } = useAuth();
   const [params, setParams] = useSearchParams();
   // The URL holds the settled search, which drives the results
   const query = params.get("q") ?? "";
@@ -80,42 +80,14 @@ function SearchPage() {
     setText(query);
   }
 
-  const [items, setItems] = useState<SearchItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Separate queries, so one failing still shows the other
+  const { data: movies = [], isLoading: moviesLoading } = useMovies();
+  const { data: shows = [], isLoading: showsLoading } = useTvShows();
+  const loading = moviesLoading || showsLoading;
+  const items: SearchItem[] = [...movies.map(movieItem), ...shows.map(tvItem)];
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-
-  useEffect(() => {
-    // Each list is fetched on its own so one failing still shows the other
-    const fetchList = async <T,>(path: string, token: string | null): Promise<T[]> => {
-      try {
-        const response = await fetch(`${API_BASE}${path}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        return response.ok ? await response.json() : [];
-      } catch (error) {
-        console.error(`Error fetching ${path}:`, error);
-        return [];
-      }
-    };
-
-    const fetchData = async () => {
-      try {
-        const token = await getToken();
-        const [movies, shows] = await Promise.all([
-          fetchList<Movie>("/api/movies", token),
-          fetchList<TvShow>("/api/tvshows", token),
-        ]);
-        setItems([...movies.map(movieItem), ...shows.map(tvItem)]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
 
   // Put the cursor in the search box once the page is ready
   useEffect(() => {

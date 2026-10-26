@@ -1,8 +1,9 @@
 import { IoClose } from "react-icons/io5";
 import { FaTrash } from "react-icons/fa";
 import { useState } from "react";
-import { useAuth } from "@clerk/clerk-react";
 import type { TvShow } from "../types";
+import { ApiError } from "../utils/api";
+import { useDeleteTvShow, useUpdateTvShow } from "../features/tvShows/api";
 import { isMobile } from "../utils/isMobile";
 import { withClientKeys } from "../utils/tvShowPurchases";
 import TvShowForm from "./TvShowForm";
@@ -25,74 +26,45 @@ export function EditTvShowModal({
   onSaved,
   onDeleted,
 }: EditTvShowModalProps) {
-  const { getToken } = useAuth();
   const [formData, setFormData] = useState<TvShow>(() => withClientKeys(show));
   const [submitError, setSubmitError] = useState("");
-  const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   // Which purchase a barcode scan fills in; null when the scanner is closed
   const [scanPurchaseIndex, setScanPurchaseIndex] = useState<number | null>(null);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
+  // Saving or deleting refreshes every screen showing the show
+  const updateTvShow = useUpdateTvShow();
+  const deleteTvShow = useDeleteTvShow();
+  const saving = updateTvShow.isPending;
 
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const API_URL = `${API_BASE}/api/tvshows/${show.id}`;
+  // The server's own explanation for a rejected show (e.g. a missing title), else a generic message
+  const errorMessage = (error: unknown, action: "save" | "delete") => {
+    if (!(error instanceof ApiError)) return "Could not reach the server. Please check your connection.";
+    if (error.status === 400) return error.message;
+    return `Failed to ${action} ${show.title} (${error.status}). Please try again.`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
-    setSaving(true);
     try {
-      const token = await getToken();
-      const response = await fetch(API_URL, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        onSaved(await response.json());
-      } else {
-        const body = await response.json().catch(() => null);
-        setSubmitError(
-          body?.error ??
-            `Failed to save ${show.title} (${response.status}). Please try again.`,
-        );
-      }
+      onSaved(await updateTvShow.mutateAsync({ ...formData, id: show.id }));
     } catch (error) {
       console.error("Error saving TV show:", error);
-      setSubmitError(
-        "Could not reach the server. Please check your connection.",
-      );
-    } finally {
-      setSaving(false);
+      setSubmitError(errorMessage(error, "save"));
     }
   };
 
   const handleDeleteConfirm = async () => {
     setShowDeleteConfirm(false);
     setSubmitError("");
+    if (show.id === undefined) return;
     try {
-      const token = await getToken();
-      const response = await fetch(API_URL, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok && show.id !== undefined) {
-        onDeleted(show.id);
-      } else {
-        setSubmitError(
-          `Failed to delete ${show.title} (${response.status}). Please try again.`,
-        );
-      }
+      await deleteTvShow.mutateAsync(show.id);
+      onDeleted(show.id);
     } catch (error) {
       console.error("Error deleting TV show:", error);
-      setSubmitError(
-        "Could not reach the server. Please check your connection.",
-      );
+      setSubmitError(errorMessage(error, "delete"));
     }
   };
 

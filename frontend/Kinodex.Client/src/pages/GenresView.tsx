@@ -1,54 +1,17 @@
-import { useState, useEffect } from "react";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
-import { useAuth } from "@clerk/clerk-react";
 import GenreCard, { GENRE_OVERLAYS } from "../components/GenreCard";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
+import { useMovies } from "../features/movies/api";
 import type { Movie } from "../types";
 
 function GenresView() {
-  const { getToken } = useAuth();
-  const [genres, setGenres] = useState<string[]>([]);
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Genres have no table of their own: they're whatever genres the user's movies have
+  const { data: movies = [], isLoading: loading } = useMovies();
+  const genres = Array.from(new Set(movies.flatMap((movie) => movie.genres ?? []))).sort();
   // Fills the screen below the header and above the mobile bottom bar
-  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
-
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const MOVIES_URL = `${API_BASE}/api/movies`;
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const token = await getToken();
-      const moviesRes = await fetch(MOVIES_URL, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (moviesRes.ok) {
-        const moviesData = await moviesRes.json();
-        setMovies(moviesData);
-
-        // Extract unique genres from all movies
-        const uniqueGenres = new Set<string>();
-        moviesData.forEach((movie: Movie) => {
-          if (movie.genres && movie.genres.length > 0) {
-            movie.genres.forEach((genre) => uniqueGenres.add(genre));
-          }
-        });
-
-        setGenres(Array.from(uniqueGenres).sort());
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
 
   const getMovieCount = (genreName: string) => {
     return movies.filter(
@@ -85,7 +48,7 @@ function GenresView() {
   return (
     <>
       <SubNavigation />
-      <div ref={viewport.ref} className="flex h-[calc(100dvh-9rem)] pt-2" style={viewport.style}>
+      <div ref={viewportRef} className="flex h-[calc(100dvh-9rem)] pt-2" style={viewportStyle}>
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pt-2">
           {genres.length === 0 ? (
             <EmptyState message="No genres yet." />

@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
-import { useAuth } from "@clerk/clerk-react";
 import { useParams } from "react-router-dom";
 import EmptyState from "../components/EmptyState";
 import SimpleMovieTable from "../components/SimpleMovieTable";
@@ -13,15 +12,14 @@ import SubNavigation from "../components/SubNavigation";
 import Drawer from "../components/Drawer";
 import MovieDetail from "./MovieDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
-import type { Movie } from "../types";
+import { useMovies } from "../features/movies/api";
 
 function GenreDetail() {
-  const { getToken } = useAuth();
   const { genreName } = useParams<{ genreName: string }>();
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: allMovies = [], isLoading: loading } = useMovies();
+  const movies = allMovies.filter((movie) => movie.genres?.includes(genreName || ""));
   // Fills the screen below the header and above the mobile bottom bar
-  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
+  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
   // The movie open in the side drawer (?movie=)
   const { openId: openMovieId, open: openMovie, close: closeMovie } = useDrawerParam("movie");
 
@@ -42,35 +40,6 @@ function GenreDetail() {
     }
   };
 
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const MOVIES_URL = `${API_BASE}/api/movies`;
-
-  useEffect(() => {
-    fetchMovies();
-  }, [genreName]);
-
-  const fetchMovies = async () => {
-    try {
-      const token = await getToken();
-      const moviesRes = await fetch(MOVIES_URL, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (moviesRes.ok) {
-        const data = await moviesRes.json();
-        const filtered = data.filter(
-          (movie: Movie) =>
-            movie.genres && movie.genres.includes(genreName || ""),
-        );
-        setMovies(filtered);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <>
@@ -85,17 +54,10 @@ function GenreDetail() {
       <SubNavigation />
       {openMovieId && (
         <Drawer label="Movie details" onClose={closeMovie}>
-          <MovieDetail
-            key={openMovieId}
-            movieId={openMovieId}
-            onDeleted={() => {
-              closeMovie();
-              fetchMovies();
-            }}
-          />
+          <MovieDetail key={openMovieId} movieId={openMovieId} onDeleted={closeMovie} />
         </Drawer>
       )}
-      <div ref={viewport.ref} className="flex h-[calc(100dvh-9rem)] mt-2" style={viewport.style}>
+      <div ref={viewportRef} className="flex h-[calc(100dvh-9rem)] mt-2" style={viewportStyle}>
         <div className="flex-1 min-h-0 overflow-y-auto px-4 md:px-12">
           <div>
             <h1 className="text-3xl font-bold">{genreName}</h1>

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { movieKeys } from "../features/movies/api";
 import { FaCheck, FaTimes, FaSync } from "react-icons/fa";
 import SubNavigation from "../components/SubNavigation";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -8,6 +10,9 @@ import type { Movie, MatchingResult, MatchSuggestion } from "../types";
 
 function MatchMovies() {
   const { getToken } = useAuth();
+  // Matching saves outside the shared cache (this page isn't converted yet), so tell it what changed
+  const queryClient = useQueryClient();
+  const refreshMovies = () => queryClient.invalidateQueries({ queryKey: movieKeys.all });
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
   // The signed-in user's token, for the TMDB matching endpoints
   const authHeader = async () => ({ Authorization: `Bearer ${await getToken()}` });
@@ -53,6 +58,7 @@ function MatchMovies() {
       });
       if (response.ok) {
         const result = await response.json();
+        refreshMovies();
         setFillResult(result);
       }
     } catch (error) {
@@ -95,6 +101,7 @@ function MatchMovies() {
       });
 
       if (response.ok) {
+        refreshMovies();
         // Remove from unmatched list
         setUnmatchedMovies((prev) => prev.filter((m) => m.id !== movieId));
 

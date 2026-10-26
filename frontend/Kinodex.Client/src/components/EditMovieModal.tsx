@@ -1,11 +1,13 @@
 import { IoClose } from "react-icons/io5";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import type { Movie } from "../types";
 import MovieForm from "./MovieForm";
-import { useAuth } from "@clerk/clerk-react";
 import BarcodeScanner from "./BarcodeScanner";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
+import { useMovie, useUpdateMovie } from "../features/movies/api";
+import { useCollections, useCreateCollection } from "../features/collections/api";
+import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
 
 interface EditMovieModalProps {
   onClose: () => void;
@@ -13,38 +15,52 @@ interface EditMovieModalProps {
   movieId?: string;
 }
 
+const EMPTY_MOVIE: Movie = {
+  userId: "",
+  title: "",
+  upcNumber: "",
+  formats: [],
+  collections: [],
+  condition: "Like New",
+  purchasePrice: 0,
+  hasWatched: false,
+  rating: 0,
+  review: "",
+  year: new Date().getFullYear(),
+  genres: [],
+  posterPath: "",
+  backdropPath: "",
+  productPosterPath: "",
+  tmdbId: undefined,
+  hdDriveNumber: 0,
+  shelfNumber: 1,
+  shelfSection: "",
+  isOnPlex: false,
+};
+
+const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
+
 export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
-  const { getToken } = useAuth();
   const params = useParams<{ id: string }>();
   const id = movieId ?? params.id;
-  const [formData, setFormData] = useState<Movie>({
-    userId: "",
-    title: "",
-    upcNumber: "",
-    formats: [],
-    collections: [],
-    condition: "Like New",
-    purchasePrice: 0,
-    hasWatched: false,
-    rating: 0,
-    review: "",
-    year: new Date().getFullYear(),
-    genres: [],
-    posterPath: "",
-    backdropPath: "",
-    productPosterPath: "",
-    tmdbId: undefined,
-    hdDriveNumber: 0,
-    shelfNumber: 1,
-    shelfSection: "",
-    isOnPlex: false,
-  });
-  const [collections, setCollections] = useState<
-    { id: number; name: string }[]
-  >([]);
-  const [shelfSections, setShelfSections] = useState<
-    { id: number; name: string }[]
-  >([]);
+  // From the shared cache (the drawer or list has usually loaded it already)
+  const { data: movie } = useMovie(id);
+  const { data: collectionList = [] } = useCollections();
+  const { data: shelfSectionList = [] } = useShelfSections();
+  const updateMovie = useUpdateMovie();
+  const createCollection = useCreateCollection();
+  const createShelfSection = useCreateShelfSection();
+
+  const [formData, setFormData] = useState<Movie>(movie ?? EMPTY_MOVIE);
+  // Fill the form once, when the movie arrives (if it wasn't already cached when the modal opened)
+  const [filledFrom, setFilledFrom] = useState(movie !== undefined);
+  if (!filledFrom && movie) {
+    setFilledFrom(true);
+    setFormData(movie);
+  }
+
+  const collections = [...collectionList].sort(byName);
+  const shelfSections = [...shelfSectionList].sort(byName);
   const [showCollectionInput, setShowCollectionInput] = useState(false);
   const [showShelfSectionInput, setShowShelfSectionInput] = useState(false);
   const [newCollection, setNewCollection] = useState("");
@@ -53,11 +69,6 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
 
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
-
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const API_URL = `${API_BASE}/api/movies`;
-  const COLLECTIONS_URL = `${API_BASE}/api/collections`;
-  const SHELF_SECTIONS_URL = `${API_BASE}/api/shelfsections`;
 
   // Check if device is mobile
   const isMobile = () => {
@@ -68,116 +79,34 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
     );
   };
 
-  useEffect(() => {
-    // Load the movie being edited
-    const fetchMovie = async () => {
-      try {
-        const token = await getToken();
-        const response = await fetch(`${API_URL}/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setFormData(data);
-        }
-      } catch (error) {
-        console.error("Error fetching movie:", error);
-      }
-    };
-
-    // Load collections and shelf sections from API
-    const fetchData = async () => {
-      try {
-        const token = await getToken();
-        const headers = { Authorization: `Bearer ${token}` };
-        const [collectionsRes, shelfSectionsRes] = await Promise.all([
-          fetch(COLLECTIONS_URL, { headers }),
-          fetch(SHELF_SECTIONS_URL, { headers }),
-        ]);
-
-        if (collectionsRes.ok) {
-          const collectionsData = await collectionsRes.json();
-          setCollections(collectionsData);
-        }
-
-        if (shelfSectionsRes.ok) {
-          const shelfSectionsData = await shelfSectionsRes.json();
-          setShelfSections(shelfSectionsData);
-        }
-      } catch (error) {
-        console.error("Error loading collections and shelf sections:", error);
-      }
-    };
-
-    fetchMovie();
-    fetchData();
-  }, []);
-
+  // Creates a collection from the form and adds this movie to it
   const addCollection = async () => {
-    if (newCollection && !collections.find((c) => c.name === newCollection)) {
-      try {
-        const token = await getToken();
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        };
-        const response = await fetch(COLLECTIONS_URL, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ name: newCollection }),
-        });
-
-        if (response.ok) {
-          const newCollectionData = await response.json();
-          setCollections(
-            [...collections, newCollectionData].sort((a, b) =>
-              a.name.localeCompare(b.name),
-            ),
-          );
-          setFormData({
-            ...formData,
-            collections: [...formData.collections, newCollection],
-          });
-          setNewCollection("");
-          setShowCollectionInput(false);
-        }
-      } catch (error) {
-        console.error("Error adding collection:", error);
-      }
+    if (!newCollection || collections.find((c) => c.name === newCollection)) return;
+    try {
+      await createCollection.mutateAsync({
+        name: newCollection,
+        isDirectorCollection: false,
+        imageUrl: null,
+        backdropUrl: null,
+      });
+      setFormData((prev) => ({ ...prev, collections: [...prev.collections, newCollection] }));
+      setNewCollection("");
+      setShowCollectionInput(false);
+    } catch (error) {
+      console.error("Error adding collection:", error);
     }
   };
 
+  // Creates a shelf section from the form and puts this movie on it
   const addShelfSection = async () => {
-    if (
-      newShelfSection &&
-      !shelfSections.find((s) => s.name === newShelfSection)
-    ) {
-      try {
-        const token = await getToken();
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        };
-        const response = await fetch(SHELF_SECTIONS_URL, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ name: newShelfSection }),
-        });
-
-        if (response.ok) {
-          const newShelfSectionData = await response.json();
-          setShelfSections(
-            [...shelfSections, newShelfSectionData].sort((a, b) =>
-              a.name.localeCompare(b.name),
-            ),
-          );
-          setFormData({ ...formData, shelfSection: newShelfSection });
-          setNewShelfSection("");
-          setShowShelfSectionInput(false);
-        }
-      } catch (error) {
-        console.error("Error adding shelf section:", error);
-      }
+    if (!newShelfSection || shelfSections.find((s) => s.name === newShelfSection)) return;
+    try {
+      await createShelfSection.mutateAsync(newShelfSection);
+      setFormData((prev) => ({ ...prev, shelfSection: newShelfSection }));
+      setNewShelfSection("");
+      setShowShelfSectionInput(false);
+    } catch (error) {
+      console.error("Error adding shelf section:", error);
     }
   };
 
@@ -189,23 +118,12 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
     }
     setSubmitError("");
     try {
-      const token = await getToken();
-      const headers = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      };
-      const response = await fetch(`${API_URL}/${id}`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        onClose();
-        window.location.reload();
-      }
+      // Every screen showing this movie refreshes itself; no page reload needed
+      await updateMovie.mutateAsync({ ...formData, id: formData.id ?? Number(id) });
+      onClose();
     } catch (error) {
       console.error("Error updating movie:", error);
+      setSubmitError("Could not save the movie. Try again.");
     }
   };
 
@@ -291,9 +209,10 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
             </button>
             <button
               onClick={handleSubmit}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
+              disabled={updateMovie.isPending}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-wait text-white rounded-md transition cursor-pointer"
             >
-              Save
+              {updateMovie.isPending ? "Saving..." : "Save"}
             </button>
           </div>
         </div>

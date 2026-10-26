@@ -1,20 +1,30 @@
 import { IoClose } from "react-icons/io5";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Movie, TMDBMovie } from "../types";
 import { GENRE_MAP, searchTMDB } from "../utils/tmdbApi";
 import MovieForm from "./MovieForm";
 import TmdbSearchStep from "./TmdbSearchStep";
-import { useUser, useAuth } from "@clerk/clerk-react";
 import BarcodeScanner from "./BarcodeScanner";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
+import { useCreateMovie } from "../features/movies/api";
+import { ApiError } from "../utils/api";
+import { useCollections, useCreateCollection } from "../features/collections/api";
+import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
 
 interface AddMovieModalProps {
   onClose: () => void;
 }
 
+const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
+
 export function AddMovieModal({ onClose }: AddMovieModalProps) {
-  const { user } = useUser();
-  const { getToken } = useAuth();
+  const navigate = useNavigate();
+  const { data: collectionList = [] } = useCollections();
+  const { data: shelfSectionList = [] } = useShelfSections();
+  const createMovie = useCreateMovie();
+  const createCollection = useCreateCollection();
+  const createShelfSection = useCreateShelfSection();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Movie>({
     userId: "",
@@ -38,12 +48,8 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     shelfSection: "",
     isOnPlex: false,
   });
-  const [collections, setCollections] = useState<
-    { id: number; name: string }[]
-  >([]);
-  const [shelfSections, setShelfSections] = useState<
-    { id: number; name: string }[]
-  >([]);
+  const collections = [...collectionList].sort(byName);
+  const shelfSections = [...shelfSectionList].sort(byName);
   const [showCollectionInput, setShowCollectionInput] = useState(false);
   const [showShelfSectionInput, setShowShelfSectionInput] = useState(false);
   const [newCollection, setNewCollection] = useState("");
@@ -53,11 +59,6 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
 
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const API_URL = `${API_BASE}/api/movies`;
-  const COLLECTIONS_URL = `${API_BASE}/api/collections`;
-  const SHELF_SECTIONS_URL = `${API_BASE}/api/shelfsections`;
-
   // Check if device is mobile
   const isMobile = () => {
     return (
@@ -66,34 +67,6 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
       ) || window.innerWidth <= 768
     );
   };
-
-  useEffect(() => {
-    // Load collections and shelf sections from API
-    const fetchData = async () => {
-      try {
-        const token = await getToken();
-        const headers = { Authorization: `Bearer ${token}` };
-        const [collectionsRes, shelfSectionsRes] = await Promise.all([
-          fetch(COLLECTIONS_URL, { headers }),
-          fetch(SHELF_SECTIONS_URL, { headers }),
-        ]);
-
-        if (collectionsRes.ok) {
-          const collectionsData = await collectionsRes.json();
-          setCollections(collectionsData);
-        }
-
-        if (shelfSectionsRes.ok) {
-          const shelfSectionsData = await shelfSectionsRes.json();
-          setShelfSections(shelfSectionsData);
-        }
-      } catch (error) {
-        console.error("Error loading collections and shelf sections:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   const handleMovieSelect = (movie: TMDBMovie) => {
     // Map genre IDs to genre names
@@ -127,71 +100,34 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     setShowForm(true);
   };
 
+  // Creates a collection from the form and adds this movie to it
   const addCollection = async () => {
-    if (newCollection && !collections.find((c) => c.name === newCollection)) {
-      try {
-        const token = await getToken();
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        };
-        const response = await fetch(COLLECTIONS_URL, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ name: newCollection }),
-        });
-
-        if (response.ok) {
-          const newCollectionData = await response.json();
-          setCollections(
-            [...collections, newCollectionData].sort((a, b) =>
-              a.name.localeCompare(b.name),
-            ),
-          );
-          setFormData({
-            ...formData,
-            collections: [...formData.collections, newCollection],
-          });
-          setNewCollection("");
-          setShowCollectionInput(false);
-        }
-      } catch (error) {
-        console.error("Error adding collection:", error);
-      }
+    if (!newCollection || collections.find((c) => c.name === newCollection)) return;
+    try {
+      await createCollection.mutateAsync({
+        name: newCollection,
+        isDirectorCollection: false,
+        imageUrl: null,
+        backdropUrl: null,
+      });
+      setFormData((prev) => ({ ...prev, collections: [...prev.collections, newCollection] }));
+      setNewCollection("");
+      setShowCollectionInput(false);
+    } catch (error) {
+      console.error("Error adding collection:", error);
     }
   };
 
+  // Creates a shelf section from the form and puts this movie on it
   const addShelfSection = async () => {
-    if (
-      newShelfSection &&
-      !shelfSections.find((s) => s.name === newShelfSection)
-    ) {
-      try {
-        const token = await getToken();
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        };
-        const response = await fetch(SHELF_SECTIONS_URL, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ name: newShelfSection }),
-        });
-
-        if (response.ok) {
-          const newShelfSectionData = await response.json();
-          setShelfSections(
-            [...shelfSections, newShelfSectionData].sort((a, b) =>
-              a.name.localeCompare(b.name),
-            ),
-          );
-          setFormData({ ...formData, shelfSection: newShelfSection });
-          setNewShelfSection("");
-          setShowShelfSectionInput(false);
-        }
-      } catch (error) {
-        console.error("Error adding shelf section:", error);
-      }
+    if (!newShelfSection || shelfSections.find((s) => s.name === newShelfSection)) return;
+    try {
+      await createShelfSection.mutateAsync(newShelfSection);
+      setFormData((prev) => ({ ...prev, shelfSection: newShelfSection }));
+      setNewShelfSection("");
+      setShowShelfSectionInput(false);
+    } catch (error) {
+      console.error("Error adding shelf section:", error);
     }
   };
 
@@ -203,25 +139,17 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     }
     setSubmitError("");
     try {
-      const token = await getToken();
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ...formData, userId: user?.id ?? "" }),
-      });
-
-      if (response.ok) {
-        onClose();
-        window.location.href = "/library";
-      } else {
-        setSubmitError(`Failed to add movie (${response.status}). Please try again.`);
-      }
+      // The server makes it the signed-in user's movie; every movie list refreshes itself
+      await createMovie.mutateAsync(formData);
+      onClose();
+      navigate("/library");
     } catch (error) {
       console.error("Error adding movie:", error);
-      setSubmitError("Could not reach the server. Please check your connection.");
+      setSubmitError(
+        error instanceof ApiError
+          ? `Failed to add movie (${error.status}). Please try again.`
+          : "Could not reach the server. Please check your connection.",
+      );
     }
   };
 

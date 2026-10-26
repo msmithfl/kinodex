@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
-import { useAuth, useUser, UserButton } from "@clerk/clerk-react";
+import { useState } from "react";
+import { useUser, UserButton } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
-import type { Movie, TvShow } from "../types";
+import { useMovies } from "../features/movies/api";
+import { useTvShows } from "../features/tvShows/api";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import {
   monthKey,
@@ -58,97 +59,51 @@ function getMonthSpend(entries: SpendEntry[], monthStart: Date): MonthSpend {
 }
 
 function Dashboard() {
-  const { getToken } = useAuth();
   const { user } = useUser();
-  const [stats, setStats] = useState<Stats>({
-    thisMonth: { label: "", spend: 0, count: 0 },
-    lastMonth: { label: "", spend: 0, count: 0 },
-  });
-  const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Separate queries, so one failing still shows the other
+  const { data: movies = [], isLoading: moviesLoading } = useMovies();
+  const { data: shows = [], isLoading: showsLoading } = useTvShows();
+  const loading = moviesLoading || showsLoading;
   const [showAddModal, setShowAddModal] = useState(false);
   // Size the page to the viewport so Recently Added scrolls instead of running off screen
-  const container = useFillViewportHeight<HTMLDivElement>();
+  const { ref: containerRef, style: containerStyle } = useFillViewportHeight<HTMLDivElement>();
 
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  // Each list is fetched on its own so one failing still shows the other
-  const fetchList = async <T,>(path: string, token: string | null): Promise<T[]> => {
-    try {
-      const response = await fetch(`${API_BASE}${path}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return response.ok ? await response.json() : [];
-    } catch (error) {
-      console.error(`Error fetching ${path}:`, error);
-      return [];
-    }
+  // Spending this month and last, across movies and TV purchases
+  const now = new Date();
+  const spend = [...movieSpend(movies), ...tvSpend(shows)];
+  const stats: Stats = {
+    thisMonth: getMonthSpend(spend, new Date(now.getFullYear(), now.getMonth())),
+    lastMonth: getMonthSpend(spend, new Date(now.getFullYear(), now.getMonth() - 1)),
   };
 
-  const fetchData = async () => {
-    try {
-      const token = await getToken();
-      const [movies, shows] = await Promise.all([
-        fetchList<Movie>("/api/movies", token),
-        fetchList<TvShow>("/api/tvshows", token),
-      ]);
-
-      const now = new Date();
-      const spend = [...movieSpend(movies), ...tvSpend(shows)];
-
-      setStats({
-        thisMonth: getMonthSpend(
-          spend,
-          new Date(now.getFullYear(), now.getMonth()),
-        ),
-        lastMonth: getMonthSpend(
-          spend,
-          new Date(now.getFullYear(), now.getMonth() - 1),
-        ),
-      });
-
-      // 20 most recently added movies and shows; enough to fill the list, which scrolls if longer
-      const recent: RecentItem[] = [
-        ...movies.map((m) => ({
-          key: `movie-${m.id}`,
-          title: m.title,
-          createdAt: m.createdAt,
-          to: `/movie/${m.id}`,
-          isTv: false,
-        })),
-        ...shows.map((s) => ({
-          key: `tv-${s.id}`,
-          title: s.title,
-          createdAt: s.createdAt,
-          to: `/tv-shows/${s.id}`,
-          isTv: true,
-        })),
-      ]
-        .sort((a, b) => {
-          if (!a.createdAt || !b.createdAt) return 0;
-          return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
-        })
-        .slice(0, 20);
-      setRecentItems(recent);
-    } catch (error) {
-      console.error("Error loading dashboard:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // 20 most recently added movies and shows; enough to fill the list, which scrolls if longer
+  const recentItems: RecentItem[] = [
+    ...movies.map((m) => ({
+      key: `movie-${m.id}`,
+      title: m.title,
+      createdAt: m.createdAt,
+      to: `/movie/${m.id}`,
+      isTv: false,
+    })),
+    ...shows.map((s) => ({
+      key: `tv-${s.id}`,
+      title: s.title,
+      createdAt: s.createdAt,
+      to: `/tv-shows/${s.id}`,
+      isTv: true,
+    })),
+  ]
+    .sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    })
+    .slice(0, 20);
 
   return (
     <div
-      ref={container.ref}
+      ref={containerRef}
       className="flex h-[calc(100dvh-5rem)] pt-2"
-      style={container.style}
+      style={containerStyle}
     >
       {/* Same content width as the Stats page */}
       <div className="flex-1 flex flex-col min-h-0 w-full px-4 md:px-20">

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAuth } from "@clerk/clerk-react";
 import { IoChevronBack, IoClose } from "react-icons/io5";
 import { getTMDBImages, searchTMDB, searchTMDBPeople, type TMDBPerson } from "../utils/tmdbApi";
+import { ApiError } from "../utils/api";
+import { useCreateCollection, useUpdateCollection } from "../features/collections/api";
 import type { Collection, Movie, TMDBMovie } from "../types";
 
 interface CollectionFormModalProps {
@@ -29,7 +30,6 @@ function CollectionFormModal({
   onClose,
   onSaved,
 }: CollectionFormModalProps) {
-  const { getToken } = useAuth();
   const editing = collection !== undefined;
   const [kind, setKind] = useState<CollectionKind>(
     collection?.isDirectorCollection ? "director" : "collection",
@@ -45,8 +45,9 @@ function CollectionFormModal({
     collection?.backdropUrl ? { url: collection.backdropUrl, label: "Current backdrop" } : null,
   );
   const [backdropQuery, setBackdropQuery] = useState("");
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const createCollection = useCreateCollection();
+  const updateCollection = useUpdateCollection();
 
   // Normal collection: movies with posters that match the search
   const posterMatches = useMemo(() => {
@@ -127,38 +128,30 @@ function CollectionFormModal({
       n.toLowerCase() === trimmedName.toLowerCase() &&
       n.toLowerCase() !== collection?.name.toLowerCase(),
   );
+  const saving = createCollection.isPending || updateCollection.isPending;
   const canSave = !!trimmedName && !nameTaken && !saving;
 
   const save = async () => {
     if (!canSave) return;
-    setSaving(true);
     setError("");
+    const input = {
+      name: trimmedName,
+      isDirectorCollection: kind === "director",
+      imageUrl: cover?.url ?? null,
+      backdropUrl: backdrop?.url ?? null,
+    };
     try {
-      const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-      const token = await getToken();
-      const response = await fetch(
-        editing ? `${API_BASE}/api/collections/${collection.id}` : `${API_BASE}/api/collections`,
-        {
-          method: editing ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({
-            name: trimmedName,
-            isDirectorCollection: kind === "director",
-            imageUrl: cover?.url ?? null,
-            backdropUrl: backdrop?.url ?? null,
-          }),
-        },
-      );
-      if (response.ok) {
-        onSaved(await response.json());
-      } else {
-        setError(`Could not save the collection (${response.status}).`);
-      }
+      const saved = editing
+        ? await updateCollection.mutateAsync({ id: collection.id, ...input })
+        : await createCollection.mutateAsync(input);
+      onSaved(saved);
     } catch (err) {
       console.error("Error saving collection:", err);
-      setError("Could not reach the server to save the collection.");
-    } finally {
-      setSaving(false);
+      setError(
+        err instanceof ApiError
+          ? `Could not save the collection (${err.status}).`
+          : "Could not reach the server to save the collection.",
+      );
     }
   };
 
