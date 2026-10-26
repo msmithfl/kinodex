@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Kinodex.Api.Data;
 using Kinodex.Api.Endpoints;
 using Kinodex.Api.Services;
+using Kinodex.Api.OpenApi;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,7 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// The description (served at /openapi/v1.json in development) is what the frontend's TypeScript
+// types are generated from (npm run gen:api); the transformer keeps those types strict.
+builder.Services.AddOpenApi(options => options.AddSchemaTransformer<StrictSchemaTransformer>());
 
 // Add HttpClient for TMDB service
 builder.Services.AddHttpClient();
@@ -121,7 +124,9 @@ var app = builder.Build();
 await app.MigrateDbAsync();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// The OpenAPI description is never served in production; the tests ("Testing") check it against
+// the copy the frontend's types were generated from
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {
     app.MapOpenApi();
 }

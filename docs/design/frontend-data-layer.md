@@ -314,9 +314,10 @@ server (400) are shown as-is; other failures show the status.
 
 ### Later / optional
 
-- **Generated types:** the API already exposes an OpenAPI description (`AddOpenApi()`).
-  Generating TypeScript types from it (as Jellyfin does with `@jellyfin/sdk`) would keep frontend
-  types in step with the backend instead of hand-maintained copies in `types/index.ts`.
+- **Generated types:** done. `npm run gen:api` generates `types/api.generated.ts` from the
+  API's OpenAPI description and `types/index.ts` derives from it (see the architecture map).
+  Typing endpoint responses in the description (`TypedResults` instead of `IResult`) is a possible
+  follow-up.
 - **Optimistic updates** for quick toggles (watched, ratings).
 - **Move TMDB calls behind the backend** (they currently use a token built into the frontend);
   part of the self-hosting plan.

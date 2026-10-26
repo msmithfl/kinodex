@@ -33,6 +33,7 @@ Kinodex/
     Endpoints/          one file per area (minimal-API route groups)
     Models/             EF entities
     Services/           TmdbMatchingService
+    OpenApi/            StrictSchemaTransformer (keeps the OpenAPI description, and so the generated types, strict)
     Data/               MovieDbContext, MigrateDbAsync() (runs migrations on startup)
     Migrations/         EF migrations (Postgres)
   backend/Kinodex.Api.Tests/   xUnit tests: the real API in memory against a throwaway Postgres DB
@@ -50,7 +51,10 @@ Kinodex/
         tvShows/          TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images tabs)
         collections/      CollectionChecklist
         shelfSections/    (hooks only)
-      types/index.ts    shared TypeScript types (hand-written to match the API)
+      types/index.ts    shared TypeScript types, derived from the generated ones
+      types/api.generated.ts  generated from the API's OpenAPI description (npm run gen:api); don't edit
+      types/openapi.json      the description it was generated from (checked by a backend test)
+    scripts/gen-api-types.mjs  the generator behind npm run gen:api
     vercel.json         rewrites every path to index.html (client-side routing)
   docs/                 this map + design docs
 ```
@@ -171,7 +175,21 @@ movie's `genres`), collection completion rings and checklist ownership, filters 
 
 HttpClient factory · JSON camelCase + cycle ignoring · Postgres from `ConnectionStrings:DefaultConnection`
 or Railway's `DATABASE_URL` · CORS from `CORS_ORIGINS` (exposes UPCitemdb rate-limit headers) ·
-Clerk JWT bearer auth (`Clerk:Domain`) · `MigrateDbAsync()` · maps every endpoint group.
+Clerk JWT bearer auth (`Clerk:Domain`) · `MigrateDbAsync()` · maps every endpoint group ·
+OpenAPI description at `/openapi/v1.json` (development and tests only).
+
+### Generated frontend types
+
+The frontend's model types come from the API's OpenAPI description: run the API locally, then
+`npm run gen:api` in `frontend/Kinodex.Client` (or `KINODEX_OPENAPI=<url or file>` to read it from
+elsewhere) and commit the regenerated `src/types/api.generated.ts` and `src/types/openapi.json` (the
+description it was generated from). A backend test (`GeneratedTypesTests`) fails if that copy no
+longer matches the API, so a forgotten regenerate shows up in `dotnet test`. `types/index.ts` builds the
+app's types from it, only making optional what forms need (no `id` before saving, etc.), so a
+backend model change the frontend doesn't follow is a type error. `StrictSchemaTransformer` marks
+every non-null property as required and describes numbers as numbers only (by default ASP.NET
+also allows numbers written as strings). Most endpoints return `IResult`, so their responses
+aren't typed in the description; the hooks still state the response type themselves.
 
 ### Endpoints
 
@@ -265,7 +283,6 @@ Pointers for cleanup, roughly in the order they'd come up:
 - Largest remaining files are the parked/unconverted pages (`CheckoutsView` ~590, `Stats` ~420,
   `MatchMovies`, shelf pages); the core pages are now 350–490 lines.
 - No frontend tests; backend tests cover the API (see Tests).
-- `types/index.ts` is hand-maintained to match the API.
 - TMDB token is built into the frontend bundle.
 - Lint: no errors; some `react-hooks/exhaustive-deps` warnings on the per-page fetch effects
   (go away with the data-layer change).

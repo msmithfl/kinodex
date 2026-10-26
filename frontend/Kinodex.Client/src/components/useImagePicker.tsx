@@ -26,7 +26,7 @@ const IMAGE_TYPES = {
 interface ImagePickerOptions {
   kind: "movie" | "tv";
   imageType: keyof typeof IMAGE_TYPES;
-  tmdbId?: number;
+  tmdbId?: number | null;
   selected: string; // The current image URL
   onSelect: (imageUrl: string) => void;
 }
