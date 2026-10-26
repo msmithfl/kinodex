@@ -3,12 +3,9 @@ import {
   FaFilm,
   FaCog,
   FaTv,
-  // FaLink,
   FaDownload,
   FaChartPie,
 } from "react-icons/fa";
-// import { LuClipboardPen } from "react-icons/lu";
-// import { IoPersonCircleSharp } from "react-icons/io5";
 import { MdDashboard } from "react-icons/md";
 
 function Sidebar() {
@@ -29,9 +26,6 @@ function Sidebar() {
     { path: "/", label: "Dashboard", icon: MdDashboard },
     { path: "/stats", label: "Stats", icon: FaChartPie },
     { path: "/export", label: "CSV Export", icon: FaDownload },
-    // { path: "/checkout", label: "Checkouts", icon: LuClipboardPen },
-    // { path: "/customer", label: "Customers", icon: IoPersonCircleSharp },
-    // { path: "/match-movies", label: "Match Movies", icon: FaLink },
     { path: "/settings", label: "Settings", icon: FaCog },
   ];
 

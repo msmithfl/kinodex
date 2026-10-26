@@ -184,7 +184,7 @@ function MovieList() {
       });
       if (response.ok) {
         const data = await response.json();
-        setShelfSections(data.map((section: any) => section.name).sort());
+        setShelfSections(data.map((section: { name: string }) => section.name).sort());
       }
     } catch (error) {
       console.error("Error fetching shelf sections:", error);
@@ -198,7 +198,7 @@ function MovieList() {
       });
       if (response.ok) {
         const data = await response.json();
-        setCollections(data.map((collection: any) => collection.name).sort());
+        setCollections(data.map((collection: { name: string }) => collection.name).sort());
       }
     } catch (error) {
       console.error("Error fetching collections:", error);

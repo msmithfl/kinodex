@@ -141,16 +141,16 @@ public static class WebhookEndpoints
                         await db.Collections.Where(c => c.UserId == userId).ExecuteDeleteAsync();
                         await db.ShelfSections.Where(s => s.UserId == userId).ExecuteDeleteAsync();
 
-                        // Deletes checkouts for movies owned by the user (if any) before deleting movies
-                        var movieIds = await db.Movies
-                            .Where(m => m.UserId == userId)
-                            .Select(m => m.Id)
-                            .ToListAsync();
-                        if (movieIds.Count > 0)
-                        {
-                            await db.Checkouts.Where(c => movieIds.Contains(c.MovieId)).ExecuteDeleteAsync();
-                        }
+                        // Checkouts first (they reference both movies and customers), then the rest
+                        await db.Checkouts
+                            .Where(c => c.Movie.UserId == userId || c.Customer.UserId == userId)
+                            .ExecuteDeleteAsync();
+                        await db.Customers.Where(c => c.UserId == userId).ExecuteDeleteAsync();
                         await db.Movies.Where(m => m.UserId == userId).ExecuteDeleteAsync();
+
+                        // Deleting a show also deletes its purchases (cascade in the database)
+                        await db.TvShows.Where(t => t.UserId == userId).ExecuteDeleteAsync();
+                        await db.UserSettings.Where(s => s.UserId == userId).ExecuteDeleteAsync();
 
                         db.Users.Remove(user);
                         await db.SaveChangesAsync();

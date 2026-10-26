@@ -145,11 +145,12 @@ app.MapSettingsEndpoints();
 app.MapCollectionEndpoints();
 app.MapShelfSectionEndpoints();
 app.MapUpcEndpoints();
-app.MapEbayEndpoints();
-app.MapProductEndpoints();
 app.MapCollectionListItemEndpoints();
 app.MapTmdbMatchingEndpoints();
 app.MapCustomerEndpoints();
 app.MapCheckoutEndpoints();
 
 app.Run();
+
+// Lets the test project start the API in memory (WebApplicationFactory<Program>)
+public partial class Program;

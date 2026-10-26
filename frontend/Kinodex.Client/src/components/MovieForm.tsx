@@ -32,7 +32,6 @@ interface MovieFormProps {
   submitButtonText?: string;
   showScanButton?: boolean;
   onScanClick?: () => void;
-  onManualSearchClick?: () => void;
 }
 
 function MovieForm({
@@ -78,7 +77,8 @@ function MovieForm({
     upc: formData.upcNumber,
     selected: formData.productPosterPath,
     onSelect: (productPosterPath) => setFormData((prev) => ({ ...prev, productPosterPath })),
-  });  const [yearInput, setYearInput] = useState<string>(formData.year.toString());
+  });
+  const [yearInput, setYearInput] = useState<string>(formData.year.toString());
   const [shelfInput, setShelfInput] = useState<string>(
     formData.shelfNumber.toString(),
   );
@@ -127,18 +127,19 @@ function MovieForm({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
+  // Keep the number text boxes in step when the movie data changes from outside them (it loads,
+  // or a TMDB result fills it in). Purchase price isn't a trigger, so typing "12." isn't rewritten
+  // to "12" mid-keystroke; it's refreshed along with the others.
+  const syncKey = `${formData.year}|${formData.shelfNumber}|${formData.hdDriveNumber}|${formData.tmdbId ?? ""}`;
+  const [syncedKey, setSyncedKey] = useState(syncKey);
+  if (syncKey !== syncedKey) {
+    setSyncedKey(syncKey);
     setYearInput(formData.year.toString());
     setShelfInput(formData.shelfNumber.toString());
     setHddInput(formData.hdDriveNumber.toString());
     setTmdbInput(formData.tmdbId?.toString() || "");
     setPurchasePriceInput(formData.purchasePrice.toString());
-  }, [
-    formData.year,
-    formData.shelfNumber,
-    formData.hdDriveNumber,
-    formData.tmdbId,
-  ]);
+  }
 
   const handleYearChange = (value: string) => {
     setYearInput(value);
@@ -514,11 +515,6 @@ function MovieForm({
                     Clear
                   </button>
                 </div>
-                {/* <p className="text-xs text-gray-400 mt-1">
-                  {formData.rating > 0
-                    ? `${formData.rating} stars`
-                    : "Not rated"}
-                </p> */}
               </div>
             </div>
 
