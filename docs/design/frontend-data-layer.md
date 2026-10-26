@@ -1,6 +1,6 @@
 # Frontend data layer: moving to a shared API client + React Query
 
-**Status:** Proposed, not started
+**Status:** Phases 1–3 (collections, movies, TV shows) done 2026-10-25; phase 4 not started
 **Last updated:** 2026-10-25
 **Scope:** `frontend/Kinodex.Client` (no backend changes needed)
 
@@ -214,11 +214,12 @@ Agreed names so invalidation is predictable:
 | Key | Data | Invalidated by |
 |---|---|---|
 | `["movies"]` | All of the user's movies | Add/edit/delete movie, CSV import, collection rename/delete |
-| `["movies", id]` | One movie | Editing or deleting that movie |
+| `["movies", id]` | One movie (seeded from the list) | Editing or deleting that movie |
 | `["collections"]` | All collections | Create/edit/delete collection |
-| `["collections", id, "items"]` | A collection's checklist | Adding/removing checklist items |
-| `["collectionItems"]` | All checklists (Collections page rings) | Adding/removing any checklist item |
+| `["collectionItems", id]` | A collection's checklist | Adding/removing checklist items |
+| `["collectionItems", "all"]` | All checklists (Collections page rings) | Adding/removing any checklist item (invalidate `["collectionItems"]` to refresh both) |
 | `["tvShows"]`, `["tvShows", id]` | TV shows | Add/edit/delete show or purchase |
+| `["shelfSections"]` | Shelf sections | Create/reorder/rename/delete a section (rename/delete also `["movies"]`) |
 | `["settings"]` | User settings | Saving settings |
 | `["shelfSections"]`, `["customers"]`, `["checkouts"]` | ... | Their own changes |
 
@@ -257,6 +258,20 @@ src/features/collections/
 **Done when** the collections feature has no direct `fetch` calls, no manual refresh code, and
 behaves the same or better.
 
+**Done (2026-10-25).** What landed:
+
+- `utils/api.ts` (`useApi`, `ApiError`), `utils/queryClient.ts` (defaults), `QueryClientProvider`
+  in `main.tsx`, and `components/ClearCacheOnUserChange.tsx` (empties the cache when the
+  signed-in user changes).
+- `features/movies/api.ts` (`useMovies`) and `features/collections/api.ts` (queries + mutations).
+- `features/collections/CollectionChecklist.tsx` split out of `CollectionDetail`
+  (645 → ~210 lines).
+- Removed: `fetchData()`-on-close, the `collectionVersion` counter, manual list updates.
+- Create/rename update the cached collection list immediately (no flicker while the drawer
+  follows a rename), then refresh from the server.
+- (The temporary `staleTime: 0` on movies/collections and the manual invalidation after a
+  stacked-drawer delete were removed in Phase 2.)
+
 ### Phase 2: movies (biggest payoff)
 
 - `useMovies`, `useMovie(id)`, `useCreateMovie`, `useUpdateMovie`, `useDeleteMovie`.
@@ -264,9 +279,30 @@ behaves the same or better.
 - Convert `MovieList`, `MovieDetail` (page + drawer), `AddMovieModal`, `EditMovieModal`,
   `GenresView`, `GenreDetail`, `SearchPage`, `Dashboard`, `Stats`.
 
+**Done (2026-10-25).** What landed:
+
+- `features/movies/api.ts`: `useMovies`, `useMovie(id)` (starts from the list's cached copy, so
+  the drawer opens instantly), `useCreateMovie`, `useUpdateMovie`, `useUpdateMovies` (bulk edit),
+  `useDeleteMovie`, `useDeleteMovies` (bulk delete).
+- `features/shelfSections/api.ts`: `useShelfSections`, `useCreateShelfSection` (movie forms).
+- `features/tvShows/api.ts`: read-only `useTvShows` for dashboard/stats/search (Phase 3 added
+  the rest).
+- Converted: `MovieList` (incl. bulk edit/delete), `MovieDetail` (page + drawer),
+  `AddMovieModal` (navigates instead of a full page load), `EditMovieModal` (**no more
+  `window.location.reload()`**), `GenresView`, `GenreDetail`, `Dashboard`, `Stats`, `SearchPage`.
+- Not converted yet but now **invalidate the cache after saving**: `CsvExport` (imports),
+  `MatchMovies`, `ShelfSectionsView`, `ShelfSectionDetail`. That's what allows movies and
+  collections to use the normal 30s staleTime.
+- Lint: `Stats`' "drop out-of-range saved month" effect became a render-time adjustment.
+
 ### Phase 3: TV shows
 
-- Same for TV, removing the drawer's `window.location.reload()` after edits.
+**Done (2026-10-25).** `features/tvShows/api.ts` gained `useTvShow(id)` (seeded from the list),
+`useCreateTvShow`, `useUpdateTvShow`, `useDeleteTvShow`, and `useTvShows` lost its temporary
+`staleTime: 0`. Converted `TvShowList`, `TvShowDetail` (page + drawer; **no more
+`window.location.reload()` after editing in the drawer**), `AddTvShowModal` (navigates instead
+of a full page load) and `EditTvShowModal` (save and delete). Validation messages from the
+server (400) are shown as-is; other failures show the status.
 
 ### Phase 4: everything else
 

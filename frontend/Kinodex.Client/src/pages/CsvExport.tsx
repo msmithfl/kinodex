@@ -1,8 +1,13 @@
-﻿import { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@clerk/clerk-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { movieKeys } from "../features/movies/api";
 import { FaDownload, FaUpload } from "react-icons/fa";
 
 function CsvExport() {
+  // Imports save outside the shared cache (this page isn't converted yet), so tell it what changed
+  const queryClient = useQueryClient();
+  const refreshMovies = () => queryClient.invalidateQueries({ queryKey: movieKeys.all });
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -71,6 +76,7 @@ function CsvExport() {
       if (!response.ok) throw new Error(`Import failed: ${response.statusText}`);
 
       const result = await response.json();
+      refreshMovies();
       setImportResult(result);
       const parts = [`Imported ${result.imported} movie${result.imported !== 1 ? "s" : ""}`];
       if (result.skipped > 0) parts.push(`${result.skipped} skipped (already in collection)`);
@@ -109,6 +115,7 @@ function CsvExport() {
       }
 
       const result = await response.json();
+      refreshMovies();
       setLetterboxdResult(result);
       const parts = [`Imported ${result.imported} movie${result.imported !== 1 ? "s" : ""}  from Letterboxd`];
       if (result.skipped > 0) parts.push(`${result.skipped} skipped (already in collection)`);

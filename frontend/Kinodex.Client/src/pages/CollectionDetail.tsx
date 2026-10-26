@@ -1,21 +1,20 @@
-import { useState, useEffect, useRef, useContext } from "react";
+import { useState, useContext } from "react";
 import { createPortal } from "react-dom";
 import { DrawerActionsSlotContext } from "../components/drawerActions";
-import { useAuth } from "@clerk/clerk-react";
 import ConfirmDialog from "../components/ConfirmDialog";
 import CollectionFormModal from "../components/CollectionFormModal";
 import Counter from "../components/Counter";
 import SimpleMovieTable from "../components/SimpleMovieTable";
 import MoviePosterCard from "../components/MovieCardPoster";
-import { searchTMDB } from "../utils/tmdbApi";
-import { isChecklistItemOwned } from "../utils/checklist";
-import type { TMDBMovie, CollectionListItem } from "../types";
-import { FaTrash, FaEdit, FaChevronDown } from "react-icons/fa";
+import { FaTrash, FaEdit } from "react-icons/fa";
 import ViewToggle from "../components/ViewToggle";
 import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
 import EmptyState from "../components/EmptyState";
 import LoadingSpinner from "../components/LoadingSpinner";
-import type { Movie, Collection } from "../types";
+import CollectionChecklist from "../features/collections/CollectionChecklist";
+import { useCollections, useDeleteCollection } from "../features/collections/api";
+import { useMovies } from "../features/movies/api";
+import type { Collection } from "../types";
 
 interface CollectionDetailProps {
   collectionName: string;
@@ -33,44 +32,14 @@ function CollectionDetail({
   onSaved,
   onDeleted,
 }: CollectionDetailProps) {
-  const { getToken } = useAuth();
-  const [movies, setMovies] = useState<Movie[]>([]);
-  // Every movie the user owns, for picking the collection's cover or backdrop in the edit form
-  const [allMovies, setAllMovies] = useState<Movie[]>([]);
-  const [collection, setCollection] = useState<Collection | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Shared with the Collections page, so opening the drawer usually needs no new requests
+  const { data: allMovies = [], isLoading: moviesLoading } = useMovies();
+  const { data: collections = [], isLoading: collectionsLoading } = useCollections();
+  const deleteCollection = useDeleteCollection();
+
   const [showEditModal, setShowEditModal] = useState(false);
-  // Every collection's name, so the edit form can stop a rename onto one that's taken
-  const [allNames, setAllNames] = useState<string[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Collection list state
-  const [listItems, setListItems] = useState<CollectionListItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchYear, setSearchYear] = useState("");
-  const [searchResults, setSearchResults] = useState<TMDBMovie[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  // Whether the checklist section is expanded: closed until opened, then remembered in this browser
-  const [checklistOpen, setChecklistOpen] = useState(() => {
-    try {
-      return localStorage.getItem("collectionChecklistOpen") === "true";
-    } catch {
-      return false;
-    }
-  });
-  const toggleChecklist = () => {
-    setChecklistOpen((open) => {
-      try {
-        localStorage.setItem("collectionChecklistOpen", String(!open));
-      } catch {
-        // Storage unavailable; the choice just isn't remembered
-      }
-      return !open;
-    });
-  };
-  const searchTimeoutRef = useRef<number | null>(null);
-
-  // View mode state
   // A table like the Movies and TV Shows lists, or a poster grid
   const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
     try {
@@ -92,253 +61,40 @@ function CollectionDetail({
     }
   };
 
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const MOVIES_URL = `${API_BASE}/api/movies`;
-  const COLLECTIONS_URL = `${API_BASE}/api/collections`;
-
-  useEffect(() => {
-    fetchMovies();
-  }, [collectionName]);
-
-  const fetchMovies = async () => {
-    try {
-      const token = await getToken();
-      const [moviesRes, collectionsRes] = await Promise.all([
-        fetch(MOVIES_URL, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(COLLECTIONS_URL, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      if (moviesRes.ok) {
-        const data = await moviesRes.json();
-        setAllMovies(data);
-        const filtered = data.filter(
-          (movie: Movie) =>
-            movie.collections &&
-            movie.collections.includes(collectionName || ""),
-        );
-        setMovies(filtered);
-      }
-
-      if (collectionsRes.ok) {
-        const collectionsData = await collectionsRes.json();
-        const foundCollection = collectionsData.find(
-          (c: Collection) => c.name === collectionName,
-        );
-        setCollection(foundCollection || null);
-        setAllNames(collectionsData.map((c: Collection) => c.name));
-
-        // Fetch list items if collection found
-        if (foundCollection) {
-          await fetchListItems(foundCollection.id, token);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchListItems = async (collectionId: number, token?: string | null) => {
-    try {
-      if (!token) token = await getToken();
-      const response = await fetch(
-        `${API_BASE}/api/collections/${collectionId}/items`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setListItems(data);
-      }
-    } catch (error) {
-      console.error("Error fetching list items:", error);
-    }
-  };
-
-  const handleEditClick = () => {
-    setShowEditModal(true);
-  };
-
-  const handleDeleteClick = () => {
-    setShowDeleteConfirm(true);
-  };
-
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = () => {
     if (!collection) return;
-
-    try {
-      const token = await getToken();
-      const response = await fetch(`${COLLECTIONS_URL}/${collection.id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        onDeleted();
-      }
-    } catch (error) {
-      console.error("Error deleting collection:", error);
-    } finally {
-      setShowDeleteConfirm(false);
-    }
+    deleteCollection.mutate(collection.id, {
+      onSuccess: onDeleted,
+      onError: (error) => console.error("Error deleting collection:", error),
+      onSettled: () => setShowDeleteConfirm(false),
+    });
   };
 
-  const handleDeleteCancel = () => {
-    setShowDeleteConfirm(false);
-  };
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-
-    // Clear previous timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    if (value.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-
-    // Wait 300ms after user stops typing
-    setIsSearching(true);
-    searchTimeoutRef.current = window.setTimeout(async () => {
-      try {
-        const results = await searchTMDB(value, searchYear);
-        setSearchResults(results.slice(0, 10)); // Show top 10 results
-      } catch (error) {
-        console.error("Error searching TMDB:", error);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 300);
-  };
-
-  const handleYearChange = (value: string) => {
-    setSearchYear(value);
-
-    // Re-search if there's already a search query
-    if (searchQuery.length >= 2) {
-      // Clear previous timeout
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-
-      setIsSearching(true);
-      searchTimeoutRef.current = window.setTimeout(async () => {
-        try {
-          const results = await searchTMDB(searchQuery, value);
-          setSearchResults(results.slice(0, 10));
-        } catch (error) {
-          console.error("Error searching TMDB:", error);
-          setSearchResults([]);
-        } finally {
-          setIsSearching(false);
-        }
-      }, 300);
-    }
-  };
-
-  const handleAddToList = async (movie: TMDBMovie) => {
-    if (!collection) return;
-
-    const year = movie.release_date
-      ? new Date(movie.release_date).getFullYear()
-      : 0;
-
-    try {
-      const token = await getToken();
-      const response = await fetch(
-        `${API_BASE}/api/collections/${collection.id}/items`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: movie.title,
-            year: year,
-            tmdbId: movie.id,
-          }),
-        },
-      );
-
-      if (response.ok) {
-        const newItem = await response.json();
-        setListItems([...listItems, newItem]);
-        setSearchQuery("");
-        setSearchYear("");
-        setSearchResults([]);
-      }
-    } catch (error) {
-      console.error("Error adding to list:", error);
-    }
-  };
-
-  const handleRemoveFromList = async (itemId: number) => {
-    if (!collection) return;
-
-    try {
-      const token = await getToken();
-      const response = await fetch(
-        `${API_BASE}/api/collections/${collection.id}/items/${itemId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      if (response.ok) {
-        setListItems(listItems.filter((item) => item.id !== itemId));
-      }
-    } catch (error) {
-      console.error("Error removing from list:", error);
-    }
-  };
-
-  // Whether a checklist item is one of this collection's movies (by TMDB id, else title and year)
-  const isOwned = (item: CollectionListItem) => isChecklistItemOwned(item, movies);
-
-  const completionPercentage =
-    listItems.length > 0
-      ? Math.round(
-          (listItems.filter(isOwned)
-            .length /
-            listItems.length) *
-            100,
-        )
-      : 0;
-
-  if (loading) {
+  if (moviesLoading || collectionsLoading) {
     return <LoadingSpinner />;
   }
 
+  const collection = collections.find((c) => c.name === collectionName) ?? null;
   // The collection's movies in release order
-  const sortedMovies = [...movies].sort((a, b) => a.year - b.year);
+  const movies = allMovies
+    .filter((movie) => movie.collections?.includes(collectionName))
+    .sort((a, b) => a.year - b.year);
   // The collection's own backdrop, or else the first movie's (in release order) that has one
   const backdropUrl =
-    collection?.backdropUrl || sortedMovies.find((m) => m.backdropPath)?.backdropPath;
+    collection?.backdropUrl || movies.find((m) => m.backdropPath)?.backdropPath;
 
   // Edit and delete: floating beside the drawer's close button from tablet up, in the header on mobile
   const actionButtons = (
     <>
       <button
-        onClick={handleEditClick}
+        onClick={() => setShowEditModal(true)}
         className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
         aria-label="Edit collection"
       >
         <FaEdit className="w-5 h-5" />
       </button>
       <button
-        onClick={handleDeleteClick}
+        onClick={() => setShowDeleteConfirm(true)}
         className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
         aria-label="Delete collection"
       >
@@ -375,7 +131,6 @@ function CollectionDetail({
           className={`relative flex-1 min-h-0 overflow-y-auto px-4 md:px-6 pt-4 pb-8 ${backdropUrl ? "md:pt-30" : "md:pt-6"}`}
         >
           <div>
-            {/* Mobile: pr-12 keeps clear of the drawer's close button in the top-right corner */}
             {/* Mobile: edit and delete above the title, level with the drawer's close button in the
                 top-right corner (-mt-1 centres these 36px buttons on it, at 30px from the top) */}
             {collection && (
@@ -403,7 +158,7 @@ function CollectionDetail({
               <EmptyState message="No movies in this collection yet." />
             ) : viewMode === "poster" ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8">
-                {sortedMovies.map((movie) => (
+                {movies.map((movie) => (
                   <MoviePosterCard
                     key={movie.id}
                     movie={movie}
@@ -414,7 +169,7 @@ function CollectionDetail({
               </div>
             ) : (
               <SimpleMovieTable
-                movies={sortedMovies}
+                movies={movies}
                 onOpen={onOpenMovie}
                 showRating={false}
                 fitWidth
@@ -422,208 +177,16 @@ function CollectionDetail({
             )}
           </div>
 
-          {/* Collection Checklist Manager */}
-          {collection && (
-            <div className="mt-8 bg-gray-800 rounded-lg p-4 md:p-6">
-              {/* Section header: click anywhere on it to collapse or expand the checklist */}
-              <button
-                type="button"
-                onClick={toggleChecklist}
-                className="w-full flex items-center justify-between gap-4 text-left cursor-pointer"
-                aria-expanded={checklistOpen}
-                aria-controls="collection-checklist"
-              >
-                <h2 className="text-2xl font-bold">Collection Checklist</h2>
-                <FaChevronDown
-                  className={`w-5 h-5 text-gray-400 shrink-0 transition-transform duration-200 ${checklistOpen ? "rotate-180" : ""}`}
-                  aria-hidden="true"
-                />
-              </button>
-
-              {checklistOpen && (
-                <div id="collection-checklist" className="mt-4">
-                  {/* Search to add movies */}
-                  <div className="mb-6">
-                    <div className="flex flex-col md:flex-row gap-3 mb-2">
-                      <div className="relative flex-1">
-                        <input
-                          type="text"
-                          value={searchQuery}
-                          onChange={(e) => handleSearchChange(e.target.value)}
-                          placeholder="Search TMDB to add movies..."
-                          className="w-full px-4 py-3 pl-10 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                        <svg
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                          />
-                        </svg>
-                        {isSearching && (
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-500"></div>
-                          </div>
-                        )}
-                      </div>
-                      <input
-                        type="text"
-                        value={searchYear}
-                        onChange={(e) => handleYearChange(e.target.value)}
-                        placeholder="Year (optional)"
-                        className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        maxLength={4}
-                      />
-                    </div>
-                    <div className="relative">
-                      {/* Search Results - Absolute positioned dropdown */}
-                      {searchResults.length > 0 && (
-                        <div className="absolute z-10 w-full bg-gray-700 border border-gray-600 rounded-md shadow-lg max-h-96 overflow-y-auto">
-                          {searchResults.map((movie) => {
-                            const year = movie.release_date
-                              ? new Date(movie.release_date).getFullYear()
-                              : "N/A";
-                            const alreadyInList = listItems.some(
-                              (item) => item.tmdbId === movie.id,
-                            );
-
-                            return (
-                              <button
-                                key={movie.id}
-                                onClick={() =>
-                                  !alreadyInList && handleAddToList(movie)
-                                }
-                                disabled={alreadyInList}
-                                className={`w-full px-4 py-3 text-left transition-colors border-b border-gray-600 last:border-b-0 ${
-                                  alreadyInList
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : "hover:bg-gray-600 cursor-pointer"
-                                }`}
-                              >
-                                <div className="flex items-center gap-4">
-                                  {movie.poster_path ? (
-                                    <img
-                                      src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
-                                      alt={movie.title}
-                                      className="w-12 h-18 object-cover rounded"
-                                    />
-                                  ) : (
-                                    <div className="w-12 h-18 bg-gray-600 rounded flex items-center justify-center">
-                                      <span className="text-gray-400 text-xs">
-                                        No Image
-                                      </span>
-                                    </div>
-                                  )}
-                                  <div>
-                                    <p className="text-white font-medium">
-                                      {movie.title}
-                                    </p>
-                                    <p className="text-gray-400 text-sm">{year}</p>
-                                  </div>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* List Items */}
-                  {listItems.length > 0 ? (
-                    <div>
-                      <div className="flex items-baseline justify-between gap-3 mb-3">
-                        <h3 className="text-lg font-semibold">
-                          Checklist (
-                          {
-                            listItems.filter((item) =>
-                              isOwned(item),
-                            ).length
-                          }{" "}
-                          of {listItems.length})
-                        </h3>
-                        <span
-                          className={`text-sm ${
-                            completionPercentage === 100
-                              ? "text-green-400 font-semibold"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {completionPercentage}% complete
-                        </span>
-                      </div>
-                      <div className="space-y-2 overflow-y-auto max-h-96">
-                        {listItems
-                          .sort((a, b) => a.year - b.year)
-                          .map((item) => {
-                            const owned = isOwned(item);
-
-                            return (
-                              <div
-                                key={item.id}
-                                className={`flex items-center justify-between p-3 rounded ${
-                                  owned
-                                    ? "bg-green-900/30 border border-green-700"
-                                    : "bg-gray-700"
-                                }`}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <input
-                                    type="checkbox"
-                                    checked={owned}
-                                    readOnly
-                                    className="w-5 h-5 cursor-default"
-                                  />
-                                  <div>
-                                    <span
-                                      className={`font-medium ${owned ? "text-green-400" : "text-white"}`}
-                                    >
-                                      {item.title}
-                                    </span>
-                                    <span className="text-gray-400 ml-2">
-                                      ({item.year})
-                                    </span>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() =>
-                                    item.id && handleRemoveFromList(item.id)
-                                  }
-                                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                                  aria-label="Remove from checklist"
-                                >
-                                  <FaTrash className="w-4 h-4" />
-                                </button>
-                              </div>
-                            );
-                          })}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-400">
-                      <p>No items in checklist yet. Search above to add movies!</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          {collection && <CollectionChecklist collection={collection} ownedMovies={movies} />}
 
           {showEditModal && collection && (
             <CollectionFormModal
               collection={collection}
               movies={allMovies}
-              existingNames={allNames}
+              existingNames={collections.map((c) => c.name)}
               onClose={() => setShowEditModal(false)}
               onSaved={(updated) => {
                 setShowEditModal(false);
-                setCollection(updated);
                 onSaved(updated);
               }}
             />
@@ -634,7 +197,7 @@ function CollectionDetail({
             title="Delete Collection"
             message={`Are you sure you want to delete "${collectionName}"? This will remove it from all movies but won't delete the movies themselves.`}
             onConfirm={handleDeleteConfirm}
-            onCancel={handleDeleteCancel}
+            onCancel={() => setShowDeleteConfirm(false)}
           />
         </div>
       </div>

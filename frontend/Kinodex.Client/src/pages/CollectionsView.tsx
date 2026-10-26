@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
-import { useAuth } from "@clerk/clerk-react";
-import type { CollectionListItem } from "../types";
 import CollectionCard from "../components/CollectionCard";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
@@ -12,25 +11,25 @@ import Drawer from "../components/Drawer";
 import CollectionDetail from "./CollectionDetail";
 import MovieDetail from "./MovieDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
-import type { Movie, Collection } from "../types";
+import { useAllChecklistItems, useCollections } from "../features/collections/api";
+import { movieKeys, useMovies } from "../features/movies/api";
 
 // Same grid as the movie list's poster view
 const POSTER_GRID =
   "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8";
 
 function CollectionsView() {
-  const { getToken } = useAuth();
   // "Show completion on collection posters" from the Settings page
   const { settings } = useSettings();
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  // Loaded once and shared with the collection drawer; saving anywhere refreshes them
+  const { data: collections = [], isLoading: collectionsLoading } = useCollections();
+  const { data: movies = [], isLoading: moviesLoading } = useMovies();
+  const { data: collectionListItems = {} } = useAllChecklistItems();
+  const loading = collectionsLoading || moviesLoading;
   // Fills the screen below the header and above the mobile bottom bar
-  const viewport = useFillViewportHeight<HTMLDivElement>([loading]);
+  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
   const [showCreateInput, setShowCreateInput] = useState(false);
-  const [collectionListItems, setCollectionListItems] = useState<
-    Record<number, CollectionListItem[]>
-  >({});
 
   // The collection open in a drawer (?collection=name), and a movie opened from it in a second
   // drawer on top (?movie=id); Back closes the top one first
@@ -41,52 +40,6 @@ function CollectionsView() {
     replace: replaceCollection,
   } = useDrawerParam("collection");
   const { openId: openMovieId, open: openMovie, close: closeMovie } = useDrawerParam("movie");
-  // Bumped when a movie is deleted from the top drawer, so the collection's drawer reloads
-  const [collectionVersion, setCollectionVersion] = useState(0);
-
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const COLLECTIONS_URL = `${API_BASE}/api/collections`;
-  const MOVIES_URL = `${API_BASE}/api/movies`;
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const token = await getToken();
-      const [collectionsRes, moviesRes, listItemsRes] = await Promise.all([
-        fetch(COLLECTIONS_URL, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(MOVIES_URL, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${API_BASE}/api/collections/items/all`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      if (collectionsRes.ok) {
-        const collectionsData = await collectionsRes.json();
-        setCollections(collectionsData);
-      }
-
-      if (moviesRes.ok) {
-        const moviesData = await moviesRes.json();
-        setMovies(moviesData);
-      }
-
-      if (listItemsRes.ok) {
-        const listItemsData = await listItemsRes.json();
-        setCollectionListItems(listItemsData);
-      }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Fallback cover for a collection created without one: the earliest-released movie in it with a poster
   const getCoverPath = (collectionName: string) =>
@@ -122,7 +75,7 @@ function CollectionsView() {
   return (
     <>
       <SubNavigation />
-      <div ref={viewport.ref} className="flex flex-col h-[calc(100dvh-9rem)] pt-2" style={viewport.style}>
+      <div ref={viewportRef} className="flex flex-col h-[calc(100dvh-9rem)] pt-2" style={viewportStyle}>
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-10 pb-8">
         {/* Scrollable content section */}
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
@@ -196,26 +149,13 @@ function CollectionsView() {
       </div>
 
       {openCollectionName && (
-        // Closing reloads the cards, which may show a new name, cover or checklist progress
-        <Drawer
-          label="Collection details"
-          onClose={() => {
-            closeCollection();
-            fetchData();
-          }}
-        >
+        <Drawer label="Collection details" onClose={closeCollection}>
           <CollectionDetail
-            key={`${openCollectionName}-${collectionVersion}`}
+            key={openCollectionName}
             collectionName={openCollectionName}
             onOpenMovie={openMovie}
-            onSaved={(updated) => {
-              replaceCollection(updated.name);
-              fetchData();
-            }}
-            onDeleted={() => {
-              closeCollection();
-              fetchData();
-            }}
+            onSaved={(updated) => replaceCollection(updated.name)}
+            onDeleted={closeCollection}
           />
         </Drawer>
       )}
@@ -226,8 +166,9 @@ function CollectionsView() {
             movieId={openMovieId}
             onDeleted={() => {
               closeMovie();
-              fetchData();
-              setCollectionVersion((v) => v + 1);
+              // The movie page deletes on its own (not through the shared cache yet), so refresh
+              // the movies the cards and the collection drawer show
+              queryClient.invalidateQueries({ queryKey: movieKeys.all });
             }}
           />
         </Drawer>
@@ -237,12 +178,7 @@ function CollectionsView() {
           movies={movies}
           existingNames={collections.map((c) => c.name)}
           onClose={() => setShowCreateInput(false)}
-          onSaved={(created) => {
-            setCollections((prev) =>
-              [...prev, created].sort((a, b) => a.name.localeCompare(b.name)),
-            );
-            setShowCreateInput(false);
-          }}
+          onSaved={() => setShowCreateInput(false)}
         />
       )}
       </div>

@@ -4,7 +4,9 @@ import { Link, useLocation } from "react-router-dom";
 import Drawer from "../components/Drawer";
 import MovieDetail from "./MovieDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
-import { useAuth } from "@clerk/clerk-react";
+import { useDeleteMovies, useMovies, useUpdateMovies } from "../features/movies/api";
+import { useShelfSections } from "../features/shelfSections/api";
+import { useCollections } from "../features/collections/api";
 import Counter from "../components/Counter";
 import BarcodeScanner from "../components/BarcodeScanner";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -52,9 +54,12 @@ interface VisibleColumns {
 }
 
 function MovieList() {
-  const { getToken } = useAuth();
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Shared with every other screen showing movies; saves anywhere refresh it
+  const { data: movies = [], isLoading: loading } = useMovies();
+  const { data: shelfSectionList = [] } = useShelfSections();
+  const { data: collectionList = [] } = useCollections();
+  const updateMovies = useUpdateMovies();
+  const deleteMovies = useDeleteMovies();
   const [sortBy, setSortBy] = useState<SortOption>(() => {
     const saved = localStorage.getItem("movieListSortBy");
     return (saved as SortOption) || "alphabetic";
@@ -128,26 +133,11 @@ function MovieList() {
     condition: "",
     formats: "",
   });
-  const [shelfSections, setShelfSections] = useState<string[]>([]);
-  const [collections, setCollections] = useState<string[]>([]);
+  // Names for the filter menu
+  const shelfSections = shelfSectionList.map((section) => section.name).sort();
+  const collections = collectionList.map((collection) => collection.name).sort();
   // Size the list to fill the viewport below the header and sub-navigation
-  const container = useFillViewportHeight<HTMLDivElement>([loading]);
-
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const API_URL = `${API_BASE}/api/movies`;
-
-  useEffect(() => {
-    const loadData = async () => {
-      const token = await getToken();
-      if (!token) return;
-      await Promise.all([
-        fetchMovies(token),
-        fetchShelfSections(token),
-        fetchCollections(token),
-      ]);
-    };
-    loadData();
-  }, []);
+  const { ref: containerRef, style: containerStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
 
   // Save column preferences to localStorage
   useEffect(() => {
@@ -159,51 +149,6 @@ function MovieList() {
     localStorage.setItem("movieListSortBy", sortBy);
     localStorage.setItem("movieListSortDirection", sortDirection);
   }, [sortBy, sortDirection]);
-
-  const fetchMovies = async (token?: string | null) => {
-    try {
-      if (!token) token = await getToken();
-      const response = await fetch(API_URL, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMovies(data);
-      }
-    } catch (error) {
-      console.error("Error fetching movies:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchShelfSections = async (token: string) => {
-    try {
-      const response = await fetch(`${API_BASE}/api/shelfsections`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setShelfSections(data.map((section: { name: string }) => section.name).sort());
-      }
-    } catch (error) {
-      console.error("Error fetching shelf sections:", error);
-    }
-  };
-
-  const fetchCollections = async (token: string) => {
-    try {
-      const response = await fetch(`${API_BASE}/api/collections`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setCollections(data.map((collection: { name: string }) => collection.name).sort());
-      }
-    } catch (error) {
-      console.error("Error fetching collections:", error);
-    }
-  };
 
   const sortedMovies = getSortedMovies(movies, sortBy, sortDirection);
 
@@ -327,32 +272,11 @@ function MovieList() {
         updates.formats = [bulkEditData.formats];
       }
 
-      // Update each selected movie
-      const token = await getToken();
-      const updatePromises = Array.from(selectedMovieIds).map(
-        async (movieId) => {
-          const movie = movies.find((m) => m.id === movieId);
-          if (!movie) return;
-
-          const updatedMovie = { ...movie, ...updates };
-          const response = await fetch(`${API_URL}/${movieId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(updatedMovie),
-          });
-
-          if (!response.ok)
-            throw new Error(`Failed to update movie ${movieId}`);
-        },
-      );
-
-      await Promise.all(updatePromises);
-
-      // Refresh the movie list
-      await fetchMovies();
+      // Save each selected movie with the changes applied; the list refreshes itself
+      const updatedMovies = movies
+        .filter((movie) => movie.id !== undefined && selectedMovieIds.has(movie.id))
+        .map((movie) => ({ ...movie, ...updates }));
+      await updateMovies.mutateAsync(updatedMovies);
 
       // Reset state
       setShowBulkEditModal(false);
@@ -375,23 +299,8 @@ function MovieList() {
 
   const handleBulkDelete = async () => {
     try {
-      const token = await getToken();
-      const deletePromises = Array.from(selectedMovieIds).map(
-        async (movieId) => {
-          const response = await fetch(`${API_URL}/${movieId}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          if (!response.ok)
-            throw new Error(`Failed to delete movie ${movieId}`);
-        },
-      );
-
-      await Promise.all(deletePromises);
-
-      // Refresh the movie list
-      await fetchMovies();
+      // The list refreshes itself afterwards
+      await deleteMovies.mutateAsync(Array.from(selectedMovieIds));
 
       // Reset state
       setShowDeleteConfirm(false);
@@ -423,20 +332,13 @@ function MovieList() {
       {openMovieId && (
         <Drawer label="Movie details" onClose={closeMovie}>
           {/* Keyed by id so switching movies starts the details fresh */}
-          <MovieDetail
-            key={openMovieId}
-            movieId={openMovieId}
-            onDeleted={() => {
-              closeMovie();
-              fetchMovies();
-            }}
-          />
+          <MovieDetail key={openMovieId} movieId={openMovieId} onDeleted={closeMovie} />
         </Drawer>
       )}
       <div
-        ref={container.ref}
+        ref={containerRef}
         className="flex flex-col h-[calc(100dvh-9rem)]"
-        style={container.style}
+        style={containerStyle}
       >
         {/* Fixed header section */}
         <div className="shrink-0 mx-6 mt-4 md:mx-12">

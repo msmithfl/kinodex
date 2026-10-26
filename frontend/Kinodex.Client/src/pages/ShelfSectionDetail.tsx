@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { movieKeys } from "../features/movies/api";
+import { shelfSectionKeys } from "../features/shelfSections/api";
 import { useParams, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
 import MovieDetailCard from "../components/MovieCardDetail";
@@ -14,6 +17,13 @@ import type { Movie, ShelfSection } from "../types";
 
 function ShelfSectionDetail() {
   const { getToken } = useAuth();
+  // This page saves outside the shared cache (not converted yet), so tell it what changed: a
+  // renamed or deleted section is renamed on, or removed from, the user's movies too
+  const queryClient = useQueryClient();
+  const refreshShelves = () => {
+    queryClient.invalidateQueries({ queryKey: shelfSectionKeys.all });
+    queryClient.invalidateQueries({ queryKey: movieKeys.all });
+  };
   const { sectionName } = useParams<{ sectionName: string }>();
   const navigate = useNavigate();
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -154,6 +164,7 @@ function ShelfSectionDetail() {
       );
 
       if (response.ok) {
+        refreshShelves();
         setIsEditing(false);
         navigate(`/shelfsections/${encodeURIComponent(editedName)}`);
       }
@@ -184,6 +195,7 @@ function ShelfSectionDetail() {
       });
 
       if (response.ok) {
+        refreshShelves();
         navigate("/shelfsections");
       }
     } catch (error) {

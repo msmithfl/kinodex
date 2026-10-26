@@ -2,7 +2,8 @@ import { useState, useEffect, useContext } from "react";
 import { createPortal } from "react-dom";
 import { DrawerActionsSlotContext } from "../components/drawerActions";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "@clerk/clerk-react";
+import { ApiError } from "../utils/api";
+import { useDeleteTvShow, useTvShow } from "../features/tvShows/api";
 import {
   TiStarOutline,
   TiStarHalfOutline,
@@ -16,7 +17,6 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import ImageLightbox from "../components/ImageLightbox";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { EditTvShowModal } from "../components/EditTvShowModal";
-import type { TvShow } from "../types";
 import { FormatIcon } from "../utils/formatIcon";
 import { formatSeasons } from "../utils/formatSeasons";
 import {
@@ -35,8 +35,8 @@ interface TvShowDetailProps {
   onDeleted?: () => void;
 }
 
-function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {  const navigate = useNavigate();
-  const { getToken } = useAuth();
+function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {
+  const navigate = useNavigate();
   const params = useParams<{ id: string }>();
   const id = showId ?? params.id;
   const inDrawer = showId !== undefined;
@@ -46,9 +46,18 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {  const na
   // So the drawer gets its own classes: the poster small on the left, title and year, genres, then
   // rating and TMDB beside it at the bottom; edit and delete in the header's bottom-right corner.
   const layout = (pageClasses: string, drawerClasses: string) =>
-    inDrawer ? drawerClasses : pageClasses;  const [show, setShow] = useState<TvShow | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+    inDrawer ? drawerClasses : pageClasses;
+  // From the shared cache: opening from the list shows the list's copy straight away
+  const { data: show, isLoading: loading, error } = useTvShow(id);
+  const deleteTvShow = useDeleteTvShow();
+  const notFound = error instanceof ApiError && error.status === 404;
+  const loadError = !error
+    ? ""
+    : notFound
+      ? "TV show not found"
+      : error instanceof ApiError
+        ? `Could not load this TV show (${error.status}).`
+        : "Could not reach the server to load this TV show.";
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   // Which purchase's UPC was just copied, for the "Copied!" hint
@@ -56,59 +65,30 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {  const na
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPosterLightbox, setShowPosterLightbox] = useState(false);
   // Size the page to the viewport below the header
-  const container = useFillViewportHeight<HTMLDivElement>([loading]);
+  const { ref: containerRef, style: containerStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
 
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
-  const API_URL = `${API_BASE}/api/tvshows/${id}`;
-
+  // As a page, a show that doesn't exist (or isn't yours) goes back to the list; in a drawer it
+  // just says so in the panel
   useEffect(() => {
-    const fetchShow = async () => {
-      setLoading(true);
-      setLoadError("");
-      try {
-        const token = await getToken();
-        const response = await fetch(API_URL, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.ok) {
-          setShow(await response.json());
-        } else if (response.status === 404 && !inDrawer) {
-          navigate("/tv-shows");
-        } else if (response.status === 404) {
-          setLoadError("TV show not found");
-        } else {
-          setLoadError(`Could not load this TV show (${response.status}).`);
-        }
-      } catch (error) {
-        console.error("Error fetching TV show:", error);
-        setLoadError("Could not reach the server to load this TV show.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchShow();
-  }, [id]);
+    if (notFound && !inDrawer) navigate("/tv-shows");
+  }, [notFound, inDrawer, navigate]);
 
   const handleDeleteConfirm = async () => {
     setShowDeleteConfirm(false);
     setDeleteError("");
+    if (id === undefined) return;
     try {
-      const token = await getToken();
-      const response = await fetch(API_URL, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        if (onDeleted) onDeleted();
-        else navigate("/tv-shows");
-      } else {
-        setDeleteError(
-          `Failed to delete ${show?.title ?? "this TV show"} (${response.status}). Please try again.`,
-        );
-      }
+      // Every screen listing shows refreshes itself
+      await deleteTvShow.mutateAsync(id);
+      if (onDeleted) onDeleted();
+      else navigate("/tv-shows");
     } catch (error) {
       console.error("Error deleting TV show:", error);
-      setDeleteError("Could not reach the server. Please check your connection.");
+      setDeleteError(
+        error instanceof ApiError
+          ? `Failed to delete ${show?.title ?? "this TV show"} (${error.status}). Please try again.`
+          : "Could not reach the server. Please check your connection.",
+      );
     }
   };
 
@@ -174,9 +154,9 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {  const na
   return (
     // As a page it fills the screen below the header; in a drawer it fills the panel
     <div
-      ref={inDrawer ? undefined : container.ref}
+      ref={inDrawer ? undefined : containerRef}
       className={`relative flex flex-col ${inDrawer ? "h-full" : "h-[calc(100dvh-5rem)]"}`}
-      style={inDrawer ? undefined : container.style}
+      style={inDrawer ? undefined : containerStyle}
     >
       {/* Drawer from tablet up: edit and delete float below the close button, outside the panel */}
       {inDrawer &&
@@ -556,13 +536,8 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps = {}) {  const na
               <EditTvShowModal
                 show={show}
                 onClose={() => setShowEditModal(false)}
-                onSaved={(updated) => {
-                  setShow(updated);
-                  setShowEditModal(false);
-                  // In the drawer the list behind it shows the old values too; reload like the
-                  // movie edit does (?show= in the URL reopens the drawer)
-                  if (inDrawer) window.location.reload();
-                }}
+                // Saving refreshes this show and the list behind the drawer; nothing to reload
+                onSaved={() => setShowEditModal(false)}
                 onDeleted={() => (onDeleted ? onDeleted() : navigate("/tv-shows"))}
               />
             )}
