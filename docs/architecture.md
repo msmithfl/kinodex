@@ -44,7 +44,12 @@ Kinodex/
       components/       shared UI, modals, forms, cards, Drawer
       utils/            helpers and small hooks
       settings/         per-user settings context
-      features/         per-feature data hooks (and components): collections/, movies/, shelfSections/, tvShows/
+      features/         per feature: data hooks (api.ts) and the feature's own components
+        movies/           MovieTable, MovieDrawerDetails, MoviePageDetails, form/ (Details,
+                          Physical, Images tabs)
+        tvShows/          TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images tabs)
+        collections/      CollectionChecklist
+        shelfSections/    (hooks only)
       types/index.ts    shared TypeScript types (hand-written to match the API)
     vercel.json         rewrites every path to index.html (client-side routing)
   docs/                 this map + design docs
@@ -112,8 +117,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 | Component | Used for |
 |---|---|
 | `AddItemModal` | Chooser: add movie or TV show |
-| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit (Details + Images tabs; TMDB search step, barcode scan, poster/backdrop pickers, product image lookup) |
-| `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` + `TvShowPurchaseEditor` | TV create/edit, with per-purchase seasons and prices |
+| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; each tab is a component in `features/movies/form/` (Details, Physical, Images: TMDB poster/backdrop pickers, product image lookup) |
+| `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit. Tabs in `features/tvShows/form/` (Details, Purchases using `TvShowPurchaseEditor`, Images) |
 | `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop); saves via the collections hooks |
 | `BulkEditModal` | Bulk edit from the movie table |
 | `ConfirmDialog`, `ImageLightbox`, `BarcodeScanner`, `MobileOnlyMessage` | Shared helpers |
@@ -122,12 +127,17 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 ### Shared building blocks
 
 - **Cards and lists:** `MovieCardPoster` (also used for TV), `MovieCardDetail` (shelf page),
-  `CollectionCard`, `GenreCard`, `SimpleMovieTable` (collection/genre table view).
+  `CollectionCard`, `GenreCard`, `SimpleMovieTable` (collection/genre table view),
+  `features/movies/MovieTable` (the movie list's table).
+- **Shared bits:** `StarRating` (`Stars` display, `StarRatingInput` picker), `TmdbLink`,
+  `ChipSelect` / `SingleChipSelect` (chip dropdowns for genres, formats, collections, shelf),
+  `ImageUrlField` (preview + URL + picker row), `formStyles` (form input/label classes).
 - **Controls:** `ViewToggle` (+ `utils/viewOptions.ts`), `SortDropdown`, `SortableTableHeader`,
   `FilterDropdown` (+ `utils/filterCategories.ts`, `utils/applyFilters.ts`), `Counter`,
   `SubNavigation`, `EmptyState`, `LoadingSpinner`.
 - **Data layer:** `utils/api.ts`, `utils/queryClient.ts`, `features/*/api.ts` (see below).
-- **Utilities:** `tmdbApi.ts` (browser-side TMDB calls), `useUrlSearchQuery` (search in the URL),
+- **Utilities:** `upc.ts` (eBay sold-listings link, copy-to-clipboard with a `Copied!` flash),
+  `tmdbApi.ts` (browser-side TMDB calls), `useUrlSearchQuery` (search in the URL),
   `useFillViewportHeight` (pages that fill the screen above the bottom nav), `getSortedMovies`,
   `spending.ts` / `tvShowPurchases.ts` / `formatSeasons.ts` (money and season maths),
   `checklist.ts` (collection checklist matching), `formatIcon.tsx`, `dateUtils.ts`, `isMobile.ts`.
@@ -246,8 +256,8 @@ Pointers for cleanup, roughly in the order they'd come up:
 
 - Shelf, CSV, Match Movies, settings and lending pages still load data themselves
   (data-layer design doc, phase 4).
-- Very large files: `MovieForm` (~920 lines), `MovieList` (~870), `MovieDetail` (~830, page +
-  drawer + tabs), `TvShowForm`, `CollectionDetail`, `CheckoutsView`.
+- Largest remaining files are the parked/unconverted pages (`CheckoutsView` ~590, `Stats` ~420,
+  `MatchMovies`, shelf pages); the core pages are now 350–490 lines.
 - No frontend tests; backend tests cover the API (see Tests).
 - `types/index.ts` is hand-maintained to match the API.
 - TMDB token is built into the frontend bundle.

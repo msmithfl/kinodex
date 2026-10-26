@@ -11,6 +11,7 @@ import { useCreateMovie } from "../features/movies/api";
 import { ApiError } from "../utils/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";
 import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
+import { useBackdropClose } from "../utils/useBackdropClose";
 
 interface AddMovieModalProps {
   onClose: () => void;
@@ -19,6 +20,8 @@ interface AddMovieModalProps {
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
 
 export function AddMovieModal({ onClose }: AddMovieModalProps) {
+  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
+  const backdropClose = useBackdropClose(onClose);
   const navigate = useNavigate();
   const { data: collectionList = [] } = useCollections();
   const { data: shelfSectionList = [] } = useShelfSections();
@@ -169,7 +172,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-      onClick={onClose}
+      {...backdropClose}
     >
       <div
         className="flex flex-col mx-2 bg-gray-800 shadow-2xl w-full max-w-3xl h-full max-h-3/4 relative"

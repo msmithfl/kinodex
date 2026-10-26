@@ -3,6 +3,7 @@ import { IoClose } from "react-icons/io5";
 import { FaFilm, FaTv } from "react-icons/fa";
 import { AddMovieModal } from "./AddMovieModal";
 import { AddTvShowModal } from "./AddTvShowModal";
+import { useBackdropClose } from "../utils/useBackdropClose";
 
 interface AddItemModalProps {
   onClose: () => void;
@@ -11,6 +12,8 @@ interface AddItemModalProps {
 // Entry point for the app's generic Add buttons: asks whether you're adding a movie or a
 // TV show, then opens that form in its place
 export function AddItemModal({ onClose }: AddItemModalProps) {
+  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
+  const backdropClose = useBackdropClose(onClose);
   const [kind, setKind] = useState<"movie" | "tv" | null>(null);
 
   if (kind === "movie") return <AddMovieModal onClose={onClose} />;
@@ -24,7 +27,7 @@ export function AddItemModal({ onClose }: AddItemModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-      onClick={onClose}
+      {...backdropClose}
     >
       <div
         className="mx-4 w-full max-w-sm bg-gray-800 shadow-2xl"

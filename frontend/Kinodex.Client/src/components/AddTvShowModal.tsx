@@ -14,6 +14,7 @@ import TmdbSearchStep from "./TmdbSearchStep";
 import TvShowForm from "./TvShowForm";
 import BarcodeScanner from "./BarcodeScanner";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
+import { useBackdropClose } from "../utils/useBackdropClose";
 
 const FORM_ID = "add-tv-show-form";
 
@@ -38,6 +39,8 @@ interface AddTvShowModalProps {
 }
 
 export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
+  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
+  const backdropClose = useBackdropClose(onClose);
   const navigate = useNavigate();
   // Adding refreshes every screen listing shows
   const createTvShow = useCreateTvShow();
@@ -121,7 +124,7 @@ export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-      onClick={onClose}
+      {...backdropClose}
     >
       <div
         className="flex flex-col mx-2 bg-gray-800 shadow-2xl w-full max-w-3xl h-full max-h-3/4 relative"

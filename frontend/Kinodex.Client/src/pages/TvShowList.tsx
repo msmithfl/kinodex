@@ -9,11 +9,7 @@ import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
 import MoviePosterCard from "../components/MovieCardPoster";
 import SortDropdown, { type SortDropdownOption } from "../components/SortDropdown";
 import { LuTable2 } from "react-icons/lu";
-import {
-  TiStarOutline,
-  TiStarHalfOutline,
-  TiStarFullOutline,
-} from "react-icons/ti";
+import { Stars } from "../components/StarRating";
 import Counter from "../components/Counter";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SortableTableHeader from "../components/SortableTableHeader";
@@ -435,21 +431,7 @@ function TvShowList() {
                         {visibleColumns.rating && (
                           <td className="pl-6 py-2 whitespace-nowrap align-middle">
                             <div className="flex gap-0.5">
-                              {[1, 2, 3, 4, 5].map((star) => {
-                                const isFullStar = show.rating >= star;
-                                const isHalfStar = show.rating === star - 0.5;
-                                return (
-                                  <div key={star}>
-                                    {isFullStar ? (
-                                      <TiStarFullOutline className="w-5 h-5 text-yellow-400" />
-                                    ) : isHalfStar ? (
-                                      <TiStarHalfOutline className="w-5 h-5 text-yellow-400" />
-                                    ) : (
-                                      <TiStarOutline className="w-5 h-5 text-gray-500" />
-                                    )}
-                                  </div>
-                                );
-                              })}
+                              <Stars rating={show.rating} />
                             </div>
                           </td>
                         )}

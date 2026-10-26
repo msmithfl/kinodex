@@ -1,39 +1,28 @@
 import { useState, useEffect, useRef } from "react";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import Drawer from "../components/Drawer";
 import MovieDetail from "./MovieDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
 import { useDeleteMovies, useMovies, useUpdateMovies } from "../features/movies/api";
 import { useShelfSections } from "../features/shelfSections/api";
 import { useCollections } from "../features/collections/api";
+import MovieTable from "../features/movies/MovieTable";
+import { DEFAULT_COLUMNS, type VisibleColumns } from "../features/movies/tableColumns";
 import Counter from "../components/Counter";
 import BarcodeScanner from "../components/BarcodeScanner";
 import LoadingSpinner from "../components/LoadingSpinner";
-import SortableTableHeader from "../components/SortableTableHeader";
 import FilterDropdown from "../components/FilterDropdown";
 import SortDropdown from "../components/SortDropdown";
 import ConfirmDialog from "../components/ConfirmDialog";
 import SubNavigation from "../components/SubNavigation";
-import {
-  FaPencilAlt,
-  FaTrash,
-  FaRegCircle,
-  FaCheckCircle,
-} from "react-icons/fa";
+import { FaPencilAlt, FaTrash } from "react-icons/fa";
 import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
 import ViewToggle from "../components/ViewToggle";
 import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
 import MoviePosterCard from "../components/MovieCardPoster";
-import { LuTable2 } from "react-icons/lu";
 import { MdClose } from "react-icons/md";
-import {
-  TiStarOutline,
-  TiStarHalfOutline,
-  TiStarFullOutline,
-} from "react-icons/ti";
 import { IoCameraOutline } from "react-icons/io5";
-import { getRelativeTimeString } from "../utils/dateUtils";
 import { buildFilterCategories } from "../utils/filterCategories";
 import EmptyState from "../components/EmptyState";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
@@ -43,15 +32,6 @@ import { applyFilters } from "../utils/applyFilters";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { isMobile } from "../utils/isMobile";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
-
-interface VisibleColumns {
-  year: boolean;
-  format: boolean;
-  condition: boolean;
-  rating: boolean;
-  purchasePrice: boolean;
-  dateAdded: boolean;
-}
 
 function MovieList() {
   // Shared with every other screen showing movies; saves anywhere refresh it
@@ -103,17 +83,13 @@ function MovieList() {
     }
   });
   const [visibleColumns, setVisibleColumns] = useState<VisibleColumns>(() => {
-    const saved = localStorage.getItem("movieListColumns");
-    return saved
-      ? JSON.parse(saved)
-      : {
-          year: true,
-          format: true,
-          condition: true,
-          rating: true,
-          purchasePrice: true,
-          dateAdded: true,
-        };
+    try {
+      const saved = localStorage.getItem("movieListColumns");
+      // Merge over the defaults so a column added later still has a value
+      return saved ? { ...DEFAULT_COLUMNS, ...JSON.parse(saved) } : DEFAULT_COLUMNS;
+    } catch {
+      return DEFAULT_COLUMNS;
+    }
   });
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, string[]>
@@ -457,278 +433,19 @@ function MovieList() {
               )}
             </div>
           ) : (
-            <div className="h-full bg-gray-900 overflow-x-auto overflow-y-hidden overscroll-x-contain">
-              {/* Two scroll areas so a swipe moves the table one way at a time: the outer one only
-                  scrolls sideways, the inner one only up and down. Touch browsers lock each gesture
-                  to the area matching its starting direction. The vertical one is inside so the
-                  sticky header still sticks, while moving sideways with the columns. */}
-              <div className="h-full w-max min-w-full overflow-y-auto overflow-x-hidden overscroll-y-contain">
-                <table className="w-full border-separate border-spacing-0">
-                  <thead className="bg-gray-700 sticky top-0 z-10">
-                    <tr>
-                      <th className="px-3 py-2 w-12 border-r border-gray-600">
-                        <div className="relative">
-                          <button
-                            onClick={() => setShowColumnMenu(!showColumnMenu)}
-                            className="flex text-gray-300 hover:text-white transition-colors cursor-pointer items-center"
-                            aria-label="Column options"
-                          >
-                            <LuTable2 className="w-5 h-5" />
-                          </button>
-                          {showColumnMenu && (
-                            <div className="text-sm absolute -left-1 mt-2 w-40 border border-gray-600 rounded-md bg-gray-800 shadow-lg z-10">
-                              <div className="">
-                                <button
-                                  onClick={() => toggleColumn("year")}
-                                  className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
-                                >
-                                  <span
-                                    className={`font-normal ${visibleColumns.year ? "text-indigo-400" : "text-white"}`}
-                                  >
-                                    Year
-                                  </span>
-                                  {visibleColumns.year && (
-                                    <FaCheck className="w-5 h-5 text-indigo-400" />
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => toggleColumn("format")}
-                                  className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
-                                >
-                                  <span
-                                    className={`font-normal ${visibleColumns.format ? "text-indigo-400" : "text-white"}`}
-                                  >
-                                    Format
-                                  </span>
-                                  {visibleColumns.format && (
-                                    <FaCheck className="w-5 h-5 text-indigo-400" />
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => toggleColumn("condition")}
-                                  className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
-                                >
-                                  <span
-                                    className={`font-normal ${visibleColumns.condition ? "text-indigo-400" : "text-white"}`}
-                                  >
-                                    Condition
-                                  </span>
-                                  {visibleColumns.condition && (
-                                    <FaCheck className="w-5 h-5 text-indigo-400" />
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => toggleColumn("rating")}
-                                  className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
-                                >
-                                  <span
-                                    className={`font-normal ${visibleColumns.rating ? "text-indigo-400" : "text-white"}`}
-                                  >
-                                    Rating
-                                  </span>
-                                  {visibleColumns.rating && (
-                                    <FaCheck className="w-5 h-5 text-indigo-400" />
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => toggleColumn("purchasePrice")}
-                                  className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
-                                >
-                                  <span
-                                    className={`font-normal ${visibleColumns.purchasePrice ? "text-indigo-400" : "text-white"}`}
-                                  >
-                                    Purchase Price
-                                  </span>
-                                  {visibleColumns.purchasePrice && (
-                                    <FaCheck className="w-5 h-5 text-indigo-400" />
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => toggleColumn("dateAdded")}
-                                  className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
-                                >
-                                  <span
-                                    className={`font-normal ${visibleColumns.dateAdded ? "text-indigo-400" : "text-white"}`}
-                                  >
-                                    Date Added
-                                  </span>
-                                  {visibleColumns.dateAdded && (
-                                    <FaCheck className="w-5 h-5 text-indigo-400" />
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </th>
-                      <SortableTableHeader
-                        label="Title"
-                        sortKey="alphabetic"
-                        currentSortBy={sortBy}
-                        sortDirection={sortDirection}
-                        onClick={handleColumnClick}
-                        className="w-46 max-w-46 md:w-96 md:max-w-96"
-                      />
-                      {visibleColumns.year && (
-                        <SortableTableHeader
-                          label="Year"
-                          sortKey="year"
-                          currentSortBy={sortBy}
-                          sortDirection={sortDirection}
-                          onClick={handleColumnClick}
-                        />
-                      )}
-                      {visibleColumns.format && (
-                        <SortableTableHeader
-                          label="Format"
-                          sortKey="format"
-                          currentSortBy={sortBy}
-                          sortDirection={sortDirection}
-                          onClick={handleColumnClick}
-                        />
-                      )}
-                      {visibleColumns.condition && (
-                        <SortableTableHeader
-                          label="Condition"
-                          sortKey="condition"
-                          currentSortBy={sortBy}
-                          sortDirection={sortDirection}
-                          onClick={handleColumnClick}
-                        />
-                      )}
-                      {visibleColumns.rating && (
-                        <SortableTableHeader
-                          label="Rating"
-                          sortKey="rating"
-                          currentSortBy={sortBy}
-                          sortDirection={sortDirection}
-                          onClick={handleColumnClick}
-                        />
-                      )}
-                      {visibleColumns.purchasePrice && (
-                        <SortableTableHeader
-                          label="Purchase Price"
-                          sortKey="purchasePrice"
-                          currentSortBy={sortBy}
-                          sortDirection={sortDirection}
-                          onClick={handleColumnClick}
-                        />
-                      )}
-                      {visibleColumns.dateAdded && (
-                        <SortableTableHeader
-                          label="Date Added"
-                          sortKey="date"
-                          currentSortBy={sortBy}
-                          sortDirection={sortDirection}
-                          onClick={handleColumnClick}
-                        />
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredMovies.map((movie, index) => (
-                      <tr
-                        key={movie.id}
-                        className={`text-sm group ${index % 2 === 0 ? "bg-gray-800" : "bg-gray-900"} hover:bg-gray-700 transition-colors duration-150 focus:outline-none focus-within:outline-none`}
-                      >
-                        <td
-                          className="w-12 text-center"
-                          onClick={() =>
-                            handleCheckboxChange(
-                              movie.id,
-                              !selectedMovieIds.has(movie.id || 0),
-                            )
-                          }
-                        >
-                          {selectedMovieIds.has(movie.id || 0) ? (
-                            <FaCheckCircle className="w-5 h-5 text-indigo-500 inline-block" />
-                          ) : (
-                            <FaRegCircle
-                              className={`w-4 h-4 text-gray-500 transition-opacity opacity-0 group-hover:opacity-100 inline-block`}
-                            />
-                          )}
-                        </td>
-                        <td className="px-6 py-2 text-white w-46 max-w-46 md:w-96 md:max-w-96 align-middle">
-                          <Link
-                            to={`/movie/${movie.id}`}
-                            onClick={(e) => {
-                              // Plain clicks open the drawer; ctrl/cmd-click still opens the full page in a new tab
-                              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-                              e.preventDefault();
-                              openMovie(movie.id);
-                            }}
-                            className="hover:underline transition-colors inline-block truncate max-w-full align-middle"
-                            title={movie.title}
-                          >
-                            {movie.title}
-                          </Link>
-                        </td>
-                        {visibleColumns.year && (
-                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                            {movie.year || "-"}
-                          </td>
-                        )}
-                        {visibleColumns.format && (
-                          <td className="px-6 py-2 whitespace-nowrap align-middle">
-                            {movie.formats && movie.formats.length > 0 ? (
-                              <div className="flex gap-1">
-                                {[...movie.formats].sort().map((fmt, idx) => (
-                                  <span key={idx}>
-                                    {fmt}
-                                    {idx < movie.formats.length - 1 ? "," : ""}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="text-gray-500">-</span>
-                            )}
-                          </td>
-                        )}
-                        {visibleColumns.condition && (
-                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                            {movie.condition}
-                          </td>
-                        )}
-                        {visibleColumns.rating && (
-                          <td className="pl-6 py-2 whitespace-nowrap align-middle">
-                            <div className="flex gap-0.5">
-                              {[1, 2, 3, 4, 5].map((star) => {
-                                const isFullStar = movie.rating >= star;
-                                const isHalfStar = movie.rating === star - 0.5;
-
-                                return (
-                                  <div key={star}>
-                                    {isFullStar ? (
-                                      <TiStarFullOutline className="w-5 h-5 text-yellow-400" />
-                                    ) : isHalfStar ? (
-                                      <TiStarHalfOutline className="w-5 h-5 text-yellow-400" />
-                                    ) : (
-                                      <TiStarOutline className="w-5 h-5 text-gray-500" />
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </td>
-                        )}
-                        {visibleColumns.purchasePrice && (
-                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                            {movie.purchasePrice
-                              ? `$${movie.purchasePrice.toFixed(2)}`
-                              : "-"}
-                          </td>
-                        )}
-                        {visibleColumns.dateAdded && (
-                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                            {getRelativeTimeString(movie.createdAt)}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <MovieTable
+              movies={filteredMovies}
+              visibleColumns={visibleColumns}
+              onToggleColumn={toggleColumn}
+              showColumnMenu={showColumnMenu}
+              onShowColumnMenu={setShowColumnMenu}
+              sortBy={sortBy}
+              sortDirection={sortDirection}
+              onSort={handleColumnClick}
+              selectedIds={selectedMovieIds}
+              onSelect={handleCheckboxChange}
+              onOpen={openMovie}
+            />
           )}
         </div>
       </div>

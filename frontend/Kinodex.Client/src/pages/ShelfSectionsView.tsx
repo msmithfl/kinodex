@@ -6,6 +6,7 @@ const SHELF_ORDER_KEY = "shelf-section-order";
 import { useAuth } from "@clerk/clerk-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { shelfSectionKeys } from "../features/shelfSections/api";
+import { useBackdropClose } from "../utils/useBackdropClose";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
@@ -14,6 +15,11 @@ import type { Movie, ShelfSection } from "../types";
 function ShelfSectionsView() {
   // This page saves outside the shared cache (not converted yet), so tell it what changed
   const queryClient = useQueryClient();
+  // The create-section modal closes only on a deliberate click on its backdrop
+  const createModalBackdrop = useBackdropClose(() => {
+    setShowCreateInput(false);
+    setNewSectionName("");
+  });
   const { getToken } = useAuth();
   const [shelfSections, setShelfSections] = useState<ShelfSection[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -328,10 +334,7 @@ function ShelfSectionsView() {
           {showCreateInput && (
             <div
               className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-              onClick={() => {
-                setShowCreateInput(false);
-                setNewSectionName("");
-              }}
+              {...createModalBackdrop}
             >
               <div
                 className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4"

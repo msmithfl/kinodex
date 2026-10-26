@@ -10,6 +10,7 @@ import TvShowForm from "./TvShowForm";
 import BarcodeScanner from "./BarcodeScanner";
 import ConfirmDialog from "./ConfirmDialog";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
+import { useBackdropClose } from "../utils/useBackdropClose";
 
 const FORM_ID = "edit-tv-show-form";
 
@@ -26,6 +27,8 @@ export function EditTvShowModal({
   onSaved,
   onDeleted,
 }: EditTvShowModalProps) {
+  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
+  const backdropClose = useBackdropClose(onClose);
   const [formData, setFormData] = useState<TvShow>(() => withClientKeys(show));
   const [submitError, setSubmitError] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -89,7 +92,7 @@ export function EditTvShowModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-      onClick={onClose}
+      {...backdropClose}
     >
       <div
         className="flex flex-col mx-2 bg-gray-800 shadow-2xl w-full max-w-3xl h-full max-h-3/4 relative"

@@ -4,6 +4,7 @@ import { getTMDBImages, searchTMDB, searchTMDBPeople, type TMDBPerson } from "..
 import { ApiError } from "../utils/api";
 import { useCreateCollection, useUpdateCollection } from "../features/collections/api";
 import type { Collection, Movie, TMDBMovie } from "../types";
+import { useBackdropClose } from "../utils/useBackdropClose";
 
 interface CollectionFormModalProps {
   // The collection to edit; leave out to create a new one
@@ -30,6 +31,8 @@ function CollectionFormModal({
   onClose,
   onSaved,
 }: CollectionFormModalProps) {
+  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
+  const backdropClose = useBackdropClose(onClose);
   const editing = collection !== undefined;
   const [kind, setKind] = useState<CollectionKind>(
     collection?.isDirectorCollection ? "director" : "collection",
@@ -166,7 +169,7 @@ function CollectionFormModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={onClose}
+      {...backdropClose}
     >
       <div
         role="dialog"
