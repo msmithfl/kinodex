@@ -28,13 +28,10 @@ interface MovieDetailProps {
   onDeleted?: () => void;
 }
 
-// The movie drawer's sections, shown as tabs under its header
-type DrawerTab = "details" | "ledger" | "log";
-const DRAWER_TABS: { id: DrawerTab; label: string }[] = [
-  { id: "details", label: "Details" },
-  { id: "ledger", label: "Ledger" },
-  { id: "log", label: "Log" },
-];
+// The movie drawer's sections, shown as tabs under its header once there's more than one.
+// Planned: a lending ledger and a watch log (on hold until the core features are solid).
+type DrawerTab = "details";
+const DRAWER_TABS: { id: DrawerTab; label: string }[] = [{ id: "details", label: "Details" }];
 
 function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
   const navigate = useNavigate();
@@ -518,8 +515,9 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
 
               {/* Details column */}
               <div className={layout("min-w-0 lg:col-start-1 lg:row-start-2", "min-w-0")}>
-                {/* Drawer: tabs under the header; the page shows the details alone */}
-                {inDrawer && (
+                {/* Drawer: tabs under the header (when there's more than one section); the page
+                    shows the details alone */}
+                {inDrawer && DRAWER_TABS.length > 1 && (
                   <div
                     role="tablist"
                     aria-label="Movie sections"
@@ -541,20 +539,6 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
                         {label}
                       </button>
                     ))}
-                  </div>
-                )}
-                {inDrawer && tab === "ledger" && (
-                  // Placeholder for the lending ledger
-                  <div className="px-4 md:px-6 py-12 text-center text-gray-400">
-                    <p className="font-medium text-gray-300">Lending ledger</p>
-                    <p className="text-sm mt-1">Who's borrowed this movie and when. Coming soon.</p>
-                  </div>
-                )}
-                {inDrawer && tab === "log" && (
-                  // Placeholder for the watch log
-                  <div className="px-4 md:px-6 py-12 text-center text-gray-400">
-                    <p className="font-medium text-gray-300">Watch log</p>
-                    <p className="text-sm mt-1">Each time you've watched this movie. Coming soon.</p>
                   </div>
                 )}
                 {inDrawer && tab === "details" && drawerDetails}
@@ -601,9 +585,6 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps = {}) {
                               </p>
                             </div>
                             <div>
-                              {/* <h3 className="text-sm font-medium text-gray-400 mb-2">
-                              UPC Number
-                            </h3> */}
                               <div className="relative inline-block">
                                 <button
                                   onClick={() => {

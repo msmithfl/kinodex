@@ -111,7 +111,6 @@ function FilterDropdown({
                           {activeCount}
                         </span>
                       )}
-                      {/* <FaChevronRight className="w-3 h-3 text-gray-400" /> */}
                     </div>
                   </button>
                 );

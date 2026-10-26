@@ -50,8 +50,6 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const [newShelfSection, setNewShelfSection] = useState("");
   const [submitError, setSubmitError] = useState("");
 
-  const [_showManualUpcInput, _setShowManualUpcInput] = useState(false);
-  const [_manualUpc, _setManualUpc] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
 
@@ -197,11 +195,6 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     }
   };
 
-  const handleManualSearchClick = () => {
-    _setManualUpc(formData.upcNumber);
-    _setShowManualUpcInput(true);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) {
@@ -300,7 +293,6 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
               submitButtonText="Add to Collection"
               showScanButton={true}
               onScanClick={handleScanClick}
-              onManualSearchClick={handleManualSearchClick}
             />
 
             {showScanner && (

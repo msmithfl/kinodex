@@ -1,5 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import Quagga from "@ericblade/quagga2";
+import Quagga, { type QuaggaJSResultObject } from "@ericblade/quagga2";
+
+// Median of a list of numbers (0 when empty); used to judge a scan's decode quality
+const getMedian = (arr: number[]) => {
+  if (arr.length === 0) return 0;
+  const sorted = arr.slice().sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
+};
 
 interface BarcodeScannerProps {
   onDetected: (code: string) => void;
@@ -18,8 +28,11 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   useEffect(() => {
     if (!scannerRef.current) return;
 
+    // The latest pending start (retries replace it), so closing cancels whichever is waiting
+    let currentTimer: ReturnType<typeof setTimeout> | undefined;
+
     const initQuagga = (delay: number) => {
-      const timer = setTimeout(() => {
+      currentTimer = setTimeout(() => {
         Quagga.stop();
         Quagga.init(
           {
@@ -80,21 +93,19 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
           },
         );
       }, delay);
-      return timer;
     };
 
-    let currentTimer = initQuagga(100);
+    initQuagga(100);
 
-    const handleDetected = (result: any) => {
-      if (!result || !result.codeResult || !result.codeResult.code) return;
-
-      const code = result.codeResult.code;
+    const handleDetected = (result: QuaggaJSResultObject) => {
+      const code = result?.codeResult?.code;
+      if (!code) return;
 
       // Only accept results with good quality
       const err = getMedian(
         result.codeResult.decodedCodes
-          .filter((x: any) => x.error !== undefined)
-          .map((x: any) => x.error),
+          .map((x) => x.error)
+          .filter((e): e is number => e !== undefined),
       );
 
       // Reject low quality scans
@@ -132,16 +143,6 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
       setIsInitialized(false);
     };
   }, [onDetected]);
-
-  // Helper function to calculate median
-  const getMedian = (arr: number[]) => {
-    if (arr.length === 0) return 0;
-    const sorted = arr.slice().sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 !== 0
-      ? sorted[mid]
-      : (sorted[mid - 1] + sorted[mid]) / 2;
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">

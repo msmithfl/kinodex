@@ -247,25 +247,6 @@ namespace Kinodex.Api.Migrations
                     b.ToTable("Movies");
                 });
 
-            modelBuilder.Entity("Kinodex.Api.Models.Product", b =>
-                {
-                    b.Property<string>("Upc")
-                        .HasColumnType("text");
-
-                    b.Property<decimal?>("EbayAveragePrice")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTimeOffset?>("EbayCachedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("EbayPriceCount")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Upc");
-
-                    b.ToTable("Products");
-                });
-
             modelBuilder.Entity("Kinodex.Api.Models.ShelfSection", b =>
                 {
                     b.Property<int>("Id")

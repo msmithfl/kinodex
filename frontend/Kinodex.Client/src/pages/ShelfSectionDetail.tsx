@@ -3,7 +3,6 @@ import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useAuth } from "@clerk/clerk-react";
 import { useParams, useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
-//import Counter from '../components/Counter'
 import MovieDetailCard from "../components/MovieCardDetail";
 import MoviePosterCard from "../components/MovieCardPoster";
 import EmptyState from "../components/EmptyState";
@@ -243,7 +242,6 @@ function ShelfSectionDetail() {
                   <div>
                     <div className="flex items-center gap-4">
                       <h1 className="text-3xl font-bold mb-2">{sectionName}</h1>
-                      {/* <Counter count={movies.length} className="mb-2" /> */}
                       {!isEditing && section && sectionName !== "Unshelved" && (
                         <div ref={actionsDropdownRef} className="relative mb-2">
                           <button

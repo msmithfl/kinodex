@@ -98,13 +98,11 @@ public class TmdbMatchingService
             return result;
         }
         
-        // Remove the duplicate else block below
         if (result.Suggestions.Count > 0)
         {
             result.Message = $"Found suggestions for {result.Suggestions.Count} of {unmatchedMovies.Count} unmatched movies.";
         }
 
-        result.Message = $"Found suggestions for {result.Suggestions.Count} of {unmatchedMovies.Count} unmatched movies.";
         return result;
     }
 

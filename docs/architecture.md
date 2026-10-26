@@ -18,7 +18,7 @@ structure changes (new page, endpoint, model, or a feature moving between "core"
  .NET 10 minimal API (frontend never touches the DB)               hosted on Railway
    ├─ verifies Clerk JWTs; every query filtered by the signed-in user's id
    ├─ EF Core → PostgreSQL (Railway); migrations run on startup
-   ├─ calls out to: TMDB (matching), UPCitemdb (product images), eBay (unused)
+   ├─ calls out to: TMDB (matching), UPCitemdb (product images)
    └─ receives: Clerk webhooks (user created / updated / deleted)
 ```
 
@@ -102,7 +102,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   a drawer (an id prop switches mode and layout classes). `CollectionDetail` is drawer-only.
 - **Floating actions:** from tablet up, edit/delete render outside the panel next to the close
   button, through a portal slot (`components/drawerActions.ts` context).
-- **Movie drawer tabs:** Details (compact layout) · Ledger · Log (both placeholders).
+- **Movie drawer tabs:** only Details for now, so the tab bar is hidden; the tab mechanism is kept for the planned Ledger and Log.
 - Escape closes only the topmost drawer; swipe right closes on touch screens.
 
 ### Modals and forms
@@ -170,7 +170,6 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 | `/api/upc/lookup/{upc}` | product title + images | Shared cache (`UpcLookups`), not per user | Product image picker |
 | `/api/tmdb/*` | unmatched, match, assign, fill-images, search | Owned (acts on the caller's movies) | `MatchMovies` |
 | `/api/customers`, `/api/checkouts` | CRUD, returns, overdue | Owned (checkouts via their movie's owner) | Parked lending pages |
-| `/api/products`, `/api/ebay/*` | eBay sold-price cache | Shared cache | **Unused** by the frontend |
 | `/api/webhooks/clerk` | user created/updated/deleted | **No sign-in**; verified by Svix signature | Clerk |
 
 ### Data model
@@ -181,7 +180,7 @@ User (Clerk id) ─── owns (by UserId string) ──┬─ Movie ───�
                                                ├─ Collection ── CollectionListItem (checklist)
                                                ├─ ShelfSection
                                                └─ UserSettings
-Shared (not per user): UpcLookup (UPC → product images), Product (eBay price cache)
+Shared (not per user): UpcLookup (UPC → product images)
 ```
 
 **Important: several links are by name, not by id.**
@@ -215,9 +214,8 @@ HDD number. Collections have `IsDirectorCollection`, `ImageUrl` (cover), `Backdr
 - **Core (being stabilized):** movies, TV shows, collections (+ checklists, covers, backdrops),
   genres, search, dashboard, stats, settings, CSV import/export, drawers, product image lookup.
 - **Present but tucked away:** shelf sections (via movie links), My Shelf, Match Movies.
-- **Parked (future features):** lending (customers/checkouts pages + API), the movie drawer's
-  Ledger and Log tabs.
-- **Unused code:** `/api/products`, `/api/ebay/*`.
+- **Parked (future features):** lending (customers/checkouts pages + API), a lending ledger and
+  watch log in the movie drawer (not built; tabs hidden).
 
 ## Known loose ends
 
@@ -229,9 +227,8 @@ Pointers for cleanup, roughly in the order they'd come up:
   drawer + tabs), `TvShowForm`, `CollectionDetail`, `CheckoutsView`.
 - No automated tests (frontend or backend).
 - `types/index.ts` is hand-maintained to match the API.
-- The Clerk `user.deleted` webhook deletes movies, collections, checklists and shelf sections,
-  but not TV shows/purchases, settings or customers.
-- Both `@clerk/clerk-react` and `@clerk/react` are listed as dependencies.
 - TMDB token is built into the frontend bundle.
-- A few existing lint errors (unused variables in the movie modals, `any` in `MovieList`,
-  setState-in-effect in `MovieForm`) and commented-out code/nav items.
+- `Microsoft.OpenApi` 2.0.0 (pulled in by `Microsoft.AspNetCore.OpenApi`) has a known high-severity
+  advisory (build warning NU1903); update when a fixed version is available.
+- Lint: no errors; some `react-hooks/exhaustive-deps` warnings on the per-page fetch effects
+  (go away with the data-layer change).

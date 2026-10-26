@@ -207,9 +207,6 @@ function Dashboard() {
                       <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">
                         ${month.spend.toFixed(2)}
                       </p>
-                      {/* <p className="text-green-200 text-xs md:text-sm mt-1">
-                        {month.count} movie{month.count !== 1 ? "s" : ""} added
-                      </p> */}
                     </div>
                   ))}
                 </div>

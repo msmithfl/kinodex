@@ -6,8 +6,6 @@ const NAV_LINKS = [
   { to: "/tv-shows", label: "TV Shows" },
   { to: "/collections", label: "Collections" },
   { to: "/genres", label: "Genres" },
-  // { to: "/shelfsections", label: "Shelves" },
-  // { to: "/my-shelf", label: "My Shelf" },
 ];
 
 function SubNavigation() {

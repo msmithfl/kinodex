@@ -17,7 +17,6 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
   const { getToken } = useAuth();
   const params = useParams<{ id: string }>();
   const id = movieId ?? params.id;
-  const [_loading, setLoading] = useState(true);
   const [formData, setFormData] = useState<Movie>({
     userId: "",
     title: "",
@@ -52,8 +51,6 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
   const [newShelfSection, setNewShelfSection] = useState("");
   const [submitError, setSubmitError] = useState("");
 
-  const [_showManualUpcInput, _setShowManualUpcInput] = useState(false);
-  const [_manualUpc, _setManualUpc] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
 
@@ -72,7 +69,22 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
   };
 
   useEffect(() => {
-    fetchMovie();
+    // Load the movie being edited
+    const fetchMovie = async () => {
+      try {
+        const token = await getToken();
+        const response = await fetch(`${API_URL}/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setFormData(data);
+        }
+      } catch (error) {
+        console.error("Error fetching movie:", error);
+      }
+    };
+
     // Load collections and shelf sections from API
     const fetchData = async () => {
       try {
@@ -97,25 +109,9 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
       }
     };
 
+    fetchMovie();
     fetchData();
   }, []);
-
-  const fetchMovie = async () => {
-    try {
-      const token = await getToken();
-      const response = await fetch(`${API_URL}/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setFormData(data);
-      }
-    } catch (error) {
-      console.error("Error fetching movie:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const addCollection = async () => {
     if (newCollection && !collections.find((c) => c.name === newCollection)) {
@@ -183,11 +179,6 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
         console.error("Error adding shelf section:", error);
       }
     }
-  };
-
-  const handleManualSearchClick = () => {
-    _setManualUpc(formData.upcNumber);
-    _setShowManualUpcInput(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -271,7 +262,6 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
             submitButtonText="Save"
             showScanButton={true}
             onScanClick={handleScanClick}
-            onManualSearchClick={handleManualSearchClick}
           />
 
           {showScanner && (

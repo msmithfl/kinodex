@@ -145,8 +145,6 @@ app.MapSettingsEndpoints();
 app.MapCollectionEndpoints();
 app.MapShelfSectionEndpoints();
 app.MapUpcEndpoints();
-app.MapEbayEndpoints();
-app.MapProductEndpoints();
 app.MapCollectionListItemEndpoints();
 app.MapTmdbMatchingEndpoints();
 app.MapCustomerEndpoints();
