@@ -102,7 +102,10 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
 
   const fetchMovie = async () => {
     try {
-      const response = await fetch(`${API_URL}/${id}`);
+      const token = await getToken();
+      const response = await fetch(`${API_URL}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const data = await response.json();
         setFormData(data);

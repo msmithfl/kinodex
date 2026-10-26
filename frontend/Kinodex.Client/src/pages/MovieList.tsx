@@ -328,6 +328,7 @@ function MovieList() {
       }
 
       // Update each selected movie
+      const token = await getToken();
       const updatePromises = Array.from(selectedMovieIds).map(
         async (movieId) => {
           const movie = movies.find((m) => m.id === movieId);
@@ -336,7 +337,10 @@ function MovieList() {
           const updatedMovie = { ...movie, ...updates };
           const response = await fetch(`${API_URL}/${movieId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
             body: JSON.stringify(updatedMovie),
           });
 
@@ -371,10 +375,12 @@ function MovieList() {
 
   const handleBulkDelete = async () => {
     try {
+      const token = await getToken();
       const deletePromises = Array.from(selectedMovieIds).map(
         async (movieId) => {
           const response = await fetch(`${API_URL}/${movieId}`, {
             method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
           });
 
           if (!response.ok)

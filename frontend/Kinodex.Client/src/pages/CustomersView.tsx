@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import EmptyState from "../components/EmptyState";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -14,6 +15,7 @@ import { getRelativeTimeString } from "../utils/dateUtils";
 import type { Customer } from "../types";
 
 function CustomersView() {
+  const { getToken } = useAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -36,7 +38,10 @@ function CustomersView() {
 
   const fetchCustomers = async () => {
     try {
-      const response = await fetch(API_URL);
+      const token = await getToken();
+      const response = await fetch(API_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const data = await response.json();
         setCustomers(data);
@@ -63,9 +68,13 @@ function CustomersView() {
         : API_URL;
       const method = editingCustomer ? "PUT" : "POST";
 
+      const token = await getToken();
       const response = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(formData),
       });
 
@@ -85,8 +94,10 @@ function CustomersView() {
     if (!deleteCustomer?.id) return;
 
     try {
+      const token = await getToken();
       const response = await fetch(`${API_URL}/${deleteCustomer.id}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {

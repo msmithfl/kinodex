@@ -57,7 +57,10 @@ function CheckoutsView() {
 
   const fetchCheckouts = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/checkouts`);
+      const token = await getToken();
+      const response = await fetch(`${API_BASE}/api/checkouts`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const data = await response.json();
         setCheckouts(data);
@@ -71,7 +74,10 @@ function CheckoutsView() {
 
   const fetchCustomers = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/customers`);
+      const token = await getToken();
+      const response = await fetch(`${API_BASE}/api/customers`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const data = await response.json();
         setCustomers(data);
@@ -127,9 +133,13 @@ function CheckoutsView() {
 
       console.log("Sending checkout data:", checkoutData);
 
+      const token = await getToken();
       const response = await fetch(`${API_BASE}/api/checkouts`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(checkoutData),
       });
 
@@ -159,10 +169,12 @@ function CheckoutsView() {
     if (!showReturnConfirm?.id) return;
 
     try {
+      const token = await getToken();
       const response = await fetch(
         `${API_BASE}/api/checkouts/${showReturnConfirm.id}/return`,
         {
           method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
 
@@ -183,10 +195,12 @@ function CheckoutsView() {
     if (!showDeleteConfirm?.id) return;
 
     try {
+      const token = await getToken();
       const response = await fetch(
         `${API_BASE}/api/checkouts/${showDeleteConfirm.id}`,
         {
           method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
         },
       );
 

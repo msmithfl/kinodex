@@ -29,7 +29,8 @@ public class TmdbMatchingService
         }
     }
 
-    public async Task<MatchingResult> MatchMoviesWithTmdb()
+    // Each method works on one user's movies only
+    public async Task<MatchingResult> MatchMoviesWithTmdb(string userId)
     {
         if (string.IsNullOrEmpty(_apiKey))
         {
@@ -41,7 +42,7 @@ public class TmdbMatchingService
         }
 
         var unmatchedMovies = await _db.Movies
-            .Where(m => m.TmdbId == null)
+            .Where(m => m.UserId == userId && m.TmdbId == null)
             .ToListAsync();
 
         var result = new MatchingResult
@@ -178,13 +179,13 @@ public class TmdbMatchingService
         }
     }
 
-    public async Task<FillImagesResult> FillMissingImages()
+    public async Task<FillImagesResult> FillMissingImages(string userId)
     {
         if (string.IsNullOrEmpty(_apiKey))
             return new FillImagesResult { Success = false, Message = "TMDB API key not configured." };
 
         var movies = await _db.Movies
-            .Where(m => m.TmdbId != null && (m.BackdropPath == null || m.BackdropPath == ""))
+            .Where(m => m.UserId == userId && m.TmdbId != null && (m.BackdropPath == null || m.BackdropPath == ""))
             .ToListAsync();
 
         var result = new FillImagesResult { Success = true, Total = movies.Count };
@@ -233,9 +234,9 @@ public class TmdbMatchingService
         return result;
     }
 
-    public async Task<bool> AssignTmdbId(int movieId, int tmdbId, string? posterPath = null, string? backdropPath = null)
+    public async Task<bool> AssignTmdbId(string userId, int movieId, int tmdbId, string? posterPath = null, string? backdropPath = null)
     {
-        var movie = await _db.Movies.FindAsync(movieId);
+        var movie = await _db.Movies.FirstOrDefaultAsync(m => m.Id == movieId && m.UserId == userId);
         if (movie == null) return false;
 
         movie.TmdbId = tmdbId;
@@ -245,10 +246,10 @@ public class TmdbMatchingService
         return true;
     }
 
-    public async Task<List<Movie>> GetUnmatchedMovies()
+    public async Task<List<Movie>> GetUnmatchedMovies(string userId)
     {
         return await _db.Movies
-            .Where(m => m.TmdbId == null)
+            .Where(m => m.UserId == userId && m.TmdbId == null)
             .OrderBy(m => m.Title)
             .ToListAsync();
     }
