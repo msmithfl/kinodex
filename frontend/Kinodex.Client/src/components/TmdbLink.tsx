@@ -1,5 +1,5 @@
 // The TMDB logo, linking to the title's TMDB page (or TMDB's home page when it has no TMDB id)
-function TmdbLink({ kind, tmdbId }: { kind: "movie" | "tv"; tmdbId?: number }) {
+function TmdbLink({ kind, tmdbId }: { kind: "movie" | "tv"; tmdbId?: number | null }) {
   return (
     <a
       href={tmdbId ? `https://www.themoviedb.org/${kind}/${tmdbId}` : "https://www.themoviedb.org/"}

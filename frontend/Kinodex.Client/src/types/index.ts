@@ -1,27 +1,50 @@
-export interface Movie {
-    id?: number;
-    userId: string; // Foreign key to User
-    title: string;
-    upcNumber: string;
-    formats: string[];
-    collections: string[];
-    condition: string;
-    purchasePrice: number;
-    hasWatched: boolean;
-    rating: number;
-    review: string;
-    year: number;
-    genres: string[];
-    posterPath: string;
-    backdropPath: string;
-    productPosterPath: string;
-    tmdbId?: number;
-    hdDriveNumber: number;
-    shelfNumber: number;
-    shelfSection: string;
-    isOnPlex: boolean;
-    createdAt?: string;
-}
+import type { components } from "./api.generated";
+
+// The API's models come from api.generated.ts (generated from the backend's OpenAPI description
+// by `npm run gen:api`), so a backend change that the frontend doesn't follow shows up as a type
+// error. The types here only loosen what forms need: a movie being added has no id yet, etc.
+type Schemas = components["schemas"];
+
+// Fields the server fills in itself, so an item that hasn't been saved yet doesn't have them
+type ServerSet = "id" | "userId" | "createdAt";
+
+// T with the given fields made optional
+type Loosen<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+// Loans (checkouts) are parked; movies loaded for the core screens don't rely on them
+export type Movie = Loosen<Schemas["Movie"], ServerSet | "checkouts">;
+
+// One transaction: a complete set, a single season, or anything in between.
+// The same season may appear in more than one purchase (e.g. a DVD later upgraded to Blu-ray).
+// purchasedAt is YYYY-MM-DD, a calendar date with no time zone.
+export type TvShowPurchase = Loosen<Schemas["TvShowPurchase"], "id" | "tvShowId"> & {
+  clientKey?: string; // Form-only identity for purchases not yet saved; the API ignores it
+};
+
+// year is the first air year; totalSeasons is TMDB's season count, 0 when unknown
+export type TvShow = Loosen<Omit<Schemas["TvShow"], "purchases">, ServerSet> & {
+  purchases: TvShowPurchase[];
+};
+
+export type CollectionListItem = Loosen<Schemas["CollectionListItem"], ServerSet | "collection">;
+
+// imageUrl: cover chosen at creation (a movie poster or the director's photo); null uses a
+// movie's poster. backdropUrl: wide image behind the collection's details.
+export type Collection = Loosen<Schemas["Collection"], "userId">;
+
+export type ShelfSection = Loosen<Schemas["ShelfSection"], "userId">;
+
+export type Customer = Loosen<Omit<Schemas["Customer"], "checkouts">, ServerSet> & {
+  checkouts?: Checkout[];
+};
+
+export type Checkout = Loosen<
+  Omit<Schemas["Checkout"], "movie" | "customer">,
+  "id" | "isOverdue" | "isActive"
+> & {
+  movie?: Movie;
+  customer?: Customer;
+};
 
 export interface TMDBMovie {
   id: number;
@@ -32,38 +55,6 @@ export interface TMDBMovie {
   genre_ids: number[];
 }
 
-// One transaction: a complete set, a single season, or anything in between.
-// The same season may appear in more than one purchase (e.g. a DVD later upgraded to Blu-ray).
-export interface TvShowPurchase {
-  id?: number;
-  clientKey?: string; // Form-only identity for purchases not yet saved; the API ignores it
-  seasons: number[];
-  price: number;
-  upcNumber: string;
-  formats: string[];
-  condition: string;
-  purchasedAt: string; // YYYY-MM-DD, a calendar date with no time zone
-}
-
-export interface TvShow {
-  id?: number;
-  userId?: string; // Set by the API from the signed-in user
-  title: string;
-  hasWatched: boolean;
-  rating: number;
-  review: string;
-  year: number; // First air year
-  genres: string[];
-  posterPath: string;
-  backdropPath: string;
-  productPosterPath: string;
-  tmdbId?: number;
-  totalSeasons: number; // Season count from TMDB, 0 when unknown
-  isOnPlex: boolean;
-  createdAt?: string;
-  purchases: TvShowPurchase[];
-}
-
 export interface TMDBTvShow {
   id: number;
   name: string;
@@ -71,32 +62,6 @@ export interface TMDBTvShow {
   poster_path: string;
   backdrop_path: string;
   genre_ids: number[];
-}
-
-export interface CollectionListItem {
-  id?: number;
-  collectionId: number;
-  title: string;
-  year: number;
-  tmdbId?: number;
-  createdAt?: string;
-}
-
-export interface Collection {
-  id: number;
-  name: string;
-  isDirectorCollection: boolean;
-  // Cover chosen at creation: a movie poster or the director's photo; null uses a movie's poster
-  imageUrl?: string | null;
-  // Wide image behind the collection's details, from one of the user's movies
-  backdropUrl?: string | null;
-  createdAt: string;
-}
-
-export interface ShelfSection {
-  id: number;
-  name: string;
-  createdAt: string;
 }
 
 export interface TmdbSearchResult {
@@ -122,29 +87,6 @@ export interface MatchingResult {
   noMatchesFound: number;
   suggestions: MatchSuggestion[];
   errors: string[];
-}
-
-export interface Customer {
-  id?: number;
-  name: string;
-  email: string;
-  phone: string;
-  createdAt?: string;
-  checkouts?: Checkout[];
-}
-
-export interface Checkout {
-  id?: number;
-  movieId: number;
-  customerId: number;
-  checkedOutDate: string;
-  dueDate?: string;
-  returnedDate?: string;
-  notes: string;
-  movie?: Movie;
-  customer?: Customer;
-  isOverdue?: boolean;
-  isActive?: boolean;
 }
 
 export const Genres = {
