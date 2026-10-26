@@ -1,11 +1,13 @@
 # Frontend data layer: moving to a shared API client + React Query
 
-**Status:** Phases 1–3 (collections, movies, TV shows) done 2026-10-25; phase 4 not started
+**Status:** Phases 1–3 (collections, movies, TV shows) done 2026-10-25; phase 4: settings and
+CSV import/export done; Match Movies left; shelf and lending pages parked
 **Last updated:** 2026-10-25
 **Scope:** `frontend/Kinodex.Client` (no backend changes needed)
 
 > **Priority (2026-10-25):** first make the existing core rock solid: movies, TV shows,
-> collections, genres, shelves, stats, dashboard. Phases 1–3 below (collections, movies, TV) are
+> collections, genres, stats, dashboard, and the shelf *fields* on movies (section, number). The
+> shelf *pages* (shelf list, shelf detail, My Shelf) are parked, like lending. Phases 1–3 below (collections, movies, TV) are
 > part of that. Phase 4's lending/customers/checkouts pages, the watch log, and everything under
 > [Roadmap context](#roadmap-context) (self-hosting, Jellyfin sign-in, SQLite, Docker) are **on
 > hold** until the core is stable.

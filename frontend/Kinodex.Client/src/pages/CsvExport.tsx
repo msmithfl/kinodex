@@ -1,26 +1,22 @@
 import { useState, useRef } from "react";
-import { useAuth } from "@clerk/clerk-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { movieKeys } from "../features/movies/api";
 import { FaDownload, FaUpload } from "react-icons/fa";
+import { useApi } from "../utils/api";
+import { useImportMovies, type ImportResult } from "../features/movies/api";
 
 function CsvExport() {
-  // Imports save outside the shared cache (this page isn't converted yet), so tell it what changed
-  const queryClient = useQueryClient();
-  const refreshMovies = () => queryClient.invalidateQueries({ queryKey: movieKeys.all });
-  const { getToken } = useAuth();
+  const api = useApi();
+  // Imports refresh every screen showing movies
+  const importMovies = useImportMovies();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ imported: number; skipped: number; errors: string[] } | null>(null);
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [importingLetterboxd, setImportingLetterboxd] = useState(false);
-  const [letterboxdResult, setLetterboxdResult] = useState<{ imported: number; skipped: number; errors: string[] } | null>(null);
+  const [letterboxdResult, setLetterboxdResult] = useState<ImportResult | null>(null);
   const letterboxdFileInputRef = useRef<HTMLInputElement>(null);
-
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5156";
 
   const handleExport = async () => {
     setLoading(true);
@@ -29,14 +25,7 @@ function CsvExport() {
     setImportResult(null);
 
     try {
-      const token = await getToken();
-      const response = await fetch(`${API_BASE}/api/movies/export/csv`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) throw new Error(`Export failed: ${response.statusText}`);
-
-      const blob = await response.blob();
+      const blob = await api.download("/movies/export/csv");
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -47,10 +36,17 @@ function CsvExport() {
       URL.revokeObjectURL(url);
       setSuccess("Export downloaded successfully!");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Export failed. Please try again.");
+      setError(err instanceof Error ? `Export failed: ${err.message}` : "Export failed. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  // "Imported 3 movies (from Letterboxd) · 2 skipped (already in collection)."
+  const describeImport = (result: ImportResult, fromWhere: string) => {
+    const parts = [`Imported ${result.imported} movie${result.imported !== 1 ? "s" : ""}${fromWhere}`];
+    if (result.skipped > 0) parts.push(`${result.skipped} skipped (already in collection)`);
+    return parts.join(" · ") + ".";
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,26 +59,11 @@ function CsvExport() {
     setImportResult(null);
 
     try {
-      const token = await getToken();
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch(`${API_BASE}/api/movies/import/csv`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error(`Import failed: ${response.statusText}`);
-
-      const result = await response.json();
-      refreshMovies();
+      const result = await importMovies.mutateAsync({ source: "csv", file });
       setImportResult(result);
-      const parts = [`Imported ${result.imported} movie${result.imported !== 1 ? "s" : ""}`];
-      if (result.skipped > 0) parts.push(`${result.skipped} skipped (already in collection)`);
-      setSuccess(parts.join(" · ") + ".");
+      setSuccess(describeImport(result, ""));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Import failed. Please try again.");
+      setError(err instanceof Error ? `Import failed: ${err.message}` : "Import failed. Please try again.");
     } finally {
       setImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -99,29 +80,11 @@ function CsvExport() {
     setLetterboxdResult(null);
 
     try {
-      const token = await getToken();
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch(`${API_BASE}/api/movies/import/letterboxd`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        throw new Error(body.error || `Import failed: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      refreshMovies();
+      const result = await importMovies.mutateAsync({ source: "letterboxd", file });
       setLetterboxdResult(result);
-      const parts = [`Imported ${result.imported} movie${result.imported !== 1 ? "s" : ""}  from Letterboxd`];
-      if (result.skipped > 0) parts.push(`${result.skipped} skipped (already in collection)`);
-      setSuccess(parts.join(" · ") + ".");
+      setSuccess(describeImport(result, " from Letterboxd"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Import failed. Please try again.");
+      setError(err instanceof Error ? `Import failed: ${err.message}` : "Import failed. Please try again.");
     } finally {
       setImportingLetterboxd(false);
       if (letterboxdFileInputRef.current) letterboxdFileInputRef.current.value = "";

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSettings } from "../settings/useSettings";
-import type { UserSettings } from "../settings/settingsContext";
+import type { UserSettings } from "../settings/settings";
 
 interface ToggleRowProps {
   label: string;

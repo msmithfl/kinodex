@@ -87,6 +87,25 @@ export function useDeleteMovie() {
   });
 }
 
+// What an import reports back
+export interface ImportResult {
+  imported: number;
+  skipped: number; // Already in the collection
+  errors: string[];
+}
+
+// Imports movies from a file: Kinodex's own CSV export, or a Letterboxd export. Every screen
+// showing movies refreshes afterwards.
+export function useImportMovies() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ source, file }: { source: "csv" | "letterboxd"; file: File }) =>
+      api.upload<ImportResult>(`/movies/import/${source}`, file),
+    onSuccess: () => refreshMovies(queryClient),
+  });
+}
+
 // Deletes several movies at once (bulk delete); refreshes once at the end
 export function useDeleteMovies() {
   const api = useApi();

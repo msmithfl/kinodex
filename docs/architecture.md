@@ -43,7 +43,7 @@ Kinodex/
       pages/            one component per route (plus drawer contents)
       components/       shared UI, modals, forms, cards, Drawer
       utils/            helpers and small hooks
-      settings/         per-user settings context
+      settings/         useSettings() hook (shared cache) and the settings type/defaults
       features/         per feature: data hooks (api.ts) and the feature's own components
         movies/           MovieTable, MovieDrawerDetails, MoviePageDetails, form/ (Details,
                           Physical, Images tabs)
@@ -62,8 +62,9 @@ Kinodex/
 ### Shell and providers
 
 `main.tsx` → `ClerkProvider` → `App`. In `App.tsx`, every route except sign-in/sign-up is
-wrapped in `ProtectedRoute` (redirects signed-out users) → `SettingsProvider` (loads
-`/api/settings`) → layout: `Header`, `Sidebar` (desktop), the page, `BottomNav` (mobile).
+wrapped in `ProtectedRoute` (redirects signed-out users) → layout: `Header`, `Sidebar` (desktop), the
+page, `BottomNav` (mobile). `main.tsx` also wraps everything in the React Query provider and
+`ClearCacheOnUserChange`. Per-user settings come from the `useSettings()` hook (shared cache).
 
 ### Navigation
 
@@ -150,7 +151,7 @@ React Query cache: `utils/api.ts` (one client: address + sign-in token + `ApiErr
 affected data as out of date and every screen showing it refreshes. The cache empties when the
 signed-in user changes (`components/ClearCacheOnUserChange.tsx`).
 
-**Not yet converted (shelf pages, CSV, Match Movies, settings, lending):** each page/modal fetches
+**Not yet converted (Match Movies, and the parked shelf and lending pages):** each page fetches
 what it needs itself (the ones that change movies or shelves then tell the cache):
 `useAuth().getToken()` → `fetch(API_BASE + path)` with a Bearer header → local `useState`. So:
 
@@ -184,7 +185,7 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 | `/api/collections` | list, create, update (name/director/cover/backdrop), delete | Owned; rename/delete also update movies' `collections` lists | Collections |
 | `/api/collections/{id}/items`, `/api/collections/items/all` | checklist items: list, add, delete; all items for rings | Owned | Collections |
 | `/api/shelfsections` | list, create, reorder, rename, delete | Owned (auth set per route); rename/delete update movies | Movie forms, shelf pages |
-| `/api/settings` | get, update | Owned | `SettingsProvider` |
+| `/api/settings` | get, update | Owned | `useSettings()` hook |
 | `/api/upc/lookup/{upc}` | product title + images | Shared cache (`UpcLookups`), not per user | Product image picker |
 | `/api/tmdb/*` | unmatched, match, assign, fill-images, search | Owned (acts on the caller's movies) | `MatchMovies` |
 | `/api/customers`, `/api/checkouts` | CRUD, returns, overdue | Owned (checkouts via their movie's owner) | Parked lending pages |
@@ -246,22 +247,25 @@ dotnet test backend/Kinodex.Api.Tests -c Release
 
 - **Core (being stabilized):** movies, TV shows, collections (+ checklists, covers, backdrops),
   genres, search, dashboard, stats, settings, CSV import/export, drawers, product image lookup.
-- **Present but tucked away:** shelf sections (via movie links), My Shelf, Match Movies.
-- **Parked (future features):** lending (customers/checkouts pages + API), a lending ledger and
-  watch log in the movie drawer (not built; tabs hidden).
+- **Core shelf tracking:** each movie's shelf section and shelf number (forms, drawer, filters,
+  bulk edit), and creating a section from the movie form.
+- **Present but tucked away:** Match Movies.
+- **Parked (future features):** the shelf pages (`ShelfSectionsView`, `ShelfSectionDetail`,
+  `MyShelf`: browsing by shelf, reordering/renaming/deleting sections), lending
+  (customers/checkouts pages + API), a lending ledger and watch log in the movie drawer (not
+  built; tabs hidden).
 
 ## Known loose ends
 
 Pointers for cleanup, roughly in the order they'd come up:
 
-- Shelf, CSV, Match Movies, settings and lending pages still load data themselves
-  (data-layer design doc, phase 4).
+- Match Movies and the parked shelf/lending pages still load data themselves (data-layer
+  design doc, phase 4). `Svix` (Clerk webhooks) has a 2.x major version available; 1.86 isn't
+  flagged, so it hasn't been upgraded.
 - Largest remaining files are the parked/unconverted pages (`CheckoutsView` ~590, `Stats` ~420,
   `MatchMovies`, shelf pages); the core pages are now 350–490 lines.
 - No frontend tests; backend tests cover the API (see Tests).
 - `types/index.ts` is hand-maintained to match the API.
 - TMDB token is built into the frontend bundle.
-- `Microsoft.OpenApi` 2.0.0 (pulled in by `Microsoft.AspNetCore.OpenApi`) has a known high-severity
-  advisory (build warning NU1903); update when a fixed version is available.
 - Lint: no errors; some `react-hooks/exhaustive-deps` warnings on the per-page fetch effects
   (go away with the data-layer change).
