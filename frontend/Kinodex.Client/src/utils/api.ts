@@ -31,17 +31,25 @@ async function readErrorMessage(response: Response): Promise<string> {
 }
 
 export function createApi(getToken: () => Promise<string | null>) {
-  async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  // Sends a request and returns the response, throwing ApiError if it failed. A FormData body
+  // (file uploads) is sent as-is; anything else is sent as JSON.
+  async function send(method: string, path: string, body?: unknown): Promise<Response> {
     const token = await getToken();
+    const isForm = body instanceof FormData;
     const response = await fetch(`${API_BASE}/api${path}`, {
       method,
       headers: {
-        ...(body !== undefined && { "Content-Type": "application/json" }),
+        ...(body !== undefined && !isForm && { "Content-Type": "application/json" }),
         ...(token && { Authorization: `Bearer ${token}` }),
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
     });
     if (!response.ok) throw new ApiError(response.status, await readErrorMessage(response));
+    return response;
+  }
+
+  async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+    const response = await send(method, path, body);
     if (response.status === 204) return undefined as T;
     const text = await response.text();
     return (text ? JSON.parse(text) : undefined) as T;
@@ -52,6 +60,14 @@ export function createApi(getToken: () => Promise<string | null>) {
     post: <T>(path: string, body?: unknown) => request<T>("POST", path, body),
     put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
     delete: (path: string) => request<void>("DELETE", path),
+    // A file the server sends back (e.g. a CSV export)
+    download: async (path: string) => (await send("GET", path)).blob(),
+    // Sends a file as a form upload (field name "file") and returns the JSON reply
+    upload: <T>(path: string, file: File) => {
+      const form = new FormData();
+      form.append("file", file);
+      return request<T>("POST", path, form);
+    },
   };
 }
 

@@ -20,7 +20,6 @@ import MyShelf from "./pages/MyShelf";
 import Stats from "./pages/Stats";
 import SearchPage from "./pages/SearchPage";
 import Settings from "./pages/Settings";
-import { SettingsProvider } from "./settings/SettingsProvider";
 import CsvExport from "./pages/CsvExport";
 import SignUpPage from "./pages/SignUpPage";
 import SignInPage from "./pages/SignInPage";
@@ -43,8 +42,6 @@ function App() {
         path="*"
         element={
           <ProtectedRoute>
-            {/* The signed-in user's settings, available to every page */}
-            <SettingsProvider>
             <div className="min-h-screen bg-gray-900 text-white flex flex-col">
               <Header />
               <div className="flex flex-1">
@@ -77,7 +74,6 @@ function App() {
               </div>
               <BottomNav />
             </div>
-            </SettingsProvider>
           </ProtectedRoute>
         }
       />
