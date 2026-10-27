@@ -82,14 +82,14 @@ function Dashboard() {
       key: `movie-${m.id}`,
       title: m.title,
       createdAt: m.createdAt,
-      to: `/movie/${m.id}`,
+      to: `/library?movie=${m.id}`, // The movie list, with this movie open in its drawer
       isTv: false,
     })),
     ...shows.map((s) => ({
       key: `tv-${s.id}`,
       title: s.title,
       createdAt: s.createdAt,
-      to: `/tv-shows/${s.id}`,
+      to: `/tv-shows?show=${s.id}`, // The TV list, with this show open in its drawer
       isTv: true,
     })),
   ]

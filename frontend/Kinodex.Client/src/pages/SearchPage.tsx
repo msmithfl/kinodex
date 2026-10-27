@@ -35,7 +35,7 @@ const movieItem = (m: Movie): SearchItem => ({
   subtitle: [m.year || null, m.formats.length > 0 ? [...m.formats].sort().join(", ") : null]
     .filter(Boolean)
     .join(" · "),
-  to: `/movie/${m.id}`,
+  to: `/library?movie=${m.id}`, // The movie list, with this movie open in its drawer
 });
 
 const tvItem = (s: TvShow): SearchItem => {
@@ -50,7 +50,7 @@ const tvItem = (s: TvShow): SearchItem => {
     subtitle: [s.year || null, seasons === "-" ? null : seasons]
       .filter(Boolean)
       .join(" · "),
-    to: `/tv-shows/${s.id}`,
+    to: `/tv-shows?show=${s.id}`, // The TV list, with this show open in its drawer
   };
 };
 
