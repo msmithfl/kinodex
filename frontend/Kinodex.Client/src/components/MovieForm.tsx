@@ -165,6 +165,11 @@ function MovieForm({
       setActiveTab("physical");
       return;
     }
+    if (!formData.purchasedAt) {
+      setValidationError("Purchase Date is required");
+      setActiveTab("physical");
+      return;
+    }
 
     await onSubmit(e);
   };

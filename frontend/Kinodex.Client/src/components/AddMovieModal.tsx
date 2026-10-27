@@ -12,6 +12,7 @@ import { ApiError } from "../utils/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";
 import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
 import { useBackdropClose } from "../utils/useBackdropClose";
+import { todayDate } from "../utils/dateUtils";
 
 interface AddMovieModalProps {
   onClose: () => void;
@@ -37,6 +38,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     collections: [],
     condition: "Like New",
     purchasePrice: 0,
+    purchasedAt: todayDate(),
     hasWatched: false,
     rating: 0,
     review: "",

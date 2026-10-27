@@ -4,6 +4,7 @@ import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import { FaBarcode } from "react-icons/fa6";
 import { FormatIcon } from "../../utils/formatIcon";
 import { openEbaySoldListings, useCopyToClipboard } from "../../utils/upc";
+import { formatPurchaseDate } from "../../utils/dateUtils";
 import type { Movie } from "../../types";
 
 interface MoviePageDetailsProps {
@@ -50,6 +51,16 @@ function MoviePageDetails({ movie, onEnlargeProductImage, actionButtons }: Movie
                 <p className="text-base font-mono text-white">
                   {movie.purchasePrice > 0 ? (
                     `$${movie.purchasePrice.toFixed(2)}`
+                  ) : (
+                    <span className="text-gray-500">Not set</span>
+                  )}
+                </p>
+              </div>
+              <div className="mb-4">
+                <h3 className="text-sm font-medium text-gray-400 mb-2">Purchase Date</h3>
+                <p className="text-base text-white">
+                  {movie.purchasedAt ? (
+                    formatPurchaseDate(movie.purchasedAt)
                   ) : (
                     <span className="text-gray-500">Not set</span>
                   )}

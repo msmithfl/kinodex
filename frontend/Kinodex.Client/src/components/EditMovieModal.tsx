@@ -24,6 +24,7 @@ const EMPTY_MOVIE: Movie = {
   collections: [],
   condition: "Like New",
   purchasePrice: 0,
+  purchasedAt: "",
   hasWatched: false,
   rating: 0,
   review: "",

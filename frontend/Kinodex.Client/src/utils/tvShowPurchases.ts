@@ -1,23 +1,5 @@
 import type { TvShow, TvShowPurchase } from "../types";
-
-const pad = (n: number) => String(n).padStart(2, "0");
-
-// Today's calendar date as YYYY-MM-DD in the viewer's own day (not UTC)
-export const todayDate = (): string => {
-  const now = new Date();
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-};
-
-// "2026-06-08" -> "Jun 8, 2026", built from the date's own parts so no time zone can shift it
-export const formatPurchaseDate = (date: string): string => {
-  const [year, month, day] = date.split("-").map(Number);
-  if (!year || !month || !day) return date;
-  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
+import { todayDate } from "./dateUtils";
 
 export const newPurchase = (
   seasons: number[] = [],

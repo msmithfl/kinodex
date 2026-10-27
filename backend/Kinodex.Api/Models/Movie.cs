@@ -10,6 +10,9 @@ public class Movie
     public List<string> Collections { get; set; } = new List<string>();
     public required string Condition { get; set; }
     public float PurchasePrice { get; set; }
+    // The day it was bought, which spending is counted by; it can be earlier than CreatedAt
+    // (logging movies bought before they were added). Today when not given.
+    public DateOnly PurchasedAt { get; set; }
     public bool HasWatched { get; set; } = false;
     public float Rating { get; set; }
     public string Review { get; set; } = string.Empty;
