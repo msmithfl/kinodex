@@ -69,10 +69,11 @@ function SortDropdown({
       <button
         onClick={() => setIsOpen(!isOpen)}
         title={`Sorted by ${currentLabel}, ${sortDirection === "asc" ? "ascending" : "descending"}`}
-        className="flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-600 rounded-md text-white hover:border-gray-500 transition-colors cursor-pointer"
+        className="flex items-center gap-2 px-2 py-1.5 bg-gray-800 border border-gray-600 rounded-md text-white hover:border-gray-500 transition-colors cursor-pointer"
       >
         <ButtonIcon className="w-4 h-4 shrink-0" />
-        <span className="whitespace-nowrap">{currentLabel}</span>
+        {/* Line height matches the icon so the button is the filter button's height */}
+        <span className="whitespace-nowrap text-sm leading-4">{currentLabel}</span>
       </button>
 
       {isOpen && (

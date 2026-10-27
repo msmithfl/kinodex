@@ -32,6 +32,9 @@ import { applyFilters } from "../utils/applyFilters";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { isMobile } from "../utils/isMobile";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
+import Pagination from "../components/Pagination";
+
+const PAGE_SIZE = 100;
 
 function MovieList() {
   // Shared with every other screen showing movies; saves anywhere refresh it
@@ -139,6 +142,21 @@ function MovieList() {
       return matchesTitle || matchesUpc;
     },
   );
+
+  // One page of the filtered movies at a time. Changing what's shown (search, filters, sort,
+  // view) goes back to page 1.
+  const pageSize = PAGE_SIZE;
+  const pageCount = Math.max(1, Math.ceil(filteredMovies.length / pageSize));
+  const [requestedPage, setRequestedPage] = useState(1);
+  const listKey = JSON.stringify([searchQuery, selectedFilters, sortBy, sortDirection, viewMode]);
+  const [pagedListKey, setPagedListKey] = useState(listKey);
+  if (listKey !== pagedListKey) {
+    setPagedListKey(listKey);
+    setRequestedPage(1);
+  }
+  // Deleting movies can leave fewer pages than the one being shown
+  const page = Math.min(requestedPage, pageCount);
+  const pageMovies = filteredMovies.slice((page - 1) * pageSize, page * pageSize);
 
   const handleColumnClick = (sortKey: string) => {
     const column = sortKey as SortOption;
@@ -420,13 +438,14 @@ function MovieList() {
           {movies.length === 0 ? (
             <EmptyState message="No movies in your collection yet." />
           ) : viewMode === "poster" ? (
-            // Poster view: the same filtered, searched and sorted movies as the table
-            <div className="h-full overflow-y-auto px-6 md:px-12 pb-8">
+            // Poster view: the same filtered, searched and sorted movies as the table.
+            // Keyed by page so a new page starts scrolled to the top.
+            <div key={page} className="h-full overflow-y-auto px-6 md:px-12 pb-8">
               {filteredMovies.length === 0 ? (
                 <EmptyState message="No movies match your search or filters." />
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8">
-                  {filteredMovies.map((movie) => (
+                  {pageMovies.map((movie) => (
                     <MoviePosterCard
                       key={movie.id}
                       movie={movie}
@@ -439,7 +458,8 @@ function MovieList() {
             </div>
           ) : (
             <MovieTable
-              movies={filteredMovies}
+              key={page} // A new page starts scrolled to the top
+              movies={pageMovies}
               visibleColumns={visibleColumns}
               onToggleColumn={toggleColumn}
               showColumnMenu={showColumnMenu}
@@ -452,6 +472,17 @@ function MovieList() {
               onOpen={openMovie}
             />
           )}
+        </div>
+
+        {/* Stays below the list rather than scrolling with it; hidden when it's all one page */}
+        <div className="shrink-0">
+          <Pagination
+            page={page}
+            pageCount={pageCount}
+            pageSize={pageSize}
+            total={filteredMovies.length}
+            onPageChange={setRequestedPage}
+          />
         </div>
       </div>
 
