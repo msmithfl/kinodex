@@ -38,6 +38,7 @@ const EMPTY_MOVIE: Movie = {
   shelfNumber: 1,
   shelfSection: "",
   isOnPlex: false,
+  isGift: false,
 };
 
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);

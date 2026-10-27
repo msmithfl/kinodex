@@ -47,7 +47,7 @@ Kinodex/
       settings/         useSettings() hook (shared cache) and the settings type/defaults
       features/         per feature: data hooks (api.ts) and the feature's own components
         movies/           MovieTable, MovieDrawerDetails, MoviePageDetails, form/ (Details,
-                          Physical, Images tabs)
+                          Physical, Location, Images tabs)
         tvShows/          TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images tabs)
         collections/      CollectionChecklist
         shelfSections/    (hooks only)
@@ -122,7 +122,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 | Component | Used for |
 |---|---|
 | `AddItemModal` | Chooser: add movie or TV show |
-| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; each tab is a component in `features/movies/form/` (Details, Physical, Images: TMDB poster/backdrop pickers, product image lookup) |
+| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; each tab is a component in `features/movies/form/` (Details; Physical: UPC, formats, price, purchase date, condition, gift; Location: shelf, HDD, streaming; Images: TMDB poster/backdrop pickers, product image lookup) |
 | `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit. Tabs in `features/tvShows/form/` (Details, Purchases using `TvShowPurchaseEditor`, Images) |
 | `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop); saves via the collections hooks |
 | `BulkEditModal` | Bulk edit from the movie table |
@@ -219,7 +219,7 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 
 ```
 User (Clerk id) ─── owns (by UserId string) ──┬─ Movie ─────────── Checkout ─── Customer   (lending, parked)
-                                               ├─ TvShow ── TvShowPurchase (seasons, price, date, UPC, formats)
+                                               ├─ TvShow ── TvShowPurchase (seasons, price, date, gift, UPC, formats)
                                                ├─ Collection ── CollectionListItem (checklist)
                                                ├─ ShelfSection
                                                └─ UserSettings
@@ -288,6 +288,12 @@ Pointers for cleanup, roughly in the order they'd come up:
   flagged, so it hasn't been upgraded.
 - Largest remaining files are the parked/unconverted pages (`CheckoutsView` ~590, `Stats` ~420,
   `MatchMovies`, shelf pages); the core pages are now 350–490 lines.
+- **Full movie and TV show pages (`/movie/:id`, `/tv-shows/:id`) are to be retired**; the drawer
+  becomes the only detail view. New detail fields go in the drawer only (the movie page doesn't
+  show Gift). Still pointing at the full pages: the drawer's own "full page" link, ctrl/cmd-click
+  on list links (`MovieTable`, `SimpleMovieTable`, `MovieCardPoster`, TV table), and the parked
+  shelf/lending pages (`ShelfSectionDetail`, `MyShelf`, `CheckoutsView`). Old `/movie/12` links
+  could redirect to `/library?movie=12`.
 - No frontend tests; backend tests cover the API (see Tests).
 - TMDB token is built into the frontend bundle.
 - Lint: no errors; some `react-hooks/exhaustive-deps` warnings on the per-page fetch effects

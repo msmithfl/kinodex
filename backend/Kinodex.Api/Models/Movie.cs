@@ -26,6 +26,7 @@ public class Movie
     public int ShelfNumber { get; set; }
     public string ShelfSection { get; set; } = string.Empty;
     public bool IsOnPlex { get; set; } = false;
+    public bool IsGift { get; set; } = false; // Received as a gift rather than bought
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     // Navigation property

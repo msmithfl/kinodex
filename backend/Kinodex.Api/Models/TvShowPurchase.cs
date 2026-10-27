@@ -14,4 +14,5 @@ public class TvShowPurchase
     public List<string> Formats { get; set; } = new List<string>();
     public string Condition { get; set; } = string.Empty;
     public DateOnly PurchasedAt { get; set; }
+    public bool IsGift { get; set; } = false; // Received as a gift rather than bought (e.g. one season)
 }

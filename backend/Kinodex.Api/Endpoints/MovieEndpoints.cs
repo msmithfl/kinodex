@@ -83,6 +83,7 @@ public static class MovieEndpoints
             movie.ShelfNumber = updatedMovie.ShelfNumber;
             movie.ShelfSection = updatedMovie.ShelfSection;
             movie.IsOnPlex = updatedMovie.IsOnPlex;
+            movie.IsGift = updatedMovie.IsGift;
 
             await db.SaveChangesAsync();
             return Results.Ok(movie);
@@ -110,7 +111,7 @@ public static class MovieEndpoints
                 .ToListAsync();
 
             var csv = new StringBuilder();
-            csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added,Purchase Date");
+            csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added,Purchase Date,Gift");
 
             foreach (var movie in movies)
             {
@@ -118,7 +119,7 @@ public static class MovieEndpoints
                 var genres = string.Join("|", movie.Genres);
                 var collections = string.Join("|", movie.Collections);
                 var title = movie.Title.Replace("\"", "\"\"");
-                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",\"{movie.Condition}\",{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},\"{movie.ShelfSection}\",{movie.HDDriveNumber},{movie.TmdbId},\"{movie.PosterPath}\",\"{movie.BackdropPath}\",\"{movie.ProductPosterPath}\",{movie.CreatedAt:yyyy-MM-dd},{movie.PurchasedAt:yyyy-MM-dd}");
+                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",\"{movie.Condition}\",{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},\"{movie.ShelfSection}\",{movie.HDDriveNumber},{movie.TmdbId},\"{movie.PosterPath}\",\"{movie.BackdropPath}\",\"{movie.ProductPosterPath}\",{movie.CreatedAt:yyyy-MM-dd},{movie.PurchasedAt:yyyy-MM-dd},{movie.IsGift}");
             }
 
             var bytes = Encoding.UTF8.GetBytes(csv.ToString());
@@ -311,6 +312,8 @@ public static class MovieEndpoints
                         ProductPosterPath = fields[17],
                         CreatedAt = createdAt,
                         PurchasedAt = purchasedAt,
+                        // Older exports have no Gift column
+                        IsGift = fields.Length > 20 && bool.TryParse(fields[20], out var gift) && gift,
                     };
 
                     db.Movies.Add(movie);

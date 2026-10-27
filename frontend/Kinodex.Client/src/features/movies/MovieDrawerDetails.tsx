@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LuEye, LuEyeClosed } from "react-icons/lu";
+import { LuEye, LuEyeClosed, LuGift } from "react-icons/lu";
 import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import { FaBarcode } from "react-icons/fa6";
 import { FormatIcon } from "../../utils/formatIcon";
@@ -54,6 +54,12 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
         </Field>
         <Field label="Purchased">
           {movie.purchasedAt ? formatPurchaseDate(movie.purchasedAt) : notSet}
+        </Field>
+        <Field label="Gift">
+          <span className="flex items-center gap-1.5">
+            <LuGift className={`w-4 h-4 ${movie.isGift ? "" : "text-gray-500"}`} />
+            {movie.isGift ? "Yes" : "No"}
+          </span>
         </Field>
         <Field label="Watched">
           <span className="flex items-center gap-1.5">

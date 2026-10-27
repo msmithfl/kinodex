@@ -52,6 +52,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     shelfNumber: 1,
     shelfSection: "",
     isOnPlex: false,
+    isGift: false,
   });
   const collections = [...collectionList].sort(byName);
   const shelfSections = [...shelfSectionList].sort(byName);
