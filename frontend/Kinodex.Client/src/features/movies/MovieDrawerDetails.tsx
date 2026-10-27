@@ -4,6 +4,7 @@ import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import { FaBarcode } from "react-icons/fa6";
 import { FormatIcon } from "../../utils/formatIcon";
 import { openEbaySoldListings, useCopyToClipboard } from "../../utils/upc";
+import { formatPurchaseDate } from "../../utils/dateUtils";
 import type { Movie } from "../../types";
 
 interface MovieDrawerDetailsProps {
@@ -50,6 +51,9 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
           ) : (
             notSet
           )}
+        </Field>
+        <Field label="Purchased">
+          {movie.purchasedAt ? formatPurchaseDate(movie.purchasedAt) : notSet}
         </Field>
         <Field label="Watched">
           <span className="flex items-center gap-1.5">

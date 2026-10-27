@@ -1333,6 +1333,7 @@
           "formats",
           "collections",
           "purchasePrice",
+          "purchasedAt",
           "hasWatched",
           "rating",
           "review",
@@ -1381,6 +1382,10 @@
           "purchasePrice": {
             "type": "number",
             "format": "float"
+          },
+          "purchasedAt": {
+            "type": "string",
+            "format": "date"
           },
           "hasWatched": {
             "type": "boolean"

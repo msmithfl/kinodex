@@ -2,7 +2,8 @@ import { useState } from "react";
 import { FaBarcode } from "react-icons/fa6";
 import { FormatIcon } from "../../utils/formatIcon";
 import { formatSeasons } from "../../utils/formatSeasons";
-import { formatPurchaseDate, purchaseKey, totalPaid } from "../../utils/tvShowPurchases";
+import { purchaseKey, totalPaid } from "../../utils/tvShowPurchases";
+import { formatPurchaseDate } from "../../utils/dateUtils";
 import { openEbaySoldListings } from "../../utils/upc";
 import type { TvShow } from "../../types";
 

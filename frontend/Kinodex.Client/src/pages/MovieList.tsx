@@ -104,6 +104,7 @@ function MovieList() {
     shelfSection: "",
     hdDriveNumber: "",
     purchasePrice: "",
+    purchasedAt: "",
     isOnPlex: "",
     hasWatched: "",
     condition: "",
@@ -244,6 +245,9 @@ function MovieList() {
       if (bulkEditData.purchasePrice !== "") {
         updates.purchasePrice = parseFloat(bulkEditData.purchasePrice);
       }
+      if (bulkEditData.purchasedAt !== "") {
+        updates.purchasedAt = bulkEditData.purchasedAt;
+      }
       if (bulkEditData.formats !== "") {
         updates.formats = [bulkEditData.formats];
       }
@@ -262,6 +266,7 @@ function MovieList() {
         shelfSection: "",
         hdDriveNumber: "",
         purchasePrice: "",
+        purchasedAt: "",
         isOnPlex: "",
         hasWatched: "",
         condition: "",

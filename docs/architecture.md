@@ -167,6 +167,12 @@ The remaining phases are in [design/frontend-data-layer.md](design/frontend-data
 **Computed in the browser, not the API:** stats, dashboard spending, genre lists (from each
 movie's `genres`), collection completion rings and checklist ownership, filters and sorting.
 
+**Spending is counted by purchase date** (`utils/spending.ts`): a movie's `purchasedAt` and each
+TV purchase's `purchasedAt`, both plain YYYY-MM-DD dates. They default to the day an item is
+added (movies and TV purchases that existed before got the UTC day they were added) and can be
+set earlier for things bought before they were logged: in the movie form's Physical tab, movie
+bulk edit, and each TV purchase. `createdAt` stays "date added" (Recently Added, the Date sort).
+
 ---
 
 ## Backend
@@ -213,7 +219,7 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 
 ```
 User (Clerk id) ─── owns (by UserId string) ──┬─ Movie ─────────── Checkout ─── Customer   (lending, parked)
-                                               ├─ TvShow ── TvShowPurchase (seasons, price, UPC, formats)
+                                               ├─ TvShow ── TvShowPurchase (seasons, price, date, UPC, formats)
                                                ├─ Collection ── CollectionListItem (checklist)
                                                ├─ ShelfSection
                                                └─ UserSettings

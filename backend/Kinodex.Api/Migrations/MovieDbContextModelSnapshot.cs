@@ -18,7 +18,7 @@ namespace Kinodex.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -209,6 +209,9 @@ namespace Kinodex.Api.Migrations
 
                     b.Property<float>("PurchasePrice")
                         .HasColumnType("real");
+
+                    b.Property<DateOnly>("PurchasedAt")
+                        .HasColumnType("date");
 
                     b.Property<float>("Rating")
                         .HasColumnType("real");

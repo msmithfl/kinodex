@@ -94,7 +94,7 @@ function MoviePhysicalTab({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {/* Purchase Price */}
         <div>
           <label htmlFor="purchasePrice" className={labelClass}>
@@ -110,8 +110,22 @@ function MoviePhysicalTab({
           />
         </div>
 
-        {/* Condition */}
+        {/* Purchase Date: when it was bought, which can be before it was added */}
         <div>
+          <label htmlFor="purchasedAt" className={labelClass}>
+            Purchased
+          </label>
+          <input
+            type="date"
+            id="purchasedAt"
+            value={formData.purchasedAt}
+            onChange={(e) => setFormData({ ...formData, purchasedAt: e.target.value })}
+            className={inputClass + " scheme-dark"}
+          />
+        </div>
+
+        {/* Condition */}
+        <div className="col-span-2 sm:col-span-1">
           <label htmlFor="condition" className={labelClass}>
             Condition
           </label>

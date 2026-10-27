@@ -82,6 +82,57 @@ public class MovieTests(KinodexApiFactory api)
     }
 
     [Fact]
+    public async Task Purchase_date_defaults_to_today_and_can_be_set_and_changed()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var today = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
+
+        // Not given: today
+        var id = await owner.CreateMovieAsync();
+        Assert.Equal(today, (await owner.GetJsonAsync($"/api/movies/{id}")).GetProperty("purchasedAt").GetString());
+
+        // Given on create (a movie bought before it was logged)
+        var created = await owner.PostAsJsonAsync("/api/movies", TestData.Movie("Old Purchase", purchasedAt: "2019-05-04"));
+        var oldId = (await created.ReadJsonAsync()).GetProperty("id").GetInt32();
+        Assert.Equal("2019-05-04", (await owner.GetJsonAsync($"/api/movies/{oldId}")).GetProperty("purchasedAt").GetString());
+
+        // Changed on edit
+        await owner.PutAsJsonAsync($"/api/movies/{oldId}", TestData.Movie("Old Purchase", purchasedAt: "2020-12-25"));
+        Assert.Equal("2020-12-25", (await owner.GetJsonAsync($"/api/movies/{oldId}")).GetProperty("purchasedAt").GetString());
+
+        // An edit that doesn't include one leaves it alone
+        await owner.PutAsJsonAsync($"/api/movies/{oldId}", TestData.Movie("Renamed"));
+        Assert.Equal("2020-12-25", (await owner.GetJsonAsync($"/api/movies/{oldId}")).GetProperty("purchasedAt").GetString());
+    }
+
+    [Fact]
+    public async Task Csv_import_keeps_purchase_dates_and_falls_back_to_date_added_for_older_files()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        const string header = "Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added";
+        var csv =
+            header + ",Purchase Date\n" +
+            "\"With Date\",,2001,\"\",\"\",\"\",\"Good\",5,0,False,False,0,\"\",0,,\"\",\"\",\"\",2024-03-10,2015-07-01\n";
+        var olderCsv =
+            header + "\n" +
+            "\"Without Date\",,2002,\"\",\"\",\"\",\"Good\",5,0,False,False,0,\"\",0,,\"\",\"\",\"\",2024-03-10\n";
+
+        foreach (var file in new[] { csv, olderCsv })
+        {
+            using var form = new MultipartFormDataContent { { new StringContent(file), "file", "movies.csv" } };
+            (await owner.PostAsync("/api/movies/import/csv", form)).EnsureSuccessStatusCode();
+        }
+
+        var movies = (await owner.GetJsonAsync("/api/movies")).EnumerateArray()
+            .ToDictionary(m => m.GetProperty("title").GetString()!, m => m.GetProperty("purchasedAt").GetString());
+        Assert.Equal("2015-07-01", movies["With Date"]);
+        Assert.Equal("2024-03-10", movies["Without Date"]);
+
+        var exported = await (await owner.GetAsync("/api/movies/export/csv")).Content.ReadAsStringAsync();
+        Assert.Contains(",2024-03-10,2015-07-01", exported);
+    }
+
+    [Fact]
     public async Task Csv_export_contains_only_the_users_own_movies()
     {
         var alice = api.ClientFor(KinodexApiFactory.NewUserId());

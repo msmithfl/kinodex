@@ -1542,6 +1542,8 @@ export interface components {
             condition: string;
             /** Format: float */
             purchasePrice: number;
+            /** Format: date */
+            purchasedAt: string;
             hasWatched: boolean;
             /** Format: float */
             rating: number;

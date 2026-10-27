@@ -41,6 +41,7 @@ public static class MovieEndpoints
             {
                 movie.Id = 0;
                 movie.UserId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                if (movie.PurchasedAt == default) movie.PurchasedAt = DateOnly.FromDateTime(DateTime.UtcNow);
                 db.Movies.Add(movie);
                 await db.SaveChangesAsync();
                 Console.WriteLine($"Created movie ID={movie.Id}, Title={movie.Title}, UserId={movie.UserId}");
@@ -67,6 +68,8 @@ public static class MovieEndpoints
             movie.Collections = updatedMovie.Collections;
             movie.Condition = updatedMovie.Condition;
             movie.PurchasePrice = updatedMovie.PurchasePrice;
+            // Left as it was when the request doesn't include one
+            if (updatedMovie.PurchasedAt != default) movie.PurchasedAt = updatedMovie.PurchasedAt;
             movie.HasWatched = updatedMovie.HasWatched;
             movie.Rating = updatedMovie.Rating;
             movie.Review = updatedMovie.Review;
@@ -107,7 +110,7 @@ public static class MovieEndpoints
                 .ToListAsync();
 
             var csv = new StringBuilder();
-            csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added");
+            csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added,Purchase Date");
 
             foreach (var movie in movies)
             {
@@ -115,7 +118,7 @@ public static class MovieEndpoints
                 var genres = string.Join("|", movie.Genres);
                 var collections = string.Join("|", movie.Collections);
                 var title = movie.Title.Replace("\"", "\"\"");
-                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",\"{movie.Condition}\",{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},\"{movie.ShelfSection}\",{movie.HDDriveNumber},{movie.TmdbId},\"{movie.PosterPath}\",\"{movie.BackdropPath}\",\"{movie.ProductPosterPath}\",{movie.CreatedAt:yyyy-MM-dd}");
+                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",\"{movie.Condition}\",{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},\"{movie.ShelfSection}\",{movie.HDDriveNumber},{movie.TmdbId},\"{movie.PosterPath}\",\"{movie.BackdropPath}\",\"{movie.ProductPosterPath}\",{movie.CreatedAt:yyyy-MM-dd},{movie.PurchasedAt:yyyy-MM-dd}");
             }
 
             var bytes = Encoding.UTF8.GetBytes(csv.ToString());
@@ -214,6 +217,7 @@ public static class MovieEndpoints
                         ShelfSection = "",
                         IsOnPlex = false,
                         CreatedAt = DateTime.UtcNow,
+                        PurchasedAt = DateOnly.FromDateTime(DateTime.UtcNow),
                     };
 
                     db.Movies.Add(movie);
@@ -276,6 +280,14 @@ public static class MovieEndpoints
                         continue;
                     }
 
+                    var createdAt = DateTime.TryParse(fields[18], out var dt) ? dt.ToUniversalTime() : DateTime.UtcNow;
+                    // Exports from before the purchase date existed don't have the column; use
+                    // the day the movie was added, as existing movies got
+                    var purchasedAt = fields.Length > 19 &&
+                        DateOnly.TryParseExact(fields[19], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var pd)
+                        ? pd
+                        : DateOnly.FromDateTime(createdAt);
+
                     var movie = new Movie
                     {
                         UserId = userId,
@@ -297,7 +309,8 @@ public static class MovieEndpoints
                         PosterPath = fields[15],
                         BackdropPath = fields[16],
                         ProductPosterPath = fields[17],
-                        CreatedAt = DateTime.TryParse(fields[18], out var dt) ? dt.ToUniversalTime() : DateTime.UtcNow,
+                        CreatedAt = createdAt,
+                        PurchasedAt = purchasedAt,
                     };
 
                     db.Movies.Add(movie);
