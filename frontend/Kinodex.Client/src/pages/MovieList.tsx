@@ -342,31 +342,8 @@ function MovieList() {
         {/* Fixed header section */}
         <div className="shrink-0 mx-6 mt-4 md:mx-12">
           {movies.length > 0 && (
-            <div className="mb-4 space-y-4">
-              {/* Search and scan: desktop only; on mobile the bottom bar's Search page and Scan cover these */}
-              <div className="hidden md:flex gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    ref={searchInputRef}
-                    placeholder="Search by title or UPC..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    className="w-full px-4 py-3 pl-10 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                  />
-                  <FaMagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleScanClick}
-                  className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer flex items-center justify-center"
-                  title="Scan barcode"
-                >
-                  <IoCameraOutline className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Desktop Sort Controls - Conditionally Visible */}
+            <div className="mb-4">
+              {/* Filter, sort and count, then search and scan, then the view toggle, all in one row */}
               {selectedMovieIds.size === 0 ? (
                 <div className="flex items-center justify-between gap-3 sm:gap-6">
                   <div className="flex items-center gap-2 sm:gap-4">
@@ -387,6 +364,29 @@ function MovieList() {
                       />
                     )}
                     <Counter count={filteredMovies.length} />
+                  </div>
+
+                  {/* Search and scan: desktop only; on mobile the bottom bar's Search page and Scan cover these */}
+                  <div className="hidden md:flex flex-1 gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        ref={searchInputRef}
+                        placeholder="Search by title or UPC..."
+                        value={searchQuery}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        className="w-full h-8 px-3 pl-9 text-sm bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                      <FaMagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleScanClick}
+                      className="h-8 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer flex items-center justify-center"
+                      title="Scan barcode"
+                    >
+                      <IoCameraOutline className="w-5 h-5" />
+                    </button>
                   </div>
 
                   {/* Table / poster view */}
