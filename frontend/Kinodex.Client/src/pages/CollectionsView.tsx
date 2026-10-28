@@ -76,9 +76,8 @@ function CollectionsView() {
     <>
       <SubNavigation />
       <div ref={viewportRef} className="flex flex-col h-[calc(100dvh-9rem)] pt-2" style={viewportStyle}>
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-10 pb-8">
         {/* Scrollable content section */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 md:px-12 pb-8">
           <>
               {/* Standard Collections Section */}
               <div className="mb-12 pt-2">
@@ -146,7 +145,6 @@ function CollectionsView() {
               )}
             </>
         </div>
-      </div>
 
       {openCollectionName && (
         <Drawer label="Collection details" onClose={closeCollection}>
