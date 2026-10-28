@@ -9,6 +9,7 @@ interface BulkEditData {
   purchasedAt: string;
   isOnPlex: string;
   hasWatched: string;
+  isGift: string;
   condition: string;
   formats: string;
 }
@@ -138,6 +139,22 @@ export function BulkEditModal({
             </div>
 
             <div>
+              <label htmlFor="bulk-is-gift" className="block text-sm font-medium text-gray-300 mb-2">
+                Gift?
+              </label>
+              <select
+                id="bulk-is-gift"
+                value={bulkEditData.isGift}
+                onChange={(e) => setBulkEditData((prev) => ({ ...prev, isGift: e.target.value }))}
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
+              >
+                <option value="">Don't change</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+
+            <div>
               <label htmlFor="bulk-condition" className="block text-sm font-medium text-gray-300 mb-2">
                 Condition
               </label>
@@ -207,7 +224,7 @@ export function BulkEditModal({
             <button
               onClick={() => {
                 setShowBulkEditModal(false);
-                setBulkEditData({ shelfNumber: "", shelfSection: "", hdDriveNumber: "", purchasePrice: "", purchasedAt: "", isOnPlex: "", hasWatched: "", condition: "", formats: "" });
+                setBulkEditData({ shelfNumber: "", shelfSection: "", hdDriveNumber: "", purchasePrice: "", purchasedAt: "", isOnPlex: "", hasWatched: "", isGift: "", condition: "", formats: "" });
               }}
               className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
             >
