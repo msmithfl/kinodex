@@ -86,7 +86,7 @@ page, `BottomNav` (mobile). `main.tsx` also wraps everything in the React Query 
 | `/` | `Dashboard`: account row, spending, quick actions, recently added | Core |
 | `/library` | `MovieList`: table/poster views, search, filters, sort, bulk edit/delete, paged in the browser (`Pagination`, 100 per page) | Core |
 | `/movie/:id` | Redirects to `/library?movie=:id` (the full page is retired) | Core |
-| `/tv-shows` | `TvShowList` | Core |
+| `/tv-shows` | `TvShowList`: table/poster views, search, filters (`features/tvShows/filters.ts`), sort | Core |
 | `/tv-shows/:id` | Redirects to `/tv-shows?show=:id` (the full page is retired) | Core |
 | `/collections` | `CollectionsView`: poster cards + create modal; hosts collection & movie drawers | Core |
 | `/collections/:name` | redirect → `/collections?collection=name` | Redirect |
@@ -140,7 +140,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   `ChipSelect` / `SingleChipSelect` (chip dropdowns for genres, formats, collections, shelf),
   `ImageUrlField` (preview + URL + picker row), `formStyles` (form input/label classes).
 - **Controls:** `ViewToggle` (+ `utils/viewOptions.ts`), `SortDropdown`, `SortableTableHeader`,
-  `FilterDropdown` (+ `utils/filterCategories.ts`, `utils/applyFilters.ts`), `Counter`,
+  `FilterDropdown` (+ `utils/filterCategories.ts`, `utils/applyFilters.ts`; TV uses `features/tvShows/filters.ts`), `Counter`,
   `SubNavigation`, `EmptyState`, `LoadingSpinner`.
 - **Data layer:** `utils/api.ts`, `utils/queryClient.ts`, `features/*/api.ts` (see below).
 - **Utilities:** `upc.ts` (eBay sold-listings link, copy-to-clipboard with a `Copied!` flash),

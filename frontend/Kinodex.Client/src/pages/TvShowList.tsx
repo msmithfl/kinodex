@@ -8,6 +8,8 @@ import ViewToggle from "../components/ViewToggle";
 import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
 import MoviePosterCard from "../components/MovieCardPoster";
 import SortDropdown, { type SortDropdownOption } from "../components/SortDropdown";
+import FilterDropdown from "../components/FilterDropdown";
+import { applyTvShowFilters, buildTvShowFilterCategories } from "../features/tvShows/filters";
 import { LuGift, LuTable2 } from "react-icons/lu";
 import { QuickRating } from "../components/StarRating";
 import Counter from "../components/Counter";
@@ -105,6 +107,7 @@ function TvShowList() {
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showColumnMenu, setShowColumnMenu] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
   const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
     try {
       return localStorage.getItem("tvShowListView") === "poster"
@@ -187,9 +190,12 @@ function TvShowList() {
     hasGift: show.purchases.some((p) => p.isGift),
   }));
 
-  // Filter by title or any purchase's UPC
+  // Apply the filter menu, then search by title or any purchase's UPC
   const query = searchQuery.trim().toLowerCase();
-  const filteredShows = getSortedMovies(rows, sortBy, sortDirection).filter(
+  const filteredShows = applyTvShowFilters(
+    getSortedMovies(rows, sortBy, sortDirection),
+    selectedFilters,
+  ).filter(
     (show) =>
       !query ||
       show.title.toLowerCase().includes(query) ||
@@ -249,9 +255,19 @@ function TvShowList() {
         <div className="shrink-0 mx-6 mt-4 md:mx-12">
           {shows.length > 0 && (
             <div className="mb-4">
-              {/* Sort and count, then search and scan, then the view toggle, all in one row */}
+              {/* Filter, sort and count, then search and scan, then the view toggle, all in one row */}
               <div className="flex items-center justify-between gap-3 sm:gap-6">
                 <div className="flex items-center gap-2 sm:gap-4">
+                  <div onClick={() => setShowColumnMenu(false)}>
+                    <FilterDropdown
+                      categories={buildTvShowFilterCategories(shows)}
+                      selectedFilters={selectedFilters}
+                      onFilterChange={(categoryId, values) =>
+                        setSelectedFilters((prev) => ({ ...prev, [categoryId]: values }))
+                      }
+                      onResetFilters={() => setSelectedFilters({})}
+                    />
+                  </div>
                   {/* Poster view has no table headers to click, so it gets a sort menu */}
                   {viewMode === "poster" && (
                     <SortDropdown
@@ -308,7 +324,7 @@ function TvShowList() {
             // Poster view: the same searched and sorted shows as the table
             <div className="h-full overflow-y-auto px-6 md:px-12 pb-8">
               {filteredShows.length === 0 ? (
-                <EmptyState message="No TV shows match your search." />
+                <EmptyState message="No TV shows match your search or filters." />
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8">
                   {filteredShows.map((show) => {

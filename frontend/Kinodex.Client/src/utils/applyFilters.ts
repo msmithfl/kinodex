@@ -50,6 +50,14 @@ export const applyFilters = (movies: Movie[], selectedFilters: Record<string, st
       });
     }
     
+    // Gift filter
+    if (selectedFilters.gift && selectedFilters.gift.length > 0) {
+      filtered = filtered.filter(movie => {
+        const isGift = movie.isGift ? 'true' : 'false';
+        return selectedFilters.gift.includes(isGift);
+      });
+    }
+
     // Shelf Section filter
     if (selectedFilters.shelfSection && selectedFilters.shelfSection.length > 0) {
       filtered = filtered.filter(movie => 
