@@ -63,6 +63,38 @@ export function useUpdateMovie() {
   });
 }
 
+// Sets one movie's rating straight from a list (the tables' stars). Every list shows the new
+// rating at once; if saving fails, the old rating is put back.
+export function useRateMovie() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ movie, rating }: { movie: Movie; rating: number }) =>
+      api.put<Movie>(`/movies/${movie.id}`, { ...movie, rating }),
+    onMutate: async ({ movie, rating }) => {
+      // Stop a refresh in flight from overwriting the new rating with the old one
+      await queryClient.cancelQueries({ queryKey: movieKeys.all });
+      const previousList = queryClient.getQueryData<Movie[]>(movieKeys.all);
+      const previousMovie = queryClient.getQueryData<Movie>(movieKeys.detail(movie.id!));
+      queryClient.setQueryData<Movie[]>(movieKeys.all, (list) =>
+        list?.map((m) => (m.id === movie.id ? { ...m, rating } : m)),
+      );
+      if (previousMovie) {
+        queryClient.setQueryData(movieKeys.detail(movie.id!), { ...previousMovie, rating });
+      }
+      return { previousList, previousMovie };
+    },
+    onError: (error, { movie }, context) => {
+      console.error("Error rating movie:", error);
+      if (context?.previousList) queryClient.setQueryData(movieKeys.all, context.previousList);
+      if (context?.previousMovie) {
+        queryClient.setQueryData(movieKeys.detail(movie.id!), context.previousMovie);
+      }
+    },
+    onSettled: () => refreshMovies(queryClient),
+  });
+}
+
 // Saves several movies at once (bulk edit); refreshes once at the end
 export function useUpdateMovies() {
   const api = useApi();

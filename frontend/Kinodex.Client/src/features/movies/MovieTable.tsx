@@ -3,7 +3,8 @@ import { FaRegCircle, FaCheckCircle } from "react-icons/fa";
 import { FaCheck } from "react-icons/fa6";
 import { LuTable2 } from "react-icons/lu";
 import SortableTableHeader from "../../components/SortableTableHeader";
-import { Stars } from "../../components/StarRating";
+import { QuickRating } from "../../components/StarRating";
+import { useRateMovie } from "./api";
 import { getRelativeTimeString } from "../../utils/dateUtils";
 import type { Movie, SortOption } from "../../types";
 import type { VisibleColumns } from "./tableColumns";
@@ -47,6 +48,8 @@ function MovieTable({
   onSelect,
   onOpen,
 }: MovieTableProps) {
+  // The Rating column's stars save straight away
+  const rateMovie = useRateMovie();
   return (
     <div className="h-full bg-gray-900 overflow-x-auto overflow-y-hidden overscroll-x-contain">
       {/* Two scroll areas so a swipe moves the table one way at a time: the outer one only
@@ -167,9 +170,12 @@ function MovieTable({
                 )}
                 {visibleColumns.rating && (
                   <td className="pl-6 py-2 whitespace-nowrap align-middle">
-                    <div className="flex gap-0.5">
-                      <Stars rating={movie.rating} />
-                    </div>
+                    {/* Click to rate */}
+                    <QuickRating
+                      rating={movie.rating}
+                      onRate={(rating) => rateMovie.mutate({ movie, rating })}
+                      label={`Rate ${movie.title}`}
+                    />
                   </td>
                 )}
                 {visibleColumns.purchasePrice && (
