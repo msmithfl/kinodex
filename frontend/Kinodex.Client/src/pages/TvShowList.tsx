@@ -8,7 +8,7 @@ import ViewToggle from "../components/ViewToggle";
 import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
 import MoviePosterCard from "../components/MovieCardPoster";
 import SortDropdown, { type SortDropdownOption } from "../components/SortDropdown";
-import { LuTable2 } from "react-icons/lu";
+import { LuGift, LuTable2 } from "react-icons/lu";
 import { QuickRating } from "../components/StarRating";
 import Counter from "../components/Counter";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -184,6 +184,7 @@ function TvShowList() {
     purchasePrice: totalPaid(show.purchases),
     condition: "",
     owned: ownedSeasons(show.purchases),
+    hasGift: show.purchases.some((p) => p.isGift),
   }));
 
   // Filter by title or any purchase's UPC
@@ -446,9 +447,16 @@ function TvShowList() {
                         )}
                         {visibleColumns.totalPaid && (
                           <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                            {show.purchasePrice > 0
-                              ? `$${show.purchasePrice.toFixed(2)}`
-                              : "-"}
+                            {/* The total, then a gift icon when any purchase was a gift; all gifts
+                                with no price shows just the icon */}
+                            <span className="inline-flex items-center gap-1.5 align-middle">
+                              {show.purchasePrice > 0
+                                ? `$${show.purchasePrice.toFixed(2)}`
+                                : !show.hasGift && "-"}
+                              {show.hasGift && (
+                                <LuGift className="w-4 h-4 text-gray-400" title="Includes a gift" aria-label="Includes a gift" />
+                              )}
+                            </span>
                           </td>
                         )}
                         {visibleColumns.dateAdded && (

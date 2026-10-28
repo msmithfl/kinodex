@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { FaRegCircle, FaCheckCircle } from "react-icons/fa";
 import { FaCheck } from "react-icons/fa6";
-import { LuTable2 } from "react-icons/lu";
+import { LuGift, LuTable2 } from "react-icons/lu";
 import SortableTableHeader from "../../components/SortableTableHeader";
 import { QuickRating } from "../../components/StarRating";
 import { useRateMovie } from "./api";
@@ -180,7 +180,15 @@ function MovieTable({
                 )}
                 {visibleColumns.purchasePrice && (
                   <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                    {movie.purchasePrice ? `$${movie.purchasePrice.toFixed(2)}` : "-"}
+                    {/* The price, then a gift icon for gifts; a gift with no price shows just the icon */}
+                    <span className="inline-flex items-center gap-1.5 align-middle">
+                      {movie.purchasePrice
+                        ? `$${movie.purchasePrice.toFixed(2)}`
+                        : !movie.isGift && "-"}
+                      {movie.isGift && (
+                        <LuGift className="w-4 h-4 text-gray-400" title="Gift" aria-label="Gift" />
+                      )}
+                    </span>
                   </td>
                 )}
                 {visibleColumns.dateAdded && (
