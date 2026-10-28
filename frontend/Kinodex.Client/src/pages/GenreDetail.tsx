@@ -10,7 +10,7 @@ import ViewToggle from "../components/ViewToggle";
 import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
 import SubNavigation from "../components/SubNavigation";
 import Drawer from "../components/Drawer";
-import MovieDetail from "./MovieDetail";
+import MovieDetail from "../features/movies/MovieDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
 import { useMovies } from "../features/movies/api";
 

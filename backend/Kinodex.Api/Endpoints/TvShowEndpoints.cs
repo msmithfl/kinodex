@@ -131,5 +131,6 @@ public static class TvShowEndpoints
             PurchasedAt = p.PurchasedAt == default
                 ? DateOnly.FromDateTime(DateTime.UtcNow)
                 : p.PurchasedAt,
+            IsGift = p.IsGift,
         }).ToList();
 }

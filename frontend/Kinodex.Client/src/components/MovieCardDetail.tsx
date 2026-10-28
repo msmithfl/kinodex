@@ -30,7 +30,7 @@ function MovieDetailCard({
 }: MovieDetailCardProps) {
   return (
     <Link
-      to={`/movie/${movie.id}`}
+      to={`/library?movie=${movie.id}`}
       onClick={(e) => {
         if (!onOpen || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         e.preventDefault();

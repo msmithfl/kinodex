@@ -126,9 +126,9 @@ function MovieTable({
                 </td>
                 <td className="px-6 py-2 text-white w-46 max-w-46 md:w-96 md:max-w-96 align-middle">
                   <Link
-                    to={`/movie/${movie.id}`}
+                    to={`/library?movie=${movie.id}`}
                     onClick={(e) => {
-                      // Plain clicks open the drawer; ctrl/cmd-click still opens the full page in a new tab
+                      // Plain clicks open the drawer; ctrl/cmd-click opens the list with it in a drawer, in a new tab
                       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                       e.preventDefault();
                       onOpen(movie.id);

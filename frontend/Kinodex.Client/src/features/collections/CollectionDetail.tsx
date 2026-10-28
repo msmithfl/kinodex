@@ -1,20 +1,20 @@
 import { useState, useContext } from "react";
 import { createPortal } from "react-dom";
-import { DrawerActionsSlotContext } from "../components/drawerActions";
-import ConfirmDialog from "../components/ConfirmDialog";
-import CollectionFormModal from "../components/CollectionFormModal";
-import Counter from "../components/Counter";
-import SimpleMovieTable from "../components/SimpleMovieTable";
-import MoviePosterCard from "../components/MovieCardPoster";
+import { DrawerActionsSlotContext } from "../../components/drawerActions";
+import ConfirmDialog from "../../components/ConfirmDialog";
+import CollectionFormModal from "../../components/CollectionFormModal";
+import Counter from "../../components/Counter";
+import SimpleMovieTable from "../../components/SimpleMovieTable";
+import MoviePosterCard from "../../components/MovieCardPoster";
 import { FaTrash, FaEdit } from "react-icons/fa";
-import ViewToggle from "../components/ViewToggle";
-import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
-import EmptyState from "../components/EmptyState";
-import LoadingSpinner from "../components/LoadingSpinner";
-import CollectionChecklist from "../features/collections/CollectionChecklist";
-import { useCollections, useDeleteCollection } from "../features/collections/api";
-import { useMovies } from "../features/movies/api";
-import type { Collection } from "../types";
+import ViewToggle from "../../components/ViewToggle";
+import { TABLE_VIEW_OPTIONS } from "../../utils/viewOptions";
+import EmptyState from "../../components/EmptyState";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import CollectionChecklist from "./CollectionChecklist";
+import { useCollections, useDeleteCollection } from "./api";
+import { useMovies } from "../movies/api";
+import type { Collection } from "../../types";
 
 interface CollectionDetailProps {
   collectionName: string;

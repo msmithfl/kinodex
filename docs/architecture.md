@@ -41,15 +41,15 @@ Kinodex/
     src/
       main.tsx          ClerkProvider → App
       App.tsx           routes + layout (Header, Sidebar, BottomNav)
-      pages/            one component per route (plus drawer contents)
+      pages/            one component per route
       components/       shared UI, modals, forms, cards, Drawer
       utils/            helpers and small hooks
       settings/         useSettings() hook (shared cache) and the settings type/defaults
       features/         per feature: data hooks (api.ts) and the feature's own components
-        movies/           MovieTable, MovieDrawerDetails, MoviePageDetails, form/ (Details,
-                          Physical, Images tabs)
-        tvShows/          TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images tabs)
-        collections/      CollectionChecklist
+        movies/           MovieDetail (drawer), MovieTable, MovieDrawerDetails, form/ (Details,
+                          Physical, Location, Images tabs)
+        tvShows/          TvShowDetail (drawer), TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images tabs)
+        collections/      CollectionDetail (drawer), CollectionChecklist
         shelfSections/    (hooks only)
       types/index.ts    shared TypeScript types, derived from the generated ones
       types/api.generated.ts  generated from the API's OpenAPI description (npm run gen:api); don't edit
@@ -85,9 +85,9 @@ page, `BottomNav` (mobile). `main.tsx` also wraps everything in the React Query 
 |---|---|---|
 | `/` | `Dashboard`: account row, spending, quick actions, recently added | Core |
 | `/library` | `MovieList`: table/poster views, search, filters, sort, bulk edit/delete, paged in the browser (`Pagination`, 100 per page) | Core |
-| `/movie/:id` | `MovieDetail`, full page (ctrl/cmd-click target; drawer is the normal path) | Core |
+| `/movie/:id` | Redirects to `/library?movie=:id` (the full page is retired) | Core |
 | `/tv-shows` | `TvShowList` | Core |
-| `/tv-shows/:id` | `TvShowDetail`, full page (drawer is the normal path) | Core |
+| `/tv-shows/:id` | Redirects to `/tv-shows?show=:id` (the full page is retired) | Core |
 | `/collections` | `CollectionsView`: poster cards + create modal; hosts collection & movie drawers | Core |
 | `/collections/:name` | redirect → `/collections?collection=name` | Redirect |
 | `/genres`, `/genres/:name` | `GenresView` (backdrop cards), `GenreDetail` (table/poster; movie drawer) | Core |
@@ -109,9 +109,11 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   `?collection=Name`. Back closes it; reload reopens it. Opening from a list pushes a history
   entry (marked `drawerFromList`) so closing steps back instead of adding another entry.
 - **Hosts:** `MovieList` (movie), `TvShowList` (show), `GenreDetail` (movie), `CollectionsView`
-  (collection, plus a stacked movie drawer on top), and `MovieDetail` itself when it's a page.
-- **Same component, two modes:** `MovieDetail`, `TvShowDetail` render as a full page *or* inside
-  a drawer (an id prop switches mode and layout classes). `CollectionDetail` is drawer-only.
+  (collection, plus a stacked movie drawer on top).
+- **The drawer is the only detail view:** `MovieDetail`, `TvShowDetail` and `CollectionDetail`
+  are drawer-only. The old full pages are retired; `/movie/:id` and `/tv-shows/:id` redirect to
+  `/library?movie=:id` and `/tv-shows?show=:id`, which are also what list links point at (so
+  ctrl/cmd-click opens the list with the drawer in a new tab).
 - **Floating actions:** from tablet up, edit/delete render outside the panel next to the close
   button, through a portal slot (`components/drawerActions.ts` context).
 - **Movie drawer tabs:** only Details for now, so the tab bar is hidden; the tab mechanism is kept for the planned Ledger and Log.
@@ -122,7 +124,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 | Component | Used for |
 |---|---|
 | `AddItemModal` | Chooser: add movie or TV show |
-| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; each tab is a component in `features/movies/form/` (Details, Physical, Images: TMDB poster/backdrop pickers, product image lookup) |
+| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; each tab is a component in `features/movies/form/` (Details; Physical: UPC, formats, price, purchase date, condition, gift; Location: shelf, HDD, streaming; Images: TMDB poster/backdrop pickers, product image lookup) |
 | `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit. Tabs in `features/tvShows/form/` (Details, Purchases using `TvShowPurchaseEditor`, Images) |
 | `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop); saves via the collections hooks |
 | `BulkEditModal` | Bulk edit from the movie table |
@@ -219,7 +221,7 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 
 ```
 User (Clerk id) ─── owns (by UserId string) ──┬─ Movie ─────────── Checkout ─── Customer   (lending, parked)
-                                               ├─ TvShow ── TvShowPurchase (seasons, price, date, UPC, formats)
+                                               ├─ TvShow ── TvShowPurchase (seasons, price, date, gift, UPC, formats)
                                                ├─ Collection ── CollectionListItem (checklist)
                                                ├─ ShelfSection
                                                └─ UserSettings

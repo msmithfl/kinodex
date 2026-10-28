@@ -24,7 +24,7 @@ export function useTvShows() {
   });
 }
 
-// One show (the drawer and the full page). Starts from the list's copy when it's already
+// One show (the drawer). Starts from the list's copy when it's already
 // loaded, so opening a show from the list shows it straight away.
 export function useTvShow(id: number | string | undefined) {
   const api = useApi();

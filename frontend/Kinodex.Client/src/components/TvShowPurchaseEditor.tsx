@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import { IoCameraOutline } from "react-icons/io5";
+import { LuGift } from "react-icons/lu";
 import type { TvShowPurchase } from "../types";
 import { formatSeasons } from "../utils/formatSeasons";
 
@@ -68,15 +69,32 @@ function TvShowPurchaseEditor({
               : formatSeasons(purchase.seasons, totalSeasons)}
           </span>
         </p>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="text-red-400 hover:text-red-300 transition cursor-pointer p-1"
-          title={`Remove purchase ${index + 1}`}
-          aria-label={`Remove purchase ${index + 1}`}
-        >
-          <FaTrash className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Gift: this purchase (e.g. one season) was received rather than bought */}
+          <button
+            type="button"
+            onClick={() => onChange({ ...purchase, isGift: !purchase.isGift })}
+            aria-pressed={purchase.isGift}
+            title={purchase.isGift ? "A gift" : "Not a gift"}
+            className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition cursor-pointer ${
+              purchase.isGift
+                ? "bg-indigo-600 border-indigo-500 text-white"
+                : "bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-400"
+            }`}
+          >
+            <LuGift className="w-3.5 h-3.5" />
+            Gift
+          </button>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="text-red-400 hover:text-red-300 transition cursor-pointer p-1"
+            title={`Remove purchase ${index + 1}`}
+            aria-label={`Remove purchase ${index + 1}`}
+          >
+            <FaTrash className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Seasons */}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FaBarcode } from "react-icons/fa6";
+import { LuGift } from "react-icons/lu";
 import { FormatIcon } from "../../utils/formatIcon";
 import { formatSeasons } from "../../utils/formatSeasons";
 import { purchaseKey, totalPaid } from "../../utils/tvShowPurchases";
@@ -47,13 +48,20 @@ function TvShowPurchaseList({ show }: { show: TvShow }) {
                   </p>
                   <p className="text-xs text-gray-400">{formatPurchaseDate(purchase.purchasedAt)}</p>
                 </div>
-                <p className="font-mono text-white min-w-16">
-                  {purchase.price > 0 ? (
-                    `$${purchase.price.toFixed(2)}`
-                  ) : (
-                    <span className="text-gray-500">No price</span>
+                <div className="min-w-16">
+                  <p className="font-mono text-white">
+                    {purchase.price > 0 ? (
+                      `$${purchase.price.toFixed(2)}`
+                    ) : (
+                      <span className="text-gray-500">No price</span>
+                    )}
+                  </p>
+                  {purchase.isGift && (
+                    <p className="flex items-center gap-1 text-xs text-gray-400">
+                      <LuGift className="w-3.5 h-3.5" /> Gift
+                    </p>
                   )}
-                </p>
+                </div>
                 <div className="flex flex-wrap items-center gap-3">
                   {[...purchase.formats].sort().map((fmt) => (
                     <FormatIcon key={fmt} fmt={fmt} />

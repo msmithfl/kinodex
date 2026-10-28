@@ -4,13 +4,15 @@ import { useImagePicker } from "./useImagePicker";
 import { useProductImagePicker } from "./useProductImagePicker";
 import MovieDetailsTab from "../features/movies/form/MovieDetailsTab";
 import MoviePhysicalTab from "../features/movies/form/MoviePhysicalTab";
+import MovieLocationTab from "../features/movies/form/MovieLocationTab";
 import MovieImagesTab from "../features/movies/form/MovieImagesTab";
 
-type Tab = "details" | "physical" | "poster";
+type Tab = "details" | "physical" | "location" | "poster";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "details", label: "Movie Details" },
   { id: "physical", label: "Physical" },
+  { id: "location", label: "Location" },
   { id: "poster", label: "Images" },
 ];
 
@@ -152,12 +154,12 @@ function MovieForm({
     }
     if (isNaN(parseInt(shelfInput))) {
       setValidationError("Shelf Number must be a valid number");
-      setActiveTab("physical");
+      setActiveTab("location");
       return;
     }
     if (isNaN(parseInt(hddInput))) {
       setValidationError("HDD Number must be a valid number");
-      setActiveTab("physical");
+      setActiveTab("location");
       return;
     }
     if (isNaN(parseFloat(purchasePriceInput))) {
@@ -228,6 +230,13 @@ function MovieForm({
             onScanClick={onScanClick}
             purchasePriceInput={purchasePriceInput}
             onPurchasePriceChange={handlePurchasePriceChange}
+          />
+        )}
+
+        {activeTab === "location" && (
+          <MovieLocationTab
+            formData={formData}
+            setFormData={setFormData}
             shelfInput={shelfInput}
             onShelfChange={handleShelfChange}
             hddInput={hddInput}

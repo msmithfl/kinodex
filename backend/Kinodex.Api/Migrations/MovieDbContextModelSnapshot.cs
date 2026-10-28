@@ -196,6 +196,9 @@ namespace Kinodex.Api.Migrations
                     b.Property<bool>("HasWatched")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsGift")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsOnPlex")
                         .HasColumnType("boolean");
 
@@ -354,6 +357,9 @@ namespace Kinodex.Api.Migrations
                     b.PrimitiveCollection<List<string>>("Formats")
                         .IsRequired()
                         .HasColumnType("text[]");
+
+                    b.Property<bool>("IsGift")
+                        .HasColumnType("boolean");
 
                     b.Property<decimal>("Price")
                         .HasPrecision(10, 2)

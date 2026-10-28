@@ -12,6 +12,7 @@ export const newPurchase = (
   formats: [],
   condition: "Like New",
   purchasedAt: todayDate(),
+  isGift: false,
   ...base,
 });
 

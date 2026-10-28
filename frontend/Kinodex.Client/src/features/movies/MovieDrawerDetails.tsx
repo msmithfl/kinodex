@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LuEye, LuEyeClosed } from "react-icons/lu";
+import { LuEye, LuEyeClosed, LuGift } from "react-icons/lu";
 import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import { FaBarcode } from "react-icons/fa6";
 import { FormatIcon } from "../../utils/formatIcon";
@@ -24,7 +24,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-// The movie drawer's Details tab: everything from the full page's sections, packed to fit without
+// The movie drawer's Details tab: everything about the copy, packed to fit without
 // scrolling - a grid of short values, then the disc (barcode, eBay), collections and notes
 function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetailsProps) {
   const { copied, copy } = useCopyToClipboard();
@@ -54,6 +54,12 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
         </Field>
         <Field label="Purchased">
           {movie.purchasedAt ? formatPurchaseDate(movie.purchasedAt) : notSet}
+        </Field>
+        <Field label="Gift">
+          <span className="flex items-center gap-1.5">
+            <LuGift className={`w-4 h-4 ${movie.isGift ? "" : "text-gray-500"}`} />
+            {movie.isGift ? "Yes" : "No"}
+          </span>
         </Field>
         <Field label="Watched">
           <span className="flex items-center gap-1.5">

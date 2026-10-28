@@ -1562,6 +1562,7 @@ export interface components {
             shelfNumber: number;
             shelfSection: string;
             isOnPlex: boolean;
+            isGift: boolean;
             /** Format: date-time */
             createdAt: string;
             checkouts: components["schemas"]["Checkout"][];
@@ -1619,6 +1620,7 @@ export interface components {
             condition: string;
             /** Format: date */
             purchasedAt: string;
+            isGift: boolean;
         };
         UpdateCollectionRequest: {
             name: string;

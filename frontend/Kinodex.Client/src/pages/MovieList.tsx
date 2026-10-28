@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
 import { useLocation } from "react-router-dom";
 import Drawer from "../components/Drawer";
-import MovieDetail from "./MovieDetail";
+import MovieDetail from "../features/movies/MovieDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
 import { useDeleteMovies, useMovies, useUpdateMovies } from "../features/movies/api";
 import { useShelfSections } from "../features/shelfSections/api";

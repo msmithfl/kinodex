@@ -106,13 +106,27 @@ public class MovieTests(KinodexApiFactory api)
     }
 
     [Fact]
+    public async Task A_movie_is_not_a_gift_until_marked_as_one()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var id = await owner.CreateMovieAsync();
+        Assert.False((await owner.GetJsonAsync($"/api/movies/{id}")).GetProperty("isGift").GetBoolean());
+
+        var body = (Dictionary<string, object>)TestData.Movie();
+        body["isGift"] = true;
+        (await owner.PutAsJsonAsync($"/api/movies/{id}", body)).EnsureSuccessStatusCode();
+
+        Assert.True((await owner.GetJsonAsync($"/api/movies/{id}")).GetProperty("isGift").GetBoolean());
+    }
+
+    [Fact]
     public async Task Csv_import_keeps_purchase_dates_and_falls_back_to_date_added_for_older_files()
     {
         var owner = api.ClientFor(KinodexApiFactory.NewUserId());
         const string header = "Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added";
         var csv =
-            header + ",Purchase Date\n" +
-            "\"With Date\",,2001,\"\",\"\",\"\",\"Good\",5,0,False,False,0,\"\",0,,\"\",\"\",\"\",2024-03-10,2015-07-01\n";
+            header + ",Purchase Date,Gift\n" +
+            "\"With Date\",,2001,\"\",\"\",\"\",\"Good\",5,0,False,False,0,\"\",0,,\"\",\"\",\"\",2024-03-10,2015-07-01,True\n";
         var olderCsv =
             header + "\n" +
             "\"Without Date\",,2002,\"\",\"\",\"\",\"Good\",5,0,False,False,0,\"\",0,,\"\",\"\",\"\",2024-03-10\n";
@@ -124,12 +138,14 @@ public class MovieTests(KinodexApiFactory api)
         }
 
         var movies = (await owner.GetJsonAsync("/api/movies")).EnumerateArray()
-            .ToDictionary(m => m.GetProperty("title").GetString()!, m => m.GetProperty("purchasedAt").GetString());
-        Assert.Equal("2015-07-01", movies["With Date"]);
-        Assert.Equal("2024-03-10", movies["Without Date"]);
+            .ToDictionary(m => m.GetProperty("title").GetString()!);
+        Assert.Equal("2015-07-01", movies["With Date"].GetProperty("purchasedAt").GetString());
+        Assert.True(movies["With Date"].GetProperty("isGift").GetBoolean());
+        Assert.Equal("2024-03-10", movies["Without Date"].GetProperty("purchasedAt").GetString());
+        Assert.False(movies["Without Date"].GetProperty("isGift").GetBoolean());
 
         var exported = await (await owner.GetAsync("/api/movies/export/csv")).Content.ReadAsStringAsync();
-        Assert.Contains(",2024-03-10,2015-07-01", exported);
+        Assert.Contains(",2024-03-10,2015-07-01,True", exported);
     }
 
     [Fact]
