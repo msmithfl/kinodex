@@ -64,6 +64,14 @@ export function buildFilterCategories(
       ],
     },
     {
+      id: 'gift',
+      label: 'Gift',
+      options: [
+        { label: 'Gift', value: 'true' },
+        { label: 'Not a gift', value: 'false' },
+      ],
+    },
+    {
       id: 'shelfSection',
       label: 'Shelf Section',
       options: shelfSections.map(section => ({ label: section, value: section })),
