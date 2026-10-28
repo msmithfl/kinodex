@@ -1561,7 +1561,7 @@ export interface components {
             /** Format: int32 */
             shelfNumber: number;
             shelfSection: string;
-            isOnPlex: boolean;
+            isStreaming: boolean;
             isGift: boolean;
             /** Format: date-time */
             createdAt: string;
@@ -1602,7 +1602,7 @@ export interface components {
             tmdbId?: null | number;
             /** Format: int32 */
             totalSeasons: number;
-            isOnPlex: boolean;
+            isStreaming: boolean;
             /** Format: date-time */
             createdAt: string;
             purchases: components["schemas"]["TvShowPurchase"][];

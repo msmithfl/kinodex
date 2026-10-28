@@ -110,18 +110,18 @@ function MovieLocationTab({
         </div>
       </div>
 
-      {/* Available on Plex */}
+      {/* Available to Stream */}
       <div className="flex flex-col items-center">
         <label className="block text-sm font-medium text-gray-300 mb-2 mt-2">
           Available to Stream
         </label>
         <button
           type="button"
-          onClick={() => setFormData({ ...formData, isOnPlex: !formData.isOnPlex })}
+          onClick={() => setFormData({ ...formData, isStreaming: !formData.isStreaming })}
           className="cursor-pointer"
-          title={formData.isOnPlex ? "Available to stream" : "Not available to stream"}
+          title={formData.isStreaming ? "Available to stream" : "Not available to stream"}
         >
-          {formData.isOnPlex ? (
+          {formData.isStreaming ? (
             <HiSignal className="w-8 h-8 text-indigo-400" />
           ) : (
             <HiOutlineSignalSlash className="w-8 h-8 text-gray-500 hover:text-indigo-400" />

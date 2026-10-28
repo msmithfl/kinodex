@@ -108,7 +108,7 @@ function MovieList() {
     hdDriveNumber: "",
     purchasePrice: "",
     purchasedAt: "",
-    isOnPlex: "",
+    isStreaming: "",
     hasWatched: "",
     isGift: "",
     condition: "",
@@ -252,8 +252,8 @@ function MovieList() {
       if (bulkEditData.hdDriveNumber !== "") {
         updates.hdDriveNumber = parseInt(bulkEditData.hdDriveNumber);
       }
-      if (bulkEditData.isOnPlex !== "") {
-        updates.isOnPlex = bulkEditData.isOnPlex === "true";
+      if (bulkEditData.isStreaming !== "") {
+        updates.isStreaming = bulkEditData.isStreaming === "true";
       }
       if (bulkEditData.hasWatched !== "") {
         updates.hasWatched = bulkEditData.hasWatched === "true";
@@ -289,7 +289,7 @@ function MovieList() {
         hdDriveNumber: "",
         purchasePrice: "",
         purchasedAt: "",
-        isOnPlex: "",
+        isStreaming: "",
         hasWatched: "",
         isGift: "",
         condition: "",

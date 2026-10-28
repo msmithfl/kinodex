@@ -123,7 +123,7 @@ public class MovieTests(KinodexApiFactory api)
     public async Task Csv_import_keeps_purchase_dates_and_falls_back_to_date_added_for_older_files()
     {
         var owner = api.ClientFor(KinodexApiFactory.NewUserId());
-        const string header = "Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added";
+        const string header = "Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,Streaming,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added";
         var csv =
             header + ",Purchase Date,Gift\n" +
             "\"With Date\",,2001,\"\",\"\",\"\",\"Good\",5,0,False,False,0,\"\",0,,\"\",\"\",\"\",2024-03-10,2015-07-01,True\n";

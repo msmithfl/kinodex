@@ -51,7 +51,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     hdDriveNumber: 0,
     shelfNumber: 1,
     shelfSection: "",
-    isOnPlex: false,
+    isStreaming: false,
     isGift: false,
   });
   const collections = [...collectionList].sort(byName);

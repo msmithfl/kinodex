@@ -242,7 +242,7 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps) {
                         Streaming
                       </h3>
                       <p className="text-base text-white flex items-center gap-2">
-                        {show.isOnPlex ? (
+                        {show.isStreaming ? (
                           <>
                             <HiSignal className="w-5 h-5" /> Yes
                           </>

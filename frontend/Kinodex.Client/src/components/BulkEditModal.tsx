@@ -7,7 +7,7 @@ interface BulkEditData {
   hdDriveNumber: string;
   purchasePrice: string;
   purchasedAt: string;
-  isOnPlex: string;
+  isStreaming: string;
   hasWatched: string;
   isGift: string;
   condition: string;
@@ -107,13 +107,13 @@ export function BulkEditModal({
             </div>
 
             <div>
-              <label htmlFor="bulk-is-on-plex" className="block text-sm font-medium text-gray-300 mb-2">
-                On Plex
+              <label htmlFor="bulk-is-streaming" className="block text-sm font-medium text-gray-300 mb-2">
+                Streaming
               </label>
               <select
-                id="bulk-is-on-plex"
-                value={bulkEditData.isOnPlex}
-                onChange={(e) => setBulkEditData((prev) => ({ ...prev, isOnPlex: e.target.value }))}
+                id="bulk-is-streaming"
+                value={bulkEditData.isStreaming}
+                onChange={(e) => setBulkEditData((prev) => ({ ...prev, isStreaming: e.target.value }))}
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
               >
                 <option value="">Don't change</option>
@@ -224,7 +224,7 @@ export function BulkEditModal({
             <button
               onClick={() => {
                 setShowBulkEditModal(false);
-                setBulkEditData({ shelfNumber: "", shelfSection: "", hdDriveNumber: "", purchasePrice: "", purchasedAt: "", isOnPlex: "", hasWatched: "", isGift: "", condition: "", formats: "" });
+                setBulkEditData({ shelfNumber: "", shelfSection: "", hdDriveNumber: "", purchasePrice: "", purchasedAt: "", isStreaming: "", hasWatched: "", isGift: "", condition: "", formats: "" });
               }}
               className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
             >
