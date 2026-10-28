@@ -90,7 +90,7 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
         </Field>
         <Field label="Streaming">
           <span className="flex items-center gap-1.5">
-            {movie.isOnPlex ? (
+            {movie.isStreaming ? (
               <>
                 <HiSignal className="w-4 h-4" /> Yes
               </>

@@ -199,7 +199,7 @@ namespace Kinodex.Api.Migrations
                     b.Property<bool>("IsGift")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsOnPlex")
+                    b.Property<bool>("IsStreaming")
                         .HasColumnType("boolean");
 
                     b.Property<string>("PosterPath")
@@ -302,7 +302,7 @@ namespace Kinodex.Api.Migrations
                     b.Property<bool>("HasWatched")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("IsOnPlex")
+                    b.Property<bool>("IsStreaming")
                         .HasColumnType("boolean");
 
                     b.Property<string>("PosterPath")

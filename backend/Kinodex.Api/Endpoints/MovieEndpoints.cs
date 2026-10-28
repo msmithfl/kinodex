@@ -82,7 +82,7 @@ public static class MovieEndpoints
             movie.HDDriveNumber = updatedMovie.HDDriveNumber;
             movie.ShelfNumber = updatedMovie.ShelfNumber;
             movie.ShelfSection = updatedMovie.ShelfSection;
-            movie.IsOnPlex = updatedMovie.IsOnPlex;
+            movie.IsStreaming = updatedMovie.IsStreaming;
             movie.IsGift = updatedMovie.IsGift;
 
             await db.SaveChangesAsync();
@@ -111,7 +111,7 @@ public static class MovieEndpoints
                 .ToListAsync();
 
             var csv = new StringBuilder();
-            csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,On Plex,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added,Purchase Date,Gift");
+            csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,Streaming,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added,Purchase Date,Gift");
 
             foreach (var movie in movies)
             {
@@ -119,7 +119,7 @@ public static class MovieEndpoints
                 var genres = string.Join("|", movie.Genres);
                 var collections = string.Join("|", movie.Collections);
                 var title = movie.Title.Replace("\"", "\"\"");
-                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",\"{movie.Condition}\",{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsOnPlex},{movie.ShelfNumber},\"{movie.ShelfSection}\",{movie.HDDriveNumber},{movie.TmdbId},\"{movie.PosterPath}\",\"{movie.BackdropPath}\",\"{movie.ProductPosterPath}\",{movie.CreatedAt:yyyy-MM-dd},{movie.PurchasedAt:yyyy-MM-dd},{movie.IsGift}");
+                csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",\"{movie.Condition}\",{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsStreaming},{movie.ShelfNumber},\"{movie.ShelfSection}\",{movie.HDDriveNumber},{movie.TmdbId},\"{movie.PosterPath}\",\"{movie.BackdropPath}\",\"{movie.ProductPosterPath}\",{movie.CreatedAt:yyyy-MM-dd},{movie.PurchasedAt:yyyy-MM-dd},{movie.IsGift}");
             }
 
             var bytes = Encoding.UTF8.GetBytes(csv.ToString());
@@ -216,7 +216,7 @@ public static class MovieEndpoints
                         HDDriveNumber = 0,
                         ShelfNumber = 0,
                         ShelfSection = "",
-                        IsOnPlex = false,
+                        IsStreaming = false,
                         CreatedAt = DateTime.UtcNow,
                         PurchasedAt = DateOnly.FromDateTime(DateTime.UtcNow),
                     };
@@ -302,7 +302,7 @@ public static class MovieEndpoints
                         PurchasePrice = float.TryParse(fields[7], NumberStyles.Float, CultureInfo.InvariantCulture, out var pp) ? pp : 0,
                         Rating = float.TryParse(fields[8], NumberStyles.Float, CultureInfo.InvariantCulture, out var rt) ? rt : 0,
                         HasWatched = bool.TryParse(fields[9], out var hw) && hw,
-                        IsOnPlex = bool.TryParse(fields[10], out var ip) && ip,
+                        IsStreaming = bool.TryParse(fields[10], out var ip) && ip,
                         ShelfNumber = int.TryParse(fields[11], out var sn) ? sn : 0,
                         ShelfSection = fields[12],
                         HDDriveNumber = int.TryParse(fields[13], out var hd) ? hd : 0,

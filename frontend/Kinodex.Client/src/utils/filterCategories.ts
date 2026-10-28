@@ -48,11 +48,11 @@ export function buildFilterCategories(
       options: collections.map(collection => ({ label: collection, value: collection })),
     },
     {
-      id: 'onPlex',
-      label: 'On Plex',
+      id: 'streaming',
+      label: 'Streaming',
       options: [
-        { label: 'On Plex', value: 'true' },
-        { label: 'Not on Plex', value: 'false' },
+        { label: 'Streaming', value: 'true' },
+        { label: 'Not streaming', value: 'false' },
       ],
     },
     {

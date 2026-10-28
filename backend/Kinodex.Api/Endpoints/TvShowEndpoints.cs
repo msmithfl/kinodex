@@ -75,7 +75,7 @@ public static class TvShowEndpoints
             show.ProductPosterPath = updatedShow.ProductPosterPath;
             show.TmdbId = updatedShow.TmdbId;
             show.TotalSeasons = updatedShow.TotalSeasons;
-            show.IsOnPlex = updatedShow.IsOnPlex;
+            show.IsStreaming = updatedShow.IsStreaming;
 
             db.TvShowPurchases.RemoveRange(show.Purchases);
             show.Purchases = PreparePurchases(updatedShow.Purchases);

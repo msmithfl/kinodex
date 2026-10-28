@@ -34,11 +34,11 @@ export const applyFilters = (movies: Movie[], selectedFilters: Record<string, st
       );
     }
     
-    // OnPlex filter
-    if (selectedFilters.onPlex && selectedFilters.onPlex.length > 0) {
+    // Streaming filter
+    if (selectedFilters.streaming && selectedFilters.streaming.length > 0) {
       filtered = filtered.filter(movie => {
-        const isOnPlex = movie.isOnPlex ? 'true' : 'false';
-        return selectedFilters.onPlex.includes(isOnPlex);
+        const isStreaming = movie.isStreaming ? 'true' : 'false';
+        return selectedFilters.streaming.includes(isStreaming);
       });
     }
 

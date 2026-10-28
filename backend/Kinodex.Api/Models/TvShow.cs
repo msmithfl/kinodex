@@ -15,7 +15,7 @@ public class TvShow
     public string ProductPosterPath { get; set; } = string.Empty;
     public int? TmdbId { get; set; }
     public int TotalSeasons { get; set; } // Season count from TMDB, 0 when unknown
-    public bool IsOnPlex { get; set; } = false;
+    public bool IsStreaming { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Owned seasons, total paid and "complete" are all derived from these

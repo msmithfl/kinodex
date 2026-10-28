@@ -22,7 +22,7 @@ interface StatItem {
   kind: "movie" | "tv";
   rating: number;
   hasWatched: boolean;
-  isOnPlex: boolean;
+  isStreaming: boolean;
   year: number;
   genres: string[];
   formats: string[];
@@ -33,7 +33,7 @@ const movieItem = (m: Movie): StatItem => ({
   kind: "movie",
   rating: m.rating,
   hasWatched: m.hasWatched,
-  isOnPlex: m.isOnPlex,
+  isStreaming: m.isStreaming,
   year: m.year,
   genres: m.genres,
   formats: m.formats,
@@ -44,7 +44,7 @@ const tvItem = (s: TvShow): StatItem => ({
   kind: "tv",
   rating: s.rating,
   hasWatched: s.hasWatched,
-  isOnPlex: s.isOnPlex,
+  isStreaming: s.isStreaming,
   year: s.year,
   genres: s.genres,
   formats: allFormats(s.purchases),
@@ -182,7 +182,7 @@ function Stats() {
     count: items.filter((m) => m.rating === r).length,
   }));
 
-  const onPlexCount = items.filter((m) => m.isOnPlex).length;
+  const streamingCount = items.filter((m) => m.isStreaming).length;
 
   // A small labelled figure in the lower half of a summary card
   const summaryStat = (
@@ -265,7 +265,7 @@ function Stats() {
                 </div>
               </div>
 
-              {/* Collection: the title count, the Movies / TV split, and how many are on Jellyfin */}
+              {/* Collection: the title count, the Movies / TV split, and how many are streaming */}
               <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5">
                 <div className="text-center">
                   <p className="text-gray-400 text-sm mb-1">Total Titles</p>
@@ -274,7 +274,7 @@ function Stats() {
                 <div className="grid grid-cols-3 divide-x divide-gray-700 border-t border-gray-700 mt-3 pt-3 text-center">
                   {summaryStat("Movies", movies.length)}
                   {summaryStat("TV Shows", shows.length)}
-                  {summaryStat("On Jellyfin", onPlexCount, "text-indigo-400")}
+                  {summaryStat("Streaming", streamingCount, "text-indigo-400")}
                 </div>
               </div>
               <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5">

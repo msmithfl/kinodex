@@ -237,7 +237,7 @@ Shared (not per user): UpcLookup (UPC → product images)
 - List fields (`Formats`, `Collections`, `Genres`, `Seasons`, `Images`) are Postgres arrays.
 
 Notable fields: movies and TV shows carry TMDB id, poster/backdrop/product image URLs, rating,
-review, watched, `IsOnPlex` ("Streaming"); movies also have UPC, condition, price, shelf number,
+review, watched, `IsStreaming`; movies also have UPC, condition, price, shelf number,
 HDD number. Collections have `IsDirectorCollection`, `ImageUrl` (cover), `BackdropUrl`.
 
 ### Configuration

@@ -30,7 +30,7 @@ const emptyTvShow = (): TvShow => ({
   productPosterPath: "",
   tmdbId: undefined,
   totalSeasons: 0,
-  isOnPlex: false,
+  isStreaming: false,
   purchases: [],
 });
 

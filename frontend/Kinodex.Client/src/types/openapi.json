@@ -1345,7 +1345,7 @@
           "hdDriveNumber",
           "shelfNumber",
           "shelfSection",
-          "isOnPlex",
+          "isStreaming",
           "isGift",
           "createdAt",
           "checkouts"
@@ -1435,7 +1435,7 @@
           "shelfSection": {
             "type": "string"
           },
-          "isOnPlex": {
+          "isStreaming": {
             "type": "boolean"
           },
           "isGift": {
@@ -1514,7 +1514,7 @@
           "backdropPath",
           "productPosterPath",
           "totalSeasons",
-          "isOnPlex",
+          "isStreaming",
           "createdAt",
           "purchases"
         ],
@@ -1570,7 +1570,7 @@
             "type": "integer",
             "format": "int32"
           },
-          "isOnPlex": {
+          "isStreaming": {
             "type": "boolean"
           },
           "createdAt": {
