@@ -64,6 +64,38 @@ export function useUpdateTvShow() {
   });
 }
 
+// Sets one show's rating straight from the list (the table's stars). Every list shows the new
+// rating at once; if saving fails, the old rating is put back. Saves the show as loaded (with its
+// purchases), so pass just its id.
+export function useRateTvShow() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, rating }: { id: number; rating: number }) => {
+      const show = queryClient.getQueryData<TvShow[]>(tvShowKeys.all)?.find((s) => s.id === id);
+      if (!show) throw new Error(`TV show ${id} isn't loaded`);
+      return api.put<TvShow>(`/tvshows/${id}`, { ...show, rating });
+    },
+    onMutate: async ({ id, rating }) => {
+      // Stop a refresh in flight from overwriting the new rating with the old one
+      await queryClient.cancelQueries({ queryKey: tvShowKeys.all });
+      const previousList = queryClient.getQueryData<TvShow[]>(tvShowKeys.all);
+      const previousShow = queryClient.getQueryData<TvShow>(tvShowKeys.detail(id));
+      queryClient.setQueryData<TvShow[]>(tvShowKeys.all, (list) =>
+        list?.map((s) => (s.id === id ? { ...s, rating } : s)),
+      );
+      if (previousShow) queryClient.setQueryData(tvShowKeys.detail(id), { ...previousShow, rating });
+      return { previousList, previousShow };
+    },
+    onError: (error, { id }, context) => {
+      console.error("Error rating TV show:", error);
+      if (context?.previousList) queryClient.setQueryData(tvShowKeys.all, context.previousList);
+      if (context?.previousShow) queryClient.setQueryData(tvShowKeys.detail(id), context.previousShow);
+    },
+    onSettled: () => refreshTvShows(queryClient),
+  });
+}
+
 export function useDeleteTvShow() {
   const api = useApi();
   const queryClient = useQueryClient();
