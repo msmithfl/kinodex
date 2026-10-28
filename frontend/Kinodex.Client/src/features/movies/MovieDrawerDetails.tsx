@@ -5,6 +5,7 @@ import { FaBarcode } from "react-icons/fa6";
 import { FormatIcon } from "../../utils/formatIcon";
 import { openEbaySoldListings, useCopyToClipboard } from "../../utils/upc";
 import { formatPurchaseDate } from "../../utils/dateUtils";
+import DetailField from "../../components/DetailField";
 import type { Movie } from "../../types";
 
 interface MovieDrawerDetailsProps {
@@ -14,26 +15,16 @@ interface MovieDrawerDetailsProps {
 
 const notSet = <span className="text-gray-500">Not set</span>;
 
-// One labelled value in the details grid
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</dt>
-      <dd className="mt-1 text-sm text-white truncate">{children}</dd>
-    </div>
-  );
-}
-
-// The movie drawer's Details tab: everything about the copy, packed to fit without
-// scrolling - a grid of short values, then the disc (barcode, eBay), collections and notes
+// The movie drawer's Details tab: everything about the copy, packed to fit without scrolling -
+// format, condition and purchase, the disc (barcode, eBay), where it lives, then collections and notes
 function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetailsProps) {
   const { copied, copy } = useCopyToClipboard();
 
   return (
     <div className="px-4 md:px-6 py-4 flex flex-col gap-4">
-      {/* The copy, then where it lives */}
-      <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
-        <Field label="Formats">
+      {/* The copy and the purchase */}
+      <dl className="grid grid-cols-3 gap-x-4 gap-y-3">
+        <DetailField label="Format">
           {movie.formats && movie.formats.length > 0 ? (
             <span className="flex flex-wrap gap-2">
               {[...movie.formats].sort().map((fmt, idx) => (
@@ -43,64 +34,25 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
           ) : (
             <span className="text-gray-500">None</span>
           )}
-        </Field>
-        <Field label="Condition">{movie.condition || notSet}</Field>
-        <Field label="Paid">
+        </DetailField>
+        <DetailField label="Condition">{movie.condition || notSet}</DetailField>
+
+        <DetailField label="Paid" rowStart>
           {movie.purchasePrice > 0 ? (
             <span className="font-mono">${movie.purchasePrice.toFixed(2)}</span>
           ) : (
             notSet
           )}
-        </Field>
-        <Field label="Purchased">
+        </DetailField>
+        <DetailField label="Purchased">
           {movie.purchasedAt ? formatPurchaseDate(movie.purchasedAt) : notSet}
-        </Field>
-        <Field label="Gift">
+        </DetailField>
+        <DetailField label="Gift">
           <span className="flex items-center gap-1.5">
             <LuGift className={`w-4 h-4 ${movie.isGift ? "" : "text-gray-500"}`} />
             {movie.isGift ? "Yes" : "No"}
           </span>
-        </Field>
-        <Field label="Watched">
-          <span className="flex items-center gap-1.5">
-            {movie.hasWatched ? (
-              <>
-                <LuEye className="w-4 h-4" /> Yes
-              </>
-            ) : (
-              <>
-                <LuEyeClosed className="w-4 h-4" /> No
-              </>
-            )}
-          </span>
-        </Field>
-        <Field label="Shelf">
-          <Link
-            to={`/shelfsections/${encodeURIComponent(movie.shelfSection || "Unshelved")}`}
-            className="hover:underline"
-          >
-            {movie.shelfSection || "Unshelved"}
-          </Link>
-        </Field>
-        <Field label="Shelf #">
-          {movie.shelfNumber > 0 ? <span className="font-mono">{movie.shelfNumber}</span> : notSet}
-        </Field>
-        <Field label="HDD #">
-          {movie.hdDriveNumber > 0 ? <span className="font-mono">{movie.hdDriveNumber}</span> : notSet}
-        </Field>
-        <Field label="Streaming">
-          <span className="flex items-center gap-1.5">
-            {movie.isStreaming ? (
-              <>
-                <HiSignal className="w-4 h-4" /> Yes
-              </>
-            ) : (
-              <>
-                <HiOutlineSignalSlash className="w-4 h-4" /> No
-              </>
-            )}
-          </span>
-        </Field>
+        </DetailField>
       </dl>
 
       {/* The disc: product shot, barcode (click to copy) and an eBay sold-listings search */}
@@ -152,6 +104,51 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
           </button>
         )}
       </div>
+
+      {/* Where it lives; watched and streaming */}
+      <dl className="grid grid-cols-3 gap-x-4 gap-y-3">
+        <DetailField label="Shelf">
+          <Link
+            to={`/shelfsections/${encodeURIComponent(movie.shelfSection || "Unshelved")}`}
+            className="hover:underline"
+          >
+            {movie.shelfSection || "Unshelved"}
+          </Link>
+        </DetailField>
+        <DetailField label="Shelf #">
+          {movie.shelfNumber > 0 ? <span className="font-mono">{movie.shelfNumber}</span> : notSet}
+        </DetailField>
+        <DetailField label="HDD #">
+          {movie.hdDriveNumber > 0 ? <span className="font-mono">{movie.hdDriveNumber}</span> : notSet}
+        </DetailField>
+
+        <DetailField label="Watched" rowStart>
+          <span className="flex items-center gap-1.5">
+            {movie.hasWatched ? (
+              <>
+                <LuEye className="w-4 h-4" /> Yes
+              </>
+            ) : (
+              <>
+                <LuEyeClosed className="w-4 h-4" /> No
+              </>
+            )}
+          </span>
+        </DetailField>
+        <DetailField label="Streaming">
+          <span className="flex items-center gap-1.5">
+            {movie.isStreaming ? (
+              <>
+                <HiSignal className="w-4 h-4" /> Yes
+              </>
+            ) : (
+              <>
+                <HiOutlineSignalSlash className="w-4 h-4" /> No
+              </>
+            )}
+          </span>
+        </DetailField>
+      </dl>
 
       {/* Collections, as links that open each one's drawer */}
       <div>

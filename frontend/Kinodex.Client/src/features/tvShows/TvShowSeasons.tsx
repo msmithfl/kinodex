@@ -9,9 +9,9 @@ function TvShowSeasons({ show }: { show: TvShow }) {
   const allSeasons = Array.from({ length: show.totalSeasons }, (_, i) => i + 1);
 
   return (
-    <div className="p-4 border-b-[0.5px] border-white/20">
-      <div className="flex items-baseline justify-between mb-2">
-        <h3 className="text-sm font-medium text-gray-400">Seasons Owned</h3>
+    <div>
+      <div className="flex items-baseline justify-between mb-1.5">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400">Seasons Owned</h3>
         {show.totalSeasons > 0 && (
           <span className="text-xs text-gray-400">
             {ownsEverySeason(show)
@@ -40,9 +40,9 @@ function TvShowSeasons({ show }: { show: TvShow }) {
           })}
         </div>
       ) : owned.length > 0 ? (
-        <p className="text-white">{formatSeasons(owned, show.totalSeasons)}</p>
+        <p className="text-sm text-white">{formatSeasons(owned, show.totalSeasons)}</p>
       ) : (
-        <p className="text-gray-500 italic">None</p>
+        <p className="text-sm text-gray-500">None</p>
       )}
     </div>
   );

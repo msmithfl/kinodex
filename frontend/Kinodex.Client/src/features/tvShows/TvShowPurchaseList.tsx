@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FaBarcode } from "react-icons/fa6";
 import { LuGift } from "react-icons/lu";
+import DetailField from "../../components/DetailField";
 import { FormatIcon } from "../../utils/formatIcon";
 import { formatSeasons } from "../../utils/formatSeasons";
 import { purchaseKey, totalPaid } from "../../utils/tvShowPurchases";
@@ -8,9 +9,11 @@ import { formatPurchaseDate } from "../../utils/dateUtils";
 import { openEbaySoldListings } from "../../utils/upc";
 import type { TvShow } from "../../types";
 
-// The show's purchases, one row each: which seasons, when, price, formats, condition, and the
-// UPC (click to copy) with an eBay sold-listings search. The total paid sits in the header, and
-// the product image (if any) below the list.
+const notSet = <span className="text-gray-500">Not set</span>;
+
+// The show's purchases, one card each, laid out like the movie drawer's details: which seasons,
+// then Format | Condition, Paid | Purchased | Gift, and the UPC (click to copy) with an eBay
+// sold-listings search. The total paid sits in the header.
 function TvShowPurchaseList({ show }: { show: TvShow }) {
   // Which purchase's UPC was just copied, for the "Copied!" hint
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -22,83 +25,92 @@ function TvShowPurchaseList({ show }: { show: TvShow }) {
   };
 
   return (
-    <div className="p-4 border-b-[0.5px] border-white/20">
-      <div className="flex items-baseline justify-between mb-3">
-        <h3 className="text-sm font-medium text-gray-400">Purchases</h3>
+    <div>
+      <div className="flex items-baseline justify-between mb-1.5">
+        <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400">Purchases</h3>
         {show.purchases.length > 0 && (
-          <span className="text-sm text-gray-300">
+          <span className="text-xs text-gray-400">
             Total paid{" "}
-            <span className="font-mono text-green-400">
+            <span className="font-mono text-sm text-green-400">
               ${totalPaid(show.purchases).toFixed(2)}
             </span>
           </span>
         )}
       </div>
       {show.purchases.length > 0 ? (
-        <div className="divide-y divide-white/10 border-[0.5px] border-white/20 rounded">
+        <div className="flex flex-col gap-3">
           {show.purchases.map((purchase, idx) => {
             const key = purchaseKey(purchase, idx);
             return (
-              <div key={key} className="flex flex-wrap items-center gap-x-6 gap-y-2 px-3 py-3">
-                <div className="min-w-24">
-                  <p className="text-white font-medium">
-                    {formatSeasons(purchase.seasons, show.totalSeasons) === "Complete"
-                      ? "Complete set"
-                      : formatSeasons(purchase.seasons, 0)}
-                  </p>
-                  <p className="text-xs text-gray-400">{formatPurchaseDate(purchase.purchasedAt)}</p>
-                </div>
-                <div className="min-w-16">
-                  <p className="font-mono text-white">
-                    {purchase.price > 0 ? (
-                      `$${purchase.price.toFixed(2)}`
+              <div key={key} className="p-3 rounded-lg bg-gray-800/60 border border-white/10">
+                <p className="text-sm font-medium text-white mb-2">
+                  {formatSeasons(purchase.seasons, show.totalSeasons) === "Complete"
+                    ? "Complete set"
+                    : formatSeasons(purchase.seasons, 0)}
+                </p>
+
+                <dl className="grid grid-cols-3 gap-x-4 gap-y-3">
+                  <DetailField label="Format">
+                    {purchase.formats.length > 0 ? (
+                      <span className="flex flex-wrap gap-2">
+                        {[...purchase.formats].sort().map((fmt) => (
+                          <FormatIcon key={fmt} fmt={fmt} />
+                        ))}
+                      </span>
                     ) : (
-                      <span className="text-gray-500">No price</span>
+                      <span className="text-gray-500">None</span>
                     )}
-                  </p>
-                  {purchase.isGift && (
-                    <p className="flex items-center gap-1 text-xs text-gray-400">
-                      <LuGift className="w-3.5 h-3.5" /> Gift
-                    </p>
-                  )}
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  {[...purchase.formats].sort().map((fmt) => (
-                    <FormatIcon key={fmt} fmt={fmt} />
-                  ))}
-                </div>
-                {purchase.condition && (
-                  <span className="text-sm text-gray-300">{purchase.condition}</span>
-                )}
-                <div className="flex items-center gap-3 ml-auto">
-                  {purchase.upcNumber ? (
-                    <>
-                      <div className="relative inline-block">
-                        <button
-                          onClick={() => copyUpc(purchase.upcNumber, key)}
-                          title="Copy to clipboard"
-                          className="flex items-center gap-1 text-sm font-mono text-white cursor-pointer"
-                        >
-                          <FaBarcode />
-                          {purchase.upcNumber}
-                        </button>
-                        {copiedKey === key && (
-                          <span className="absolute top-full mt-1 left-1/2 -translate-x-1/2 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
-                            Copied!
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => openEbaySoldListings(purchase.upcNumber)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded-md transition duration-200 text-xs cursor-pointer"
-                      >
-                        Search eBay
-                      </button>
-                    </>
-                  ) : (
-                    <span className="text-gray-500 text-sm flex items-center gap-1">
-                      <FaBarcode /> No UPC
+                  </DetailField>
+                  <DetailField label="Condition">{purchase.condition || notSet}</DetailField>
+
+                  <DetailField label="Paid" rowStart>
+                    {purchase.price > 0 ? (
+                      <span className="font-mono">${purchase.price.toFixed(2)}</span>
+                    ) : (
+                      notSet
+                    )}
+                  </DetailField>
+                  <DetailField label="Purchased">
+                    {purchase.purchasedAt ? formatPurchaseDate(purchase.purchasedAt) : notSet}
+                  </DetailField>
+                  <DetailField label="Gift">
+                    <span className="flex items-center gap-1.5">
+                      <LuGift className={`w-4 h-4 ${purchase.isGift ? "" : "text-gray-500"}`} />
+                      {purchase.isGift ? "Yes" : "No"}
                     </span>
+                  </DetailField>
+                </dl>
+
+                {/* The disc: barcode (click to copy) and an eBay sold-listings search */}
+                <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/10">
+                  <div className="relative min-w-0">
+                    {purchase.upcNumber ? (
+                      <button
+                        onClick={() => copyUpc(purchase.upcNumber, key)}
+                        title="Copy to clipboard"
+                        className="flex items-center gap-1.5 font-mono text-sm text-white hover:text-indigo-300 cursor-pointer"
+                      >
+                        <FaBarcode className="shrink-0" />
+                        <span className="truncate">{purchase.upcNumber}</span>
+                      </button>
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-sm text-gray-500">
+                        <FaBarcode className="shrink-0" /> No UPC
+                      </span>
+                    )}
+                    {copiedKey === key && (
+                      <span className="absolute top-full mt-1 left-0 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
+                        Copied!
+                      </span>
+                    )}
+                  </div>
+                  {purchase.upcNumber && (
+                    <button
+                      onClick={() => openEbaySoldListings(purchase.upcNumber)}
+                      className="ml-auto shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3 rounded-md transition duration-200 text-xs cursor-pointer"
+                    >
+                      Search eBay
+                    </button>
                   )}
                 </div>
               </div>
@@ -106,17 +118,7 @@ function TvShowPurchaseList({ show }: { show: TvShow }) {
           })}
         </div>
       ) : (
-        <p className="text-gray-500 italic">No purchases recorded</p>
-      )}
-      {show.productPosterPath && (
-        <img
-          src={show.productPosterPath}
-          alt={`${show.title} product`}
-          className="mt-4 rounded-lg shadow-md w-24 lg:w-32 h-auto object-cover"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
-        />
+        <p className="text-sm text-gray-500">No purchases recorded</p>
       )}
     </div>
   );

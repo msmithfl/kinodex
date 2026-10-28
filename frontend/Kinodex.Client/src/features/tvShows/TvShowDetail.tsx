@@ -6,14 +6,11 @@ import { useDeleteTvShow, useTvShow } from "./api";
 import { Stars } from "../../components/StarRating";
 import TmdbLink from "../../components/TmdbLink";
 import { FaEdit, FaTrash } from "react-icons/fa";
-import { LuEye, LuEyeClosed } from "react-icons/lu";
-import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import ImageLightbox from "../../components/ImageLightbox";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { EditTvShowModal } from "../../components/EditTvShowModal";
-import TvShowSeasons from "./TvShowSeasons";
-import TvShowPurchaseList from "./TvShowPurchaseList";
+import TvShowDrawerDetails from "./TvShowDrawerDetails";
 
 interface TvShowDetailProps {
   showId: string;
@@ -23,7 +20,7 @@ interface TvShowDetailProps {
 
 // A TV show's details, shown in the side drawer (the only detail view; the old full page is
 // retired and /tv-shows/:id redirects to the list with this drawer open). The poster small on the
-// left, title and year, genres, then rating and TMDB beside it; seasons and purchases below.
+// left, title and year, genres, then rating and TMDB beside it; the details below.
 function TvShowDetail({ showId, onDeleted }: TvShowDetailProps) {
   // From tablet up the drawer floats edit and delete beside its close button, outside the panel
   const actionsSlot = useContext(DrawerActionsSlotContext);
@@ -41,6 +38,7 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps) {
   const [deleteError, setDeleteError] = useState("");
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPosterLightbox, setShowPosterLightbox] = useState(false);
+  const [showProductLightbox, setShowProductLightbox] = useState(false);
 
   const handleDeleteConfirm = async () => {
     setShowDeleteConfirm(false);
@@ -216,65 +214,20 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps) {
 
               {/* Details */}
               <div className="min-w-0">
-                <div className="mb-8">
-                  <TvShowSeasons show={show} />
-                  <TvShowPurchaseList show={show} />
-
-                  <div className="flex p-4 border-b-[0.5px] border-white/20">
-                    <div className="w-1/2">
-                      <h3 className="text-sm font-medium text-gray-400 mb-2">
-                        Watched
-                      </h3>
-                      <p className="text-base text-white flex items-center gap-2">
-                        {show.hasWatched ? (
-                          <>
-                            <LuEye className="w-5 h-5" /> Yes
-                          </>
-                        ) : (
-                          <>
-                            <LuEyeClosed className="w-5 h-5" /> No
-                          </>
-                        )}
-                      </p>
-                    </div>
-                    <div className="w-1/2">
-                      <h3 className="text-sm font-medium text-gray-400 mb-2">
-                        Streaming
-                      </h3>
-                      <p className="text-base text-white flex items-center gap-2">
-                        {show.isStreaming ? (
-                          <>
-                            <HiSignal className="w-5 h-5" /> Yes
-                          </>
-                        ) : (
-                          <>
-                            <HiOutlineSignalSlash className="w-5 h-5" /> No
-                          </>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Review */}
-                <div className="mb-8">
-                  <div className="m-4 p-6 bg-gray-700 rounded-lg">
-                    <h3 className="text-sm font-medium text-gray-400 mb-3">
-                      Review / Notes
-                    </h3>
-                    {show.review ? (
-                      <p className="text-white whitespace-pre-wrap">
-                        {show.review}
-                      </p>
-                    ) : (
-                      <p className="text-gray-500 italic">
-                        No review or notes added
-                      </p>
-                    )}
-                  </div>
-                </div>
+                <TvShowDrawerDetails
+                  show={show}
+                  onEnlargeProductImage={() => setShowProductLightbox(true)}
+                />
               </div>
             </div>
+
+            {showProductLightbox && show.productPosterPath && (
+              <ImageLightbox
+                src={show.productPosterPath}
+                alt={`${show.title} product`}
+                onClose={() => setShowProductLightbox(false)}
+              />
+            )}
 
             {showPosterLightbox && show.posterPath && (
               <ImageLightbox
