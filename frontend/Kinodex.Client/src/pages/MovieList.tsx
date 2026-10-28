@@ -110,6 +110,7 @@ function MovieList() {
     purchasedAt: "",
     isOnPlex: "",
     hasWatched: "",
+    isGift: "",
     condition: "",
     formats: "",
   });
@@ -257,6 +258,9 @@ function MovieList() {
       if (bulkEditData.hasWatched !== "") {
         updates.hasWatched = bulkEditData.hasWatched === "true";
       }
+      if (bulkEditData.isGift !== "") {
+        updates.isGift = bulkEditData.isGift === "true";
+      }
       if (bulkEditData.condition !== "") {
         updates.condition = bulkEditData.condition;
       }
@@ -287,6 +291,7 @@ function MovieList() {
         purchasedAt: "",
         isOnPlex: "",
         hasWatched: "",
+        isGift: "",
         condition: "",
         formats: "",
       });
