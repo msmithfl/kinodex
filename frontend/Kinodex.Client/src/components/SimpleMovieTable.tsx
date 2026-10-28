@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { Stars } from "./StarRating";
+import { QuickRating } from "./StarRating";
+import { useRateMovie } from "../features/movies/api";
 import type { Movie } from "../types";
 
 interface SimpleMovieTableProps {
@@ -21,6 +22,8 @@ function SimpleMovieTable({
   showRating = true,
   fitWidth = false,
 }: SimpleMovieTableProps) {
+  // The Rating column's stars save straight away
+  const rateMovie = useRateMovie();
   const headings = ["Title", "Year", "Format", ...(showRating ? ["Rating"] : [])];
   // Narrower padding when fitting, to leave the title as much room as possible
   const pad = fitWidth ? "px-3 md:px-4" : "px-4 md:px-6";
@@ -91,9 +94,12 @@ function SimpleMovieTable({
               </td>
               {showRating && (
                 <td className={`${pad} py-2 whitespace-nowrap align-middle`}>
-                  <div className="flex gap-0.5">
-                    <Stars rating={movie.rating} />
-                  </div>
+                  {/* Click to rate; clicks don't open the row's drawer */}
+                  <QuickRating
+                    rating={movie.rating}
+                    onRate={(rating) => rateMovie.mutate({ movie, rating })}
+                    label={`Rate ${movie.title}`}
+                  />
                 </td>
               )}
             </tr>

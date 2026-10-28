@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
 import { ApiError } from "../utils/api";
-import { useTvShows } from "../features/tvShows/api";
+import { useRateTvShow, useTvShows } from "../features/tvShows/api";
 import { Link, useLocation } from "react-router-dom";
 import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
 import ViewToggle from "../components/ViewToggle";
@@ -9,7 +9,7 @@ import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
 import MoviePosterCard from "../components/MovieCardPoster";
 import SortDropdown, { type SortDropdownOption } from "../components/SortDropdown";
 import { LuTable2 } from "react-icons/lu";
-import { Stars } from "../components/StarRating";
+import { QuickRating } from "../components/StarRating";
 import Counter from "../components/Counter";
 import LoadingSpinner from "../components/LoadingSpinner";
 import SortableTableHeader from "../components/SortableTableHeader";
@@ -69,6 +69,8 @@ const COLUMN_OPTIONS: { key: keyof VisibleColumns; label: string }[] = [
 function TvShowList() {
   // Shared with every other screen showing TV shows; saves anywhere refresh it
   const { data: shows = [], isLoading: loading, error } = useTvShows();
+  // The Rating column's stars save straight away
+  const rateTvShow = useRateTvShow();
   const loadError = !error
     ? ""
     : error instanceof ApiError
@@ -432,9 +434,14 @@ function TvShowList() {
                         )}
                         {visibleColumns.rating && (
                           <td className="pl-6 py-2 whitespace-nowrap align-middle">
-                            <div className="flex gap-0.5">
-                              <Stars rating={show.rating} />
-                            </div>
+                            {/* Click to rate; clicks don't open the row's drawer */}
+                            <QuickRating
+                              rating={show.rating}
+                              onRate={(rating) => {
+                                if (show.id !== undefined) rateTvShow.mutate({ id: show.id, rating });
+                              }}
+                              label={`Rate ${show.title}`}
+                            />
                           </td>
                         )}
                         {visibleColumns.totalPaid && (

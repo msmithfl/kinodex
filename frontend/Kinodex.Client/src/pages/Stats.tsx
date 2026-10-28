@@ -244,6 +244,7 @@ function Stats() {
   return (
     <div ref={viewportRef} className="flex flex-col h-[calc(100dvh-5rem)] pt-2" style={viewportStyle}>
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-20 pt-2 md:pt-4 pb-8">
+        <h1 className="text-2xl font-bold mb-4">Collection Statistics</h1>
 
         {loading ? (
           <LoadingSpinner />
