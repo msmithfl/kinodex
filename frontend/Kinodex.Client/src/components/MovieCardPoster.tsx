@@ -48,7 +48,7 @@ function MoviePosterCard({
 
     return (
       <Link
-        to={to ?? `/movie/${movie.id}`}
+        to={to ?? `/library?movie=${movie.id}`}
         onClick={handleClick}
         className="group flex flex-col min-w-0"
       >
@@ -98,7 +98,7 @@ function MoviePosterCard({
 
   return (
     <Link
-      to={`/movie/${movie.id}`}
+      to={`/library?movie=${movie.id}`}
       className="group relative aspect-2/3 max-w-42 rounded border-[0.5px] border-white/20 overflow-hidden shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-2xl"
     >
       {movie.posterPath ? (

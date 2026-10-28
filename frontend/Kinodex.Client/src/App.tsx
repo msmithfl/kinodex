@@ -6,8 +6,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import MovieList from "./pages/MovieList";
 import TvShowList from "./pages/TvShowList";
-import TvShowDetail from "./pages/TvShowDetail";
-import MovieDetail from "./pages/MovieDetail";
 import CollectionsView from "./pages/CollectionsView";
 import ShelfSectionsView from "./pages/ShelfSectionsView";
 import ShelfSectionDetail from "./pages/ShelfSectionDetail";
@@ -28,6 +26,18 @@ import SignInPage from "./pages/SignInPage";
 function CollectionRedirect() {
   const { collectionName = "" } = useParams<{ collectionName: string }>();
   return <Navigate replace to={`/collections?collection=${encodeURIComponent(collectionName)}`} />;
+}
+
+// Movies and TV shows open in a drawer on their lists; the old full pages are retired, so old
+// /movie/:id and /tv-shows/:id links land on the list with the drawer open
+function MovieRedirect() {
+  const { id = "" } = useParams<{ id: string }>();
+  return <Navigate replace to={`/library?movie=${encodeURIComponent(id)}`} />;
+}
+
+function TvShowRedirect() {
+  const { id = "" } = useParams<{ id: string }>();
+  return <Navigate replace to={`/tv-shows?show=${encodeURIComponent(id)}`} />;
 }
 
 function App() {
@@ -52,7 +62,7 @@ function App() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/library" element={<MovieList />} />
                     <Route path="/tv-shows" element={<TvShowList />} />
-                    <Route path="/tv-shows/:id" element={<TvShowDetail />} />
+                    <Route path="/tv-shows/:id" element={<TvShowRedirect />} />
                     <Route path="/my-shelf" element={<MyShelf />} />
                     <Route path="/dashboard" element={<Navigate to="/" replace />} />
                     <Route path="/collections" element={<CollectionsView />} />
@@ -64,7 +74,7 @@ function App() {
                     <Route path="/match-movies" element={<MatchMovies />} />
                     <Route path="/checkout" element={<CheckoutsView />} />
                     <Route path="/customer" element={<CustomersView />} />
-                    <Route path="/movie/:id" element={<MovieDetail />} />
+                    <Route path="/movie/:id" element={<MovieRedirect />} />
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/stats" element={<Stats />} />
                     <Route path="/export" element={<CsvExport />} />

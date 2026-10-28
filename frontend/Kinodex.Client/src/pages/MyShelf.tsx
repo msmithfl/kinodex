@@ -140,7 +140,7 @@ function MyShelf() {
                     return (
                       <Link
                         key={movie.id}
-                        to={`/movie/${movie.id}`}
+                        to={`/library?movie=${movie.id}`}
                         title={`${movie.title}${tier !== "other" ? ` (${tier === "bluray" ? "Blu-ray" : tier.toUpperCase()})` : ""}`}
                         style={{
                           width: `${tier === "vhs" ? "40px" : "20px"}`,

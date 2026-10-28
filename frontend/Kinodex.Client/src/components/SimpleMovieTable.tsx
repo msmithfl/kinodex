@@ -63,10 +63,10 @@ function SimpleMovieTable({
                 className={`${pad} py-2 text-white align-middle ${fitWidth ? "" : "max-w-56 md:max-w-80"}`}
               >
                 <Link
-                  to={`/movie/${movie.id}`}
+                  to={`/library?movie=${movie.id}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Plain clicks open the drawer; ctrl/cmd-click still opens the full page in a new tab
+                    // Plain clicks open the drawer; ctrl/cmd-click opens the list with it in a drawer, in a new tab
                     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                     e.preventDefault();
                     onOpen(movie.id);

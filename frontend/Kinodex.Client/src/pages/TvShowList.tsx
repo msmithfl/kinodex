@@ -26,7 +26,7 @@ import BarcodeScanner from "../components/BarcodeScanner";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import SubNavigation from "../components/SubNavigation";
 import Drawer from "../components/Drawer";
-import TvShowDetail from "./TvShowDetail";
+import TvShowDetail from "../features/tvShows/TvShowDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
 
 // Matches the sortable table columns; TV has no condition, and its price is the total paid
@@ -314,7 +314,7 @@ function TvShowList() {
                       <MoviePosterCard
                         key={show.id}
                         movie={show}
-                        to={`/tv-shows/${show.id}`}
+                        to={`/tv-shows?show=${show.id}`}
                         onOpen={() => openShow(show.id)}
                         subtitle={[show.year || null, seasons === "-" ? null : seasons]
                           .filter(Boolean)
@@ -397,10 +397,10 @@ function TvShowList() {
                         <td className="w-12" />
                         <td className="px-6 py-2 text-white w-46 max-w-46 md:w-96 md:max-w-96 align-middle">
                           <Link
-                            to={`/tv-shows/${show.id}`}
+                            to={`/tv-shows?show=${show.id}`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Plain clicks open the drawer; ctrl/cmd-click still opens the full page in a new tab
+                              // Plain clicks open the drawer; ctrl/cmd-click opens the list with it in a drawer, in a new tab
                               if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                               e.preventDefault();
                               openShow(show.id);

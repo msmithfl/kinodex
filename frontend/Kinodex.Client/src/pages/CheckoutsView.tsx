@@ -373,7 +373,7 @@ function CheckoutsView() {
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <Link
-                              to={`/movie/${checkout.movieId}`}
+                              to={`/library?movie=${checkout.movieId}`}
                               className="text-xl font-semibold text-white hover:text-indigo-400 transition-colors"
                             >
                               {checkout.movie?.title || "Unknown Movie"}

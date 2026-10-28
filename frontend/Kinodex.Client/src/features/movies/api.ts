@@ -24,7 +24,7 @@ export function useMovies() {
   });
 }
 
-// One movie (the drawer and the full page). Starts from the list's copy when it's already
+// One movie (the drawer). Starts from the list's copy when it's already
 // loaded, so opening a movie from a list shows it straight away.
 export function useMovie(id: number | string | undefined) {
   const api = useApi();

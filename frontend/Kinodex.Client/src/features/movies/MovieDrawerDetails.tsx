@@ -24,7 +24,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-// The movie drawer's Details tab: everything from the full page's sections, packed to fit without
+// The movie drawer's Details tab: everything about the copy, packed to fit without
 // scrolling - a grid of short values, then the disc (barcode, eBay), collections and notes
 function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetailsProps) {
   const { copied, copy } = useCopyToClipboard();

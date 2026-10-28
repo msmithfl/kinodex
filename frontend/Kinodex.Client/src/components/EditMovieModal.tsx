@@ -1,6 +1,5 @@
 import { IoClose } from "react-icons/io5";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
 import type { Movie } from "../types";
 import MovieForm from "./MovieForm";
 import BarcodeScanner from "./BarcodeScanner";
@@ -12,8 +11,8 @@ import { useBackdropClose } from "../utils/useBackdropClose";
 
 interface EditMovieModalProps {
   onClose: () => void;
-  // The movie to edit; falls back to the /movie/:id route's id
-  movieId?: string;
+  // The movie to edit
+  movieId: string;
 }
 
 const EMPTY_MOVIE: Movie = {
@@ -46,10 +45,8 @@ const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompar
 export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
   // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
   const backdropClose = useBackdropClose(onClose);
-  const params = useParams<{ id: string }>();
-  const id = movieId ?? params.id;
   // From the shared cache (the drawer or list has usually loaded it already)
-  const { data: movie } = useMovie(id);
+  const { data: movie } = useMovie(movieId);
   const { data: collectionList = [] } = useCollections();
   const { data: shelfSectionList = [] } = useShelfSections();
   const updateMovie = useUpdateMovie();
@@ -124,7 +121,7 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
     setSubmitError("");
     try {
       // Every screen showing this movie refreshes itself; no page reload needed
-      await updateMovie.mutateAsync({ ...formData, id: formData.id ?? Number(id) });
+      await updateMovie.mutateAsync({ ...formData, id: formData.id ?? Number(movieId) });
       onClose();
     } catch (error) {
       console.error("Error updating movie:", error);
