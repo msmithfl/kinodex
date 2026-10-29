@@ -449,12 +449,13 @@ function MovieList() {
               {filteredMovies.length === 0 ? (
                 <EmptyState message="No movies match your search or filters." />
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8">
+                <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-1 md:gap-x-4 md:gap-y-8">
                   {pageMovies.map((movie) => (
                     <MoviePosterCard
                       key={movie.id}
                       movie={movie}
                       captionBelow
+                      hideCaptionOnMobile
                       onOpen={() => openMovie(movie.id)}
                     />
                   ))}

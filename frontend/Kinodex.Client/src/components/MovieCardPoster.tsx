@@ -15,6 +15,8 @@ interface MoviePosterCardProps {
   showShelf?: boolean;
   // Show the title and details under the poster at all times instead of on hover
   captionBelow?: boolean;
+  // With captionBelow: hide the caption on phones, where the posters are too small for it
+  hideCaptionOnMobile?: boolean;
   // Where the card links; defaults to the movie's page (TV shows pass their own)
   to?: string;
   // Replaces the caption's year · formats line
@@ -31,6 +33,7 @@ function MoviePosterCard({
   movie,
   showShelf = false,
   captionBelow = false,
+  hideCaptionOnMobile = false,
   to,
   subtitle,
   onOpen,
@@ -82,13 +85,13 @@ function MoviePosterCard({
           )}
         </div>
         <h3
-          className="mt-2 text-white text-xs md:text-sm font-semibold leading-tight truncate group-hover:underline"
+          className={`${hideCaptionOnMobile ? "hidden md:block" : ""} mt-2 text-white text-xs md:text-sm font-semibold leading-tight truncate group-hover:underline`}
           title={movie.title}
         >
           {movie.title}
         </h3>
         {(showShelf || details) && (
-          <p className="text-gray-400 text-xs mt-0.5 truncate">
+          <p className={`${hideCaptionOnMobile ? "hidden md:block" : ""} text-gray-400 text-xs mt-0.5 truncate`}>
             {showShelf ? `Shelf #${movie.shelfNumber || "N/A"}` : details}
           </p>
         )}

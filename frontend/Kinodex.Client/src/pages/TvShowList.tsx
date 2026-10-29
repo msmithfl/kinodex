@@ -326,7 +326,7 @@ function TvShowList() {
               {filteredShows.length === 0 ? (
                 <EmptyState message="No TV shows match your search or filters." />
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8">
+                <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-1 md:gap-x-4 md:gap-y-8">
                   {filteredShows.map((show) => {
                     const seasons = formatSeasons(show.owned, show.totalSeasons);
                     return (
@@ -339,6 +339,7 @@ function TvShowList() {
                           .filter(Boolean)
                           .join(" · ")}
                         captionBelow
+                        hideCaptionOnMobile
                       />
                     );
                   })}
