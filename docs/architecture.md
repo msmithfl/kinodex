@@ -83,7 +83,7 @@ page, `BottomNav` (mobile). `main.tsx` also wraps everything in the React Query 
 
 | Route | Page | Status |
 |---|---|---|
-| `/` | `Dashboard`: account row, spending, quick actions, recently added | Core |
+| `/` | `Dashboard`: account row, spending, quick actions, recently added movies and TV shows (two sideways-scrolling poster rows, right column on desktop) | Core |
 | `/library` | `MovieList`: table/poster views, search, filters, sort, bulk edit/delete, paged in the browser (`Pagination`, 100 per page) | Core |
 | `/movie/:id` | Redirects to `/library?movie=:id` (the full page is retired) | Core |
 | `/tv-shows` | `TvShowList`: table/poster views, search, filters (`features/tvShows/filters.ts`), sort | Core |

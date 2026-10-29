@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useUser, UserButton } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -13,12 +13,12 @@ import {
 } from "../utils/spending";
 import {
   FaFilm,
-  FaTv,
   FaDownload,
   FaChartPie,
   FaPlus,
   FaCog,
 } from "react-icons/fa";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { AddItemModal } from "../components/AddItemModal";
 import AccountMenuButton from "../components/AccountMenuButton";
 
@@ -33,13 +33,13 @@ interface MonthSpend {
   count: number;
 }
 
-// A movie or TV show in the Recently Added list
+// A movie or TV show in a Recently Added row
 interface RecentItem {
   key: string;
   title: string;
+  posterPath: string;
   createdAt?: string;
   to: string;
-  isTv: boolean; // Picks the sidebar's Movies or TV Shows icon
 }
 
 // On mobile each card is 26% of the row, so three fit with part of the fourth peeking in
@@ -58,6 +58,79 @@ function getMonthSpend(entries: SpendEntry[], monthStart: Date): MonthSpend {
   };
 }
 
+// The 20 most recently added, newest first
+const newestFirst = (items: RecentItem[]) =>
+  [...items]
+    .sort((a, b) => {
+      if (!a.createdAt || !b.createdAt) return 0;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    })
+    .slice(0, 20);
+
+// A titled row of posters that scrolls sideways (swipe, trackpad, or the arrows from tablet up)
+function RecentCarousel({ title, items }: { title: string; items: RecentItem[] }) {
+  const rowRef = useRef<HTMLDivElement>(null);
+  const scroll = (direction: 1 | -1) => {
+    const row = rowRef.current;
+    if (row) row.scrollBy({ left: direction * row.clientWidth * 0.8, behavior: "smooth" });
+  };
+
+  if (items.length === 0) return null;
+  return (
+    // Below desktop the row shares the height left on screen and the posters size to fit it, so
+    // the page needs no scrolling; on desktop the posters have a fixed width
+    <section className="flex-1 min-h-32 flex flex-col lg:flex-none lg:min-h-0">
+      <div className="shrink-0 flex items-center justify-between mb-2 md:mb-3">
+        <h2 className="text-lg md:text-xl font-bold">{title}</h2>
+        <div className="hidden md:flex gap-2">
+          {([-1, 1] as const).map((direction) => (
+            <button
+              key={direction}
+              type="button"
+              onClick={() => scroll(direction)}
+              className="p-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-md text-gray-300 hover:text-white transition-colors cursor-pointer"
+              aria-label={direction < 0 ? "Scroll back" : "Scroll forward"}
+            >
+              {direction < 0 ? (
+                <FaChevronLeft className="w-3 h-3" />
+              ) : (
+                <FaChevronRight className="w-3 h-3" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div
+        ref={rowRef}
+        className="flex-1 min-h-0 lg:flex-none flex gap-3 md:gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain snap-x snap-mandatory pb-2"
+      >
+        {items.map((item) => (
+          <div key={item.key} className="shrink-0 snap-start h-full aspect-2/3 lg:h-auto lg:w-28">
+            {/* Poster only; the title shows on hover (tooltip) and in the drawer it opens */}
+            <Link
+              to={item.to}
+              title={item.title}
+              className="block w-full h-full rounded border border-white/20 overflow-hidden shadow-lg transition-colors duration-200 hover:border-indigo-500"
+            >
+              {item.posterPath ? (
+                <img
+                  src={item.posterPath}
+                  alt={`${item.title} poster`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+                  <span className="text-gray-400 text-xs text-center px-2">{item.title}</span>
+                </div>
+              )}
+            </Link>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Dashboard() {
   const { user } = useUser();
   // Separate queries, so one failing still shows the other
@@ -65,7 +138,7 @@ function Dashboard() {
   const { data: shows = [], isLoading: showsLoading } = useTvShows();
   const loading = moviesLoading || showsLoading;
   const [showAddModal, setShowAddModal] = useState(false);
-  // Size the page to the viewport so Recently Added scrolls instead of running off screen
+  // Size the page to the viewport so the columns scroll instead of running off screen
   const { ref: containerRef, style: containerStyle } = useFillViewportHeight<HTMLDivElement>();
 
   // Spending this month and last, across movies and TV purchases
@@ -76,28 +149,25 @@ function Dashboard() {
     lastMonth: getMonthSpend(spend, new Date(now.getFullYear(), now.getMonth() - 1)),
   };
 
-  // 20 most recently added movies and shows; enough to fill the list, which scrolls if longer
-  const recentItems: RecentItem[] = [
-    ...movies.map((m) => ({
+  // The 20 most recently added movies, and the same for TV shows, newest first
+  const recentMovies = newestFirst(
+    movies.map((m) => ({
       key: `movie-${m.id}`,
       title: m.title,
+      posterPath: m.posterPath,
       createdAt: m.createdAt,
       to: `/library?movie=${m.id}`, // The movie list, with this movie open in its drawer
-      isTv: false,
     })),
-    ...shows.map((s) => ({
+  );
+  const recentShows = newestFirst(
+    shows.map((s) => ({
       key: `tv-${s.id}`,
       title: s.title,
+      posterPath: s.posterPath,
       createdAt: s.createdAt,
       to: `/tv-shows?show=${s.id}`, // The TV list, with this show open in its drawer
-      isTv: true,
     })),
-  ]
-    .sort((a, b) => {
-      if (!a.createdAt || !b.createdAt) return 0;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    })
-    .slice(0, 20);
+  );
 
   return (
     <div
@@ -110,9 +180,9 @@ function Dashboard() {
         {loading ? (
           <LoadingSpinner />
         ) : (
-          // Mobile: one column; the page fits the screen and Recently Added scrolls in what's left.
-          // Desktop: two columns; collection data on the left, Recently Added filling the right.
-          <div className="flex-1 min-h-0 flex flex-col gap-6 lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] lg:gap-8 mt-4 md:mt-6">
+          // Mobile: one column that scrolls; Recently Added under the quick actions.
+          // Desktop: two columns; collection data on the left, the Recently Added rows on the right.
+          <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 overflow-y-auto overflow-x-hidden lg:overflow-hidden lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] lg:gap-8 mt-4 md:mt-6">
             {/* Left column */}
             {/* lg:px-2/-mx-2 makes room for the quick actions' -m-2 hover margin, so the column never scrolls sideways */}
             <div className="shrink-0 flex flex-col gap-3 md:gap-6 lg:min-h-0 lg:overflow-y-auto lg:overflow-x-hidden lg:px-2 lg:-mx-2 lg:pb-8">
@@ -213,42 +283,11 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Right column: Recently Added */}
-            {recentItems.length > 0 && (
-              <div className="flex-1 min-h-48 lg:min-h-0 flex flex-col pb-6 md:pb-8">
-                {/* pb-6 on mobile matches the 24px above the content (pt-2 + mt-4) */}
-                <h2 className="shrink-0 text-2xl font-bold mb-3 md:mb-4">Recently Added</h2>
-                {/* flex-1 fills the space down to the bottom of the screen; the rows scroll inside it */}
-                <div className="flex-1 min-h-0 bg-gray-800 rounded-lg shadow-lg overflow-y-auto">
-                  <div className="divide-y divide-gray-700">
-                    {recentItems.map((item) => (
-                      <Link
-                        key={item.key}
-                        to={item.to}
-                        className="flex items-center gap-3 p-4 hover:bg-gray-700 transition-colors"
-                      >
-                        {/* Same icons as the sidebar's Movies and TV Shows items */}
-                        {item.isTv ? (
-                          <FaTv
-                            className="w-5 h-5 shrink-0 text-gray-400"
-                            title="TV show"
-                          />
-                        ) : (
-                          <FaFilm
-                            className="w-5 h-5 shrink-0 text-gray-400"
-                            title="Movie"
-                          />
-                        )}
-                        <h3
-                          className="min-w-0 text-lg font-semibold text-white truncate"
-                          title={item.title}
-                        >
-                          {item.title}
-                        </h3>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
+            {/* Right column: Recently Added movies, then TV shows */}
+            {(recentMovies.length > 0 || recentShows.length > 0) && (
+              <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 lg:flex-none lg:overflow-y-auto lg:overflow-x-hidden pb-4 md:pb-8">
+                <RecentCarousel title="Recently Added Movies" items={recentMovies} />
+                <RecentCarousel title="Recently Added TV Shows" items={recentShows} />
               </div>
             )}
           </div>
