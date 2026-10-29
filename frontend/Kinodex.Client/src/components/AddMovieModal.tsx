@@ -51,7 +51,7 @@ const emptyMovie = (): Movie => ({
   hdDriveNumber: 0,
   shelfNumber: 1,
   shelfSection: "",
-  isStreaming: false,
+  isStreaming: true,
   isGift: false,
 });
 
@@ -178,7 +178,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     }
   };
 
-  // Picking a preset fills its values; "No preset" puts those fields back to the defaults
+  // Picking a preset fills its values; "Default" puts those fields back to the defaults
   const choosePreset = (id: number | null) => {
     setPresetId(id);
     try {
@@ -290,7 +290,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
                 onChange={(e) => choosePreset(e.target.value ? Number(e.target.value) : null)}
                 className="h-8 min-w-0 max-w-32 sm:max-w-44 px-2 text-sm bg-gray-800 border border-gray-600 rounded-md text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <option value="">No preset</option>
+                <option value="">Default</option>
                 {presets.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
