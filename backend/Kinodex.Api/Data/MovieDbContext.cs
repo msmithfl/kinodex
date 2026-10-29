@@ -21,4 +21,10 @@ public class MovieDbContext : DbContext
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Checkout> Checkouts => Set<Checkout>();
     public DbSet<UpcLookup> UpcLookups => Set<UpcLookup>();
+    public DbSet<MoviePreset> MoviePresets => Set<MoviePreset>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<MoviePreset>().HasIndex(p => new { p.UserId, p.Name }).IsUnique();
+    }
 }

@@ -487,6 +487,120 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/movie-presets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MoviePreset"][];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MoviePreset"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/movie-presets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MoviePreset"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/collections": {
         parameters: {
             query?: never;
@@ -1566,6 +1680,34 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             checkouts: components["schemas"]["Checkout"][];
+        };
+        MoviePreset: {
+            /** Format: int32 */
+            id: number;
+            userId: string;
+            name: string;
+            upcNumber: string;
+            collections: string[];
+            formats: string[];
+            condition: string;
+            /** Format: float */
+            purchasePrice: number;
+            /** Format: date */
+            purchasedAt?: null | string;
+            isGift: boolean;
+            hasWatched: boolean;
+            /** Format: float */
+            rating: number;
+            review: string;
+            productPosterPath: string;
+            isStreaming: boolean;
+            shelfSection: string;
+            /** Format: int32 */
+            shelfNumber: number;
+            /** Format: int32 */
+            hdDriveNumber: number;
+            /** Format: date-time */
+            createdAt: string;
         };
         ReorderItem: {
             /** Format: int32 */

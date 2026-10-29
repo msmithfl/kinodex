@@ -95,9 +95,9 @@ function MovieForm({
   );
 
   // Keep the number text boxes in step when the movie data changes from outside them (it loads,
-  // or a TMDB result fills it in). Purchase price isn't a trigger, so typing "12." isn't rewritten
-  // to "12" mid-keystroke; it's refreshed along with the others.
-  const syncKey = `${formData.year}|${formData.shelfNumber}|${formData.hdDriveNumber}|${formData.tmdbId ?? ""}`;
+  // a TMDB result or a preset fills it in). The price text is only rewritten when it no longer
+  // means the price, so typing "12." isn't rewritten to "12" mid-keystroke.
+  const syncKey = `${formData.year}|${formData.shelfNumber}|${formData.hdDriveNumber}|${formData.tmdbId ?? ""}|${formData.purchasePrice}`;
   const [syncedKey, setSyncedKey] = useState(syncKey);
   if (syncKey !== syncedKey) {
     setSyncedKey(syncKey);
@@ -105,7 +105,9 @@ function MovieForm({
     setShelfInput(formData.shelfNumber.toString());
     setHddInput(formData.hdDriveNumber.toString());
     setTmdbInput(formData.tmdbId?.toString() || "");
-    setPurchasePriceInput(formData.purchasePrice.toString());
+    if (parseFloat(purchasePriceInput) !== formData.purchasePrice) {
+      setPurchasePriceInput(formData.purchasePrice.toString());
+    }
   }
 
   const handleYearChange = (value: string) => {

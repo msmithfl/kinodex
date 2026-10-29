@@ -253,6 +253,85 @@ namespace Kinodex.Api.Migrations
                     b.ToTable("Movies");
                 });
 
+            modelBuilder.Entity("Kinodex.Api.Models.MoviePreset", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.PrimitiveCollection<List<string>>("Collections")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<List<string>>("Formats")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<int>("HDDriveNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("HasWatched")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsGift")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsStreaming")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProductPosterPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<float>("PurchasePrice")
+                        .HasColumnType("real");
+
+                    b.Property<DateOnly?>("PurchasedAt")
+                        .HasColumnType("date");
+
+                    b.Property<float>("Rating")
+                        .HasColumnType("real");
+
+                    b.Property<string>("Review")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ShelfNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ShelfSection")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UpcNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("MoviePresets");
+                });
+
             modelBuilder.Entity("Kinodex.Api.Models.ShelfSection", b =>
                 {
                     b.Property<int>("Id")

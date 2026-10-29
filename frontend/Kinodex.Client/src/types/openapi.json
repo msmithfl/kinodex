@@ -331,6 +331,102 @@
         }
       }
     },
+    "/api/movie-presets": {
+      "get": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MoviePreset"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoviePreset"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/movie-presets/{id}": {
+      "put": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoviePreset"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/collections": {
       "get": {
         "tags": [
@@ -1450,6 +1546,104 @@
             "items": {
               "$ref": "#/components/schemas/Checkout"
             }
+          }
+        }
+      },
+      "MoviePreset": {
+        "required": [
+          "name",
+          "id",
+          "userId",
+          "upcNumber",
+          "collections",
+          "formats",
+          "condition",
+          "purchasePrice",
+          "isGift",
+          "hasWatched",
+          "rating",
+          "review",
+          "productPosterPath",
+          "isStreaming",
+          "shelfSection",
+          "shelfNumber",
+          "hdDriveNumber",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "upcNumber": {
+            "type": "string"
+          },
+          "collections": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "formats": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "condition": {
+            "type": "string"
+          },
+          "purchasePrice": {
+            "type": "number",
+            "format": "float"
+          },
+          "purchasedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "isGift": {
+            "type": "boolean"
+          },
+          "hasWatched": {
+            "type": "boolean"
+          },
+          "rating": {
+            "type": "number",
+            "format": "float"
+          },
+          "review": {
+            "type": "string"
+          },
+          "productPosterPath": {
+            "type": "string"
+          },
+          "isStreaming": {
+            "type": "boolean"
+          },
+          "shelfSection": {
+            "type": "string"
+          },
+          "shelfNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hdDriveNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
