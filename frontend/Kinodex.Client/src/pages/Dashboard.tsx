@@ -45,7 +45,7 @@ interface RecentItem {
 // On mobile each card is 26% of the row, so three fit with part of the fourth peeking in
 // to show the row scrolls; from tablet up the cards share the row
 const quickActionClass =
-  "shrink-0 snap-start w-[26%] md:w-auto md:flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center";
+  "shrink-0 w-[26%] md:w-auto md:flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center";
 
 // Total spent in the given calendar month, across movies and TV purchases
 function getMonthSpend(entries: SpendEntry[], monthStart: Date): MonthSpend {
@@ -102,10 +102,10 @@ function RecentCarousel({ title, items }: { title: string; items: RecentItem[] }
       </div>
       <div
         ref={rowRef}
-        className="flex-1 min-h-0 lg:flex-none flex gap-3 md:gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain snap-x snap-mandatory pb-2"
+        className="flex-1 min-h-0 lg:flex-none flex gap-3 md:gap-4 -mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto overflow-y-hidden overscroll-x-contain no-scrollbar"
       >
         {items.map((item) => (
-          <div key={item.key} className="shrink-0 snap-start h-full aspect-2/3 lg:h-auto lg:w-28">
+          <div key={item.key} className="shrink-0 h-full aspect-2/3 lg:h-auto lg:w-28">
             {/* Poster only; the title shows on hover (tooltip) and in the drawer it opens */}
             <Link
               to={item.to}
@@ -180,9 +180,10 @@ function Dashboard() {
         {loading ? (
           <LoadingSpinner />
         ) : (
-          // Mobile: one column that scrolls; Recently Added under the quick actions.
+          // Mobile: one column; Recently Added under the quick actions. Its page padding is moved onto
+          // this box (-mx-4 px-4) so the carousels can reach the screen edges without being clipped.
           // Desktop: two columns; collection data on the left, the Recently Added rows on the right.
-          <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 overflow-y-auto overflow-x-hidden lg:overflow-hidden lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] lg:gap-8 mt-4 md:mt-6">
+          <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 overflow-y-auto overflow-x-hidden -mx-4 px-4 md:mx-0 md:px-0 lg:overflow-hidden lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] lg:gap-8 mt-4 md:mt-6">
             {/* Left column */}
             {/* lg:px-2/-mx-2 makes room for the quick actions' -m-2 hover margin, so the column never scrolls sideways */}
             <div className="shrink-0 flex flex-col gap-3 md:gap-6 lg:min-h-0 lg:overflow-y-auto lg:overflow-x-hidden lg:px-2 lg:-mx-2 lg:pb-8">
@@ -239,8 +240,8 @@ function Dashboard() {
 
 
               {/* Quick Actions */}
-              {/* Mobile: three cards fit across and the rest scroll. Tablet: four in a row. Desktop: a 2x2 grid in the left column. Padding leaves room for the hover scale. */}
-              <div className="flex lg:grid lg:grid-cols-2 gap-3 md:gap-6 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none scroll-px-2 -m-2 p-2">
+              {/* Mobile: three cards fit across and the rest scroll. Tablet: four in a row. Desktop: a 2x2 grid in the left column. Padding leaves room for the hover scale; on mobile the row runs to the screen edges, like the carousels. */}
+              <div className="flex lg:grid lg:grid-cols-2 gap-3 md:gap-6 overflow-x-auto md:overflow-x-visible no-scrollbar -my-2 py-2 -mx-4 px-4 md:-m-2 md:p-2">
                 <Link
                   to="/library"
                   className={quickActionClass}

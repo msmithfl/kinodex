@@ -90,6 +90,14 @@
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-gray-500);
 }
+/* Rows that scroll sideways by swipe or arrows (dashboard carousels, quick actions), with no
+   bar. Plain CSS rather than a Tailwind utility so it beats the unlayered rules above. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 
 *:focus {
   outline: none !important;
