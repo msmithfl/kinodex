@@ -34,6 +34,10 @@ export type Collection = Loosen<Schemas["Collection"], "userId">;
 
 export type ShelfSection = Loosen<Schemas["ShelfSection"], "userId">;
 
+// A named set of Add Movie values (format, condition, price, gift, watched, streaming, shelf,
+// HDD) for adding batches of similar movies
+export type MoviePreset = Loosen<Schemas["MoviePreset"], ServerSet>;
+
 export type Customer = Loosen<Omit<Schemas["Customer"], "checkouts">, ServerSet> & {
   checkouts?: Checkout[];
 };

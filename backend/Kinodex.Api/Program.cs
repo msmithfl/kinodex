@@ -147,6 +147,7 @@ app.MapWebhookEndpoints();
 app.MapMovieEndpoints();
 app.MapTvShowEndpoints();
 app.MapSettingsEndpoints();
+app.MapMoviePresetEndpoints();
 app.MapCollectionEndpoints();
 app.MapShelfSectionEndpoints();
 app.MapUpcEndpoints();

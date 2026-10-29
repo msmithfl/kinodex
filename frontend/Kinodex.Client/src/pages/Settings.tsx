@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSettings } from "../settings/useSettings";
 import type { UserSettings } from "../settings/settings";
+import MoviePresetSettings from "../features/movies/MoviePresetSettings";
 
 interface ToggleRowProps {
   label: string;
@@ -75,6 +76,13 @@ function Settings() {
           disabled={!loaded}
           onChange={(checked) => update({ showCollectionCompletion: checked })}
         />
+      </section>
+
+      <section className="bg-gray-800 rounded-lg px-5 py-2 mt-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-400 pt-3 pb-1">
+          Add Movie presets
+        </h2>
+        <MoviePresetSettings onError={setSaveError} />
       </section>
     </div>
   );
