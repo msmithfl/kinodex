@@ -149,6 +149,26 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   `spending.ts` / `tvShowPurchases.ts` / `formatSeasons.ts` (money and season maths),
   `checklist.ts` (collection checklist matching), `formatIcon.tsx`, `dateUtils.ts`, `isMobile.ts`.
 
+### Redesign foundation (shadcn/ui, in progress on `feature/modernize-design`)
+
+- **Components:** `components/ui/` holds shadcn/ui components (Radix primitives + Tailwind):
+  button, input, label, badge, separator, skeleton, checkbox, switch, tabs, tooltip, popover,
+  dropdown-menu, select, dialog, sheet, toggle-group, command (cmdk), sonner. They're copied
+  source, not a package: edit them freely. `components.json` lets the shadcn CLI add more.
+  `lib/utils.ts` has `cn()` for merging class names. `@/` imports resolve to `src/`.
+- **Tokens:** semantic colors in `index.css` (`bg-background`, `bg-card`, `text-muted-foreground`,
+  `bg-primary`, `bg-primary-soft`, `text-primary-text`, `border-border`, ...). `<html class="dark">`
+  selects the dark set; the `:root` set is the future light theme. The old `gray-*` classes are
+  untouched, so screens that aren't redesigned look the same.
+- **Type and motion:** Geist and Geist Mono (self-hosted via `@fontsource-variable`, imported in
+  `main.tsx`) are the app font. `tw-animate-css` gives the components their enter/exit
+  animations; `motion` is installed for larger transitions.
+- **Toasts:** `<Toaster />` is mounted in `App`; call `toast()` from `sonner`.
+- **Focus rings:** the global "no focus outline" rule skips elements with `data-slot` (every shadcn
+  component), so the new components keep keyboard focus rings.
+- Mockup of the target design: the "Kinodex redesign mockup" artifact (desktop movie list,
+  poster view with filters, Add Movie; mobile list and Add sheet).
+
 ### How data loading works today
 
 **Converted (movies, TV shows, collections, genres, dashboard, stats, search):** load and save through a shared
