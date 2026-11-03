@@ -120,7 +120,14 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Floating actions:** from tablet up, edit/delete render outside the panel next to the close
   button, through a portal slot (`components/drawerActions.ts` context).
 - **Movie drawer tabs:** only Details for now, so the tab bar is hidden; the tab mechanism is kept for the planned Ledger and Log.
-- Escape closes only the topmost drawer; swipe right closes on touch screens.
+- **Movie drawer (redesigned):** `Drawer appearance="modern"` wherever a movie opens; the backdrop
+  across the top fading into the panel, the poster overlapping it with title, year · genres,
+  stars and TMDB; then `MovieDrawerDetails` as cards in the agreed order (Format | Condition,
+  Paid | Purchased | Gift; product shot + UPC copy + eBay sold; Shelf | Shelf # | HDD #, Watched |
+  Streaming; collections; notes). Delete asks in an `AlertDialog`, then toasts. Skeleton while
+  loading. The TV and collection drawers keep the classic look.
+- Escape closes only the topmost drawer or dialog (`role="dialog"` or `"alertdialog"`); swipe right
+  closes on touch screens.
 
 ### Modals and forms
 

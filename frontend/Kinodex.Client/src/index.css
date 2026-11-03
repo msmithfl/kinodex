@@ -115,10 +115,15 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Borders default to the theme's border color (every existing border names its own color) */
+/* Borders default to the theme's border color (every existing border names its own color).
+   Text defaults to the theme's light foreground, so windows, menus and toasts portalled outside
+   the app's layout (which sets its own white text) aren't left with the browser's black. */
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+  body {
+    @apply text-foreground;
   }
 }
 
