@@ -1,21 +1,19 @@
 import { useState } from "react";
-import { FaBarcode } from "react-icons/fa6";
-import { LuGift } from "react-icons/lu";
-import DetailField from "../../components/DetailField";
-import { FormatIcon } from "../../utils/formatIcon";
+import { Barcode, Check, Copy, ExternalLink, Gift } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import DetailField, { NotSet, YesNo } from "../../components/DetailField";
 import { formatSeasons } from "../../utils/formatSeasons";
 import { purchaseKey, totalPaid } from "../../utils/tvShowPurchases";
 import { formatPurchaseDate } from "../../utils/dateUtils";
 import { openEbaySoldListings } from "../../utils/upc";
 import type { TvShow } from "../../types";
 
-const notSet = <span className="text-gray-500">Not set</span>;
-
 // The show's purchases, one card each, laid out like the movie drawer's details: which seasons,
 // then Format | Condition, Paid | Purchased | Gift, and the UPC (click to copy) with an eBay
 // sold-listings search. The total paid sits in the header.
 function TvShowPurchaseList({ show }: { show: TvShow }) {
-  // Which purchase's UPC was just copied, for the "Copied!" hint
+  // Which purchase's UPC was just copied, for the tick
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const copyUpc = (upc: string, key: string) => {
@@ -25,13 +23,13 @@ function TvShowPurchaseList({ show }: { show: TvShow }) {
   };
 
   return (
-    <div>
-      <div className="flex items-baseline justify-between mb-1.5">
-        <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400">Purchases</h3>
+    <section className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-xs text-muted-foreground">Purchases</h3>
         {show.purchases.length > 0 && (
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-muted-foreground">
             Total paid{" "}
-            <span className="font-mono text-sm text-green-400">
+            <span className="font-mono text-sm text-foreground tabular-nums">
               ${totalPaid(show.purchases).toFixed(2)}
             </span>
           </span>
@@ -42,75 +40,76 @@ function TvShowPurchaseList({ show }: { show: TvShow }) {
           {show.purchases.map((purchase, idx) => {
             const key = purchaseKey(purchase, idx);
             return (
-              <div key={key} className="p-3 rounded-lg bg-gray-800/60 border border-white/10">
-                <p className="text-sm font-medium text-white mb-2">
+              <div key={key} className="rounded-xl border border-border bg-card">
+                <p className="px-4 pt-3 text-sm font-medium">
                   {formatSeasons(purchase.seasons, show.totalSeasons) === "Complete"
                     ? "Complete set"
                     : formatSeasons(purchase.seasons, 0)}
                 </p>
 
-                <dl className="grid grid-cols-3 gap-x-4 gap-y-3">
+                <dl className="grid grid-cols-3 gap-x-4 gap-y-4 px-4 pt-3 pb-4">
                   <DetailField label="Format">
                     {purchase.formats.length > 0 ? (
-                      <span className="flex flex-wrap gap-2">
+                      <span className="flex gap-1">
                         {[...purchase.formats].sort().map((fmt) => (
-                          <FormatIcon key={fmt} fmt={fmt} />
+                          <Badge key={fmt} variant="outline" className="font-normal">
+                            {fmt}
+                          </Badge>
                         ))}
                       </span>
                     ) : (
-                      <span className="text-gray-500">None</span>
+                      <span className="text-muted-foreground">None</span>
                     )}
                   </DetailField>
-                  <DetailField label="Condition">{purchase.condition || notSet}</DetailField>
+                  <DetailField label="Condition">{purchase.condition || <NotSet />}</DetailField>
 
                   <DetailField label="Paid" rowStart>
                     {purchase.price > 0 ? (
-                      <span className="font-mono">${purchase.price.toFixed(2)}</span>
+                      <span className="font-mono tabular-nums">${purchase.price.toFixed(2)}</span>
                     ) : (
-                      notSet
+                      <NotSet />
                     )}
                   </DetailField>
                   <DetailField label="Purchased">
-                    {purchase.purchasedAt ? formatPurchaseDate(purchase.purchasedAt) : notSet}
+                    {purchase.purchasedAt ? formatPurchaseDate(purchase.purchasedAt) : <NotSet />}
                   </DetailField>
                   <DetailField label="Gift">
-                    <span className="flex items-center gap-1.5">
-                      <LuGift className={`w-4 h-4 ${purchase.isGift ? "" : "text-gray-500"}`} />
-                      {purchase.isGift ? "Yes" : "No"}
-                    </span>
+                    <YesNo yes={purchase.isGift} on={<Gift />} off={<Gift />} />
                   </DetailField>
                 </dl>
 
                 {/* The disc: barcode (click to copy) and an eBay sold-listings search */}
-                <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/10">
-                  <div className="relative min-w-0">
-                    {purchase.upcNumber ? (
-                      <button
-                        onClick={() => copyUpc(purchase.upcNumber, key)}
-                        title="Copy to clipboard"
-                        className="flex items-center gap-1.5 font-mono text-sm text-white hover:text-indigo-300 cursor-pointer"
-                      >
-                        <FaBarcode className="shrink-0" />
-                        <span className="truncate">{purchase.upcNumber}</span>
-                      </button>
-                    ) : (
-                      <span className="flex items-center gap-1.5 text-sm text-gray-500">
-                        <FaBarcode className="shrink-0" /> No UPC
-                      </span>
-                    )}
-                    {copiedKey === key && (
-                      <span className="absolute top-full mt-1 left-0 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
-                        Copied!
-                      </span>
-                    )}
-                  </div>
-                  {purchase.upcNumber && (
+                <div className="flex items-center gap-3 border-t border-border px-3 py-2.5">
+                  {purchase.upcNumber ? (
                     <button
-                      onClick={() => openEbaySoldListings(purchase.upcNumber)}
-                      className="ml-auto shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3 rounded-md transition duration-200 text-xs cursor-pointer"
+                      type="button"
+                      onClick={() => copyUpc(purchase.upcNumber, key)}
+                      title="Copy the UPC"
+                      className="group flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 font-mono text-sm hover:bg-accent"
                     >
-                      Search eBay
+                      <Barcode className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{purchase.upcNumber}</span>
+                      {copiedKey === key ? (
+                        <Check className="size-3.5 shrink-0 text-green-400" aria-label="Copied" />
+                      ) : (
+                        <Copy className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                      )}
                     </button>
+                  ) : (
+                    <span className="flex items-center gap-2 px-1.5 text-sm text-muted-foreground">
+                      <Barcode className="size-4 shrink-0" /> No UPC
+                    </span>
+                  )}
+                  {purchase.upcNumber && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => openEbaySoldListings(purchase.upcNumber)}
+                      className="ml-auto"
+                    >
+                      eBay sold
+                      <ExternalLink />
+                    </Button>
                   )}
                 </div>
               </div>
@@ -118,9 +117,9 @@ function TvShowPurchaseList({ show }: { show: TvShow }) {
           })}
         </div>
       ) : (
-        <p className="text-sm text-gray-500">No purchases recorded</p>
+        <p className="text-sm text-muted-foreground">No purchases recorded</p>
       )}
-    </div>
+    </section>
   );
 }
 

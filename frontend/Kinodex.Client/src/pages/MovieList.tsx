@@ -1,6 +1,21 @@
 import { useState, useEffect, useRef } from "react";
-import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
 import { useLocation } from "react-router-dom";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
+import { toast } from "sonner";
+import { Columns3, LayoutGrid, Pencil, Plus, ScanBarcode, Search, Table2, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import ListSkeleton from "../components/ListSkeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
 import Drawer from "../components/Drawer";
 import MovieDetail from "../features/movies/MovieDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
@@ -8,21 +23,15 @@ import { useDeleteMovies, useMovies, useUpdateMovies } from "../features/movies/
 import { useShelfSections } from "../features/shelfSections/api";
 import { useCollections } from "../features/collections/api";
 import MovieTable from "../features/movies/MovieTable";
-import { DEFAULT_COLUMNS, type VisibleColumns } from "../features/movies/tableColumns";
-import Counter from "../components/Counter";
+import { COLUMNS, DEFAULT_COLUMNS, type VisibleColumns } from "../features/movies/tableColumns";
 import BarcodeScanner from "../components/BarcodeScanner";
-import LoadingSpinner from "../components/LoadingSpinner";
-import FilterDropdown from "../components/FilterDropdown";
-import SortDropdown from "../components/SortDropdown";
-import ConfirmDialog from "../components/ConfirmDialog";
+import FilterPanel from "../components/FilterPanel";
+import FilterChips from "../components/FilterChips";
+import SortMenu from "../components/SortMenu";
+import DeleteConfirm from "../components/DeleteConfirm";
 import SubNavigation from "../components/SubNavigation";
-import { FaPencilAlt, FaTrash } from "react-icons/fa";
-import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
-import ViewToggle from "../components/ViewToggle";
-import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
-import MoviePosterCard from "../components/MovieCardPoster";
-import { MdClose } from "react-icons/md";
-import { IoCameraOutline } from "react-icons/io5";
+import PosterCard from "../components/PosterCard";
+import { AddMovieModal } from "../components/AddMovieModal";
 import { buildFilterCategories } from "../utils/filterCategories";
 import EmptyState from "../components/EmptyState";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
@@ -35,6 +44,21 @@ import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import Pagination from "../components/Pagination";
 
 const PAGE_SIZE = 100;
+
+const EMPTY_BULK_EDIT = {
+  shelfNumber: "",
+  shelfSection: "",
+  hdDriveNumber: "",
+  purchasePrice: "",
+  purchasedAt: "",
+  isStreaming: "",
+  hasWatched: "",
+  isGift: "",
+  condition: "",
+  formats: "",
+};
+
+const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 function MovieList() {
   // Shared with every other screen showing movies; saves anywhere refresh it
@@ -66,6 +90,19 @@ function MovieList() {
     if (focusSearch && !loading) searchInputRef.current?.focus();
   }, [focusSearch, loading, location.key]);
 
+  // "/" jumps to the search box, unless you're already typing somewhere
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement;
+      if (target.closest("input, textarea, select, [contenteditable='true']")) return;
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   // The movie open in the side drawer (?movie=)
   const {
     openId: openMovieId,
@@ -75,7 +112,7 @@ function MovieList() {
 
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
-  const [showColumnMenu, setShowColumnMenu] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
     try {
       return localStorage.getItem("movieListView") === "poster"
@@ -102,18 +139,7 @@ function MovieList() {
   );
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [bulkEditData, setBulkEditData] = useState({
-    shelfNumber: "",
-    shelfSection: "",
-    hdDriveNumber: "",
-    purchasePrice: "",
-    purchasedAt: "",
-    isStreaming: "",
-    hasWatched: "",
-    isGift: "",
-    condition: "",
-    formats: "",
-  });
+  const [bulkEditData, setBulkEditData] = useState(EMPTY_BULK_EDIT);
   // Names for the filter menu
   const shelfSections = shelfSectionList.map((section) => section.name).sort();
   const collections = collectionList.map((collection) => collection.name).sort();
@@ -159,20 +185,14 @@ function MovieList() {
   const page = Math.min(requestedPage, pageCount);
   const pageMovies = filteredMovies.slice((page - 1) * pageSize, page * pageSize);
 
-  const handleColumnClick = (sortKey: string) => {
-    const column = sortKey as SortOption;
+  // Table headers: a new column sorts ascending, the current one flips the direction
+  const handleColumnClick = (column: SortOption) => {
     if (column === sortBy) {
-      // Same column, toggle direction
       setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
-      // New column, set it and default to ascending
       setSortBy(column);
       setSortDirection("asc");
     }
-  };
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
   };
 
   const handleScanClick = () => {
@@ -206,15 +226,10 @@ function MovieList() {
     setSelectedFilters({});
   };
 
-  const handleDeselectAll = () => {
-    setSelectedMovieIds(new Set());
-  };
-
-  // Posters can't be selected, so leaving the table clears any selection and the column menu
+  // Posters can't be selected, so leaving the table clears any selection
   const handleViewModeChange = (mode: "table" | "poster") => {
     setViewMode(mode);
     setSelectedMovieIds(new Set());
-    setShowColumnMenu(false);
     try {
       localStorage.setItem("movieListView", mode);
     } catch {
@@ -236,6 +251,18 @@ function MovieList() {
         newSet.delete(movieId);
       }
       return newSet;
+    });
+  };
+
+  // The table's header checkbox: every movie on the page at once
+  const handleSelectAll = (movieIds: number[], checked: boolean) => {
+    setSelectedMovieIds((prev) => {
+      const next = new Set(prev);
+      for (const id of movieIds) {
+        if (checked) next.add(id);
+        else next.delete(id);
+      }
+      return next;
     });
   };
 
@@ -283,25 +310,16 @@ function MovieList() {
       // Reset state
       setShowBulkEditModal(false);
       setSelectedMovieIds(new Set());
-      setBulkEditData({
-        shelfNumber: "",
-        shelfSection: "",
-        hdDriveNumber: "",
-        purchasePrice: "",
-        purchasedAt: "",
-        isStreaming: "",
-        hasWatched: "",
-        isGift: "",
-        condition: "",
-        formats: "",
-      });
+      setBulkEditData(EMPTY_BULK_EDIT);
+      toast.success(`Updated ${plural(updatedMovies.length, "movie")}`);
     } catch (error) {
       console.error("Error updating movies:", error);
-      alert("Failed to update movies. Please try again.");
+      toast.error("Couldn't update the movies. Please try again.");
     }
   };
 
   const handleBulkDelete = async () => {
+    const count = selectedMovieIds.size;
     try {
       // The list refreshes itself afterwards
       await deleteMovies.mutateAsync(Array.from(selectedMovieIds));
@@ -309,9 +327,11 @@ function MovieList() {
       // Reset state
       setShowDeleteConfirm(false);
       setSelectedMovieIds(new Set());
+      toast.success(`Deleted ${plural(count, "movie")}`);
     } catch (error) {
       console.error("Error deleting movies:", error);
-      alert("Failed to delete movies. Please try again.");
+      setShowDeleteConfirm(false);
+      toast.error("Couldn't delete the movies. Please try again.");
     }
   };
 
@@ -325,163 +345,240 @@ function MovieList() {
     return (
       <>
         <SubNavigation />
-        <LoadingSpinner />
+        <ListSkeleton viewMode={viewMode} label="Loading movies" />
       </>
     );
   }
+
+  const narrowed = filteredMovies.length !== movies.length;
 
   return (
     <>
       <SubNavigation />
       {openMovieId && (
-        <Drawer label="Movie details" onClose={closeMovie}>
+        <Drawer label="Movie details" onClose={closeMovie} appearance="modern">
           {/* Keyed by id so switching movies starts the details fresh */}
           <MovieDetail key={openMovieId} movieId={openMovieId} onDeleted={closeMovie} />
         </Drawer>
       )}
       <div
         ref={containerRef}
-        className="flex flex-col h-[calc(100dvh-9rem)]"
+        className="flex h-[calc(100dvh-9rem)] flex-col bg-background"
         style={containerStyle}
       >
-        {/* Fixed header section */}
-        <div className="shrink-0 mx-6 mt-4 md:mx-12">
+        {/* Title, toolbar and active filters */}
+        <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">Movies</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {movies.length} in your collection
+                {narrowed && ` · ${filteredMovies.length} shown`}
+              </p>
+            </div>
+            {/* Phones add and scan from the bottom bar */}
+            <div className="hidden gap-2 md:flex">
+              <Button variant="outline" onClick={handleScanClick}>
+                <ScanBarcode />
+                Scan
+              </Button>
+              <Button onClick={() => setShowAddModal(true)}>
+                <Plus />
+                Add movie
+              </Button>
+            </div>
+          </div>
+
           {movies.length > 0 && (
-            <div className="mb-4">
-              {/* Filter, sort and count, then search and scan, then the view toggle, all in one row */}
-              {selectedMovieIds.size === 0 ? (
-                <div className="flex items-center justify-between gap-3 sm:gap-6">
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <div onClick={() => setShowColumnMenu(false)}>
-                      <FilterDropdown
-                        categories={filterCategories}
-                        selectedFilters={selectedFilters}
-                        onFilterChange={handleFilterChange}
-                        onResetFilters={handleClearFilters}
-                      />
-                    </div>
-                    {/* Poster view has no table headers to click, so it gets a sort menu */}
-                    {viewMode === "poster" && (
-                      <SortDropdown
-                        sortBy={sortBy}
-                        sortDirection={sortDirection}
-                        onSortChange={handleColumnClick}
-                      />
-                    )}
-                    <Counter count={filteredMovies.length} />
-                  </div>
-
-                  {/* Search and scan: desktop only; on mobile the bottom bar's Search page and Scan cover these */}
-                  <div className="hidden md:flex flex-1 gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
-                        ref={searchInputRef}
-                        placeholder="Search by title or UPC..."
-                        value={searchQuery}
-                        onChange={(e) => handleSearchChange(e.target.value)}
-                        className="w-full h-8 px-3 pl-9 text-sm bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      />
-                      <FaMagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleScanClick}
-                      className="h-8 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer flex items-center justify-center"
-                      title="Scan barcode"
-                    >
-                      <IoCameraOutline className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  {/* Table / poster view */}
-                  <ViewToggle
-                    value={viewMode}
-                    options={TABLE_VIEW_OPTIONS}
-                    onChange={handleViewModeChange}
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center justify-between py-1 px-3 md:px-6 bg-yellow-900/30 border border-yellow-600 rounded-lg">
-                  <span className="text-yellow-400 font-medium">
-                    <FaCheck className="inline w-4 h-4 mr-1 -mt-1" />
-                    {selectedMovieIds.size} selected
-                  </span>
-
-                  <div className="flex items-center gap-6">
-                    <button
-                      onClick={() => setShowBulkEditModal(true)}
-                      className="text-yellow-400 hover:text-yellow-300 transition-colors cursor-pointer"
-                      title="Edit selected movies"
-                    >
-                      <FaPencilAlt className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setShowDeleteConfirm(true)}
-                      className="text-yellow-400 hover:text-yellow-300 transition-colors cursor-pointer"
-                      title="Delete selected movies"
-                    >
-                      <FaTrash className="w-5 h-5" />
-                    </button>
-                  </div>
-
+            <div className="flex items-center gap-2">
+              {/* Search: tablet up; on phones the bottom bar's Search page covers it */}
+              <label className="relative hidden max-w-md flex-1 md:block">
+                <span className="sr-only">Search movies</span>
+                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search title or UPC"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-9 pl-9"
+                />
+                {searchQuery ? (
                   <button
-                    onClick={handleDeselectAll}
-                    className="px-4 py-1.5 text-sm text-yellow-400 hover:text-yellow-300 hover:border-yellow-500 rounded transition-colors cursor-pointer"
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search"
+                    className="absolute top-1/2 right-2 grid size-6 -translate-y-1/2 cursor-pointer place-items-center rounded text-muted-foreground hover:text-foreground"
                   >
-                    <MdClose className="inline w-4 h-4 mr-1 -mt-1" />
-                    Deselect All
+                    <X className="size-3.5" />
                   </button>
-                </div>
-              )}
+                ) : (
+                  <kbd className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded border border-border px-1.5 font-sans text-[11px] text-muted-foreground">
+                    /
+                  </kbd>
+                )}
+              </label>
+              <FilterPanel
+                categories={filterCategories}
+                selectedFilters={selectedFilters}
+                onFilterChange={handleFilterChange}
+                onReset={handleClearFilters}
+                resultLabel={`Show ${plural(filteredMovies.length, "movie")}`}
+              />
+              <SortMenu
+                sortBy={sortBy}
+                sortDirection={sortDirection}
+                onSortByChange={setSortBy}
+                onDirectionChange={setSortDirection}
+              />
+              <div className="ml-auto flex items-center gap-2">
+                <ToggleGroup
+                  type="single"
+                  value={viewMode}
+                  onValueChange={(mode) => mode && handleViewModeChange(mode as "table" | "poster")}
+                  aria-label="View"
+                >
+                  <ToggleGroupItem value="table" aria-label="Table view">
+                    <Table2 />
+                    <span className="hidden lg:inline">Table</span>
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="poster" aria-label="Poster view">
+                    <LayoutGrid />
+                    <span className="hidden lg:inline">Posters</span>
+                  </ToggleGroupItem>
+                </ToggleGroup>
+                {viewMode === "table" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" aria-label="Choose columns">
+                        <Columns3 />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuLabel>Columns</DropdownMenuLabel>
+                      {COLUMNS.map(({ key, label }) => (
+                        <DropdownMenuCheckboxItem
+                          key={key}
+                          checked={visibleColumns[key]}
+                          onCheckedChange={() => toggleColumn(key)}
+                          // Stay open, so several columns can be switched in one go
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          {label}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
             </div>
           )}
+
+          <FilterChips
+            categories={filterCategories}
+            selectedFilters={selectedFilters}
+            onFilterChange={handleFilterChange}
+            onReset={handleClearFilters}
+          />
         </div>
 
-        {/* Scrollable table section - takes remaining height */}
-        <div className="flex-1 min-h-0">
+        {/* The list fills the rest of the height and scrolls on its own */}
+        <div className="relative min-h-0 flex-1 px-6 md:px-10">
           {movies.length === 0 ? (
             <EmptyState message="No movies in your collection yet." />
+          ) : filteredMovies.length === 0 ? (
+            <EmptyState message="No movies match your search or filters." />
           ) : viewMode === "poster" ? (
-            // Poster view: the same filtered, searched and sorted movies as the table.
-            // Keyed by page so a new page starts scrolled to the top.
-            <div key={page} className="h-full overflow-y-auto px-6 md:px-12 pb-8">
-              {filteredMovies.length === 0 ? (
-                <EmptyState message="No movies match your search or filters." />
-              ) : (
-                <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-1 md:gap-x-4 md:gap-y-8">
-                  {pageMovies.map((movie) => (
-                    <MoviePosterCard
+            // Keyed by page so a new page starts scrolled to the top. The small inset keeps the
+            // hover ring and lift inside the scroll area.
+            <div key={page} className="-mx-2 h-full overflow-y-auto px-2 pt-1 pb-6">
+              <MotionConfig reducedMotion="user">
+                <div className="grid grid-cols-4 gap-1 md:gap-x-4 md:gap-y-7 lg:grid-cols-5 xl:grid-cols-8">
+                  {pageMovies.map((movie, index) => (
+                    <motion.div
                       key={movie.id}
-                      movie={movie}
-                      captionBelow
-                      hideCaptionOnMobile
-                      onOpen={() => openMovie(movie.id)}
-                    />
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, delay: Math.min(index, 24) * 0.015 }}
+                      className="min-w-0"
+                    >
+                      <PosterCard
+                        title={movie.title}
+                        posterPath={movie.posterPath}
+                        subtitle={movie.year ? String(movie.year) : undefined}
+                        formats={movie.formats}
+                        rating={movie.rating}
+                        to={`/library?movie=${movie.id}`}
+                        onOpen={() => openMovie(movie.id)}
+                        hideCaptionOnMobile
+                      />
+                    </motion.div>
                   ))}
                 </div>
-              )}
+              </MotionConfig>
             </div>
           ) : (
             <MovieTable
               key={page} // A new page starts scrolled to the top
               movies={pageMovies}
               visibleColumns={visibleColumns}
-              onToggleColumn={toggleColumn}
-              showColumnMenu={showColumnMenu}
-              onShowColumnMenu={setShowColumnMenu}
               sortBy={sortBy}
               sortDirection={sortDirection}
               onSort={handleColumnClick}
               selectedIds={selectedMovieIds}
               onSelect={handleCheckboxChange}
+              onSelectAll={handleSelectAll}
               onOpen={openMovie}
             />
           )}
+
+          {/* Selected rows: a floating bar of bulk actions over the bottom of the list */}
+          <AnimatePresence>
+            {selectedMovieIds.size > 0 && (
+              <div key="bulk-actions" className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 16 }}
+                  transition={{ duration: 0.15 }}
+                  role="toolbar"
+                  aria-label="Selected movies"
+                  className="pointer-events-auto flex items-center gap-1 rounded-xl border border-border bg-popover p-1.5 shadow-2xl"
+                >
+                  <span className="px-2.5 text-sm font-medium whitespace-nowrap tabular-nums">
+                    {selectedMovieIds.size} selected
+                  </span>
+                  <Separator orientation="vertical" className="mx-1 h-5!" />
+                  <Button variant="ghost" size="sm" onClick={() => setShowBulkEditModal(true)}>
+                    <Pencil />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="text-red-300 hover:bg-destructive/15 hover:text-red-200"
+                  >
+                    <Trash2 />
+                    Delete
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setSelectedMovieIds(new Set())}
+                    aria-label="Clear selection"
+                    className="text-muted-foreground"
+                  >
+                    <X />
+                  </Button>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Stays below the list rather than scrolling with it; hidden when it's all one page */}
-        <div className="shrink-0">
+        <div className="shrink-0 px-6 pb-2 md:px-10">
           <Pagination
             page={page}
             pageCount={pageCount}
@@ -491,6 +588,8 @@ function MovieList() {
           />
         </div>
       </div>
+
+      {showAddModal && <AddMovieModal onClose={() => setShowAddModal(false)} />}
 
       {showScanner && (
         <BarcodeScanner
@@ -517,15 +616,12 @@ function MovieList() {
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        title="Delete Movies"
-        message={`Are you sure you want to delete ${selectedMovieIds.size} movie${selectedMovieIds.size !== 1 ? "s" : ""}? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+      <DeleteConfirm
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title={plural(selectedMovieIds.size, "movie")}
+        description="They're removed from your collection, with their purchase and shelf details. This can't be undone."
         onConfirm={handleBulkDelete}
-        onCancel={() => setShowDeleteConfirm(false)}
       />
     </>
   );

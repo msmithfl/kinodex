@@ -53,7 +53,7 @@ function GenreDetail() {
     <>
       <SubNavigation />
       {openMovieId && (
-        <Drawer label="Movie details" onClose={closeMovie}>
+        <Drawer label="Movie details" onClose={closeMovie} appearance="modern">
           <MovieDetail key={openMovieId} movieId={openMovieId} onDeleted={closeMovie} />
         </Drawer>
       )}

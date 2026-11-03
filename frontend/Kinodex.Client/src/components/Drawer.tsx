@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { IoClose } from "react-icons/io5";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { DrawerActionsSlotContext } from "./drawerActions";
 
 interface DrawerProps {
   label: string; // Screen reader name, e.g. "Movie details"
   onClose: () => void; // Runs once the drawer has finished sliding out
   children: ReactNode;
+  // The redesign's look (movie drawers); the classic one stays for TV and collections until they're redone
+  appearance?: "classic" | "modern";
 }
 
 // How far (share of the panel's width) or how fast (px per ms) a rightward swipe must go to close
@@ -20,7 +24,8 @@ type SwipeMode = "idle" | "drag" | "settle" | "out";
 // show's details over its list. Close it with the backdrop, the close button, Escape, or (on touch screens) by
 // swiping it to the right; it slides back out before closing. Portalled to <body> so it covers
 // the header and the mobile bottom bar.
-function Drawer({ label, onClose, children }: DrawerProps) {
+function Drawer({ label, onClose, children, appearance = "classic" }: DrawerProps) {
+  const modern = appearance === "modern";
   // Set while the slide-out animation plays; onClose runs when it finishes
   const [closing, setClosing] = useState(false);
   const requestClose = useCallback(() => setClosing(true), []);
@@ -44,7 +49,7 @@ function Drawer({ label, onClose, children }: DrawerProps) {
       // collection's), and don't close mid-typing in a field, where it could throw away an unsaved edit
       const target = e.target as HTMLElement;
       if (target.closest("input, textarea, select")) return;
-      const dialogs = document.querySelectorAll('[role="dialog"]');
+      const dialogs = document.querySelectorAll('[role="dialog"], [role="alertdialog"]');
       if (dialogs[dialogs.length - 1] !== panelRef.current) return;
       requestClose();
     };
@@ -106,9 +111,13 @@ function Drawer({ label, onClose, children }: DrawerProps) {
 
   return createPortal(
     // text-white: portalled outside the app's layout, so it doesn't inherit the app's white text
-    <div className="fixed inset-0 z-50 text-white">
+    <div className={cn("fixed inset-0 z-50", modern ? "text-foreground" : "text-white")}>
       <div
-        className={`absolute inset-0 bg-black/50 ${closing ? "animate-fade-out" : "animate-fade-in"}`}
+        className={cn(
+          "absolute inset-0",
+          modern ? "bg-black/60 backdrop-blur-[2px]" : "bg-black/50",
+          closing ? "animate-fade-out" : "animate-fade-in",
+        )}
         style={backdropStyle}
         onClick={requestClose}
         aria-hidden="true"
@@ -119,7 +128,11 @@ function Drawer({ label, onClose, children }: DrawerProps) {
         aria-modal="true"
         aria-label={label}
         // touch-pan-y: the browser keeps vertical scrolling; horizontal moves are the swipe's
-        className={`${closing ? "animate-drawer-out" : "animate-drawer-in"} touch-pan-y absolute inset-y-0 right-0 w-full md:w-[42rem] lg:w-[48rem] bg-gray-900 shadow-2xl border-l border-white/10`}
+        className={cn(
+          closing ? "animate-drawer-out" : "animate-drawer-in",
+          "touch-pan-y absolute inset-y-0 right-0 w-full md:w-[42rem] lg:w-[48rem] shadow-2xl border-l",
+          modern ? "bg-background border-border" : "bg-gray-900 border-white/10",
+        )}
         style={panelStyle}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -139,10 +152,15 @@ function Drawer({ label, onClose, children }: DrawerProps) {
         <button
           type="button"
           onClick={requestClose}
-          className="md:hidden absolute top-3 right-3 z-40 p-1.5 rounded-full bg-gray-900/70 text-gray-300 hover:text-white backdrop-blur-sm cursor-pointer"
+          className={cn(
+            "md:hidden absolute top-3 right-3 z-40 rounded-full backdrop-blur-sm cursor-pointer",
+            modern
+              ? "grid size-9 place-items-center border border-white/10 bg-background/70 text-foreground/80 hover:text-foreground"
+              : "p-1.5 bg-gray-900/70 text-gray-300 hover:text-white",
+          )}
           aria-label="Close"
         >
-          <IoClose className="w-6 h-6" />
+          {modern ? <X className="size-5" /> : <IoClose className="w-6 h-6" />}
         </button>
         {/* Tablet up: close, then the content's own buttons, floating outside the panel's top-left
             corner. Inside the panel, so they slide in with it; on closing they fade out quickly,
@@ -153,10 +171,15 @@ function Drawer({ label, onClose, children }: DrawerProps) {
           <button
             type="button"
             onClick={requestClose}
-            className="p-2.5 rounded-full bg-gray-900/80 border border-white/10 shadow-lg text-gray-300 hover:text-white backdrop-blur-sm cursor-pointer"
+            className={cn(
+              "rounded-full border shadow-lg backdrop-blur-sm cursor-pointer",
+              modern
+                ? "grid size-11 place-items-center border-border bg-popover/90 text-muted-foreground hover:text-foreground"
+                : "p-2.5 bg-gray-900/80 border-white/10 text-gray-300 hover:text-white",
+            )}
             aria-label="Close"
           >
-            <IoClose className="w-6 h-6" />
+            {modern ? <X className="size-5" /> : <IoClose className="w-6 h-6" />}
           </button>
           <div ref={setActionsSlot} className="contents" />
         </div>

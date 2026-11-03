@@ -1,4 +1,131 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* ---------------------------------------------------------------------------------------------
+   Redesign tokens (shadcn/ui). New, semantic color names (bg-background, text-muted-foreground,
+   bg-primary, border-border, ...) used by the components in components/ui and the redesigned
+   screens. The existing gray-* classes are untouched, so screens not yet redesigned look as before.
+   The app is dark only for now: <html class="dark"> picks the .dark set. The :root set is the
+   light theme, ready for when that's built (docs/design/light-theme.md); nothing uses it yet.
+   --------------------------------------------------------------------------------------------- */
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --primary-soft: rgb(79 70 229 / 0.1);
+  --primary-text: #4338ca;
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: #6366f1;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: #4f46e5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(79 70 229 / 0.1);
+  --sidebar-accent-foreground: #4338ca;
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: #6366f1;
+}
+
+/* Near-black neutral base (no blue tint), one indigo accent, faint white borders */
+.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #0f0f12;
+  --card-foreground: #fafafa;
+  --popover: #141418;
+  --popover-foreground: #fafafa;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --primary-soft: rgb(79 70 229 / 0.18);
+  --primary-text: #a5b4fc;
+  --secondary: #18181b;
+  --secondary-foreground: #fafafa;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --accent: #1f1f25;
+  --accent-foreground: #fafafa;
+  --destructive: #dc2626;
+  --border: rgb(255 255 255 / 0.08);
+  --input: rgb(255 255 255 / 0.12);
+  --ring: #6366f1;
+  --sidebar: #0c0c0f;
+  --sidebar-foreground: #d4d4d8;
+  --sidebar-primary: #4f46e5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(79 70 229 / 0.18);
+  --sidebar-accent-foreground: #c7d2fe;
+  --sidebar-border: rgb(255 255 255 / 0.08);
+  --sidebar-ring: #6366f1;
+}
+
+/* Geist everywhere (self-hosted from @fontsource, imported in main.tsx) */
+@theme {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, monospace;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-text: var(--primary-text);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Borders default to the theme's border color (every existing border names its own color).
+   Text defaults to the theme's light foreground, so windows, menus and toasts portalled outside
+   the app's layout (which sets its own white text) aren't left with the browser's black. */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply text-foreground;
+  }
+}
 
 /* Side drawer slide-in. Defined as an animation without a fill mode so no transform is left on
    the panel afterwards: a lingering transform would make the panel the containing block for
@@ -99,7 +226,9 @@
   display: none;
 }
 
-*:focus {
+/* No focus outline or ring on the existing screens. shadcn/ui components (they carry a data-slot
+   attribute) are left out so their keyboard focus rings still show. */
+*:focus:not([data-slot]) {
   outline: none !important;
   box-shadow: none !important;
   ring: none !important;

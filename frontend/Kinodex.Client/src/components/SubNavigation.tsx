@@ -29,7 +29,8 @@ function SubNavigation() {
   }, [location.pathname]);
 
   return (
-    <nav>
+    // Phones only: from tablet up these pages are in the sidebar
+    <nav className="md:hidden">
       <div className="max-w-7xl mx-auto px-4">
         {/* Segmented control, matching the scope switch on the Stats page */}
         <div className="flex justify-center pt-4">

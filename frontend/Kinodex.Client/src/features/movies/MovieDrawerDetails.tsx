@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { LuEye, LuEyeClosed, LuGift } from "react-icons/lu";
-import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
-import { FaBarcode } from "react-icons/fa6";
-import { FormatIcon } from "../../utils/formatIcon";
+import { Barcode, Check, Copy, ExternalLink, Eye, EyeOff, Gift, MonitorOff, MonitorPlay } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { openEbaySoldListings, useCopyToClipboard } from "../../utils/upc";
 import { formatPurchaseDate } from "../../utils/dateUtils";
-import DetailField from "../../components/DetailField";
+import Fact, { NotSet, YesNo } from "../../components/DetailField";
 import type { Movie } from "../../types";
 
 interface MovieDrawerDetailsProps {
@@ -13,50 +13,50 @@ interface MovieDrawerDetailsProps {
   onEnlargeProductImage: () => void;
 }
 
-const notSet = <span className="text-gray-500">Not set</span>;
+const notSet = <NotSet />;
 
-// The movie drawer's Details tab: everything about the copy, packed to fit without scrolling -
-// format, condition and purchase, the disc (barcode, eBay), where it lives, then collections and notes
+const card = "rounded-xl border border-border bg-card";
+
+// The movie drawer's details, in the order they were laid out: format and condition, the purchase,
+// the disc (product shot, barcode, eBay), where it lives, watched and streaming, then collections
+// and notes
 function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetailsProps) {
   const { copied, copy } = useCopyToClipboard();
 
   return (
-    <div className="px-4 md:px-6 py-4 flex flex-col gap-4">
+    <div className="flex flex-col gap-3 px-5 pt-6 pb-8 md:px-8">
       {/* The copy and the purchase */}
-      <dl className="grid grid-cols-3 gap-x-4 gap-y-3">
-        <DetailField label="Format">
-          {movie.formats && movie.formats.length > 0 ? (
-            <span className="flex flex-wrap gap-2">
-              {[...movie.formats].sort().map((fmt, idx) => (
-                <FormatIcon key={idx} fmt={fmt} />
+      <dl className={cn(card, "grid grid-cols-3 gap-x-4 gap-y-4 p-4")}>
+        <Fact label="Format">
+          {movie.formats.length > 0 ? (
+            <span className="flex gap-1">
+              {[...movie.formats].sort().map((fmt) => (
+                <Badge key={fmt} variant="outline" className="font-normal">
+                  {fmt}
+                </Badge>
               ))}
             </span>
           ) : (
-            <span className="text-gray-500">None</span>
+            <span className="text-muted-foreground">None</span>
           )}
-        </DetailField>
-        <DetailField label="Condition">{movie.condition || notSet}</DetailField>
+        </Fact>
+        <Fact label="Condition">{movie.condition || notSet}</Fact>
 
-        <DetailField label="Paid" rowStart>
+        <Fact label="Paid" rowStart>
           {movie.purchasePrice > 0 ? (
-            <span className="font-mono">${movie.purchasePrice.toFixed(2)}</span>
+            <span className="font-mono tabular-nums">${movie.purchasePrice.toFixed(2)}</span>
           ) : (
             notSet
           )}
-        </DetailField>
-        <DetailField label="Purchased">
-          {movie.purchasedAt ? formatPurchaseDate(movie.purchasedAt) : notSet}
-        </DetailField>
-        <DetailField label="Gift">
-          <span className="flex items-center gap-1.5">
-            <LuGift className={`w-4 h-4 ${movie.isGift ? "" : "text-gray-500"}`} />
-            {movie.isGift ? "Yes" : "No"}
-          </span>
-        </DetailField>
+        </Fact>
+        <Fact label="Purchased">{movie.purchasedAt ? formatPurchaseDate(movie.purchasedAt) : notSet}</Fact>
+        <Fact label="Gift">
+          <YesNo yes={movie.isGift} on={<Gift />} off={<Gift />} />
+        </Fact>
       </dl>
 
       {/* The disc: product shot, barcode (click to copy) and an eBay sold-listings search */}
-      <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/60 border border-white/10">
+      <div className={cn(card, "flex items-center gap-3 p-3")}>
         {movie.productPosterPath && (
           <button
             type="button"
@@ -67,120 +67,95 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
             <img
               src={movie.productPosterPath}
               alt={`${movie.title} product`}
-              className="h-14 w-auto rounded shadow object-cover"
+              className="h-14 w-auto rounded-md bg-white object-cover"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
               }}
             />
           </button>
         )}
-        <div className="relative min-w-0">
-          {movie.upcNumber ? (
-            <button
-              onClick={() => copy(movie.upcNumber)}
-              title="Copy to clipboard"
-              className="flex items-center gap-1.5 font-mono text-sm text-white hover:text-indigo-300 cursor-pointer"
-            >
-              <FaBarcode className="shrink-0" />
-              <span className="truncate">{movie.upcNumber}</span>
-            </button>
-          ) : (
-            <span className="flex items-center gap-1.5 text-sm text-gray-500">
-              <FaBarcode className="shrink-0" /> No UPC
-            </span>
-          )}
-          {copied && (
-            <span className="absolute top-full mt-1 left-0 bg-gray-900 text-green-400 text-xs font-medium px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap">
-              Copied!
-            </span>
-          )}
-        </div>
-        {movie.upcNumber && (
+        {movie.upcNumber ? (
           <button
-            onClick={() => openEbaySoldListings(movie.upcNumber)}
-            className="ml-auto shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3 rounded-md transition duration-200 text-xs cursor-pointer"
+            type="button"
+            onClick={() => copy(movie.upcNumber)}
+            title="Copy the UPC"
+            className="group flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 font-mono text-sm hover:bg-accent"
           >
-            Search eBay
+            <Barcode className="size-4 shrink-0 text-muted-foreground" />
+            <span className="truncate">{movie.upcNumber}</span>
+            {copied ? (
+              <Check className="size-3.5 shrink-0 text-green-400" aria-label="Copied" />
+            ) : (
+              <Copy className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+            )}
           </button>
+        ) : (
+          <span className="flex items-center gap-2 px-1.5 text-sm text-muted-foreground">
+            <Barcode className="size-4 shrink-0" /> No UPC
+          </span>
+        )}
+        {movie.upcNumber && (
+          <Button variant="secondary" size="sm" onClick={() => openEbaySoldListings(movie.upcNumber)} className="ml-auto">
+            eBay sold
+            <ExternalLink />
+          </Button>
         )}
       </div>
 
       {/* Where it lives; watched and streaming */}
-      <dl className="grid grid-cols-3 gap-x-4 gap-y-3">
-        <DetailField label="Shelf">
+      <dl className={cn(card, "grid grid-cols-3 gap-x-4 gap-y-4 p-4")}>
+        <Fact label="Shelf">
           <Link
             to={`/shelfsections/${encodeURIComponent(movie.shelfSection || "Unshelved")}`}
             className="hover:underline"
           >
             {movie.shelfSection || "Unshelved"}
           </Link>
-        </DetailField>
-        <DetailField label="Shelf #">
-          {movie.shelfNumber > 0 ? <span className="font-mono">{movie.shelfNumber}</span> : notSet}
-        </DetailField>
-        <DetailField label="HDD #">
-          {movie.hdDriveNumber > 0 ? <span className="font-mono">{movie.hdDriveNumber}</span> : notSet}
-        </DetailField>
+        </Fact>
+        <Fact label="Shelf #">
+          {movie.shelfNumber > 0 ? <span className="font-mono tabular-nums">{movie.shelfNumber}</span> : notSet}
+        </Fact>
+        <Fact label="HDD #">
+          {movie.hdDriveNumber > 0 ? <span className="font-mono tabular-nums">{movie.hdDriveNumber}</span> : notSet}
+        </Fact>
 
-        <DetailField label="Watched" rowStart>
-          <span className="flex items-center gap-1.5">
-            {movie.hasWatched ? (
-              <>
-                <LuEye className="w-4 h-4" /> Yes
-              </>
-            ) : (
-              <>
-                <LuEyeClosed className="w-4 h-4" /> No
-              </>
-            )}
-          </span>
-        </DetailField>
-        <DetailField label="Streaming">
-          <span className="flex items-center gap-1.5">
-            {movie.isStreaming ? (
-              <>
-                <HiSignal className="w-4 h-4" /> Yes
-              </>
-            ) : (
-              <>
-                <HiOutlineSignalSlash className="w-4 h-4" /> No
-              </>
-            )}
-          </span>
-        </DetailField>
+        <Fact label="Watched" rowStart>
+          <YesNo yes={movie.hasWatched} on={<Eye />} off={<EyeOff />} />
+        </Fact>
+        <Fact label="Streaming">
+          <YesNo yes={movie.isStreaming} on={<MonitorPlay />} off={<MonitorOff />} />
+        </Fact>
       </dl>
 
       {/* Collections, as links that open each one's drawer */}
-      <div>
-        <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400">Collections</h3>
-        {movie.collections && movie.collections.length > 0 ? (
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {movie.collections.map((col, idx) => (
+      <section className="flex flex-col gap-2 pt-2">
+        <h3 className="text-xs text-muted-foreground">Collections</h3>
+        {movie.collections.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {movie.collections.map((col) => (
               <Link
-                key={idx}
+                key={col}
                 to={`/collections?collection=${encodeURIComponent(col)}`}
-                className="px-2.5 py-0.5 rounded-full text-sm bg-gray-700 hover:bg-gray-600 transition-colors"
+                className="inline-flex h-7 items-center rounded-full border border-border bg-card px-3 text-xs transition-colors hover:bg-accent"
               >
                 {col}
               </Link>
             ))}
           </div>
         ) : (
-          <p className="mt-1 text-sm text-gray-500">None</p>
+          <p className="text-sm text-muted-foreground">None</p>
         )}
-      </div>
+      </section>
 
       {/* Review / notes */}
-      <div className="p-3 rounded-lg bg-gray-800/60 border border-white/10">
-        <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400">
-          Review / Notes
-        </h3>
+      <section className={cn(card, "mt-1 flex flex-col gap-1.5 p-4")}>
+        <h3 className="text-xs text-muted-foreground">Review / notes</h3>
         {movie.review ? (
-          <p className="mt-1 text-sm text-white whitespace-pre-wrap">{movie.review}</p>
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">{movie.review}</p>
         ) : (
-          <p className="mt-1 text-sm text-gray-500 italic">No review or notes added</p>
+          <p className="text-sm text-muted-foreground italic">No review or notes added</p>
         )}
-      </div>
+      </section>
     </div>
   );
 }

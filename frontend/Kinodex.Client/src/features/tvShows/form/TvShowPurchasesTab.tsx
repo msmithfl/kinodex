@@ -1,6 +1,7 @@
-import { FaPlus } from "react-icons/fa6";
+import { Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { FormField } from "../../../components/FormFields";
 import TvShowPurchaseEditor from "../../../components/TvShowPurchaseEditor";
-import { inputClass, labelClass } from "../../../components/formStyles";
 import { formatSeasons } from "../../../utils/formatSeasons";
 import {
   newPurchase,
@@ -18,6 +19,31 @@ interface TvShowPurchasesTabProps {
   totalSeasonsInput: string;
   onTotalSeasonsChange: (value: string) => void;
   onScanClick?: (purchaseIndex: number) => void;
+}
+
+// One of the "how was it bought?" shortcuts shown before any purchase is added
+function QuickStart({
+  title,
+  description,
+  disabled,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="flex cursor-pointer flex-col gap-0.5 rounded-xl border border-border bg-card px-4 py-3 text-left transition-colors hover:border-primary/50 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:bg-card"
+    >
+      <span className="text-sm font-medium">{title}</span>
+      <span className="text-xs text-muted-foreground">{description}</span>
+    </button>
+  );
 }
 
 // The TV show form's second tab: how many seasons the show has, then each purchase (which
@@ -50,77 +76,62 @@ function TvShowPurchasesTab({
   const paid = totalPaid(formData.purchases);
 
   return (
-    <div className="space-y-4 pb-2">
-      {/* Total Seasons */}
-      <div>
-        <label htmlFor="totalSeasons" className={labelClass}>
-          Total Seasons
-        </label>
-        <input
-          type="text"
+    <div className="flex flex-col gap-4 pb-2">
+      <FormField label="Total seasons" htmlFor="totalSeasons">
+        <Input
           id="totalSeasons"
+          inputMode="numeric"
           value={totalSeasonsInput}
           onChange={(e) => onTotalSeasonsChange(e.target.value)}
           placeholder="Number of seasons"
-          className={inputClass}
+          className="max-w-40"
         />
-        <p className="text-xs text-gray-400 mt-1">
-          Filled in from TMDB when you pick a show from the search.
-        </p>
-      </div>
+        <p className="text-xs text-muted-foreground">Filled in from TMDB when you pick a show from the search.</p>
+      </FormField>
 
       {/* Summary */}
       {formData.purchases.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-2 bg-gray-700/60 px-3 py-2 text-sm">
-          <span className="text-white">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/60 px-3 py-2 text-sm">
+          <span>
             {ownsEverySeason(formData)
               ? "Complete series"
               : formData.totalSeasons > 0
                 ? `${formatSeasons(owned, formData.totalSeasons)} of ${formData.totalSeasons} seasons`
                 : formatSeasons(owned, formData.totalSeasons)}
           </span>
-          <span className="text-gray-300">
-            {formData.purchases.length} purchase
-            {formData.purchases.length !== 1 ? "s" : ""} ·{" "}
-            <span className="font-mono text-green-400">${paid.toFixed(2)}</span>
+          <span className="text-muted-foreground">
+            {formData.purchases.length} purchase{formData.purchases.length !== 1 ? "s" : ""} ·{" "}
+            <span className="font-mono text-foreground tabular-nums">${paid.toFixed(2)}</span>
           </span>
         </div>
       )}
 
       {/* Quick start when nothing has been added yet */}
       {formData.purchases.length === 0 && (
-        <div className="space-y-2">
-          <p className="text-sm text-gray-400">How was this show bought?</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button
-              type="button"
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-muted-foreground">How was this show bought?</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <QuickStart
+              title="Complete set"
+              description="One price covering every season"
               disabled={formData.totalSeasons === 0}
               onClick={() => setPurchases([newPurchase(allSeasons)])}
-              className="px-4 py-3 text-left bg-gray-700 hover:bg-gray-600 border border-gray-600 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-700"
-            >
-              <p className="text-white font-medium">Complete set</p>
-              <p className="text-xs text-gray-400">One price covering every season</p>
-            </button>
-            <button
-              type="button"
+            />
+            <QuickStart
+              title="Individual seasons"
+              description="A price for each season; remove any you don't own"
               disabled={formData.totalSeasons === 0}
               onClick={() => setPurchases(allSeasons.map((s) => newPurchase([s])))}
-              className="px-4 py-3 text-left bg-gray-700 hover:bg-gray-600 border border-gray-600 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-700"
-            >
-              <p className="text-white font-medium">Individual seasons</p>
-              <p className="text-xs text-gray-400">
-                A price for each season; remove any you don't own
-              </p>
-            </button>
+            />
           </div>
           {formData.totalSeasons === 0 && (
-            <p className="text-xs text-gray-400">Enter Total Seasons to use these shortcuts.</p>
+            <p className="text-xs text-muted-foreground">Enter the total seasons to use these shortcuts.</p>
           )}
         </div>
       )}
 
       {/* Purchases */}
-      <div className="space-y-3">
+      <div className="flex flex-col gap-3">
         {formData.purchases.map((purchase, index) => (
           <TvShowPurchaseEditor
             key={purchaseKey(purchase, index)}
@@ -137,9 +148,9 @@ function TvShowPurchasesTab({
       <button
         type="button"
         onClick={() => setPurchases([...formData.purchases, newPurchase()])}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-dashed border-gray-500 text-gray-300 hover:text-white hover:border-gray-300 transition cursor-pointer"
+        className="flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
       >
-        <FaPlus className="w-3 h-3" /> Add purchase
+        <Plus className="size-4" /> Add purchase
       </button>
     </div>
   );

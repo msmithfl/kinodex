@@ -1,4 +1,6 @@
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface PaginationProps {
   page: number; // 1-based
@@ -19,9 +21,6 @@ function pageList(page: number, pageCount: number): (number | "gap")[] {
   return pages;
 }
 
-const buttonClass =
-  "min-w-7 h-7 px-1.5 flex items-center justify-center rounded text-sm transition cursor-pointer disabled:opacity-40 disabled:cursor-default";
-
 // The bar under a paged list: what's showing ("51–100 of 312") and the page buttons.
 // Phones get previous/next around "2 / 7"; wider screens get the page numbers too.
 function Pagination({ page, pageCount, pageSize, total, onPageChange }: PaginationProps) {
@@ -31,63 +30,56 @@ function Pagination({ page, pageCount, pageSize, total, onPageChange }: Paginati
   const last = Math.min(page * pageSize, total);
 
   return (
-    <nav
-      aria-label="Pages"
-      className="flex items-center justify-between gap-3 px-6 md:px-12 py-1 border-t border-gray-700 bg-gray-900"
-    >
-      <span className="text-xs text-gray-400">
+    <nav aria-label="Pages" className="flex items-center justify-between gap-3 py-2">
+      <span className="text-xs text-muted-foreground tabular-nums">
         {first}–{last} of {total}
       </span>
 
-      <div className="flex items-center gap-0.5">
-        <button
-          type="button"
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
-          className={buttonClass + " text-gray-300 hover:bg-gray-800"}
           aria-label="Previous page"
         >
-          <FaChevronLeft className="w-3 h-3" />
-        </button>
+          <ChevronLeft />
+        </Button>
 
-        <span className="sm:hidden text-xs text-gray-300 px-1.5">
+        <span className="px-1.5 text-xs text-muted-foreground tabular-nums sm:hidden">
           {page} / {pageCount}
         </span>
 
-        <div className="hidden sm:flex items-center gap-0.5">
+        <div className="hidden items-center gap-1 sm:flex">
           {pageList(page, pageCount).map((p, i) =>
             p === "gap" ? (
-              <span key={`gap-${i}`} className="px-1 text-gray-500">
+              <span key={`gap-${i}`} className="px-1 text-muted-foreground">
                 …
               </span>
             ) : (
-              <button
+              <Button
                 key={p}
-                type="button"
+                variant={p === page ? "secondary" : "ghost"}
+                size="icon-sm"
                 onClick={() => onPageChange(p)}
                 aria-current={p === page ? "page" : undefined}
-                className={
-                  buttonClass +
-                  (p === page
-                    ? " bg-indigo-600 text-white"
-                    : " text-gray-300 hover:bg-gray-800")
-                }
+                className={cn("tabular-nums", p === page && "bg-accent")}
               >
                 {p}
-              </button>
+              </Button>
             ),
           )}
         </div>
 
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() => onPageChange(page + 1)}
           disabled={page === pageCount}
-          className={buttonClass + " text-gray-300 hover:bg-gray-800"}
           aria-label="Next page"
         >
-          <FaChevronRight className="w-3 h-3" />
-        </button>
+          <ChevronRight />
+        </Button>
       </div>
     </nav>
   );

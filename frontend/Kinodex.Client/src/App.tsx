@@ -21,6 +21,7 @@ import Settings from "./pages/Settings";
 import CsvExport from "./pages/CsvExport";
 import SignUpPage from "./pages/SignUpPage";
 import SignInPage from "./pages/SignInPage";
+import { Toaster } from "@/components/ui/sonner";
 
 // Collections open in a drawer on the Collections page now; old /collections/:name links land there
 function CollectionRedirect() {
@@ -83,6 +84,8 @@ function App() {
                 </main>
               </div>
               <BottomNav />
+              {/* Toasts from anywhere in the app: toast("...") from "sonner" */}
+              <Toaster position="bottom-right" />
             </div>
           </ProtectedRoute>
         }

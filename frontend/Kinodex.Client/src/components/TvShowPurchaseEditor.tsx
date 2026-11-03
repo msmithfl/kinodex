@@ -1,16 +1,15 @@
 import { useState } from "react";
-import { FaTrash } from "react-icons/fa";
-import { IoCameraOutline } from "react-icons/io5";
-import { LuGift } from "react-icons/lu";
+import { Gift, ScanBarcode, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormField, PillToggles } from "./FormFields";
 import type { TvShowPurchase } from "../types";
 import { formatSeasons } from "../utils/formatSeasons";
 
-const FORMATS = ["4K", "Blu-ray", "DVD", "VHS", "Digital"] as const;
+const FORMAT_OPTIONS = ["4K", "Blu-ray", "DVD", "VHS", "Digital"].map((value) => ({ value }));
 const CONDITIONS = ["Sealed", "Like New", "Good", "Poor", "Damaged"];
-
-const inputClass =
-  "w-full px-3 py-2 bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-gray-500";
-const labelClass = "block text-xs font-medium text-gray-400 mb-1";
 
 interface TvShowPurchaseEditorProps {
   purchase: TvShowPurchase;
@@ -21,6 +20,8 @@ interface TvShowPurchaseEditorProps {
   onScanClick?: () => void;
 }
 
+// One purchase in the TV form, as a card: which seasons it covers (tiles), price, date, condition,
+// formats and UPC, with a Gift toggle and remove in its header
 function TvShowPurchaseEditor({
   purchase,
   index,
@@ -47,89 +48,79 @@ function TvShowPurchaseEditor({
     onChange({ ...purchase, seasons });
   };
 
-  const toggleFormat = (format: string) => {
-    const formats = purchase.formats.includes(format)
-      ? purchase.formats.filter((f) => f !== format)
-      : [...purchase.formats, format];
-    onChange({ ...purchase, formats });
-  };
-
   const allSeasons = Array.from({ length: totalSeasons }, (_, i) => i + 1);
   const coversEverySeason =
     totalSeasons > 0 && allSeasons.every((s) => purchase.seasons.includes(s));
+  const summary = formatSeasons(purchase.seasons, totalSeasons);
 
   return (
-    <div className="border border-gray-600 bg-gray-800/60 p-3 space-y-3">
+    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-white">
+        <p className="min-w-0 truncate text-sm font-semibold">
           Purchase {index + 1}
-          <span className="ml-2 font-normal text-gray-400">
-            {formatSeasons(purchase.seasons, totalSeasons) === "-"
-              ? "No seasons yet"
-              : formatSeasons(purchase.seasons, totalSeasons)}
+          <span className="ml-2 font-normal text-muted-foreground">
+            {summary === "-" ? "No seasons yet" : summary}
           </span>
         </p>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-1">
           {/* Gift: this purchase (e.g. one season) was received rather than bought */}
           <button
             type="button"
             onClick={() => onChange({ ...purchase, isGift: !purchase.isGift })}
             aria-pressed={purchase.isGift}
-            title={purchase.isGift ? "A gift" : "Not a gift"}
-            className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition cursor-pointer ${
+            className={cn(
+              "flex h-7 cursor-pointer items-center gap-1 rounded-full border px-2.5 text-xs font-medium transition-colors",
               purchase.isGift
-                ? "bg-indigo-600 border-indigo-500 text-white"
-                : "bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-400"
-            }`}
+                ? "border-primary bg-primary-soft text-primary-text"
+                : "border-border text-muted-foreground hover:text-foreground",
+            )}
           >
-            <LuGift className="w-3.5 h-3.5" />
+            <Gift className="size-3.5" />
             Gift
           </button>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={onRemove}
-            className="text-red-400 hover:text-red-300 transition cursor-pointer p-1"
-            title={`Remove purchase ${index + 1}`}
             aria-label={`Remove purchase ${index + 1}`}
+            className="text-red-300 hover:bg-destructive/15 hover:text-red-200"
           >
-            <FaTrash className="w-4 h-4" />
-          </button>
+            <Trash2 />
+          </Button>
         </div>
       </div>
 
       {/* Seasons */}
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs font-medium text-gray-400">Seasons</span>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Seasons</span>
           {totalSeasons > 0 && (
             <button
               type="button"
-              onClick={() =>
-                onChange({
-                  ...purchase,
-                  seasons: coversEverySeason ? [] : allSeasons,
-                })
-              }
-              className="text-xs text-gray-400 hover:text-white transition cursor-pointer"
+              onClick={() => onChange({ ...purchase, seasons: coversEverySeason ? [] : allSeasons })}
+              className="cursor-pointer text-xs text-primary-text hover:underline"
             >
               {coversEverySeason ? "Clear" : "All seasons"}
             </button>
           )}
         </div>
         {totalSeasons > 0 ? (
-          <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+          <div role="group" aria-label="Seasons" className="grid grid-cols-5 gap-1.5 sm:grid-cols-10">
             {allSeasons.map((season) => {
               const selected = purchase.seasons.includes(season);
               return (
                 <button
                   key={season}
                   type="button"
+                  aria-pressed={selected}
                   onClick={() => toggleSeason(season)}
-                  className={`px-1 py-1.5 text-xs font-medium border transition cursor-pointer ${
+                  className={cn(
+                    "h-8 cursor-pointer rounded-md border text-xs font-medium tabular-nums transition-colors",
                     selected
-                      ? "bg-indigo-600 border-indigo-500 text-white"
-                      : "bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-400"
-                  }`}
+                      ? "border-primary bg-primary-soft text-primary-text"
+                      : "border-border text-muted-foreground hover:bg-accent hover:text-foreground",
+                  )}
                 >
                   S{season}
                 </button>
@@ -137,117 +128,80 @@ function TvShowPurchaseEditor({
             })}
           </div>
         ) : (
-          <p className="text-xs text-gray-400">
-            Set Total Seasons above to choose which seasons this purchase covers.
+          <p className="text-xs text-muted-foreground">
+            Set the total seasons above to choose which seasons this purchase covers.
           </p>
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {/* Price */}
-        <div>
-          <label htmlFor={`price-${index}`} className={labelClass}>
-            Price
-          </label>
-          <input
-            type="number"
-            id={`price-${index}`}
-            min={0}
-            step="0.01"
-            value={priceInput}
-            onChange={(e) => handlePriceChange(e.target.value)}
-            placeholder="0.00"
-            className={inputClass}
-          />
-        </div>
-        {/* Purchase date */}
-        <div>
-          <label htmlFor={`purchasedAt-${index}`} className={labelClass}>
-            Purchased
-          </label>
-          <input
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <FormField label="Price" htmlFor={`price-${index}`}>
+          <div className="relative">
+            <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
+              $
+            </span>
+            <Input
+              type="number"
+              id={`price-${index}`}
+              min={0}
+              step="0.01"
+              value={priceInput}
+              onChange={(e) => handlePriceChange(e.target.value)}
+              placeholder="0.00"
+              className="pl-6 font-mono"
+            />
+          </div>
+        </FormField>
+        <FormField label="Purchased" htmlFor={`purchasedAt-${index}`}>
+          <Input
             type="date"
             id={`purchasedAt-${index}`}
             value={purchase.purchasedAt}
-            onChange={(e) =>
-              onChange({ ...purchase, purchasedAt: e.target.value })
-            }
-            className={inputClass + " scheme-dark"}
+            onChange={(e) => onChange({ ...purchase, purchasedAt: e.target.value })}
+            className="scheme-dark"
           />
-        </div>
-        {/* Condition */}
-        <div className="col-span-2 sm:col-span-1">
-          <label htmlFor={`condition-${index}`} className={labelClass}>
-            Condition
-          </label>
-          <select
-            id={`condition-${index}`}
-            value={purchase.condition}
-            onChange={(e) =>
-              onChange({ ...purchase, condition: e.target.value })
-            }
-            className={inputClass + " cursor-pointer"}
-          >
-            {CONDITIONS.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </div>
+        </FormField>
+        <FormField label="Condition" className="col-span-2 sm:col-span-1">
+          <Select value={purchase.condition} onValueChange={(condition) => onChange({ ...purchase, condition })}>
+            <SelectTrigger className="w-full" aria-label="Condition">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CONDITIONS.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
       </div>
 
-      {/* Formats */}
-      <div>
-        <span className={labelClass}>Formats</span>
-        <div className="flex flex-wrap gap-1.5">
-          {FORMATS.map((format) => {
-            const selected = purchase.formats.includes(format);
-            return (
-              <button
-                key={format}
-                type="button"
-                onClick={() => toggleFormat(format)}
-                className={`px-3 py-1 rounded-full text-xs font-medium border transition cursor-pointer ${
-                  selected
-                    ? "bg-indigo-600 border-indigo-500 text-white"
-                    : "bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-400"
-                }`}
-              >
-                {format === "4K" ? "4K Ultra HD" : format}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <FormField label="Format">
+        <PillToggles
+          label="Formats"
+          options={FORMAT_OPTIONS}
+          values={purchase.formats}
+          onChange={(formats) => onChange({ ...purchase, formats })}
+        />
+      </FormField>
 
-      {/* UPC */}
-      <div>
-        <label htmlFor={`upc-${index}`} className={labelClass}>
-          UPC Number
-        </label>
+      <FormField label="UPC" htmlFor={`upc-${index}`}>
         <div className="flex gap-2">
-          <input
-            type="text"
+          <Input
             id={`upc-${index}`}
+            inputMode="numeric"
             value={purchase.upcNumber}
-            onChange={(e) =>
-              onChange({ ...purchase, upcNumber: e.target.value })
-            }
-            className={inputClass + " flex-1"}
+            onChange={(e) => onChange({ ...purchase, upcNumber: e.target.value })}
+            className="flex-1 font-mono"
           />
           {onScanClick && (
-            <button
-              type="button"
-              onClick={onScanClick}
-              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
-              title="Scan barcode"
-            >
-              <IoCameraOutline className="w-5 h-5" />
-            </button>
+            <Button type="button" variant="outline" size="icon" onClick={onScanClick} aria-label="Scan barcode">
+              <ScanBarcode />
+            </Button>
           )}
         </div>
-      </div>
+      </FormField>
     </div>
   );
 }
