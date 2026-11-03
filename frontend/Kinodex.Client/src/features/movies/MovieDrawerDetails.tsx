@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Barcode, Check, Copy, ExternalLink, Eye, EyeOff, Gift, MonitorOff, MonitorPlay } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { openEbaySoldListings, useCopyToClipboard } from "../../utils/upc";
 import { formatPurchaseDate } from "../../utils/dateUtils";
+import Fact, { NotSet, YesNo } from "../../components/DetailField";
 import type { Movie } from "../../types";
 
 interface MovieDrawerDetailsProps {
@@ -13,28 +13,7 @@ interface MovieDrawerDetailsProps {
   onEnlargeProductImage: () => void;
 }
 
-const notSet = <span className="text-muted-foreground">Not set</span>;
-
-// One labelled value in a details grid. rowStart begins a new row at the left edge, so a short
-// row leaves its remaining columns empty instead of pulling the next row up.
-function Fact({ label, rowStart, children }: { label: string; rowStart?: boolean; children: ReactNode }) {
-  return (
-    <div className={cn("min-w-0", rowStart && "col-start-1")}>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-1 truncate text-sm">{children}</dd>
-    </div>
-  );
-}
-
-// A yes/no value with its icon; "No" is muted
-function YesNo({ yes, on, off }: { yes: boolean; on: ReactNode; off: ReactNode }) {
-  return (
-    <span className={cn("flex items-center gap-1.5 [&_svg]:size-4", !yes && "text-muted-foreground")}>
-      {yes ? on : off}
-      {yes ? "Yes" : "No"}
-    </span>
-  );
-}
+const notSet = <NotSet />;
 
 const card = "rounded-xl border border-border bg-card";
 

@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ChipSelect } from "../../../components/ChipSelect";
 import { StarRatingInput } from "../../../components/StarRating";
 import { Genres, type Movie } from "../../../types";
-import { FormField, SwitchField } from "./fields";
+import { FormField, SwitchField } from "../../../components/FormFields";
 
 const GENRE_OPTIONS = Object.values(Genres).map((genre) => ({ value: genre }));
 
@@ -74,7 +74,6 @@ function MovieDetailsTab({
 
       <FormField label="Genres">
         <ChipSelect
-          appearance="modern"
           placeholder="Add genres"
           values={formData.genres}
           options={GENRE_OPTIONS}
@@ -87,7 +86,6 @@ function MovieDetailsTab({
       <FormField label="Collections">
         <div className="flex flex-wrap gap-2">
           <ChipSelect
-            appearance="modern"
             placeholder="Add to a collection"
             values={formData.collections}
             options={collections.map((col) => ({ value: col.name }))}

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Movie } from "../../../types";
-import { FormField, SwitchField } from "./fields";
+import { FormField, SwitchField } from "../../../components/FormFields";
 
 // The Select's value for "no shelf section" (its items can't use an empty string)
 const UNSHELVED = "__unshelved__";

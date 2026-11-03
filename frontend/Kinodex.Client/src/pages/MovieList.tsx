@@ -28,7 +28,7 @@ import BarcodeScanner from "../components/BarcodeScanner";
 import FilterPanel from "../components/FilterPanel";
 import FilterChips from "../components/FilterChips";
 import SortMenu from "../components/SortMenu";
-import ConfirmDialog from "../components/ConfirmDialog";
+import DeleteConfirm from "../components/DeleteConfirm";
 import SubNavigation from "../components/SubNavigation";
 import PosterCard from "../components/PosterCard";
 import { AddMovieModal } from "../components/AddMovieModal";
@@ -616,15 +616,12 @@ function MovieList() {
         />
       )}
 
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        title="Delete Movies"
-        message={`Are you sure you want to delete ${plural(selectedMovieIds.size, "movie")}? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+      <DeleteConfirm
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title={plural(selectedMovieIds.size, "movie")}
+        description="They're removed from your collection, with their purchase and shelf details. This can't be undone."
         onConfirm={handleBulkDelete}
-        onCancel={() => setShowDeleteConfirm(false)}
       />
     </>
   );

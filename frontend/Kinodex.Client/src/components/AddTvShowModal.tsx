@@ -1,20 +1,21 @@
-import { IoClose } from "react-icons/io5";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Check, ChevronRight, PenLine } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ApiError } from "../utils/api";
-import { useCreateTvShow } from "../features/tvShows/api";
+import { useCreateTvShow, useTvShows } from "../features/tvShows/api";
 import type { TMDBTvShow, TvShow } from "../types";
-import {
-  TV_GENRE_MAP,
-  getTMDBTvSeasonCount,
-  searchTMDBTv,
-} from "../utils/tmdbApi";
+import { TV_GENRE_MAP, getTMDBTvSeasonCount, searchTMDBTv } from "../utils/tmdbApi";
 import { isMobile } from "../utils/isMobile";
-import TmdbSearchStep from "./TmdbSearchStep";
+import TmdbSearch from "./TmdbSearch";
 import TvShowForm from "./TvShowForm";
 import BarcodeScanner from "./BarcodeScanner";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
-import { useBackdropClose } from "../utils/useBackdropClose";
+import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 
 const FORM_ID = "add-tv-show-form";
 
@@ -38,19 +39,43 @@ interface AddTvShowModalProps {
   onClose: () => void;
 }
 
+// The show being added: its poster, or the title on a tile
+function PreviewPoster({ show, className }: { show: TvShow; className?: string }) {
+  return show.posterPath ? (
+    <img
+      src={show.posterPath}
+      alt=""
+      className={cn("aspect-2/3 rounded-lg border border-white/10 bg-muted object-cover shadow-lg", className)}
+    />
+  ) : (
+    <div
+      className={cn(
+        "flex aspect-2/3 items-center justify-center rounded-lg border border-border bg-muted p-2 text-center text-xs text-muted-foreground",
+        className,
+      )}
+    >
+      {show.title || "No poster"}
+    </div>
+  );
+}
+
+// Add a TV show: search TMDB, then fill in the details and purchases. Same window as Add Movie.
 export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
-  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
-  const backdropClose = useBackdropClose(onClose);
   const navigate = useNavigate();
+  const { data: shows = [] } = useTvShows();
   // Adding refreshes every screen listing shows
   const createTvShow = useCreateTvShow();
   const saving = createTvShow.isPending;
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<TvShow>(emptyTvShow);
   const [submitError, setSubmitError] = useState("");
+  // Remounts the TMDB search when going back to it
+  const [searchKey, setSearchKey] = useState(0);
   // Which purchase a barcode scan fills in; null when the scanner is closed
   const [scanPurchaseIndex, setScanPurchaseIndex] = useState<number | null>(null);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
+  // TMDB results already in the library get an "In library" badge
+  const ownedTmdbIds = new Set(shows.flatMap((s) => (s.tmdbId ? [s.tmdbId] : [])));
 
   const handleShowSelect = async (show: TMDBTvShow) => {
     const genres = show.genre_ids
@@ -84,13 +109,22 @@ export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
     );
   };
 
+  // Back to the search to pick a different TMDB match; the other fields are kept
+  const changeShow = () => {
+    setShowForm(false);
+    setSearchKey((key) => key + 1);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
     try {
-      await createTvShow.mutateAsync(formData);
+      const created = await createTvShow.mutateAsync(formData);
       onClose();
       navigate("/tv-shows");
+      toast.success(`Added ${created.title}`, {
+        action: { label: "Open", onClick: () => navigate(`/tv-shows?show=${created.id}`) },
+      });
     } catch (error) {
       console.error("Error adding TV show:", error);
       setSubmitError(
@@ -121,87 +155,122 @@ export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
     setScanPurchaseIndex(null);
   };
 
+  const meta = [formData.year || null, formData.genres.slice(0, 2).join(", ") || null].filter(Boolean).join(" · ");
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-      {...backdropClose}
-    >
-      <div
-        className="flex flex-col mx-2 bg-gray-800 shadow-2xl w-full max-w-3xl h-full max-h-3/4 relative"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        className={FORM_MODAL_CLASS}
+        onEscapeKeyDown={keepOpenWhileTyping}
       >
-        <div className="flex gap-4 justify-between bg-gray-700 p-2">
-          <p className="text-white text-xl pl-2">Add TV Show</p>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white cursor-pointer"
-          >
-            <IoClose className="w-6 h-6" />
-          </button>
+        <div className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-4">
+          <div className="flex min-w-0 flex-col gap-1">
+            <DialogTitle>Add TV show</DialogTitle>
+            <ol aria-label="Steps" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <li className={cn("flex items-center gap-1", !showForm && "font-medium text-foreground")}>
+                {showForm && <Check className="size-3" aria-hidden="true" />}
+                Search
+              </li>
+              <ChevronRight className="size-3" aria-hidden="true" />
+              <li className={cn(showForm && "font-medium text-foreground")}>Details</li>
+            </ol>
+          </div>
         </div>
 
-        {!showForm && (
-          <TmdbSearchStep
+        {!showForm ? (
+          <TmdbSearch
+            key={searchKey}
             search={searchTMDBTv}
-            toOption={(show) => ({
+            toOption={(show: TMDBTvShow) => ({
               id: show.id,
               title: show.name,
               date: show.first_air_date,
               posterPath: show.poster_path,
             })}
             onSelect={handleShowSelect}
-            onManualEntry={() => setShowForm(true)}
-            placeholder="Search TMDB for a TV show..."
+            ownedTmdbIds={ownedTmdbIds}
+            placeholder="Search TMDB for a TV show…"
           />
-        )}
-        {showForm && (
-          <div className="flex flex-col flex-1 min-h-0 px-4">
-            <TvShowForm
-              formId={FORM_ID}
-              formData={formData}
-              setFormData={setFormData}
-              onSubmit={handleSubmit}
-              onScanClick={handleScanClick}
-            />
+        ) : (
+          <div className="flex min-h-0 flex-1 gap-7 px-5 pt-4 md:px-6 md:pt-5">
+            {/* Tablet up: the show being added, beside the form */}
+            <aside className="hidden w-44 shrink-0 flex-col gap-3 md:flex">
+              <PreviewPoster show={formData} className="w-full" />
+              <div className="flex flex-col gap-1">
+                <span className="text-base leading-tight font-semibold">{formData.title || "Untitled"}</span>
+                {meta && <span className="text-xs text-muted-foreground">{meta}</span>}
+                {formData.totalSeasons > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {formData.totalSeasons} season{formData.totalSeasons !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {formData.tmdbId && (
+                  <Badge variant="outline" className="font-mono font-normal text-muted-foreground">
+                    TMDB {formData.tmdbId}
+                  </Badge>
+                )}
+                <Button variant="link" size="sm" className="h-auto px-0 text-xs" onClick={changeShow}>
+                  {formData.tmdbId ? "Change show" : "Search TMDB"}
+                </Button>
+              </div>
+            </aside>
 
-            {scanPurchaseIndex !== null && (
-              <BarcodeScanner
-                onDetected={handleBarcodeDetected}
-                onClose={() => setScanPurchaseIndex(null)}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              {/* Phones: the show in a compact row */}
+              <div className="mb-3 flex items-center gap-3 md:hidden">
+                <PreviewPoster show={formData} className="w-10 shrink-0 rounded-sm text-[0px]" />
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-semibold">{formData.title || "Untitled"}</span>
+                  {meta && <span className="truncate text-xs text-muted-foreground">{meta}</span>}
+                </div>
+                <Button variant="link" size="sm" className="px-0 text-xs" onClick={changeShow}>
+                  Change
+                </Button>
+              </div>
+              <TvShowForm
+                formId={FORM_ID}
+                formData={formData}
+                setFormData={setFormData}
+                onSubmit={handleSubmit}
+                onScanClick={handleScanClick}
               />
-            )}
-
-            {showMobileOnlyMessage && (
-              <MobileOnlyMessage
-                setShowMobileOnlyMessage={setShowMobileOnlyMessage}
-              />
-            )}
+            </div>
           </div>
         )}
 
-        <div className="flex flex-col px-6 py-3 bg-gray-700 gap-2">
+        <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card px-5 py-3">
           {submitError && (
-            <p className="text-red-400 text-sm text-right">{submitError}</p>
+            <p role="alert" className="text-sm text-red-300">
+              {submitError}
+            </p>
           )}
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
-            >
-              Close
-            </button>
-            {/* Submits the form so its validation runs; nothing to save until a show is chosen or entered */}
-            <button
-              type="submit"
-              form={FORM_ID}
-              disabled={!showForm || saving}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600"
-            >
-              {saving ? "Saving..." : "Save"}
-            </button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={onClose} className="mr-auto">
+              Cancel
+            </Button>
+            {showForm ? (
+              // Submits the form so its validation runs
+              <Button type="submit" form={FORM_ID} disabled={saving}>
+                {saving ? "Saving…" : "Save"}
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => setShowForm(true)}>
+                <PenLine />
+                Enter details manually
+              </Button>
+            )}
           </div>
         </div>
-      </div>
-    </div>
+
+        {scanPurchaseIndex !== null && (
+          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setScanPurchaseIndex(null)} />
+        )}
+        {showMobileOnlyMessage && <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />}
+      </DialogContent>
+    </Dialog>
   );
 }

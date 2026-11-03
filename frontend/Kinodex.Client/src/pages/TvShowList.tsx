@@ -217,7 +217,7 @@ function TvShowList() {
     <>
       <SubNavigation />
       {openShowId && (
-        <Drawer label="TV show details" onClose={closeShow}>
+        <Drawer label="TV show details" onClose={closeShow} appearance="modern">
           {/* Keyed by id so switching shows starts the details fresh */}
           <TvShowDetail key={openShowId} showId={openShowId} onDeleted={closeShow} />
         </Drawer>

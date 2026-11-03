@@ -1,6 +1,8 @@
-import { IoClose } from "react-icons/io5";
-import { FaTrash } from "react-icons/fa";
 import { useState } from "react";
+import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { TvShow } from "../types";
 import { ApiError } from "../utils/api";
 import { useDeleteTvShow, useUpdateTvShow } from "../features/tvShows/api";
@@ -8,9 +10,9 @@ import { isMobile } from "../utils/isMobile";
 import { withClientKeys } from "../utils/tvShowPurchases";
 import TvShowForm from "./TvShowForm";
 import BarcodeScanner from "./BarcodeScanner";
-import ConfirmDialog from "./ConfirmDialog";
+import DeleteConfirm from "./DeleteConfirm";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
-import { useBackdropClose } from "../utils/useBackdropClose";
+import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 
 const FORM_ID = "edit-tv-show-form";
 
@@ -21,14 +23,13 @@ interface EditTvShowModalProps {
   onDeleted: (id: number) => void;
 }
 
+// Edit a TV show: the same form as Add TV Show, in the same window, with Delete in the footer
 export function EditTvShowModal({
   show,
   onClose,
   onSaved,
   onDeleted,
 }: EditTvShowModalProps) {
-  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
-  const backdropClose = useBackdropClose(onClose);
   const [formData, setFormData] = useState<TvShow>(() => withClientKeys(show));
   const [submitError, setSubmitError] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -59,11 +60,11 @@ export function EditTvShowModal({
   };
 
   const handleDeleteConfirm = async () => {
-    setShowDeleteConfirm(false);
     setSubmitError("");
     if (show.id === undefined) return;
     try {
       await deleteTvShow.mutateAsync(show.id);
+      toast.success(`Deleted ${show.title}`);
       onDeleted(show.id);
     } catch (error) {
       console.error("Error deleting TV show:", error);
@@ -89,26 +90,31 @@ export function EditTvShowModal({
     setScanPurchaseIndex(null);
   };
 
+  const meta = [formData.year || null, formData.genres.slice(0, 2).join(", ") || null].filter(Boolean).join(" · ");
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-      {...backdropClose}
-    >
-      <div
-        className="flex flex-col mx-2 bg-gray-800 shadow-2xl w-full max-w-3xl h-full max-h-3/4 relative"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        className={FORM_MODAL_CLASS}
+        onEscapeKeyDown={keepOpenWhileTyping}
       >
-        <div className="flex gap-4 justify-between bg-gray-700 p-2">
-          <p className="text-white text-xl pl-2 truncate">Edit {show.title}</p>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white cursor-pointer"
-          >
-            <IoClose className="w-6 h-6" />
-          </button>
+        <div className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-4">
+          {formData.posterPath && (
+            <img
+              src={formData.posterPath}
+              alt=""
+              className="h-12 w-8 shrink-0 rounded-sm border border-white/10 bg-muted object-cover"
+            />
+          )}
+          <div className="flex min-w-0 flex-col gap-1">
+            <DialogTitle className="truncate">Edit {show.title}</DialogTitle>
+            {meta && <span className="truncate text-xs text-muted-foreground">{meta}</span>}
+          </div>
         </div>
 
-        <div className="flex flex-col flex-1 min-h-0 px-4">
+        <div className="flex min-h-0 flex-1 flex-col px-5 pt-4 md:px-6">
           <TvShowForm
             formId={FORM_ID}
             formData={formData}
@@ -116,65 +122,46 @@ export function EditTvShowModal({
             onSubmit={handleSubmit}
             onScanClick={handleScanClick}
           />
-
-          {scanPurchaseIndex !== null && (
-            <BarcodeScanner
-              onDetected={handleBarcodeDetected}
-              onClose={() => setScanPurchaseIndex(null)}
-            />
-          )}
-
-          {showMobileOnlyMessage && (
-            <MobileOnlyMessage
-              setShowMobileOnlyMessage={setShowMobileOnlyMessage}
-            />
-          )}
         </div>
 
-        <div className="flex flex-col px-6 py-3 bg-gray-700 gap-2">
+        <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card px-5 py-3">
           {submitError && (
-            <p className="text-red-400 text-sm text-right">{submitError}</p>
+            <p role="alert" className="text-sm text-red-300">
+              {submitError}
+            </p>
           )}
-          <div className="flex justify-between gap-3">
-            <button
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
               onClick={() => setShowDeleteConfirm(true)}
-              className="px-4 py-2 text-red-400 hover:text-red-300 transition cursor-pointer flex items-center gap-2"
+              className="mr-auto text-red-300 hover:bg-destructive/15 hover:text-red-200"
             >
-              <FaTrash className="w-4 h-4" />
+              <Trash2 />
               Delete
-            </button>
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
-              >
-                Close
-              </button>
-              {/* Submits the form so its validation runs */}
-              <button
-                type="submit"
-                form={FORM_ID}
-                disabled={saving}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
-            </div>
+            </Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+            {/* Submits the form so its validation runs */}
+            <Button type="submit" form={FORM_ID} disabled={saving}>
+              {saving ? "Saving…" : "Save"}
+            </Button>
           </div>
         </div>
-      </div>
 
-      <div onClick={(e) => e.stopPropagation()}>
-        <ConfirmDialog
-          isOpen={showDeleteConfirm}
-          title="Delete TV Show"
-          message={`Are you sure you want to delete ${show.title}? This action cannot be undone.`}
-          confirmText="Delete"
-          cancelText="Cancel"
+        {scanPurchaseIndex !== null && (
+          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setScanPurchaseIndex(null)} />
+        )}
+        {showMobileOnlyMessage && <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />}
+
+        <DeleteConfirm
+          open={showDeleteConfirm}
+          onOpenChange={setShowDeleteConfirm}
+          title={show.title}
+          description="It's removed from your collection, with all its purchases. This can't be undone."
           onConfirm={handleDeleteConfirm}
-          onCancel={() => setShowDeleteConfirm(false)}
         />
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

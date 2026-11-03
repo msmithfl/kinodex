@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 
-// The Add and Edit Movie windows. Phones: a sheet that rises from the bottom. Tablet up: centred.
+// The add and edit windows (movies, TV shows). Phones: a sheet that rises from the bottom. Tablet up: centred.
 // Placed without transforms so the barcode scanner, a full-screen overlay inside them, still
 // covers the whole screen.
-export const MOVIE_MODAL_CLASS = cn(
+export const FORM_MODAL_CLASS = cn(
   "flex flex-col gap-0 overflow-hidden p-0",
   "inset-x-0 top-auto bottom-0 left-0 h-[92dvh] w-full max-w-none translate-x-0 translate-y-0 rounded-t-2xl rounded-b-none sm:max-w-none",
   "max-md:data-[state=closed]:slide-out-to-bottom max-md:data-[state=open]:slide-in-from-bottom",

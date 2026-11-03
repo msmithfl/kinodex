@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Movie } from "../../../types";
-import { FormField, PillToggles, SwitchField } from "./fields";
+import { FormField, PillToggles, SwitchField } from "../../../components/FormFields";
 
 const FORMAT_OPTIONS = [
   { value: "4K" },

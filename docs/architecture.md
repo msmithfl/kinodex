@@ -124,8 +124,13 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   across the top fading into the panel, the poster overlapping it with title, year · genres,
   stars and TMDB; then `MovieDrawerDetails` as cards in the agreed order (Format | Condition,
   Paid | Purchased | Gift; product shot + UPC copy + eBay sold; Shelf | Shelf # | HDD #, Watched |
-  Streaming; collections; notes). Delete asks in an `AlertDialog`, then toasts. Skeleton while
-  loading. The TV and collection drawers keep the classic look.
+  Streaming; collections; notes). Delete asks in `DeleteConfirm` (an `AlertDialog`), then toasts.
+  Skeleton while loading.
+- **TV drawer (redesigned):** the same `DetailHeader` (shared backdrop/poster/title/actions header,
+  plus `DetailSkeleton`), then `TvShowDrawerDetails`: season tiles, one card per purchase (Format |
+  Condition, Paid | Purchased | Gift, UPC copy + eBay sold), product shot, Watched | Streaming,
+  notes. Both drawers' fields use `DetailField` / `YesNo` / `NotSet`. The collection drawer keeps
+  the classic `Drawer` look.
 - Escape closes only the topmost drawer or dialog (`role="dialog"` or `"alertdialog"`); swipe right
   closes on touch screens.
 
@@ -135,7 +140,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 |---|---|
 | `AddItemModal` | Chooser: add movie or TV show |
 | `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; each tab is a component in `features/movies/form/` (Details; Physical: UPC, formats, price, purchase date, condition, gift; Location: shelf, HDD, streaming; Images: TMDB poster/backdrop pickers, product image lookup). `AddMovieModal` also has a preset picker (last choice remembered per device), Save as preset, and Save & add another |
-| `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit. Tabs in `features/tvShows/form/` (Details, Purchases using `TvShowPurchaseEditor`, Images) |
+| `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit, in the same redesigned window as movies (Add: Search › Details, preview beside the form, toast; Edit: Delete in the footer). Tabs in `features/tvShows/form/` (Details, Purchases using `TvShowPurchaseEditor` cards with season tiles, Images) |
 | `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop); saves via the collections hooks |
 | `BulkEditModal` | Bulk edit from the movie table |
 | `ConfirmDialog`, `ImageLightbox`, `BarcodeScanner`, `MobileOnlyMessage` | Shared helpers |
@@ -147,8 +152,10 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   `CollectionCard`, `GenreCard`, `SimpleMovieTable` (collection/genre table view),
   `features/movies/MovieTable` (the movie list's table).
 - **Shared bits:** `StarRating` (`Stars` display, `StarRatingInput` picker), `TmdbLink`,
-  `ChipSelect` / `SingleChipSelect` (chip dropdowns for genres, formats, collections, shelf),
-  `ImageUrlField` (preview + URL + picker row), `formStyles` (form input/label classes).
+  `ChipSelect` (chip dropdown for genres and collections), `ImageUrlField` (preview + URL + picker
+  row), `FormFields` (`FormField`, `SwitchField`, `PillToggles`), `formModal.ts` (the add/edit
+  windows' size and Escape rule), `TmdbSearch` (keyboard-driven TMDB search, movies and TV),
+  `DetailHeader`, `DetailField`, `DeleteConfirm`.
 - **Controls (classic, for screens not yet redesigned):** `ViewToggle` (+ `utils/viewOptions.ts`),
   `Counter`, `SubNavigation`, `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`
   + `utils/applyFilters.ts` (movies), `features/tvShows/filters.ts` (TV).
@@ -188,12 +195,11 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   columns; filter chips; `MovieTable` with poster thumbnails, checkboxes and a select-all; a
   floating bulk-action bar; staggered poster fade-in; skeletons while loading; toasts after bulk
   edit/delete); the Add and Edit Movie windows (Radix `Dialog`, a bottom sheet on phones, sized
-  by `features/movies/form/modalClass.ts`; Add has Search › Details steps, `TmdbMovieSearch`
-  (cmdk: arrow keys + Enter, "In library" badges), a poster/title preview beside the form, the
-  preset Select, footer Save (↵) and Save & add another (Ctrl/⌘↵) submitting the form through
-  its validation, and an "Added …" toast with Open). The movie form tabs use the shadcn inputs,
-  `features/movies/form/fields.tsx` (`FormField`, `SwitchField`, `PillToggles`) and the opt-in
-  `appearance="modern"` of `ChipSelect` and `ImageUrlField` (the TV forms keep the classic look).
+  by `components/formModal.ts`; Add has Search › Details steps, `TmdbSearch` (cmdk: arrow keys +
+  Enter, "In library" badges), a poster/title preview beside the form, the preset Select, footer
+  Save (↵) and Save & add another (Ctrl/⌘↵) submitting the form through its validation, and an
+  "Added …" toast with Open); the movie drawer; the TV list (same building blocks as the movie
+  list), TV drawer and TV add/edit windows. Both forms use the shadcn inputs and `FormFields`.
 - Mockup of the target design: the "Kinodex redesign mockup" artifact (desktop movie list,
   poster view with filters, Add Movie; mobile list and Add sheet).
 

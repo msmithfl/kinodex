@@ -8,7 +8,7 @@ import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { useMovie, useUpdateMovie } from "../features/movies/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";
 import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
-import { MOVIE_MODAL_CLASS, keepOpenWhileTyping } from "../features/movies/form/modalClass";
+import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 import { isMobile } from "../utils/isMobile";
 
 const FORM_ID = "edit-movie-form";
@@ -143,7 +143,7 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
       <DialogContent
         showCloseButton={false}
         aria-describedby={undefined}
-        className={MOVIE_MODAL_CLASS}
+        className={FORM_MODAL_CLASS}
         onEscapeKeyDown={keepOpenWhileTyping}
       >
         <div className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-4">

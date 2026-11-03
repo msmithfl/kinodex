@@ -9,13 +9,13 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Movie, MoviePreset, TMDBMovie } from "../types";
-import { GENRE_MAP } from "../utils/tmdbApi";
+import { GENRE_MAP, searchTMDB } from "../utils/tmdbApi";
 import MovieForm from "./MovieForm";
 import BarcodeScanner from "./BarcodeScanner";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { MOD_KEY } from "./navigation";
-import TmdbMovieSearch from "../features/movies/TmdbMovieSearch";
-import { MOVIE_MODAL_CLASS, keepOpenWhileTyping } from "../features/movies/form/modalClass";
+import TmdbSearch from "./TmdbSearch";
+import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 import { useCreateMovie, useMovies } from "../features/movies/api";
 import { ApiError } from "../utils/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";
@@ -324,7 +324,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
       <DialogContent
         showCloseButton={false}
         aria-describedby={undefined}
-        className={MOVIE_MODAL_CLASS}
+        className={FORM_MODAL_CLASS}
         onEscapeKeyDown={keepOpenWhileTyping}
         onKeyDown={(e) => {
           // Ctrl/⌘+Enter: Save & add another
@@ -424,7 +424,19 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
         )}
 
         {!showForm ? (
-          <TmdbMovieSearch key={searchKey} onSelect={handleMovieSelect} ownedTmdbIds={ownedTmdbIds} />
+          <TmdbSearch
+            key={searchKey}
+            search={searchTMDB}
+            toOption={(movie: TMDBMovie) => ({
+              id: movie.id,
+              title: movie.title,
+              date: movie.release_date,
+              posterPath: movie.poster_path,
+            })}
+            onSelect={handleMovieSelect}
+            ownedTmdbIds={ownedTmdbIds}
+            placeholder="Search TMDB for a movie…"
+          />
         ) : (
           <div className="flex min-h-0 flex-1 gap-7 px-5 pt-4 md:px-6 md:pt-5">
             {/* Tablet up: the movie being added, beside the form */}
