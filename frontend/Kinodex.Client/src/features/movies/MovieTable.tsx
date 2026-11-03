@@ -1,203 +1,225 @@
 import { Link } from "react-router-dom";
-import { FaRegCircle, FaCheckCircle } from "react-icons/fa";
-import { FaCheck } from "react-icons/fa6";
-import { LuGift, LuTable2 } from "react-icons/lu";
-import SortableTableHeader from "../../components/SortableTableHeader";
+import { ArrowDown, ArrowUp, Gift } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { QuickRating } from "../../components/StarRating";
 import { useRateMovie } from "./api";
 import { getRelativeTimeString } from "../../utils/dateUtils";
 import type { Movie, SortOption } from "../../types";
-import type { VisibleColumns } from "./tableColumns";
-
-// Menu label and sort key for each optional column, in table order
-const COLUMNS: { key: keyof VisibleColumns; label: string; sortKey: SortOption }[] = [
-  { key: "year", label: "Year", sortKey: "year" },
-  { key: "format", label: "Format", sortKey: "format" },
-  { key: "condition", label: "Condition", sortKey: "condition" },
-  { key: "rating", label: "Rating", sortKey: "rating" },
-  { key: "purchasePrice", label: "Purchase Price", sortKey: "purchasePrice" },
-  { key: "dateAdded", label: "Date Added", sortKey: "date" },
-];
+import { COLUMNS, type VisibleColumns } from "./tableColumns";
 
 interface MovieTableProps {
-  movies: Movie[]; // Already filtered, searched and sorted
+  movies: Movie[]; // Already filtered, searched, sorted and paged
   visibleColumns: VisibleColumns;
-  onToggleColumn: (column: keyof VisibleColumns) => void;
-  showColumnMenu: boolean;
-  onShowColumnMenu: (show: boolean) => void;
   sortBy: SortOption;
   sortDirection: "asc" | "desc";
-  onSort: (sortKey: string) => void;
+  onSort: (sortKey: SortOption) => void;
   selectedIds: Set<number>;
   onSelect: (movieId: number | undefined, selected: boolean) => void;
+  // The header checkbox: select or clear every movie on this page
+  onSelectAll: (movieIds: number[], selected: boolean) => void;
   onOpen: (movieId?: number) => void;
 }
 
-// The movie list's table: a column menu, sortable headers, and rows with a selection circle and a
-// title that opens the movie's drawer
+const headClass = "border-b border-border px-4 py-2.5 text-left text-xs font-medium whitespace-nowrap";
+const cellClass = "border-b border-border/60 px-4 py-2 align-middle";
+// The title column is a fixed width; longer titles are cut short with "…"
+const TITLE_WIDTH = "w-56 max-w-56 md:w-96 md:max-w-96";
+
+// A column header that sorts by its column; the arrow shows on the sorted one
+function SortHeader({
+  label,
+  sortKey,
+  sortBy,
+  sortDirection,
+  onSort,
+  className,
+}: {
+  label: string;
+  sortKey: SortOption;
+  sortBy: SortOption;
+  sortDirection: "asc" | "desc";
+  onSort: (sortKey: SortOption) => void;
+  className?: string;
+}) {
+  const active = sortBy === sortKey;
+  const Arrow = sortDirection === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <th
+      className={cn(headClass, className)}
+      aria-sort={active ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={cn(
+          "group/sort inline-flex cursor-pointer items-center gap-1 transition-colors hover:text-foreground",
+          active ? "text-foreground" : "text-muted-foreground",
+        )}
+      >
+        {label}
+        <Arrow className={cn("size-3", active ? "" : "opacity-0 group-hover/sort:opacity-50")} />
+      </button>
+    </th>
+  );
+}
+
+// The movie list's table: a checkbox per row (and select-all for the page), a small poster and
+// the title (opens the drawer), then the optional columns. Rating stars save straight away.
 function MovieTable({
   movies,
   visibleColumns,
-  onToggleColumn,
-  showColumnMenu,
-  onShowColumnMenu,
   sortBy,
   sortDirection,
   onSort,
   selectedIds,
   onSelect,
+  onSelectAll,
   onOpen,
 }: MovieTableProps) {
-  // The Rating column's stars save straight away
   const rateMovie = useRateMovie();
+  const sortProps = { sortBy, sortDirection, onSort };
+  const pageIds = movies.flatMap((m) => (m.id === undefined ? [] : [m.id]));
+  const selectedOnPage = pageIds.filter((id) => selectedIds.has(id)).length;
+  const anySelected = selectedIds.size > 0;
+
   return (
-    <div className="h-full bg-gray-900 overflow-x-auto overflow-y-hidden overscroll-x-contain">
+    <div className="h-full overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-xl border border-border bg-card">
       {/* Two scroll areas so a swipe moves the table one way at a time: the outer one only
           scrolls sideways, the inner one only up and down. Touch browsers lock each gesture
           to the area matching its starting direction. The vertical one is inside so the
           sticky header still sticks, while moving sideways with the columns. */}
-      <div className="h-full w-max min-w-full overflow-y-auto overflow-x-hidden overscroll-y-contain">
-        <table className="w-full border-separate border-spacing-0">
-          <thead className="bg-gray-700 sticky top-0 z-10">
+      <div className="h-full w-max min-w-full overflow-x-hidden overflow-y-auto overscroll-y-contain">
+        <table className="w-full border-separate border-spacing-0 text-sm">
+          <thead className="sticky top-0 z-10 bg-card">
             <tr>
-              <th className="px-3 py-2 w-12 border-r border-gray-600">
-                <div className="relative">
-                  <button
-                    onClick={() => onShowColumnMenu(!showColumnMenu)}
-                    className="flex text-gray-300 hover:text-white transition-colors cursor-pointer items-center"
-                    aria-label="Column options"
-                  >
-                    <LuTable2 className="w-5 h-5" />
-                  </button>
-                  {showColumnMenu && (
-                    <div className="text-sm absolute -left-1 mt-2 w-40 border border-gray-600 rounded-md bg-gray-800 shadow-lg z-10">
-                      {COLUMNS.map(({ key, label }) => (
-                        <button
-                          key={key}
-                          onClick={() => onToggleColumn(key)}
-                          className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
-                        >
-                          <span
-                            className={`font-normal ${visibleColumns[key] ? "text-indigo-400" : "text-white"}`}
-                          >
-                            {label}
-                          </span>
-                          {visibleColumns[key] && <FaCheck className="w-5 h-5 text-indigo-400" />}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+              <th className={cn(headClass, "w-10 pr-0")}>
+                <Checkbox
+                  checked={
+                    selectedOnPage > 0 && selectedOnPage === pageIds.length
+                      ? true
+                      : selectedOnPage > 0
+                        ? "indeterminate"
+                        : false
+                  }
+                  onCheckedChange={(checked) => onSelectAll(pageIds, checked === true)}
+                  aria-label="Select every movie on this page"
+                  className="align-middle"
+                />
               </th>
-              <SortableTableHeader
-                label="Title"
-                sortKey="alphabetic"
-                currentSortBy={sortBy}
-                sortDirection={sortDirection}
-                onClick={onSort}
-                className="w-46 max-w-46 md:w-96 md:max-w-96"
-              />
+              <SortHeader label="Title" sortKey="alphabetic" {...sortProps} className={TITLE_WIDTH} />
               {COLUMNS.filter(({ key }) => visibleColumns[key]).map(({ key, label, sortKey }) => (
-                <SortableTableHeader
+                <SortHeader
                   key={key}
                   label={label}
                   sortKey={sortKey}
-                  currentSortBy={sortBy}
-                  sortDirection={sortDirection}
-                  onClick={onSort}
+                  {...sortProps}
+                  className={key === "purchasePrice" ? "text-right" : undefined}
                 />
               ))}
             </tr>
           </thead>
           <tbody>
-            {movies.map((movie, index) => (
-              <tr
-                key={movie.id}
-                className={`text-sm group ${index % 2 === 0 ? "bg-gray-800" : "bg-gray-900"} hover:bg-gray-700 transition-colors duration-150 focus:outline-none focus-within:outline-none`}
-              >
-                <td
-                  className="w-12 text-center"
-                  onClick={() => onSelect(movie.id, !selectedIds.has(movie.id || 0))}
-                >
-                  {selectedIds.has(movie.id || 0) ? (
-                    <FaCheckCircle className="w-5 h-5 text-indigo-500 inline-block" />
-                  ) : (
-                    <FaRegCircle
-                      className={`w-4 h-4 text-gray-500 transition-opacity opacity-0 group-hover:opacity-100 inline-block`}
-                    />
+            {movies.map((movie) => {
+              const selected = selectedIds.has(movie.id ?? -1);
+              return (
+                <tr
+                  key={movie.id}
+                  className={cn(
+                    "group transition-colors",
+                    selected ? "bg-primary-soft" : "hover:bg-accent/50",
                   )}
-                </td>
-                <td className="px-6 py-2 text-white w-46 max-w-46 md:w-96 md:max-w-96 align-middle">
-                  <Link
-                    to={`/library?movie=${movie.id}`}
-                    onClick={(e) => {
-                      // Plain clicks open the drawer; ctrl/cmd-click opens the list with it in a drawer, in a new tab
-                      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-                      e.preventDefault();
-                      onOpen(movie.id);
-                    }}
-                    className="hover:underline transition-colors inline-block truncate max-w-full align-middle"
-                    title={movie.title}
-                  >
-                    {movie.title}
-                  </Link>
-                </td>
-                {visibleColumns.year && (
-                  <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                    {movie.year || "-"}
-                  </td>
-                )}
-                {visibleColumns.format && (
-                  <td className="px-6 py-2 whitespace-nowrap align-middle">
-                    {movie.formats && movie.formats.length > 0 ? (
-                      <div className="flex gap-1">
-                        {[...movie.formats].sort().map((fmt, idx) => (
-                          <span key={idx}>
-                            {fmt}
-                            {idx < movie.formats.length - 1 ? "," : ""}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-gray-500">-</span>
-                    )}
-                  </td>
-                )}
-                {visibleColumns.condition && (
-                  <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                    {movie.condition}
-                  </td>
-                )}
-                {visibleColumns.rating && (
-                  <td className="pl-6 py-2 whitespace-nowrap align-middle">
-                    {/* Click to rate */}
-                    <QuickRating
-                      rating={movie.rating}
-                      onRate={(rating) => rateMovie.mutate({ movie, rating })}
-                      label={`Rate ${movie.title}`}
+                >
+                  <td className={cn(cellClass, "w-10 pr-0")}>
+                    <Checkbox
+                      checked={selected}
+                      onCheckedChange={(checked) => onSelect(movie.id, checked === true)}
+                      aria-label={`Select ${movie.title}`}
+                      className={cn(
+                        "align-middle transition-opacity",
+                        !selected && !anySelected && "opacity-40 group-hover:opacity-100",
+                      )}
                     />
                   </td>
-                )}
-                {visibleColumns.purchasePrice && (
-                  <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                    {/* The price, then a gift icon for gifts; a gift with no price shows just the icon */}
-                    <span className="inline-flex items-center gap-1.5 align-middle">
-                      {movie.purchasePrice
-                        ? `$${movie.purchasePrice.toFixed(2)}`
-                        : !movie.isGift && "-"}
-                      {movie.isGift && (
-                        <LuGift className="w-4 h-4 text-gray-400" title="Gift" aria-label="Gift" />
+                  <td className={cn(cellClass, TITLE_WIDTH)}>
+                    <Link
+                      to={`/library?movie=${movie.id}`}
+                      onClick={(e) => {
+                        // Plain clicks open the drawer; ctrl/cmd-click opens the list with it in a drawer, in a new tab
+                        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                        e.preventDefault();
+                        onOpen(movie.id);
+                      }}
+                      className="flex min-w-0 items-center gap-3 hover:underline"
+                      title={movie.title}
+                    >
+                      {movie.posterPath ? (
+                        <img
+                          src={movie.posterPath}
+                          alt=""
+                          loading="lazy"
+                          className="h-10 w-7 shrink-0 rounded-sm border border-white/10 bg-muted object-cover"
+                        />
+                      ) : (
+                        <span className="h-10 w-7 shrink-0 rounded-sm bg-muted" />
                       )}
-                    </span>
+                      <span className="truncate font-medium">{movie.title}</span>
+                    </Link>
                   </td>
-                )}
-                {visibleColumns.dateAdded && (
-                  <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                    {getRelativeTimeString(movie.createdAt)}
-                  </td>
-                )}
-              </tr>
-            ))}
+                  {visibleColumns.year && (
+                    <td className={cn(cellClass, "whitespace-nowrap text-muted-foreground tabular-nums")}>
+                      {movie.year || "–"}
+                    </td>
+                  )}
+                  {visibleColumns.format && (
+                    <td className={cn(cellClass, "whitespace-nowrap")}>
+                      {movie.formats.length > 0 ? (
+                        <span className="flex gap-1">
+                          {[...movie.formats].sort().map((fmt) => (
+                            <Badge key={fmt} variant="outline" className="font-normal text-foreground/85">
+                              {fmt}
+                            </Badge>
+                          ))}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">–</span>
+                      )}
+                    </td>
+                  )}
+                  {visibleColumns.condition && (
+                    <td className={cn(cellClass, "whitespace-nowrap text-foreground/85")}>{movie.condition}</td>
+                  )}
+                  {visibleColumns.rating && (
+                    <td className={cn(cellClass, "whitespace-nowrap")}>
+                      <QuickRating
+                        rating={movie.rating}
+                        onRate={(rating) => rateMovie.mutate({ movie, rating })}
+                        label={`Rate ${movie.title}`}
+                      />
+                    </td>
+                  )}
+                  {visibleColumns.purchasePrice && (
+                    <td className={cn(cellClass, "text-right font-mono text-[13px] whitespace-nowrap tabular-nums")}>
+                      {/* The price, then a gift icon for gifts; a gift with no price shows just the icon */}
+                      <span className="inline-flex items-center gap-1.5">
+                        {movie.purchasePrice
+                          ? `$${movie.purchasePrice.toFixed(2)}`
+                          : !movie.isGift && <span className="text-muted-foreground">–</span>}
+                        {movie.isGift && (
+                          <Gift className="size-3.5 text-muted-foreground" aria-label="Gift" />
+                        )}
+                      </span>
+                    </td>
+                  )}
+                  {visibleColumns.dateAdded && (
+                    <td className={cn(cellClass, "whitespace-nowrap text-muted-foreground")}>
+                      {getRelativeTimeString(movie.createdAt)}
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

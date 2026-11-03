@@ -87,7 +87,7 @@ the `useSettings()` hook (shared cache).
 | Route | Page | Status |
 |---|---|---|
 | `/` | `Dashboard`: account row, spending, quick actions, recently added movies and TV shows (two sideways-scrolling poster rows, right column on desktop) | Core |
-| `/library` | `MovieList`: table/poster views, search, filters, sort, bulk edit/delete, paged in the browser (`Pagination`, 100 per page) | Core |
+| `/library` | `MovieList` (redesigned): title and count, table/poster views, search, filter panel and chips, sort, columns, floating bulk edit/delete bar, paged in the browser (`Pagination`, 100 per page) | Core |
 | `/movie/:id` | Redirects to `/library?movie=:id` (the full page is retired) | Core |
 | `/tv-shows` | `TvShowList`: table/poster views, search, filters (`features/tvShows/filters.ts`), sort | Core |
 | `/tv-shows/:id` | Redirects to `/tv-shows?show=:id` (the full page is retired) | Core |
@@ -169,6 +169,17 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Toasts:** `<Toaster />` is mounted in `App`; call `toast()` from `sonner`.
 - **Focus rings:** the global "no focus outline" rule skips elements with `data-slot` (every shadcn
   component), so the new components keep keyboard focus rings.
+- **Redesigned building blocks:** `FilterPanel` (Filter button + popover: format pills, Any/Yes/No
+  switches, checklists for the long lists; drawn from each category's `kind` in
+  `utils/filterCategories.ts`), `FilterChips` (active filters as removable chips), `SortMenu`
+  (sort-by and direction dropdown), `PosterCard` (poster grid card with hover lift, formats and
+  rating), `Pagination`. The older `FilterDropdown`, `SortDropdown`, `ViewToggle`, `Counter` and
+  `MovieCardPoster` stay for the screens not yet redesigned (TV, collections, genres).
+- **Redesigned screens so far:** the sidebar and search palette; the movie list (`MovieList`:
+  title and count, Scan/Add, toolbar with search (`/` focuses it), filter, sort, Table/Posters,
+  columns; filter chips; `MovieTable` with poster thumbnails, checkboxes and a select-all; a
+  floating bulk-action bar; staggered poster fade-in; skeletons while loading; toasts after bulk
+  edit/delete).
 - Mockup of the target design: the "Kinodex redesign mockup" artifact (desktop movie list,
   poster view with filters, Add Movie; mobile list and Add sheet).
 
