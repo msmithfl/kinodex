@@ -1,29 +1,36 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
+import { MotionConfig, motion } from "motion/react";
+import { Columns3, LayoutGrid, Plus, ScanBarcode, Search, Table2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
 import { ApiError } from "../utils/api";
-import { useRateTvShow, useTvShows } from "../features/tvShows/api";
-import { Link, useLocation } from "react-router-dom";
-import { FaMagnifyingGlass, FaCheck } from "react-icons/fa6";
-import ViewToggle from "../components/ViewToggle";
-import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
-import MoviePosterCard from "../components/MovieCardPoster";
-import SortDropdown, { type SortDropdownOption } from "../components/SortDropdown";
-import FilterDropdown from "../components/FilterDropdown";
+import { useTvShows } from "../features/tvShows/api";
 import { applyTvShowFilters, buildTvShowFilterCategories } from "../features/tvShows/filters";
-import { LuGift, LuTable2 } from "react-icons/lu";
-import { QuickRating } from "../components/StarRating";
-import Counter from "../components/Counter";
-import LoadingSpinner from "../components/LoadingSpinner";
-import SortableTableHeader from "../components/SortableTableHeader";
+import TvShowTable, { type TvShowRow } from "../features/tvShows/TvShowTable";
+import { COLUMNS, DEFAULT_COLUMNS, type VisibleColumns } from "../features/tvShows/tableColumns";
+import FilterPanel from "../components/FilterPanel";
+import FilterChips from "../components/FilterChips";
+import SortMenu, { type SortMenuOption } from "../components/SortMenu";
+import PosterCard from "../components/PosterCard";
+import ListSkeleton from "../components/ListSkeleton";
 import EmptyState from "../components/EmptyState";
+import { AddTvShowModal } from "../components/AddTvShowModal";
 import type { SortOption } from "../types";
 import { getSortedMovies } from "../utils/getSortedMovies";
-import { getRelativeTimeString } from "../utils/dateUtils";
 import { formatSeasons } from "../utils/formatSeasons";
 import { allFormats, ownedSeasons, totalPaid } from "../utils/tvShowPurchases";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { isMobile } from "../utils/isMobile";
-import { IoCameraOutline } from "react-icons/io5";
 import BarcodeScanner from "../components/BarcodeScanner";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import SubNavigation from "../components/SubNavigation";
@@ -32,47 +39,20 @@ import TvShowDetail from "../features/tvShows/TvShowDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
 
 // Matches the sortable table columns; TV has no condition, and its price is the total paid
-const TV_SORT_OPTIONS: SortDropdownOption[] = [
+const TV_SORT_OPTIONS: SortMenuOption[] = [
   { value: "alphabetic", label: "Title" },
   { value: "year", label: "Year" },
   { value: "format", label: "Format" },
   { value: "rating", label: "Rating" },
-  { value: "purchasePrice", label: "Total Paid" },
-  { value: "date", label: "Date Added" },
+  { value: "purchasePrice", label: "Total paid" },
+  { value: "date", label: "Date added" },
 ];
 
-interface VisibleColumns {
-  seasons: boolean;
-  year: boolean;
-  format: boolean;
-  rating: boolean;
-  totalPaid: boolean;
-  dateAdded: boolean;
-}
-
-const DEFAULT_COLUMNS: VisibleColumns = {
-  seasons: true,
-  year: true,
-  format: true,
-  rating: true,
-  totalPaid: true,
-  dateAdded: true,
-};
-
-const COLUMN_OPTIONS: { key: keyof VisibleColumns; label: string }[] = [
-  { key: "seasons", label: "Seasons" },
-  { key: "year", label: "Year" },
-  { key: "format", label: "Format" },
-  { key: "rating", label: "Rating" },
-  { key: "totalPaid", label: "Total Paid" },
-  { key: "dateAdded", label: "Date Added" },
-];
+const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 function TvShowList() {
   // Shared with every other screen showing TV shows; saves anywhere refresh it
   const { data: shows = [], isLoading: loading, error } = useTvShows();
-  // The Rating column's stars save straight away
-  const rateTvShow = useRateTvShow();
   const loadError = !error
     ? ""
     : error instanceof ApiError
@@ -104,9 +84,22 @@ function TvShowList() {
     if (focusSearch && !loading) searchInputRef.current?.focus();
   }, [focusSearch, loading, location.key]);
 
+  // "/" jumps to the search box, unless you're already typing somewhere
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement;
+      if (target.closest("input, textarea, select, [contenteditable='true']")) return;
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
-  const [showColumnMenu, setShowColumnMenu] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
   const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
     try {
@@ -120,7 +113,6 @@ function TvShowList() {
 
   const handleViewModeChange = (mode: "table" | "poster") => {
     setViewMode(mode);
-    setShowColumnMenu(false);
     try {
       localStorage.setItem("tvShowListView", mode);
     } catch {
@@ -156,8 +148,8 @@ function TvShowList() {
     localStorage.setItem("tvShowListSortDirection", sortDirection);
   }, [sortBy, sortDirection]);
 
-  const handleColumnClick = (sortKey: string) => {
-    const column = sortKey as SortOption;
+  // Table headers: a new column sorts ascending, the current one flips the direction
+  const handleColumnClick = (column: SortOption) => {
     if (column === sortBy) {
       setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
@@ -180,8 +172,12 @@ function TvShowList() {
     setShowScanner(false);
   };
 
+  const handleFilterChange = (categoryId: string, values: string[]) => {
+    setSelectedFilters((prev) => ({ ...prev, [categoryId]: values }));
+  };
+
   // Table rows carry the purchase-derived figures, so the shared sorter can sort by them
-  const rows = shows.map((show) => ({
+  const rows: TvShowRow[] = shows.map((show) => ({
     ...show,
     formats: allFormats(show.purchases),
     purchasePrice: totalPaid(show.purchases),
@@ -203,27 +199,19 @@ function TvShowList() {
         (p.upcNumber ?? "").toLowerCase().includes(query),
       ),
   );
+  const filterCategories = buildTvShowFilterCategories(shows);
 
   // Keep the sub-navigation on screen while loading, as the movie pages do, so it doesn't blink
   if (loading) {
     return (
       <>
         <SubNavigation />
-        <LoadingSpinner />
+        <ListSkeleton viewMode={viewMode} label="Loading TV shows" />
       </>
     );
   }
 
-  const sortHeader = (label: string, sortKey: SortOption, className = "") => (
-    <SortableTableHeader
-      label={label}
-      sortKey={sortKey}
-      currentSortBy={sortBy}
-      sortDirection={sortDirection}
-      onClick={handleColumnClick}
-      className={className}
-    />
-  );
+  const narrowed = filteredShows.length !== shows.length;
 
   return (
     <>
@@ -234,6 +222,183 @@ function TvShowList() {
           <TvShowDetail key={openShowId} showId={openShowId} onDeleted={closeShow} />
         </Drawer>
       )}
+
+      <div
+        ref={containerRef}
+        className="flex h-[calc(100dvh-5rem)] flex-col bg-background"
+        style={containerStyle}
+      >
+        {/* Title, toolbar and active filters */}
+        <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">TV Shows</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {shows.length} in your collection
+                {narrowed && ` · ${filteredShows.length} shown`}
+              </p>
+            </div>
+            {/* Phones add and scan from the bottom bar */}
+            <div className="hidden gap-2 md:flex">
+              <Button variant="outline" onClick={handleScanClick}>
+                <ScanBarcode />
+                Scan
+              </Button>
+              <Button onClick={() => setShowAddModal(true)}>
+                <Plus />
+                Add TV show
+              </Button>
+            </div>
+          </div>
+
+          {shows.length > 0 && (
+            <div className="flex items-center gap-2">
+              {/* Search: tablet up; on phones the bottom bar's Search page covers it */}
+              <label className="relative hidden max-w-md flex-1 md:block">
+                <span className="sr-only">Search TV shows</span>
+                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search title or UPC"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-9 pl-9"
+                />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    aria-label="Clear search"
+                    className="absolute top-1/2 right-2 grid size-6 -translate-y-1/2 cursor-pointer place-items-center rounded text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                ) : (
+                  <kbd className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded border border-border px-1.5 font-sans text-[11px] text-muted-foreground">
+                    /
+                  </kbd>
+                )}
+              </label>
+              <FilterPanel
+                categories={filterCategories}
+                selectedFilters={selectedFilters}
+                onFilterChange={handleFilterChange}
+                onReset={() => setSelectedFilters({})}
+                resultLabel={`Show ${plural(filteredShows.length, "show")}`}
+              />
+              <SortMenu
+                sortBy={sortBy}
+                sortDirection={sortDirection}
+                onSortByChange={setSortBy}
+                onDirectionChange={setSortDirection}
+                options={TV_SORT_OPTIONS}
+              />
+              <div className="ml-auto flex items-center gap-2">
+                <ToggleGroup
+                  type="single"
+                  value={viewMode}
+                  onValueChange={(mode) => mode && handleViewModeChange(mode as "table" | "poster")}
+                  aria-label="View"
+                >
+                  <ToggleGroupItem value="table" aria-label="Table view">
+                    <Table2 />
+                    <span className="hidden lg:inline">Table</span>
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="poster" aria-label="Poster view">
+                    <LayoutGrid />
+                    <span className="hidden lg:inline">Posters</span>
+                  </ToggleGroupItem>
+                </ToggleGroup>
+                {viewMode === "table" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" aria-label="Choose columns">
+                        <Columns3 />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuLabel>Columns</DropdownMenuLabel>
+                      {COLUMNS.map(({ key, label }) => (
+                        <DropdownMenuCheckboxItem
+                          key={key}
+                          checked={visibleColumns[key]}
+                          onCheckedChange={() => toggleColumn(key)}
+                          // Stay open, so several columns can be switched in one go
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          {label}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+            </div>
+          )}
+
+          <FilterChips
+            categories={filterCategories}
+            selectedFilters={selectedFilters}
+            onFilterChange={handleFilterChange}
+            onReset={() => setSelectedFilters({})}
+          />
+        </div>
+
+        {/* The list fills the rest of the height and scrolls on its own */}
+        <div className="min-h-0 flex-1 px-6 pb-3 md:px-10">
+          {loadError ? (
+            <EmptyState message={loadError} />
+          ) : shows.length === 0 ? (
+            <EmptyState message="No TV shows in your collection yet." />
+          ) : filteredShows.length === 0 ? (
+            <EmptyState message="No TV shows match your search or filters." />
+          ) : viewMode === "poster" ? (
+            // The small inset keeps the hover ring and lift inside the scroll area
+            <div className="-mx-2 h-full overflow-y-auto px-2 pt-1 pb-6">
+              <MotionConfig reducedMotion="user">
+                <div className="grid grid-cols-4 gap-1 md:gap-x-4 md:gap-y-7 lg:grid-cols-5 xl:grid-cols-8">
+                  {filteredShows.map((show, index) => {
+                    const seasons = formatSeasons(show.owned, show.totalSeasons);
+                    return (
+                      <motion.div
+                        key={show.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25, delay: Math.min(index, 24) * 0.015 }}
+                        className="min-w-0"
+                      >
+                        <PosterCard
+                          title={show.title}
+                          posterPath={show.posterPath}
+                          subtitle={[show.year || null, seasons === "-" ? null : seasons].filter(Boolean).join(" · ")}
+                          formats={show.formats}
+                          rating={show.rating}
+                          to={`/tv-shows?show=${show.id}`}
+                          onOpen={() => openShow(show.id)}
+                          hideCaptionOnMobile
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </MotionConfig>
+            </div>
+          ) : (
+            <TvShowTable
+              shows={filteredShows}
+              visibleColumns={visibleColumns}
+              sortBy={sortBy}
+              sortDirection={sortDirection}
+              onSort={handleColumnClick}
+              onOpen={openShow}
+            />
+          )}
+        </div>
+      </div>
+
+      {showAddModal && <AddTvShowModal onClose={() => setShowAddModal(false)} />}
+
       {showScanner && (
         <BarcodeScanner
           onDetected={handleBarcodeDetected}
@@ -245,251 +410,6 @@ function TvShowList() {
           setShowMobileOnlyMessage={setShowMobileOnlyMessage}
         />
       )}
-
-      <div
-        ref={containerRef}
-        className="flex flex-col h-[calc(100dvh-5rem)]"
-        style={containerStyle}
-      >
-        {/* Fixed header section */}
-        <div className="shrink-0 mx-6 mt-4 md:mx-12">
-          {shows.length > 0 && (
-            <div className="mb-4">
-              {/* Filter, sort and count, then search and scan, then the view toggle, all in one row */}
-              <div className="flex items-center justify-between gap-3 sm:gap-6">
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <div onClick={() => setShowColumnMenu(false)}>
-                    <FilterDropdown
-                      categories={buildTvShowFilterCategories(shows)}
-                      selectedFilters={selectedFilters}
-                      onFilterChange={(categoryId, values) =>
-                        setSelectedFilters((prev) => ({ ...prev, [categoryId]: values }))
-                      }
-                      onResetFilters={() => setSelectedFilters({})}
-                    />
-                  </div>
-                  {/* Poster view has no table headers to click, so it gets a sort menu */}
-                  {viewMode === "poster" && (
-                    <SortDropdown
-                      sortBy={sortBy}
-                      sortDirection={sortDirection}
-                      onSortChange={handleColumnClick}
-                      options={TV_SORT_OPTIONS}
-                    />
-                  )}
-                  <Counter count={filteredShows.length} />
-                </div>
-
-                {/* Search and scan: desktop only; on mobile the bottom bar's Search page and Scan cover these */}
-                <div className="hidden md:flex flex-1 gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      ref={searchInputRef}
-                      placeholder="Search by title or UPC..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full h-8 px-3 pl-9 text-sm bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                    <FaMagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleScanClick}
-                    className="h-8 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer flex items-center justify-center"
-                    title="Scan barcode"
-                  >
-                    <IoCameraOutline className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Table / poster view */}
-                <ViewToggle
-                  value={viewMode}
-                  options={TABLE_VIEW_OPTIONS}
-                  onChange={handleViewModeChange}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Scrollable table section - takes remaining height */}
-        <div className="flex-1 min-h-0">
-          {loadError ? (
-            <EmptyState message={loadError} />
-          ) : shows.length === 0 ? (
-            <EmptyState message="No TV shows in your collection yet." />
-          ) : viewMode === "poster" ? (
-            // Poster view: the same searched and sorted shows as the table
-            <div className="h-full overflow-y-auto px-6 md:px-12 pb-8">
-              {filteredShows.length === 0 ? (
-                <EmptyState message="No TV shows match your search or filters." />
-              ) : (
-                <div className="grid grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-1 md:gap-x-4 md:gap-y-8">
-                  {filteredShows.map((show) => {
-                    const seasons = formatSeasons(show.owned, show.totalSeasons);
-                    return (
-                      <MoviePosterCard
-                        key={show.id}
-                        movie={show}
-                        to={`/tv-shows?show=${show.id}`}
-                        onOpen={() => openShow(show.id)}
-                        subtitle={[show.year || null, seasons === "-" ? null : seasons]
-                          .filter(Boolean)
-                          .join(" · ")}
-                        captionBelow
-                        hideCaptionOnMobile
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="h-full bg-gray-900 overflow-x-auto overflow-y-hidden overscroll-x-contain">
-              {/* Two scroll areas so a swipe moves the table one way at a time: the outer one only
-                  scrolls sideways, the inner one only up and down. Touch browsers lock each gesture
-                  to the area matching its starting direction. The vertical one is inside so the
-                  sticky header still sticks, while moving sideways with the columns. */}
-              <div className="h-full w-max min-w-full overflow-y-auto overflow-x-hidden overscroll-y-contain">
-                <table className="w-full border-separate border-spacing-0">
-                  <thead className="bg-gray-700 sticky top-0 z-10">
-                    <tr>
-                      <th className="px-3 py-2 w-12 border-r border-gray-600">
-                        <div className="relative">
-                          <button
-                            onClick={() => setShowColumnMenu(!showColumnMenu)}
-                            className="flex text-gray-300 hover:text-white transition-colors cursor-pointer items-center"
-                            aria-label="Column options"
-                          >
-                            <LuTable2 className="w-5 h-5" />
-                          </button>
-                          {showColumnMenu && (
-                            <div className="text-sm absolute -left-1 mt-2 w-40 border border-gray-600 rounded-md bg-gray-800 shadow-lg z-10">
-                              {COLUMN_OPTIONS.map(({ key, label }) => (
-                                <button
-                                  key={key}
-                                  onClick={() => toggleColumn(key)}
-                                  className="w-full flex items-center justify-between cursor-pointer hover:bg-gray-700 px-4 py-2"
-                                >
-                                  <span
-                                    className={`font-normal ${visibleColumns[key] ? "text-indigo-400" : "text-white"}`}
-                                  >
-                                    {label}
-                                  </span>
-                                  {visibleColumns[key] && (
-                                    <FaCheck className="w-5 h-5 text-indigo-400" />
-                                  )}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </th>
-                      {sortHeader(
-                        "Title",
-                        "alphabetic",
-                        "w-46 max-w-46 md:w-96 md:max-w-96",
-                      )}
-                      {visibleColumns.seasons && (
-                        <th className="px-6 py-2 text-left text-sm font-semibold text-gray-200 border-r border-gray-600 whitespace-nowrap">
-                          Seasons
-                        </th>
-                      )}
-                      {visibleColumns.year && sortHeader("Year", "year")}
-                      {visibleColumns.format && sortHeader("Format", "format")}
-                      {visibleColumns.rating && sortHeader("Rating", "rating")}
-                      {visibleColumns.totalPaid &&
-                        sortHeader("Total Paid", "purchasePrice")}
-                      {visibleColumns.dateAdded &&
-                        sortHeader("Date Added", "date")}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredShows.map((show, index) => (
-                      <tr
-                        key={show.id}
-                        onClick={() => openShow(show.id)}
-                        className={`text-sm cursor-pointer ${index % 2 === 0 ? "bg-gray-800" : "bg-gray-900"} hover:bg-gray-700 transition-colors duration-150`}
-                      >
-                        {/* Sits under the column menu, as the selection column does on Movies */}
-                        <td className="w-12" />
-                        <td className="px-6 py-2 text-white w-46 max-w-46 md:w-96 md:max-w-96 align-middle">
-                          <Link
-                            to={`/tv-shows?show=${show.id}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Plain clicks open the drawer; ctrl/cmd-click opens the list with it in a drawer, in a new tab
-                              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-                              e.preventDefault();
-                              openShow(show.id);
-                            }}
-                            className="inline-block truncate max-w-full align-middle hover:underline"
-                            title={show.title}
-                          >
-                            {show.title}
-                          </Link>
-                        </td>
-                        {visibleColumns.seasons && (
-                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                            {formatSeasons(show.owned, show.totalSeasons)}
-                          </td>
-                        )}
-                        {visibleColumns.year && (
-                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                            {show.year || "-"}
-                          </td>
-                        )}
-                        {visibleColumns.format && (
-                          <td className="px-6 py-2 whitespace-nowrap align-middle">
-                            {show.formats.length > 0 ? (
-                              show.formats.join(", ")
-                            ) : (
-                              <span className="text-gray-500">-</span>
-                            )}
-                          </td>
-                        )}
-                        {visibleColumns.rating && (
-                          <td className="pl-6 py-2 whitespace-nowrap align-middle">
-                            {/* Click to rate; clicks don't open the row's drawer */}
-                            <QuickRating
-                              rating={show.rating}
-                              onRate={(rating) => {
-                                if (show.id !== undefined) rateTvShow.mutate({ id: show.id, rating });
-                              }}
-                              label={`Rate ${show.title}`}
-                            />
-                          </td>
-                        )}
-                        {visibleColumns.totalPaid && (
-                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                            {/* The total, then a gift icon when any purchase was a gift; all gifts
-                                with no price shows just the icon */}
-                            <span className="inline-flex items-center gap-1.5 align-middle">
-                              {show.purchasePrice > 0
-                                ? `$${show.purchasePrice.toFixed(2)}`
-                                : !show.hasGift && "-"}
-                              {show.hasGift && (
-                                <LuGift className="w-4 h-4 text-gray-400" title="Includes a gift" aria-label="Includes a gift" />
-                              )}
-                            </span>
-                          </td>
-                        )}
-                        {visibleColumns.dateAdded && (
-                          <td className="px-6 py-2 text-gray-300 whitespace-nowrap align-middle">
-                            {getRelativeTimeString(show.createdAt)}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
     </>
   );
 }

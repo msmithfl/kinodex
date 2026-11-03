@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { ArrowDown, ArrowUp, Gift } from "lucide-react";
+import { Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import SortHeader from "../../components/SortHeader";
 import { QuickRating } from "../../components/StarRating";
 import { useRateMovie } from "./api";
 import { getRelativeTimeString } from "../../utils/dateUtils";
@@ -26,44 +27,6 @@ const headClass = "border-b border-border px-4 py-2.5 text-left text-xs font-med
 const cellClass = "border-b border-border/60 px-4 py-2 align-middle";
 // The title column is a fixed width; longer titles are cut short with "…"
 const TITLE_WIDTH = "w-56 max-w-56 md:w-96 md:max-w-96";
-
-// A column header that sorts by its column; the arrow shows on the sorted one
-function SortHeader({
-  label,
-  sortKey,
-  sortBy,
-  sortDirection,
-  onSort,
-  className,
-}: {
-  label: string;
-  sortKey: SortOption;
-  sortBy: SortOption;
-  sortDirection: "asc" | "desc";
-  onSort: (sortKey: SortOption) => void;
-  className?: string;
-}) {
-  const active = sortBy === sortKey;
-  const Arrow = sortDirection === "asc" ? ArrowUp : ArrowDown;
-  return (
-    <th
-      className={cn(headClass, className)}
-      aria-sort={active ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
-    >
-      <button
-        type="button"
-        onClick={() => onSort(sortKey)}
-        className={cn(
-          "group/sort inline-flex cursor-pointer items-center gap-1 transition-colors hover:text-foreground",
-          active ? "text-foreground" : "text-muted-foreground",
-        )}
-      >
-        {label}
-        <Arrow className={cn("size-3", active ? "" : "opacity-0 group-hover/sort:opacity-50")} />
-      </button>
-    </th>
-  );
-}
 
 // The movie list's table: a checkbox per row (and select-all for the page), a small poster and
 // the title (opens the drawer), then the optional columns. Rating stars save straight away.

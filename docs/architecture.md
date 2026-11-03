@@ -89,7 +89,7 @@ the `useSettings()` hook (shared cache).
 | `/` | `Dashboard`: account row, spending, quick actions, recently added movies and TV shows (two sideways-scrolling poster rows, right column on desktop) | Core |
 | `/library` | `MovieList` (redesigned): title and count, table/poster views, search, filter panel and chips, sort, columns, floating bulk edit/delete bar, paged in the browser (`Pagination`, 100 per page) | Core |
 | `/movie/:id` | Redirects to `/library?movie=:id` (the full page is retired) | Core |
-| `/tv-shows` | `TvShowList`: table/poster views, search, filters (`features/tvShows/filters.ts`), sort | Core |
+| `/tv-shows` | `TvShowList` (redesigned, like `MovieList` without selection or paging): title and count, Scan/Add TV show, search, filter panel and chips (`features/tvShows/filters.ts`), sort, columns; `features/tvShows/TvShowTable` | Core |
 | `/tv-shows/:id` | Redirects to `/tv-shows?show=:id` (the full page is retired) | Core |
 | `/collections` | `CollectionsView`: poster cards + create modal; hosts collection & movie drawers | Core |
 | `/collections/:name` | redirect → `/collections?collection=name` | Redirect |
@@ -149,9 +149,9 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Shared bits:** `StarRating` (`Stars` display, `StarRatingInput` picker), `TmdbLink`,
   `ChipSelect` / `SingleChipSelect` (chip dropdowns for genres, formats, collections, shelf),
   `ImageUrlField` (preview + URL + picker row), `formStyles` (form input/label classes).
-- **Controls:** `ViewToggle` (+ `utils/viewOptions.ts`), `SortDropdown`, `SortableTableHeader`,
-  `FilterDropdown` (+ `utils/filterCategories.ts`, `utils/applyFilters.ts`; TV uses `features/tvShows/filters.ts`), `Counter`,
-  `SubNavigation`, `EmptyState`, `LoadingSpinner`.
+- **Controls (classic, for screens not yet redesigned):** `ViewToggle` (+ `utils/viewOptions.ts`),
+  `Counter`, `SubNavigation`, `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`
+  + `utils/applyFilters.ts` (movies), `features/tvShows/filters.ts` (TV).
 - **Data layer:** `utils/api.ts`, `utils/queryClient.ts`, `features/*/api.ts` (see below).
 - **Utilities:** `upc.ts` (eBay sold-listings link, copy-to-clipboard with a `Copied!` flash),
   `tmdbApi.ts` (browser-side TMDB calls), `useUrlSearchQuery` (search in the URL),
@@ -180,8 +180,9 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   switches, checklists for the long lists; drawn from each category's `kind` in
   `utils/filterCategories.ts`), `FilterChips` (active filters as removable chips), `SortMenu`
   (sort-by and direction dropdown), `PosterCard` (poster grid card with hover lift, formats and
-  rating), `Pagination`. The older `FilterDropdown`, `SortDropdown`, `ViewToggle`, `Counter` and
-  `MovieCardPoster` stay for the screens not yet redesigned (TV, collections, genres).
+  rating), `SortHeader` (a table's sortable column header), `ListSkeleton` (loading placeholder for
+  the movie and TV lists), `Pagination`. The older `ViewToggle`, `Counter` and `MovieCardPoster`
+  stay for the screens not yet redesigned (collections, genres, stats).
 - **Redesigned screens so far:** the sidebar and search palette; the movie list (`MovieList`:
   title and count, Scan/Add, toolbar with search (`/` focuses it), filter, sort, Table/Posters,
   columns; filter chips; `MovieTable` with poster thumbnails, checkboxes and a select-all; a
