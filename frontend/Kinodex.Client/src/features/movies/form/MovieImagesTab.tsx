@@ -27,9 +27,10 @@ function MovieImagesTab({
   productPicker,
 }: MovieImagesTabProps) {
   return (
-    <div className="space-y-2 pb-2">
+    <div className="flex flex-col gap-4 pb-2">
       <ImageUrlField
         id="posterPath"
+        appearance="modern"
         label="Movie Poster URL"
         value={formData.posterPath}
         onChange={(posterPath) => setFormData({ ...formData, posterPath })}
@@ -43,6 +44,7 @@ function MovieImagesTab({
 
       <ImageUrlField
         id="backdropPath"
+        appearance="modern"
         label="Backdrop URL"
         value={formData.backdropPath}
         onChange={(backdropPath) => setFormData({ ...formData, backdropPath })}
@@ -56,6 +58,7 @@ function MovieImagesTab({
 
       <ImageUrlField
         id="productPosterPath"
+        appearance="modern"
         label="Product Image URL"
         value={formData.productPosterPath}
         onChange={(productPosterPath) => setFormData({ ...formData, productPosterPath })}

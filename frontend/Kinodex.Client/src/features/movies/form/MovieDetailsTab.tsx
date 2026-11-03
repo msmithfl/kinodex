@@ -1,9 +1,11 @@
-import { LuEye, LuEyeClosed } from "react-icons/lu";
-import { FaPlus, FaMinus } from "react-icons/fa6";
+import { Minus, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ChipSelect } from "../../../components/ChipSelect";
 import { StarRatingInput } from "../../../components/StarRating";
-import { inputClass, labelClass } from "../../../components/formStyles";
 import { Genres, type Movie } from "../../../types";
+import { FormField, SwitchField } from "./fields";
 
 const GENRE_OPTIONS = Object.values(Genres).map((genre) => ({ value: genre }));
 
@@ -23,7 +25,7 @@ interface MovieDetailsTabProps {
   addCollection: () => Promise<void>;
 }
 
-// The movie form's first tab: title, year, TMDB id, genres, collections, watched, rating, notes
+// The movie form's first tab: title, year, TMDB id, genres, collections, rating, watched, notes
 function MovieDetailsTab({
   formData,
   setFormData,
@@ -39,144 +41,108 @@ function MovieDetailsTab({
   addCollection,
 }: MovieDetailsTabProps) {
   return (
-    <div className="space-y-2 pb-2">
-      {/* Title */}
-      <div>
-        <label htmlFor="title" className={labelClass}>
-          Movie Title *
-        </label>
-        <input
-          type="text"
+    <div className="flex flex-col gap-4 pb-2">
+      <FormField label="Title" htmlFor="title">
+        <Input
           id="title"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
-          className={inputClass}
         />
-      </div>
+      </FormField>
 
       <div className="grid grid-cols-2 gap-4">
-        {/* Year */}
-        <div>
-          <label htmlFor="year" className={labelClass}>
-            Year
-          </label>
-          <input
-            type="text"
+        <FormField label="Year" htmlFor="year">
+          <Input
             id="year"
+            inputMode="numeric"
             value={yearInput}
             onChange={(e) => onYearChange(e.target.value)}
             placeholder="Release year"
-            className={inputClass}
           />
-        </div>
-        {/* TMDB ID */}
-        <div>
-          <label htmlFor="tmdbId" className={labelClass}>
-            TMDB ID
-          </label>
-          <input
-            type="text"
+        </FormField>
+        <FormField label="TMDB ID" htmlFor="tmdbId">
+          <Input
             id="tmdbId"
+            inputMode="numeric"
             value={tmdbInput}
             onChange={(e) => onTmdbChange(e.target.value)}
-            className={inputClass}
+            className="font-mono"
           />
-        </div>
+        </FormField>
       </div>
 
-      {/* Genres */}
-      <div>
-        <label className={labelClass}>Genres</label>
+      <FormField label="Genres">
         <ChipSelect
+          appearance="modern"
+          placeholder="Add genres"
           values={formData.genres}
           options={GENRE_OPTIONS}
           onChange={(genres) => setFormData({ ...formData, genres })}
-          chipColor="bg-purple-600"
           listHeight="max-h-50"
         />
-      </div>
+      </FormField>
 
       {/* Collections: pick existing ones, or add a new one with + */}
-      <div>
-        <label className={labelClass}>Collections</label>
+      <FormField label="Collections">
         <div className="flex flex-wrap gap-2">
           <ChipSelect
+            appearance="modern"
+            placeholder="Add to a collection"
             values={formData.collections}
             options={collections.map((col) => ({ value: col.name }))}
             onChange={(selected) => setFormData({ ...formData, collections: selected })}
             className="flex-1"
           />
-
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             onClick={() => setShowCollectionInput(!showCollectionInput)}
-            className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer shrink-0"
+            aria-label={showCollectionInput ? "Cancel new collection" : "New collection"}
           >
-            {showCollectionInput ? <FaMinus /> : <FaPlus />}
-          </button>
-
+            {showCollectionInput ? <Minus /> : <Plus />}
+          </Button>
           {showCollectionInput && (
-            <div className="flex gap-2 basis-full sm:basis-0 sm:flex-1">
-              <input
-                type="text"
+            <div className="flex basis-full gap-2">
+              <Input
                 value={newCollection}
                 onChange={(e) => setNewCollection(e.target.value)}
                 placeholder="New collection name"
-                className={inputClass + " flex-1"}
+                aria-label="New collection name"
+                className="flex-1"
               />
-              <button
-                type="button"
-                onClick={addCollection}
-                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition cursor-pointer shrink-0"
-              >
+              <Button type="button" variant="secondary" onClick={addCollection}>
                 Add
-              </button>
+              </Button>
             </div>
           )}
         </div>
-      </div>
+      </FormField>
 
-      <div className="flex items-start justify-center gap-16">
-        {/* Watched */}
-        <div className="flex flex-col items-center">
-          <label className="block text-sm font-medium text-gray-300 mb-2">Watched</label>
-          <button
-            type="button"
-            onClick={() => setFormData({ ...formData, hasWatched: !formData.hasWatched })}
-            className="cursor-pointer"
-            title={formData.hasWatched ? "Watched" : "Not watched"}
-          >
-            {formData.hasWatched ? (
-              <LuEye className="w-8 h-8 text-indigo-400" />
-            ) : (
-              <LuEyeClosed className="w-8 h-8 text-gray-500 hover:text-indigo-400" />
-            )}
-          </button>
-        </div>
-        {/* Rating */}
-        <div>
-          <label className={labelClass}>Rating</label>
-          <StarRatingInput
-            value={formData.rating}
-            onChange={(rating) => setFormData({ ...formData, rating })}
+      <div className="grid grid-cols-2 gap-4">
+        <FormField label="Rating">
+          <StarRatingInput value={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} />
+        </FormField>
+        <FormField label="Watched">
+          <SwitchField
+            id="hasWatched"
+            label={formData.hasWatched ? "Watched" : "Not watched yet"}
+            checked={formData.hasWatched}
+            onCheckedChange={(hasWatched) => setFormData({ ...formData, hasWatched })}
           />
-        </div>
+        </FormField>
       </div>
 
-      {/* Review / Notes */}
-      <div>
-        <label htmlFor="review" className={labelClass}>
-          Review / Notes
-        </label>
-        <textarea
+      <FormField label="Review / notes" htmlFor="review">
+        <Textarea
           id="review"
           value={formData.review}
           onChange={(e) => setFormData({ ...formData, review: e.target.value })}
           rows={4}
-          className={inputClass}
+          className="min-h-24"
         />
-      </div>
+      </FormField>
     </div>
   );
 }

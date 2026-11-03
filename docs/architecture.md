@@ -179,7 +179,13 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   title and count, Scan/Add, toolbar with search (`/` focuses it), filter, sort, Table/Posters,
   columns; filter chips; `MovieTable` with poster thumbnails, checkboxes and a select-all; a
   floating bulk-action bar; staggered poster fade-in; skeletons while loading; toasts after bulk
-  edit/delete).
+  edit/delete); the Add and Edit Movie windows (Radix `Dialog`, a bottom sheet on phones, sized
+  by `features/movies/form/modalClass.ts`; Add has Search › Details steps, `TmdbMovieSearch`
+  (cmdk: arrow keys + Enter, "In library" badges), a poster/title preview beside the form, the
+  preset Select, footer Save (↵) and Save & add another (Ctrl/⌘↵) submitting the form through
+  its validation, and an "Added …" toast with Open). The movie form tabs use the shadcn inputs,
+  `features/movies/form/fields.tsx` (`FormField`, `SwitchField`, `PillToggles`) and the opt-in
+  `appearance="modern"` of `ChipSelect` and `ImageUrlField` (the TV forms keep the classic look).
 - Mockup of the target design: the "Kinodex redesign mockup" artifact (desktop movie list,
   poster view with filters, Add Movie; mobile list and Add sheet).
 

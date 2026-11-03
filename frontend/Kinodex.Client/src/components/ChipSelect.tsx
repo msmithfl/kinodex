@@ -26,14 +26,24 @@ const listClass = "absolute top-full left-0 w-full overflow-y-auto bg-gray-800 b
 const itemClass = "px-3 py-2 text-white text-sm hover:bg-gray-600 cursor-pointer";
 const chipBase = "inline-flex items-center gap-1 px-3 py-1 text-white rounded-full text-sm relative z-10";
 
+// The redesign's look (the movie form); the classic one stays for the TV forms until they're redone
+const modern = {
+  field: "relative rounded-md border border-input bg-card shadow-xs focus-within:border-ring",
+  list: "absolute top-full left-0 mt-1 w-full overflow-y-auto rounded-lg border border-border bg-popover p-1 shadow-lg z-50",
+  item: "rounded-md px-2 py-1.5 text-sm hover:bg-accent cursor-pointer",
+  chip: "inline-flex items-center gap-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-medium text-primary-text relative z-10",
+};
+
 interface ChipSelectProps {
   values: string[];
   options: ChipOption[]; // Every choice; ones already picked are left out of the list
   onChange: (values: string[]) => void;
-  chipColor?: string; // Tailwind background class for the chips
+  chipColor?: string; // Tailwind background class for the chips (classic look)
   listHeight?: string; // Tailwind max-height class for the list
   rowPadding?: string; // Tailwind vertical padding class for the chip row
   className?: string; // Extra classes for the field (e.g. flex-1 beside a button)
+  appearance?: "classic" | "modern";
+  placeholder?: string; // Shown when nothing is picked (modern look)
 }
 
 // A field showing picked values as removable chips; clicking it opens a list of the rest
@@ -45,26 +55,33 @@ export function ChipSelect({
   listHeight = "max-h-30",
   rowPadding = "py-1",
   className = "",
+  appearance = "classic",
+  placeholder,
 }: ChipSelectProps) {
   const { open, setOpen, ref } = useDropdown();
   const remaining = options.filter((option) => !values.includes(option.value));
+  const isModern = appearance === "modern";
 
   return (
-    <div ref={ref} className={`${fieldClass} ${className}`}>
+    <div ref={ref} className={`${isModern ? modern.field : fieldClass} ${className}`}>
       <div
-        className={`flex flex-wrap items-center gap-2 px-3 ${rowPadding} min-h-10.5 cursor-pointer`}
+        className={`flex flex-wrap items-center gap-2 px-3 ${rowPadding} ${isModern ? "min-h-9" : "min-h-10.5"} cursor-pointer`}
         onClick={() => setOpen((prev) => !prev)}
       >
+        {isModern && values.length === 0 && placeholder && (
+          <span className="text-sm text-muted-foreground">{placeholder}</span>
+        )}
         {values.map((value, index) => (
-          <span key={index} className={`${chipBase} ${chipColor}`}>
+          <span key={index} className={isModern ? modern.chip : `${chipBase} ${chipColor}`}>
             {value}
             <button
               type="button"
+              aria-label={`Remove ${value}`}
               onClick={(e) => {
                 e.stopPropagation();
                 onChange(values.filter((_, i) => i !== index));
               }}
-              className="hover:text-red-300 transition cursor-pointer"
+              className={isModern ? "cursor-pointer opacity-70 transition hover:opacity-100" : "hover:text-red-300 transition cursor-pointer"}
             >
               ×
             </button>
@@ -73,7 +90,7 @@ export function ChipSelect({
       </div>
 
       {open && (
-        <ul className={`${listClass} ${listHeight}`}>
+        <ul className={`${isModern ? modern.list : listClass} ${listHeight}`}>
           {remaining.map((option) => (
             <li
               key={option.value}
@@ -81,7 +98,7 @@ export function ChipSelect({
                 onChange([...values, option.value]);
                 setOpen(false);
               }}
-              className={itemClass}
+              className={isModern ? modern.item : itemClass}
             >
               {option.label ?? option.value}
             </li>

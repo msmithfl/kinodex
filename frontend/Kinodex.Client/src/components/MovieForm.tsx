@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Movie } from "../types";
 import { useImagePicker } from "./useImagePicker";
 import { useProductImagePicker } from "./useProductImagePicker";
@@ -10,7 +11,7 @@ import MovieImagesTab from "../features/movies/form/MovieImagesTab";
 type Tab = "details" | "physical" | "location" | "poster";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "details", label: "Movie Details" },
+  { id: "details", label: "Details" },
   { id: "physical", label: "Physical" },
   { id: "location", label: "Location" },
   { id: "poster", label: "Images" },
@@ -36,6 +37,8 @@ interface MovieFormProps {
   submitButtonText?: string;
   showScanButton?: boolean;
   onScanClick?: () => void;
+  // The form element's id, so buttons outside it (the modal footer) can submit it
+  id?: string;
 }
 
 function MovieForm({
@@ -56,6 +59,7 @@ function MovieForm({
   onSubmit,
   showScanButton = false,
   onScanClick,
+  id,
 }: MovieFormProps) {
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [validationError, setValidationError] = useState<string>("");
@@ -180,33 +184,24 @@ function MovieForm({
 
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full w-full">
-      {/* Tabs */}
-      <div className="flex border-b border-gray-700 mb-4 mt-2 shrink-0">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 text-sm font-medium transition cursor-pointer ${
-              activeTab === tab.id
-                ? "text-white border-b-2 border-indigo-500"
-                : "text-gray-400 hover:text-white"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+    <form id={id} onSubmit={handleSubmit} className="flex flex-col h-full w-full">
+      <Tabs value={activeTab} onValueChange={(tab) => setActiveTab(tab as Tab)} className="flex min-h-0 flex-1 flex-col gap-0">
+        <TabsList className="shrink-0">
+          {TABS.map((tab) => (
+            <TabsTrigger key={tab.id} value={tab.id}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-      {validationError && (
-        <div className="bg-red-600 text-white px-4 py-3 rounded-md mb-4 shrink-0">
-          {validationError}
-        </div>
-      )}
+        {validationError && (
+          <div role="alert" className="mt-4 shrink-0 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-red-300">
+            {validationError}
+          </div>
+        )}
 
-      {/* Scrollable tab content */}
-      <div className="flex-1 overflow-y-auto min-h-0 pr-1">
+        {/* Scrollable tab content */}
+        <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 pt-4">
         {activeTab === "details" && (
           <MovieDetailsTab
             formData={formData}
@@ -261,7 +256,8 @@ function MovieForm({
             productPicker={productPicker}
           />
         )}
-      </div>
+        </div>
+      </Tabs>
     </form>
   );
 }

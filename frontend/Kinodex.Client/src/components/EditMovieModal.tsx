@@ -1,5 +1,6 @@
-import { IoClose } from "react-icons/io5";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { Movie } from "../types";
 import MovieForm from "./MovieForm";
 import BarcodeScanner from "./BarcodeScanner";
@@ -7,7 +8,10 @@ import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { useMovie, useUpdateMovie } from "../features/movies/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";
 import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
-import { useBackdropClose } from "../utils/useBackdropClose";
+import { MOVIE_MODAL_CLASS, keepOpenWhileTyping } from "../features/movies/form/modalClass";
+import { isMobile } from "../utils/isMobile";
+
+const FORM_ID = "edit-movie-form";
 
 interface EditMovieModalProps {
   onClose: () => void;
@@ -42,9 +46,8 @@ const EMPTY_MOVIE: Movie = {
 
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
 
+// Edit a movie: the same form as Add Movie, in the same window
 export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
-  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
-  const backdropClose = useBackdropClose(onClose);
   // From the shared cache (the drawer or list has usually loaded it already)
   const { data: movie } = useMovie(movieId);
   const { data: collectionList = [] } = useCollections();
@@ -71,15 +74,6 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
 
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
-
-  // Check if device is mobile
-  const isMobile = () => {
-    return (
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
-      ) || window.innerWidth <= 768
-    );
-  };
 
   // Creates a collection from the form and adds this movie to it
   const addCollection = async () => {
@@ -142,27 +136,33 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
     setShowScanner(false);
   };
 
+  const meta = [formData.year || null, formData.genres.slice(0, 2).join(", ") || null].filter(Boolean).join(" · ");
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-      {...backdropClose}
-    >
-      <div
-        className="flex flex-col mx-2 bg-gray-800 shadow-2xl w-full max-w-3xl h-full max-h-3/4 relative"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        className={MOVIE_MODAL_CLASS}
+        onEscapeKeyDown={keepOpenWhileTyping}
       >
-        <div className="flex gap-4 justify-between bg-gray-700 p-2">
-          <p className="text-white text-xl pl-2">Editing {formData.title}</p>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white cursor-pointer"
-          >
-            <IoClose className="w-6 h-6" />
-          </button>
+        <div className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-4">
+          {formData.posterPath && (
+            <img
+              src={formData.posterPath}
+              alt=""
+              className="h-12 w-8 shrink-0 rounded-sm border border-white/10 bg-muted object-cover"
+            />
+          )}
+          <div className="flex min-w-0 flex-col gap-1">
+            <DialogTitle className="truncate">Edit {formData.title || "movie"}</DialogTitle>
+            {meta && <span className="truncate text-xs text-muted-foreground">{meta}</span>}
+          </div>
         </div>
 
-        <div className="flex flex-col flex-1 min-h-0 px-4">
+        <div className="flex min-h-0 flex-1 flex-col px-5 pt-4 md:px-6">
           <MovieForm
+            id={FORM_ID}
             formData={formData}
             setFormData={setFormData}
             collections={collections}
@@ -183,42 +183,29 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
             showScanButton={true}
             onScanClick={handleScanClick}
           />
-
-          {showScanner && (
-            <BarcodeScanner
-              onDetected={handleBarcodeDetected}
-              onClose={() => setShowScanner(false)}
-            />
-          )}
-
-          {showMobileOnlyMessage && (
-            <MobileOnlyMessage
-              setShowMobileOnlyMessage={setShowMobileOnlyMessage}
-            />
-          )}
         </div>
 
-        <div className="flex flex-col px-6 py-3 bg-gray-700 gap-2">
+        <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card px-5 py-3">
           {submitError && (
-            <p className="text-red-400 text-sm text-right">{submitError}</p>
+            <p role="alert" className="text-sm text-red-300">
+              {submitError}
+            </p>
           )}
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
-            >
-              Close
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={updateMovie.isPending}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-wait text-white rounded-md transition cursor-pointer"
-            >
-              {updateMovie.isPending ? "Saving..." : "Save"}
-            </button>
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="ghost" onClick={onClose} className="mr-auto">
+              Cancel
+            </Button>
+            <Button type="submit" form={FORM_ID} disabled={updateMovie.isPending}>
+              {updateMovie.isPending ? "Saving…" : "Save"}
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+
+        {showScanner && (
+          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setShowScanner(false)} />
+        )}
+        {showMobileOnlyMessage && <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />}
+      </DialogContent>
+    </Dialog>
   );
 }
