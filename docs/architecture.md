@@ -66,18 +66,21 @@ Kinodex/
 ### Shell and providers
 
 `main.tsx` → `ClerkProvider` → `App`. In `App.tsx`, every route except sign-in/sign-up is
-wrapped in `ProtectedRoute` (redirects signed-out users) → layout: `Header`, `Sidebar` (desktop), the
-page, `BottomNav` (mobile). `main.tsx` also wraps everything in the React Query provider and
-`ClearCacheOnUserChange`. Per-user settings come from the `useSettings()` hook (shared cache).
+wrapped in `ProtectedRoute` (redirects signed-out users) → layout: `Header` (phones), `Sidebar`
+(tablet up, full height), the page, `BottomNav` (phones), `Toaster`. `main.tsx` also wraps
+everything in the React Query provider and `ClearCacheOnUserChange`. Per-user settings come from
+the `useSettings()` hook (shared cache).
 
 ### Navigation
 
 | Where | Items |
 |---|---|
-| `SubNavigation` (tabs above library pages) | Movies · TV Shows · Collections · Genres (Shelves and My Shelf are commented out) |
-| `Sidebar` (desktop) | Movies, TV Shows · Dashboard, Stats, CSV Export, Settings (Checkouts, Customers, Match Movies are commented out) |
-| `BottomNav` (mobile) | Library, Search, Add (opens `AddItemModal`: movie or TV), Scan, Dashboard |
-| `AccountMenuButton` | Clerk account menu |
+| `Sidebar` (tablet up, redesigned) | Logo + collapse toggle (icon rail with tooltips, remembered in localStorage) · Search (opens `CommandPalette`) · Add (opens `AddItemModal`) · **Library:** Movies, TV Shows (with counts), Collections, Genres · **Insights:** Dashboard, Stats, CSV Export · Settings · account (`AccountMenuButton`, menu opens upward). Links are defined in `components/navigation.ts` |
+| `CommandPalette` (Ctrl/⌘K anywhere, or the sidebar's Search) | Every movie and TV show (title, year, UPC; opens its list with the drawer), the pages, and Add. Before typing it shows the newest few |
+| `SubNavigation` (phones only, tabs above library pages) | Movies · TV Shows · Collections · Genres (Shelves and My Shelf are commented out) |
+| `Header` (phones only) | Logo |
+| `BottomNav` (phones) | Library, Search, Add (opens `AddItemModal`: movie or TV), Scan, Dashboard |
+| `AccountMenuButton` | Clerk account menu, below or above the avatar |
 
 ### Routes
 
