@@ -1,68 +1,44 @@
 import { useState } from "react";
-import { IoClose } from "react-icons/io5";
-import { FaFilm, FaTv } from "react-icons/fa";
+import { Film, Tv } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AddMovieModal } from "./AddMovieModal";
 import { AddTvShowModal } from "./AddTvShowModal";
-import { useBackdropClose } from "../utils/useBackdropClose";
 
 interface AddItemModalProps {
   onClose: () => void;
 }
 
+const CHOICES = [
+  { id: "movie", label: "Movie", icon: Film },
+  { id: "tv", label: "TV Show", icon: Tv },
+] as const;
+
 // Entry point for the app's generic Add buttons: asks whether you're adding a movie or a
 // TV show, then opens that form in its place
 export function AddItemModal({ onClose }: AddItemModalProps) {
-  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
-  const backdropClose = useBackdropClose(onClose);
   const [kind, setKind] = useState<"movie" | "tv" | null>(null);
 
   if (kind === "movie") return <AddMovieModal onClose={onClose} />;
   if (kind === "tv") return <AddTvShowModal onClose={onClose} />;
 
-  const choices = [
-    { id: "movie", label: "Movie", icon: FaFilm },
-    { id: "tv", label: "TV Show", icon: FaTv },
-  ] as const;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-      {...backdropClose}
-    >
-      <div
-        className="mx-4 w-full max-w-sm bg-gray-800 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="add-item-title"
-      >
-        <div className="flex gap-4 justify-between bg-gray-700 p-2">
-          <p id="add-item-title" className="text-white text-xl pl-2">
-            Add to Collection
-          </p>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white cursor-pointer"
-            aria-label="Close"
-          >
-            <IoClose className="w-6 h-6" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 p-4">
-          {choices.map(({ id, label, icon: Icon }) => (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent showCloseButton={false} aria-describedby={undefined} className="p-5 sm:max-w-sm">
+        <DialogTitle>Add to collection</DialogTitle>
+        <div className="grid grid-cols-2 gap-3">
+          {CHOICES.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"
               onClick={() => setKind(id)}
-              className="flex flex-col items-center justify-center gap-3 py-6 bg-gray-700 hover:bg-gray-600 border border-gray-600 hover:border-indigo-500 rounded-lg text-white transition-colors cursor-pointer"
+              className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-border py-6 text-sm font-medium transition-colors outline-none hover:border-primary hover:bg-primary-soft hover:text-primary-text focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
-              <Icon className="w-8 h-8" />
-              <span className="font-semibold">{label}</span>
+              <Icon className="size-6" />
+              {label}
             </button>
           ))}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

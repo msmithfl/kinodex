@@ -613,6 +613,7 @@ function MovieList() {
           shelfSections={shelfSections}
           setShowBulkEditModal={setShowBulkEditModal}
           handleBulkEdit={handleBulkEdit}
+          saving={updateMovies.isPending}
         />
       )}
 
