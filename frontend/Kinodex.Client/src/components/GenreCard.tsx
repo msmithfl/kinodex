@@ -29,7 +29,8 @@ function GenreCard({ name, movieCount, imagePath, overlay }: GenreCardProps) {
   return (
     <Link
       to={`/genres/${encodeURIComponent(name)}`}
-      className="group relative h-28 md:h-32 rounded-lg overflow-hidden shadow-lg bg-gray-800 ring-0 hover:ring-2 hover:ring-white/40 transition"
+      data-slot="genre-card"
+      className="group relative h-28 overflow-hidden rounded-xl border border-white/10 bg-muted shadow-md outline-none transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:ring-2 hover:ring-primary focus-visible:ring-2 focus-visible:ring-ring md:h-32"
     >
       {imagePath && (
         <img
@@ -43,10 +44,10 @@ function GenreCard({ name, movieCount, imagePath, overlay }: GenreCardProps) {
         className={`absolute inset-0 bg-linear-to-r ${overlay} transition-opacity group-hover:opacity-90`}
       />
       <div className="relative h-full flex items-end justify-between gap-3 p-4">
-        <h3 className="text-xl md:text-2xl font-bold text-white drop-shadow truncate">
+        <h3 className="truncate text-xl font-semibold tracking-tight text-white drop-shadow md:text-2xl">
           {name}
         </h3>
-        <span className="shrink-0 bg-black/40 text-white px-3 py-1 rounded-full text-sm font-medium">
+        <span className="shrink-0 rounded-full bg-black/40 px-2.5 py-0.5 text-sm font-medium text-white tabular-nums backdrop-blur-sm">
           {movieCount}
         </span>
       </div>

@@ -151,7 +151,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 ### Shared building blocks
 
 - **Cards and lists:** `PosterCard` (movie, TV and collection grids; `CollectionCard` wraps it),
-  `MovieCardPoster` (genre and shelf pages), `MovieCardDetail` (shelf page),
+  `MovieCardPoster` and `MovieCardDetail` (shelf page),
   `GenreCard`, `SimpleMovieTable` (collection/genre table view),
   `features/movies/MovieTable` (the movie list's table).
 - **Shared bits:** `StarRating` (`Stars` display, `StarRatingInput` picker), `TmdbLink`,
@@ -160,7 +160,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   windows' size and Escape rule), `TmdbSearch` (keyboard-driven TMDB search, movies and TV),
   `DetailHeader`, `DetailField`, `DeleteConfirm`.
 - **Controls (classic, for screens not yet redesigned):** `ViewToggle` (+ `utils/viewOptions.ts`),
-  `Counter`, `SubNavigation`, `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`
+  `SubNavigation`, `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`
   + `utils/applyFilters.ts` (movies), `features/tvShows/filters.ts` (TV).
 - **Data layer:** `utils/api.ts`, `utils/queryClient.ts`, `features/*/api.ts` (see below).
 - **Utilities:** `upc.ts` (eBay sold-listings link, copy-to-clipboard with a `Copied!` flash),

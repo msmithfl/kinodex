@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useParams } from "react-router-dom";
+import { LayoutGrid, Table2 } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import EmptyState from "../components/EmptyState";
+import ListSkeleton from "../components/ListSkeleton";
+import PosterCard from "../components/PosterCard";
 import SimpleMovieTable from "../components/SimpleMovieTable";
-import MoviePosterCard from "../components/MovieCardPoster";
-import Counter from "../components/Counter";
-import LoadingSpinner from "../components/LoadingSpinner";
-import ViewToggle from "../components/ViewToggle";
-import { TABLE_VIEW_OPTIONS } from "../utils/viewOptions";
 import SubNavigation from "../components/SubNavigation";
 import Drawer from "../components/Drawer";
 import MovieDetail from "../features/movies/MovieDetail";
@@ -44,7 +43,7 @@ function GenreDetail() {
     return (
       <>
         <SubNavigation />
-        <LoadingSpinner />
+        <ListSkeleton viewMode={viewMode} label="Loading genre" />
       </>
     );
   }
@@ -57,40 +56,53 @@ function GenreDetail() {
           <MovieDetail key={openMovieId} movieId={openMovieId} onDeleted={closeMovie} />
         </Drawer>
       )}
-      <div ref={viewportRef} className="flex h-[calc(100dvh-9rem)] mt-2" style={viewportStyle}>
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 md:px-12">
-          <div>
-            <h1 className="text-3xl font-bold">{genreName}</h1>
-            {/* The movie count, with the view toggle on the same line */}
-            <div className="flex items-center justify-between gap-4 mt-1 mb-3">
-              <Counter count={movies.length} />
-              <ViewToggle
-                value={viewMode}
-                options={TABLE_VIEW_OPTIONS}
-                onChange={handleViewModeChange}
-              />
-            </div>
+      <div ref={viewportRef} className="flex h-[calc(100dvh-5rem)] flex-col bg-background" style={viewportStyle}>
+        <div className="flex shrink-0 flex-wrap items-end justify-between gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">{genreName}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {movies.length} {movies.length === 1 ? "movie" : "movies"}
+            </p>
           </div>
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(mode) => mode && handleViewModeChange(mode as "table" | "poster")}
+            aria-label="View"
+          >
+            <ToggleGroupItem value="table" aria-label="Table view">
+              <Table2 />
+              <span className="hidden lg:inline">Table</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem value="poster" aria-label="Poster view">
+              <LayoutGrid />
+              <span className="hidden lg:inline">Posters</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
 
-          {/* Movies Section */}
-          <div>
-            {movies.length === 0 ? (
-              <EmptyState message="No movies in this genre yet." />
-            ) : viewMode === "poster" ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8">
-                {movies.map((movie) => (
-                  <MoviePosterCard
-                    key={movie.id}
-                    movie={movie}
-                    captionBelow
-                    onOpen={() => openMovie(movie.id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <SimpleMovieTable movies={movies} onOpen={openMovie} />
-            )}
-          </div>
+        {/* Scrolls on its own; the small top inset keeps the hover ring and lift inside it */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-8 md:px-10">
+          {movies.length === 0 ? (
+            <EmptyState message="No movies in this genre yet." />
+          ) : viewMode === "poster" ? (
+            <div className="grid grid-cols-3 gap-x-3 gap-y-5 md:grid-cols-4 md:gap-x-4 md:gap-y-7 lg:grid-cols-5 xl:grid-cols-8">
+              {movies.map((movie) => (
+                <PosterCard
+                  key={movie.id}
+                  title={movie.title}
+                  posterPath={movie.posterPath}
+                  subtitle={movie.year ? String(movie.year) : undefined}
+                  formats={movie.formats}
+                  rating={movie.rating}
+                  to={`/library?movie=${movie.id}`}
+                  onOpen={() => openMovie(movie.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <SimpleMovieTable movies={movies} onOpen={openMovie} />
+          )}
         </div>
       </div>
     </>
