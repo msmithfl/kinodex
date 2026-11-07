@@ -31,7 +31,7 @@ function SubNavigation() {
 
   return (
     // Phones only: from tablet up these pages are in the sidebar
-    <nav aria-label="Library" className="flex justify-center bg-background px-4 pt-4 md:hidden">
+    <nav aria-label="Library" className="flex justify-center px-4 pt-4 md:hidden">
       <div
         ref={scrollRef}
         className="no-scrollbar relative inline-flex max-w-full gap-0.5 overflow-x-auto rounded-lg border border-input bg-card p-[3px]"

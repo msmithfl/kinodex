@@ -1,8 +1,10 @@
 import { useState, useRef } from "react";
 import { Download, Upload } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import PageHeader from "../components/PageHeader";
+import PageShell from "../components/PageShell";
 import { useApi } from "../utils/api";
-import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useImportMovies, type ImportResult } from "../features/movies/api";
 
 // The rows an import couldn't use
@@ -22,8 +24,6 @@ function RowErrors({ errors }: { errors: string[] }) {
 
 function CsvExport() {
   const api = useApi();
-  // Fills the screen below the header and above the mobile bottom bar
-  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>();
   // Imports refresh every screen showing movies
   const importMovies = useImportMovies();
   const [loading, setLoading] = useState(false);
@@ -111,21 +111,12 @@ function CsvExport() {
   };
 
   return (
-    <div ref={viewportRef} className="h-[calc(100dvh-5rem)] overflow-y-auto bg-background" style={viewportStyle}>
+    <PageShell layout="scroll">
       <div className="flex max-w-3xl flex-col gap-4 px-4 pt-4 pb-8 md:px-20 md:pt-7">
-        <h1 className="mb-2 text-2xl font-semibold tracking-tight md:text-[28px]">Export and import</h1>
+        <PageHeader title="Export and import" className="mb-2" />
 
-        {error && (
-          <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/15 px-4 py-2 text-sm text-red-300">
-            {error}
-          </p>
-        )}
-
-        {success && (
-          <p role="status" className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
-            {success}
-          </p>
-        )}
+        {error && <Alert variant="destructive">{error}</Alert>}
+        {success && <Alert variant="success">{success}</Alert>}
 
         {/* Export */}
         <section className="flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-5">
@@ -195,7 +186,7 @@ function CsvExport() {
           {letterboxdResult && <RowErrors errors={letterboxdResult.errors} />}
         </section>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

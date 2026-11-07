@@ -3,7 +3,9 @@ import { Switch } from "@/components/ui/switch";
 import { useSettings } from "../settings/useSettings";
 import type { UserSettings } from "../settings/settings";
 import MoviePresetSettings from "../features/movies/MoviePresetSettings";
-import { useFillViewportHeight } from "../utils/useFillViewportHeight";
+import { Alert } from "@/components/ui/alert";
+import PageHeader from "../components/PageHeader";
+import PageShell from "../components/PageShell";
 
 interface ToggleRowProps {
   label: string;
@@ -29,8 +31,6 @@ function ToggleRow({ label, description, checked, disabled, onChange }: ToggleRo
 function Settings() {
   const { settings, loaded, updateSettings } = useSettings();
   const [saveError, setSaveError] = useState("");
-  // Fills the screen below the header and above the mobile bottom bar
-  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>();
 
   const update = async (changes: Partial<UserSettings>) => {
     setSaveError("");
@@ -41,17 +41,18 @@ function Settings() {
   };
 
   return (
-    <div ref={viewportRef} className="h-[calc(100dvh-5rem)] overflow-y-auto bg-background" style={viewportStyle}>
+    <PageShell layout="scroll">
       <div className="max-w-3xl px-4 pt-4 pb-8 md:px-20 md:pt-7">
-        <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">Settings</h1>
-        <p className="mt-1 mb-6 text-sm text-muted-foreground">
-          Saved to your account, so they apply on every device you sign in on.
-        </p>
+        <PageHeader
+          title="Settings"
+          subtitle="Saved to your account, so they apply on every device you sign in on."
+          className="mb-6"
+        />
 
         {saveError && (
-          <p role="alert" className="mb-4 rounded-md border border-destructive/40 bg-destructive/15 px-4 py-2 text-sm text-red-300">
+          <Alert variant="destructive" className="mb-4">
             {saveError}
-          </p>
+          </Alert>
         )}
 
         <section className="rounded-xl border border-border bg-card px-5 py-2">
@@ -70,7 +71,7 @@ function Settings() {
           <MoviePresetSettings onError={setSaveError} />
         </section>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

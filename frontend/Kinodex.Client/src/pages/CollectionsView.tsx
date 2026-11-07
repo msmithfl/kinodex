@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useFillViewportHeight } from "../utils/useFillViewportHeight";
+import ListSkeleton from "../components/ListSkeleton";
+import PageShell from "../components/PageShell";
+import PageHeader from "../components/PageHeader";
+import { POSTER_GRID_CAPTIONED } from "../components/posterGrid";
 import CollectionCard from "../components/CollectionCard";
 import SubNavigation from "../components/SubNavigation";
 import { useSettings } from "../settings/useSettings";
@@ -16,10 +18,6 @@ import { useAllChecklistItems, useCollections } from "../features/collections/ap
 import { movieKeys, useMovies } from "../features/movies/api";
 import type { Collection } from "../types";
 
-// The movie list's poster widths from tablet up; phones stay 3 across, with names
-const POSTER_GRID =
-  "grid grid-cols-3 gap-x-3 gap-y-5 md:grid-cols-4 md:gap-x-4 md:gap-y-7 lg:grid-cols-5 xl:grid-cols-8";
-
 function CollectionsView() {
   // "Show completion on collection posters" from the Settings page
   const { settings } = useSettings();
@@ -29,8 +27,6 @@ function CollectionsView() {
   const { data: movies = [], isLoading: moviesLoading } = useMovies();
   const { data: collectionListItems = {} } = useAllChecklistItems();
   const loading = collectionsLoading || moviesLoading;
-  // Fills the screen below the header and above the mobile bottom bar
-  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
   const [showCreateInput, setShowCreateInput] = useState(false);
 
   // The collection open in a drawer (?collection=name), and a movie opened from it in a second
@@ -69,17 +65,7 @@ function CollectionsView() {
     return (
       <>
         <SubNavigation />
-        <div className="flex flex-col gap-4 bg-background px-6 pt-4 md:px-10 md:pt-7" aria-busy="true" aria-label="Loading collections">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-8 w-36" />
-            <Skeleton className="h-4 w-28" />
-          </div>
-          <div className={POSTER_GRID}>
-            {Array.from({ length: 16 }, (_, i) => (
-              <Skeleton key={i} className="aspect-2/3 rounded-[4px] md:rounded-lg" />
-            ))}
-          </div>
-        </div>
+        <ListSkeleton viewMode="poster" toolbar={false} grid={POSTER_GRID_CAPTIONED} label="Loading collections" />
       </>
     );
   }
@@ -100,17 +86,16 @@ function CollectionsView() {
   return (
     <>
       <SubNavigation />
-      <div ref={viewportRef} className="flex h-[calc(100dvh-5rem)] flex-col bg-background" style={viewportStyle}>
-        <div className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7">
-          <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">Collections</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {collections.length} {collections.length === 1 ? "collection" : "collections"}
-          </p>
-        </div>
+      <PageShell deps={[loading]}>
+        <PageHeader
+          title="Collections"
+          subtitle={`${collections.length} ${collections.length === 1 ? "collection" : "collections"}`}
+          className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7"
+        />
 
         {/* Scrolls on its own; the small top inset keeps the hover ring and lift inside it */}
         <div className="flex min-h-0 flex-1 flex-col gap-10 overflow-y-auto px-6 pt-2 pb-8 md:px-10">
-          <div className={POSTER_GRID}>
+          <div className={POSTER_GRID_CAPTIONED}>
             {/* New collection: poster-shaped to line up with the cards */}
             <button
               type="button"
@@ -127,11 +112,11 @@ function CollectionsView() {
           {directorCollections.length > 0 && (
             <section className="flex flex-col gap-4">
               <h2 className="text-lg font-semibold tracking-tight">Director collections</h2>
-              <div className={POSTER_GRID}>{directorCollections.map(renderCard)}</div>
+              <div className={POSTER_GRID_CAPTIONED}>{directorCollections.map(renderCard)}</div>
             </section>
           )}
         </div>
-      </div>
+      </PageShell>
 
       {openCollectionName && (
         <Drawer label="Collection details" onClose={closeCollection}>

@@ -133,7 +133,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Collection drawer (redesigned):** the shared `DetailBackdrop` and `DetailActions` (also parts of
   `DetailHeader`), the name and movie count, then Movies and Checklist tabs. Movies has a
   table/poster switch (`SimpleMovieTable` or `PosterCard`); Checklist is `CollectionChecklist`.
-  On phones the header and tabs stay on screen and only the open tab scrolls.
+  The drawer itself never scrolls: the header and tabs stay put and only the open tab's content
+  (table, posters or checklist) scrolls.
 - Escape closes only the topmost drawer or dialog (`role="dialog"` or `"alertdialog"`); swipe right
   closes on touch screens.
 
@@ -188,6 +189,12 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Toasts:** `<Toaster />` is mounted in `App`; call `toast()` from `sonner`.
 - **Focus rings:** keyboard users only. Elements with `data-slot` (every shadcn component, plus
   custom ones like `PosterCard`) draw their own; `index.css` gives everything else an outline.
+- **Page building blocks:** `PageShell` (fills the screen down to the phone bottom bar; `column`
+  layout scrolls its parts, `scroll` scrolls the page), `PageHeader` (title, count line, actions),
+  `ViewModeToggle` (Table/Posters), `components/posterGrid.ts` (`POSTER_GRID` for the lists,
+  `POSTER_GRID_CAPTIONED` for captioned grids, `POSTER_GRID_DRAWER`), `ui/alert.tsx` (message
+  banners), and `utils/useStoredState.ts` (`useStoredState` / `useStoredChoice`: state remembered
+  in localStorage; every remembered choice uses it). New pages should start from these.
 - **Redesigned building blocks:** `FilterPanel` (Filter button + popover: format pills, Any/Yes/No
   switches, checklists for the long lists; drawn from each category's `kind` in
   `utils/filterCategories.ts`), `FilterChips` (active filters as removable chips), `SortMenu`

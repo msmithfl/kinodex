@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Bookmark, BookmarkPlus, Check, ChevronRight, PenLine, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useStoredState } from "@/utils/useStoredState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -67,16 +68,6 @@ const emptyMovie = (): Movie => ({
   isGift: false,
 });
 
-// The last preset picked, so the next Add Movie starts with it (per device)
-const PRESET_STORAGE_KEY = "addMoviePresetId";
-const readPresetId = () => {
-  try {
-    const saved = Number(localStorage.getItem(PRESET_STORAGE_KEY));
-    return saved > 0 ? saved : null;
-  } catch {
-    return null;
-  }
-};
 
 // A keyboard shortcut hint on a button; desktop only
 function Kbd({ children, className }: { children: ReactNode; className?: string }) {
@@ -123,7 +114,11 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   // Presets fill the repeating fields (format, price, watched, ...) for batches of similar movies
   const { data: presets = [] } = useMoviePresets();
   const saveMoviePreset = useSaveMoviePreset();
-  const [presetId, setPresetId] = useState<number | null>(readPresetId);
+  // The last preset picked, so the next Add Movie starts with it (remembered in this browser)
+  const [presetId, setPresetId] = useStoredState<number | null>("addMoviePresetId", null, {
+    parse: (saved) => (Number(saved) > 0 ? Number(saved) : undefined),
+    serialize: (id) => (id ? String(id) : ""),
+  });
   const preset = presets.find((p) => p.id === presetId);
   // Which preset's values the form holds; the chosen one is filled in once presets have loaded
   const [appliedPresetId, setAppliedPresetId] = useState<number | null>(null);
@@ -213,12 +208,6 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   // Picking a preset fills its values; "Default" puts those fields back to the defaults
   const choosePreset = (id: number | null) => {
     setPresetId(id);
-    try {
-      if (id) localStorage.setItem(PRESET_STORAGE_KEY, String(id));
-      else localStorage.removeItem(PRESET_STORAGE_KEY);
-    } catch {
-      // Storage unavailable; the choice just isn't remembered
-    }
     if (!id) {
       setAppliedPresetId(null);
       setFormData((prev) => ({ ...prev, ...presetFields(emptyMovie()) }));

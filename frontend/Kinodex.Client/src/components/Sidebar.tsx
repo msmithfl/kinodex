@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMovies } from "@/features/movies/api";
 import { useTvShows } from "@/features/tvShows/api";
+import { useStoredState } from "@/utils/useStoredState";
 import AccountMenuButton from "./AccountMenuButton";
 import { AddItemModal } from "./AddItemModal";
 import CommandPalette from "./CommandPalette";
@@ -101,24 +102,13 @@ function Sidebar() {
   const { data: shows } = useTvShows();
   const [showAddModal, setShowAddModal] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(() => {
-    try {
-      return localStorage.getItem(COLLAPSED_KEY) === "true";
-    } catch {
-      return false;
-    }
+  // Remembered in this browser
+  const [collapsed, setCollapsed] = useStoredState(COLLAPSED_KEY, false, {
+    parse: (saved) => saved === "true",
+    serialize: String,
   });
 
-  const toggleCollapsed = () => {
-    setCollapsed((was) => {
-      try {
-        localStorage.setItem(COLLAPSED_KEY, String(!was));
-      } catch {
-        // Storage unavailable; the choice just isn't remembered
-      }
-      return !was;
-    });
-  };
+  const toggleCollapsed = () => setCollapsed((was) => !was);
 
   // Item counts beside Movies and TV Shows, once loaded
   const counts: Record<string, number | undefined> = {

@@ -5,7 +5,7 @@ import { useTvShows } from "../features/tvShows/api";
 import { Film, ScanBarcode, Search, Tv, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useFillViewportHeight } from "../utils/useFillViewportHeight";
+import PageShell from "../components/PageShell";
 import BarcodeScanner from "../components/BarcodeScanner";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import type { Movie, TvShow } from "../types";
@@ -88,8 +88,6 @@ function SearchPage() {
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  // Fills the screen below the header and above the mobile bottom bar
-  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>();
 
   // Put the cursor in the search box once the page is ready
   useEffect(() => {
@@ -144,7 +142,7 @@ function SearchPage() {
     : [];
 
   return (
-    <div ref={viewportRef} className="h-[calc(100dvh-5rem)] overflow-y-auto bg-background" style={viewportStyle}>
+    <PageShell layout="scroll">
       <div className="max-w-4xl px-4 pt-4 pb-8 md:px-20 md:pt-7">
         {/* Search box and scan */}
         <div className="flex gap-2">
@@ -243,7 +241,7 @@ function SearchPage() {
           <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }
 
