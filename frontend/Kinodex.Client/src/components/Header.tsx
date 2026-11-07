@@ -5,10 +5,10 @@ import { Link } from "react-router-dom";
 // Settings are on the Dashboard.
 function Header() {
   return (
-    <header className="md:hidden bg-gray-800 border-b-[0.5px] border-white/20 relative">
+    <header className="relative border-b border-border bg-card md:hidden">
       <div className="mx-auto px-8 py-4">
-        <Link to="/" className="flex items-end gap-1 w-fit">
-          <img src="/kinodex-logo.png" alt="Kinodex" className="w-10 h-10 mb-0.5" />
+        <Link to="/" className="flex w-fit items-end gap-1">
+          <img src="/kinodex-logo.png" alt="Kinodex" className="mb-0.5 size-10" />
         </Link>
       </div>
     </header>

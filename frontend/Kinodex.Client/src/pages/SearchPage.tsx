@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useMovies } from "../features/movies/api";
 import { useTvShows } from "../features/tvShows/api";
-import { FaFilm, FaTv } from "react-icons/fa";
-import { FaMagnifyingGlass } from "react-icons/fa6";
-import { IoCameraOutline } from "react-icons/io5";
-import { MdClose } from "react-icons/md";
+import { Film, ScanBarcode, Search, Tv, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import BarcodeScanner from "../components/BarcodeScanner";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import type { Movie, TvShow } from "../types";
@@ -88,6 +88,8 @@ function SearchPage() {
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Fills the screen below the header and above the mobile bottom bar
+  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>();
 
   // Put the cursor in the search box once the page is ready
   useEffect(() => {
@@ -142,111 +144,105 @@ function SearchPage() {
     : [];
 
   return (
-    <div className="px-4 md:px-20 pt-4 md:pt-6 pb-8 max-w-4xl">
-      {/* Search box and scan */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <input
-            ref={inputRef}
-            type="search"
-            placeholder="Search movies and TV shows by title or UPC..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="w-full px-4 py-3 pl-10 pr-10 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent [&::-webkit-search-cancel-button]:hidden"
-          />
-          <FaMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-          {text && (
-            <button
-              type="button"
-              onClick={() => {
-                setQueryNow("");
-                inputRef.current?.focus();
-              }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white cursor-pointer"
-              aria-label="Clear search"
-            >
-              <MdClose className="w-5 h-5" />
-            </button>
+    <div ref={viewportRef} className="h-[calc(100dvh-5rem)] overflow-y-auto bg-background" style={viewportStyle}>
+      <div className="max-w-4xl px-4 pt-4 pb-8 md:px-20 md:pt-7">
+        {/* Search box and scan */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              ref={inputRef}
+              type="search"
+              placeholder="Search by title or UPC"
+              aria-label="Search movies and TV shows by title or UPC"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              className="h-11 pr-10 pl-9 [&::-webkit-search-cancel-button]:hidden"
+            />
+            {text && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQueryNow("");
+                  inputRef.current?.focus();
+                }}
+                className="absolute top-1/2 right-2 grid size-7 -translate-y-1/2 cursor-pointer place-items-center rounded text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+          <Button
+            type="button"
+            size="icon"
+            onClick={handleScanClick}
+            className="size-11"
+            title="Scan barcode"
+            aria-label="Scan barcode"
+          >
+            <ScanBarcode className="size-5" />
+          </Button>
+        </div>
+
+        {/* Result count */}
+        <div className="mt-4 mb-3 min-h-5">
+          {needle && !loading && (
+            <span className="text-sm text-muted-foreground">
+              {results.length} result{results.length !== 1 ? "s" : ""}
+            </span>
           )}
         </div>
-        <button
-          type="button"
-          onClick={handleScanClick}
-          className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer flex items-center justify-center"
-          title="Scan barcode"
-          aria-label="Scan barcode"
-        >
-          <IoCameraOutline className="w-6 h-6" />
-        </button>
-      </div>
 
-      {/* Result count */}
-      <div className="mt-4 mb-3 min-h-5">
-        {needle && !loading && (
-          <span className="text-sm text-gray-400">
-            {results.length} result{results.length !== 1 ? "s" : ""}
-          </span>
+        {/* Results. No spinner while the collection loads: the hint shows, and a search typed
+            meanwhile just waits (rather than briefly claiming nothing matches) */}
+        {!needle ? (
+          <p className="py-12 text-center text-sm text-muted-foreground">
+            Search your whole collection by title or barcode.
+          </p>
+        ) : loading ? null : results.length === 0 ? (
+          <p className="py-12 text-center text-sm text-muted-foreground">
+            Nothing in your collection matches "{query.trim()}".
+          </p>
+        ) : (
+          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+            {results.map((item) => {
+              const KindIcon = item.kind === "tv" ? Tv : Film;
+              return (
+                <li key={item.key}>
+                  <Link to={item.to} className="flex items-center gap-3 p-3 transition-colors hover:bg-accent/50">
+                    <div className="aspect-2/3 w-10 shrink-0 overflow-hidden rounded-sm border border-white/10 bg-muted">
+                      {item.posterPath && (
+                        <img src={item.posterPath} alt="" className="h-full w-full object-cover" loading="lazy" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium" title={item.title}>
+                        {item.title}
+                      </p>
+                      {item.subtitle && <p className="truncate text-xs text-muted-foreground">{item.subtitle}</p>}
+                    </div>
+                    <KindIcon
+                      className="size-4 shrink-0 text-muted-foreground"
+                      aria-label={item.kind === "tv" ? "TV show" : "Movie"}
+                    />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {showScanner && (
+          <BarcodeScanner
+            onDetected={handleBarcodeDetected}
+            onClose={() => setShowScanner(false)}
+          />
+        )}
+        {showMobileOnlyMessage && (
+          <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />
         )}
       </div>
-
-      {/* Results. No spinner while the collection loads: the hint shows, and a search typed
-          meanwhile just waits (rather than briefly claiming nothing matches) */}
-      {!needle ? (
-        <p className="text-gray-400 text-center py-12">
-          Search your whole collection by title or barcode.
-        </p>
-      ) : loading ? null : results.length === 0 ? (
-        <p className="text-gray-400 text-center py-12">
-          Nothing in your collection matches "{query.trim()}".
-        </p>
-      ) : (
-        <ul className="bg-gray-800 rounded-lg divide-y divide-gray-700 overflow-hidden">
-          {results.map((item) => {
-            const KindIcon = item.kind === "tv" ? FaTv : FaFilm;
-            return (
-              <li key={item.key}>
-                <Link
-                  to={item.to}
-                  className="flex items-center gap-3 p-3 hover:bg-gray-700 transition-colors"
-                >
-                  <div className="w-10 aspect-2/3 shrink-0 rounded overflow-hidden bg-gray-700">
-                    {item.posterPath && (
-                      <img
-                        src={item.posterPath}
-                        alt=""
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-semibold truncate" title={item.title}>
-                      {item.title}
-                    </p>
-                    {item.subtitle && (
-                      <p className="text-gray-400 text-sm truncate">{item.subtitle}</p>
-                    )}
-                  </div>
-                  <KindIcon
-                    className="w-5 h-5 shrink-0 text-gray-400"
-                    title={item.kind === "tv" ? "TV show" : "Movie"}
-                  />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
-      {showScanner && (
-        <BarcodeScanner
-          onDetected={handleBarcodeDetected}
-          onClose={() => setShowScanner(false)}
-        />
-      )}
-      {showMobileOnlyMessage && (
-        <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />
-      )}
     </div>
   );
 }
