@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ChevronDown, Circle, CircleCheck, Loader2, Search, Trash2 } from "lucide-react";
+import { Circle, CircleCheck, Loader2, Search, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +14,8 @@ interface CollectionChecklistProps {
   ownedMovies: Movie[];
 }
 
-// A collapsible checklist of the movies that make up a collection (searched on TMDB), each
-// ticked when one of the collection's movies matches it
+// The collection drawer's Checklist tab: the movies that make up a collection (searched on TMDB),
+// each ticked when one of the collection's movies matches it
 function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistProps) {
   const { data: listItems = [] } = useChecklistItems(collection.id);
   const addItem = useAddChecklistItem(collection.id);
@@ -26,25 +26,6 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
   const [searchResults, setSearchResults] = useState<TMDBMovie[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<number | null>(null);
-
-  // Whether the checklist section is expanded: closed until opened, then remembered in this browser
-  const [checklistOpen, setChecklistOpen] = useState(() => {
-    try {
-      return localStorage.getItem("collectionChecklistOpen") === "true";
-    } catch {
-      return false;
-    }
-  });
-  const toggleChecklist = () => {
-    setChecklistOpen((open) => {
-      try {
-        localStorage.setItem("collectionChecklistOpen", String(!open));
-      } catch {
-        // Storage unavailable; the choice just isn't remembered
-      }
-      return !open;
-    });
-  };
 
   // Searches TMDB 300ms after the user stops typing
   const scheduleSearch = (query: string, year: string) => {
@@ -107,24 +88,8 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
     listItems.length > 0 ? Math.round((ownedCount / listItems.length) * 100) : 0;
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4">
-      {/* Section header: click anywhere on it to collapse or expand the checklist */}
-      <button
-        type="button"
-        onClick={toggleChecklist}
-        className="flex w-full cursor-pointer items-center justify-between gap-4 text-left"
-        aria-expanded={checklistOpen}
-        aria-controls="collection-checklist"
-      >
-        <h2 className="text-base font-semibold">Collection checklist</h2>
-        <ChevronDown
-          className={cn("size-4 shrink-0 text-muted-foreground transition-transform duration-200", checklistOpen && "rotate-180")}
-          aria-hidden="true"
-        />
-      </button>
-
-      {checklistOpen && (
-        <div id="collection-checklist" className="mt-4 flex flex-col gap-4">
+    <section aria-label="Collection checklist" className="rounded-xl border border-border bg-card p-4">
+        <div className="flex flex-col gap-4">
           {/* Search to add movies */}
           <div className="relative">
             <div className="flex flex-col gap-2 md:flex-row">
@@ -209,7 +174,7 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
                   style={{ width: `${completionPercentage}%` }}
                 />
               </div>
-              <ul className="mt-1 max-h-96 overflow-y-auto">
+              <ul className="mt-1">
                 {[...listItems]
                   .sort((a, b) => a.year - b.year)
                   .map((item) => {
@@ -250,7 +215,6 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
             </p>
           )}
         </div>
-      )}
     </section>
   );
 }

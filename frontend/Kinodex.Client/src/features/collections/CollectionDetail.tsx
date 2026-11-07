@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { LayoutGrid, Table2 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CollectionFormModal from "../../components/CollectionFormModal";
 import DeleteConfirm from "../../components/DeleteConfirm";
@@ -46,6 +47,24 @@ function CollectionDetail({
     }
   });
 
+  // The Movies or Checklist tab, remembered in this browser
+  const [tab, setTab] = useState<"movies" | "checklist">(() => {
+    try {
+      return localStorage.getItem("collectionTab") === "checklist" ? "checklist" : "movies";
+    } catch {
+      return "movies";
+    }
+  });
+  const handleTabChange = (next: string) => {
+    const value = next === "checklist" ? "checklist" : "movies";
+    setTab(value);
+    try {
+      localStorage.setItem("collectionTab", value);
+    } catch {
+      // Storage unavailable; the choice just isn't remembered
+    }
+  };
+
   const handleViewModeChange = (mode: "table" | "poster") => {
     setViewMode(mode);
     try {
@@ -83,65 +102,92 @@ function CollectionDetail({
   };
 
   return (
-    // Fills the drawer and scrolls within it
-    <div className="h-full overflow-y-auto overscroll-contain">
-      <DetailBackdrop backdropPath={backdropUrl}>
-        {collection && (
-          <DetailActions
-            kind="collection"
-            onEdit={() => setShowEditModal(true)}
-            onDelete={() => setShowDeleteConfirm(true)}
-          />
-        )}
-      </DetailBackdrop>
-
-      <div className="relative -mt-12 flex flex-col gap-5 px-5 pb-8 md:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-balance md:text-3xl">{collectionName}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {movies.length} {movies.length === 1 ? "movie" : "movies"}
-            </p>
-          </div>
-          <ToggleGroup
-            type="single"
-            value={viewMode}
-            onValueChange={(mode) => mode && handleViewModeChange(mode as "table" | "poster")}
-            aria-label="View"
-          >
-            <ToggleGroupItem value="table" aria-label="Table view">
-              <Table2 />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="poster" aria-label="Poster view">
-              <LayoutGrid />
-            </ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-
-        {movies.length === 0 ? (
-          <EmptyState message="No movies in this collection yet." />
-        ) : viewMode === "poster" ? (
-          <div className="grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 md:gap-x-4 md:gap-y-7 lg:grid-cols-5">
-            {movies.map((movie) => (
-              <PosterCard
-                key={movie.id}
-                title={movie.title}
-                posterPath={movie.posterPath}
-                subtitle={movie.year ? String(movie.year) : undefined}
-                formats={movie.formats}
-                rating={movie.rating}
-                to={`/library?movie=${movie.id}`}
-                onOpen={() => onOpenMovie(movie.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <SimpleMovieTable movies={movies} onOpen={onOpenMovie} showRating={false} fitWidth />
-        )}
-
-        {collection && <CollectionChecklist collection={collection} ownedMovies={movies} />}
+    // Fills the drawer. From tablet up the whole drawer scrolls; on phones the header and tabs
+    // stay put and only the open tab's content scrolls, so it all fits on one screen.
+    <div className="flex h-full flex-col overflow-y-auto overscroll-contain max-md:overflow-hidden">
+      <div className="shrink-0">
+        <DetailBackdrop backdropPath={backdropUrl}>
+          {collection && (
+            <DetailActions
+              kind="collection"
+              onEdit={() => setShowEditModal(true)}
+              onDelete={() => setShowDeleteConfirm(true)}
+            />
+          )}
+        </DetailBackdrop>
       </div>
 
+      <Tabs
+        value={tab}
+        onValueChange={handleTabChange}
+        className="relative -mt-12 gap-4 px-5 pb-8 max-md:min-h-0 max-md:flex-1 max-md:pb-5 md:px-8"
+      >
+        <div className="min-w-0 shrink-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-balance md:text-3xl">{collectionName}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {movies.length} {movies.length === 1 ? "movie" : "movies"}
+          </p>
+        </div>
+
+        {/* The tabs, with the Table/Posters switch at the right while Movies is open */}
+        <div className="flex shrink-0 items-end justify-between gap-3 border-b border-border">
+          <TabsList className="w-auto border-b-0">
+            <TabsTrigger value="movies">Movies</TabsTrigger>
+            <TabsTrigger value="checklist">Checklist</TabsTrigger>
+          </TabsList>
+          {tab === "movies" && (
+            <ToggleGroup
+              type="single"
+              value={viewMode}
+              onValueChange={(mode) => mode && handleViewModeChange(mode as "table" | "poster")}
+              aria-label="View"
+              className="mb-1.5"
+            >
+              <ToggleGroupItem value="table" aria-label="Table view">
+                <Table2 />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="poster" aria-label="Poster view">
+                <LayoutGrid />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          )}
+        </div>
+
+        <TabsContent value="movies" className="flex flex-col max-md:min-h-0">
+          {movies.length === 0 ? (
+            <EmptyState message="No movies in this collection yet." />
+          ) : viewMode === "poster" ? (
+            <div className="grid grid-cols-3 content-start gap-x-3 gap-y-5 max-md:min-h-0 max-md:overflow-y-auto max-md:overscroll-contain sm:grid-cols-4 md:gap-x-4 md:gap-y-7 lg:grid-cols-5">
+              {movies.map((movie) => (
+                <PosterCard
+                  key={movie.id}
+                  title={movie.title}
+                  posterPath={movie.posterPath}
+                  subtitle={movie.year ? String(movie.year) : undefined}
+                  formats={movie.formats}
+                  rating={movie.rating}
+                  to={`/library?movie=${movie.id}`}
+                  onOpen={() => onOpenMovie(movie.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            // Its own height, shrinking (and scrolling, under a header row that stays put) only
+            // when a phone screen runs out
+            <SimpleMovieTable
+              movies={movies}
+              onOpen={onOpenMovie}
+              showRating={false}
+              fitWidth
+              className="max-md:min-h-0 max-md:overflow-y-auto max-md:overscroll-contain"
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="checklist" className="max-md:min-h-0 max-md:overflow-y-auto max-md:overscroll-contain">
+          {collection && <CollectionChecklist collection={collection} ownedMovies={movies} />}
+        </TabsContent>
+      </Tabs>
       {showEditModal && collection && (
         <CollectionFormModal
           collection={collection}
