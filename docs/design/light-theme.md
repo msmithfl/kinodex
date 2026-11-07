@@ -1,6 +1,8 @@
 # Light theme (planned, on hold)
 
-Status: planned, waiting. Not started.
+Status: planned, waiting. Not started. **Out of date:** written before the redesign, which added
+semantic colour tokens. The approach will be a second set of token values; see step 3 of
+[foundation-plan.md](foundation-plan.md).
 
 Goal: a light theme alongside the current dark one, chosen on the Settings page.
 
