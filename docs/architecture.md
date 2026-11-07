@@ -178,22 +178,22 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   `lib/utils.ts` has `cn()` for merging class names. `@/` imports resolve to `src/`.
 - **Tokens:** semantic colors in `index.css` (`bg-background`, `bg-card`, `text-muted-foreground`,
   `bg-primary`, `bg-primary-soft`, `text-primary-text`, `border-border`, ...). `<html class="dark">`
-  selects the dark set; the `:root` set is the future light theme. The old `gray-*` classes are
-  untouched, so screens that aren't redesigned look the same.
+  selects the dark set; the `:root` set is the future light theme. Only the parked pages (and the
+  `MovieCardPoster`, `MovieCardDetail`, `ConfirmDialog` and `FormatIcon` pieces only they use) still
+  use the old `gray-*` classes.
 - **Type and motion:** Geist and Geist Mono (self-hosted via `@fontsource-variable`, imported in
   `main.tsx`) are the app font. `tw-animate-css` gives the components their enter/exit
   animations; `motion` is installed for larger transitions.
 - **Toasts:** `<Toaster />` is mounted in `App`; call `toast()` from `sonner`.
-- **Focus rings:** the global "no focus outline" rule skips elements with `data-slot` (every shadcn
-  component), so the new components keep keyboard focus rings.
+- **Focus rings:** keyboard users only. Elements with `data-slot` (every shadcn component, plus
+  custom ones like `PosterCard`) draw their own; `index.css` gives everything else an outline.
 - **Redesigned building blocks:** `FilterPanel` (Filter button + popover: format pills, Any/Yes/No
   switches, checklists for the long lists; drawn from each category's `kind` in
   `utils/filterCategories.ts`), `FilterChips` (active filters as removable chips), `SortMenu`
   (sort-by and direction dropdown), `PosterCard` (poster grid card with hover lift, formats and
   rating), `SortHeader` (a table's sortable column header), `ListSkeleton` (loading placeholder for
-  the movie and TV lists), `Pagination`. The older `ViewToggle`, `Counter` and `MovieCardPoster`
-  stay for the screens not yet redesigned (collections, genres, stats).
-- **Redesigned screens so far:** the sidebar and search palette; the movie list (`MovieList`:
+  the movie and TV lists), `Pagination`.
+- **Redesigned screens:** everything in the core app (the parked pages are not). The sidebar and search palette; the movie list (`MovieList`:
   title and count, Scan/Add, toolbar with search (`/` focuses it), filter, sort, Table/Posters,
   columns; filter chips; `MovieTable` with poster thumbnails, checkboxes and a select-all; a
   floating bulk-action bar; staggered poster fade-in; skeletons while loading; toasts after bulk
@@ -203,6 +203,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   Save (↵) and Save & add another (Ctrl/⌘↵) submitting the form through its validation, and an
   "Added …" toast with Open); the movie drawer; the TV list (same building blocks as the movie
   list), TV drawer and TV add/edit windows. Both forms use the shadcn inputs and `FormFields`.
+  Also collections, genres, dashboard, stats (`utils/chartColors.ts`), settings, export, the phone
+  header, bottom bar, sub-tabs and Search page, and sign-in (`utils/clerkAppearance.ts`).
 - Mockup of the target design: the "Kinodex redesign mockup" artifact (desktop movie list,
   poster view with filters, Add Movie; mobile list and Add sheet).
 

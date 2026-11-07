@@ -13,7 +13,7 @@ function StarIcon({ rating, star, icon, filled = "text-yellow-400" }: {
 }) {
   if (rating >= star) return <TiStarFullOutline className={`${icon} ${filled}`} />;
   if (rating === star - 0.5) return <TiStarHalfOutline className={`${icon} ${filled}`} />;
-  return <TiStarOutline className={`${icon} text-gray-500`} />;
+  return <TiStarOutline className={`${icon} text-muted-foreground/70`} />;
 }
 
 // Five stars for a 0-5 rating in half steps. Renders just the stars, so the caller's own flex
@@ -119,7 +119,7 @@ export function StarRatingInput({ value, onChange }: { value: number; onChange: 
             ) : isHalfStar ? (
               <TiStarHalfOutline className="w-8 h-8 text-yellow-400 absolute top-0 left-0" />
             ) : (
-              <TiStarOutline className="w-8 h-8 text-gray-500 group-hover:text-yellow-200 absolute top-0 left-0" />
+              <TiStarOutline className="w-8 h-8 text-muted-foreground/70 group-hover:text-yellow-200 absolute top-0 left-0" />
             )}
           </div>
         );
@@ -127,7 +127,7 @@ export function StarRatingInput({ value, onChange }: { value: number; onChange: 
       <button
         type="button"
         onClick={() => onChange(0)}
-        className="ml-2 text-xs text-gray-400 hover:text-white transition cursor-pointer"
+        className="ml-2 text-xs text-muted-foreground hover:text-foreground transition cursor-pointer"
       >
         Clear
       </button>

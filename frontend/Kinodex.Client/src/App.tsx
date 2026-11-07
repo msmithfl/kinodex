@@ -53,7 +53,7 @@ function App() {
         path="*"
         element={
           <ProtectedRoute>
-            <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+            <div className="min-h-screen bg-background text-foreground flex flex-col">
               <Header />
               <div className="flex flex-1">
                 <Sidebar />

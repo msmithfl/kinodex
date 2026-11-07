@@ -342,7 +342,6 @@ function CheckoutsView() {
               ? "No checkouts found. Try adjusting your search."
               : "No checkouts yet. Start checking out movies to your customers."
           }
-          showAddButton={false}
         />
       ) : (
         <div className="space-y-4">
