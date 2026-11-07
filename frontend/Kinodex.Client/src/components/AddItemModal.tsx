@@ -29,6 +29,7 @@ export function AddItemModal({ onClose }: AddItemModalProps) {
           {CHOICES.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
+              data-slot="add-choice"
               type="button"
               onClick={() => setKind(id)}
               className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-border py-6 text-sm font-medium transition-colors outline-none hover:border-primary hover:bg-primary-soft hover:text-primary-text focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { FaCheck } from "react-icons/fa";
+import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ProductImagePickerOptions {
   upc: string; // The barcode to look up
@@ -78,30 +79,24 @@ export function useProductImagePicker({ upc, selected, onSelect }: ProductImageP
   };
 
   const button = !validUpc ? (
-    <p className="text-xs text-gray-400">
+    <p className="text-xs text-muted-foreground">
       Add a UPC on the details tab to find product images for it.
     </p>
   ) : (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={loading}
-      aria-expanded={open}
-      className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-md transition cursor-pointer disabled:opacity-60 disabled:cursor-wait"
-    >
-      {loading ? "Looking up UPC..." : open ? "Close product images" : "Find product images"}
-    </button>
+    <Button type="button" variant="outline" size="sm" onClick={toggle} disabled={loading} aria-expanded={open}>
+      {loading ? "Looking up UPC…" : open ? "Close product images" : "Find product images"}
+    </Button>
   );
 
   const images = result?.images ?? [];
   const grid = !open ? null : (
     <div className="flex flex-col gap-2">
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs text-red-300">{error}</p>}
       {result && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-muted-foreground">
           {result.found && result.title ? (
             <>
-              <span className="text-gray-300">{result.title}</span> ·{" "}
+              <span className="text-foreground/85">{result.title}</span> ·{" "}
             </>
           ) : null}
           {result.cached
@@ -112,7 +107,7 @@ export function useProductImagePicker({ upc, selected, onSelect }: ProductImageP
         </p>
       )}
       {result && images.length === 0 && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-muted-foreground">
           {result.found
             ? "No product images were found for this UPC."
             : "No product was found for this UPC."}
@@ -128,8 +123,8 @@ export function useProductImagePicker({ upc, selected, onSelect }: ProductImageP
                 type="button"
                 onClick={() => onSelect(url)}
                 aria-pressed={isSelected}
-                className={`relative block w-full aspect-square rounded overflow-hidden border-2 bg-white transition cursor-pointer ${
-                  isSelected ? "border-indigo-500" : "border-transparent hover:border-gray-400"
+                className={`relative block w-full aspect-square rounded-md overflow-hidden border-2 bg-white transition cursor-pointer ${
+                  isSelected ? "border-primary" : "border-transparent hover:border-foreground/40"
                 }`}
               >
                 <img
@@ -144,8 +139,8 @@ export function useProductImagePicker({ upc, selected, onSelect }: ProductImageP
                   }}
                 />
                 {isSelected && (
-                  <span className="absolute top-1 right-1 bg-indigo-600 text-white rounded-full p-1">
-                    <FaCheck className="w-2.5 h-2.5" />
+                  <span className="absolute top-1 right-1 rounded-full bg-primary p-1 text-primary-foreground">
+                    <Check className="size-2.5" strokeWidth={3} />
                   </span>
                 )}
               </button>
