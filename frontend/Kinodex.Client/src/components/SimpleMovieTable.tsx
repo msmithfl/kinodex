@@ -14,6 +14,8 @@ interface SimpleMovieTableProps {
   // Never wider than its container: fixed column widths, the title truncates and formats wrap
   // (e.g. in a drawer). Otherwise columns size to their content and the table scrolls sideways.
   fitWidth?: boolean;
+  // Extra classes for the card, e.g. to let it scroll on its own (the header row stays put)
+  className?: string;
 }
 
 // A compact table of movies (title, year, format, rating) styled like the Movies and TV Shows
@@ -23,6 +25,7 @@ function SimpleMovieTable({
   onOpen,
   showRating = true,
   fitWidth = false,
+  className,
 }: SimpleMovieTableProps) {
   // The Rating column's stars save straight away
   const rateMovie = useRateMovie();
@@ -33,6 +36,7 @@ function SimpleMovieTable({
       className={cn(
         "rounded-xl border border-border bg-card",
         fitWidth ? "overflow-hidden" : "overflow-x-auto overscroll-x-contain",
+        className,
       )}
     >
       <table className={cn("w-full border-separate border-spacing-0 text-sm", fitWidth && "table-fixed")}>
@@ -45,7 +49,7 @@ function SimpleMovieTable({
             {showRating && <col className="w-32" />}
           </colgroup>
         )}
-        <thead>
+        <thead className="sticky top-0 z-10 bg-card">
           <tr>
             {headings.map((heading) => (
               <th

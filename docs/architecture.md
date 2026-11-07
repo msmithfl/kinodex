@@ -131,8 +131,9 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   Condition, Paid | Purchased | Gift, UPC copy + eBay sold), product shot, Watched | Streaming,
   notes. Both drawers' fields use `DetailField` / `YesNo` / `NotSet`.
 - **Collection drawer (redesigned):** the shared `DetailBackdrop` and `DetailActions` (also parts of
-  `DetailHeader`), the name and movie count with a table/poster switch, the movies
-  (`SimpleMovieTable` or `PosterCard`), then the collapsible `CollectionChecklist` card.
+  `DetailHeader`), the name and movie count, then Movies and Checklist tabs. Movies has a
+  table/poster switch (`SimpleMovieTable` or `PosterCard`); Checklist is `CollectionChecklist`.
+  On phones the header and tabs stay on screen and only the open tab scrolls.
 - Escape closes only the topmost drawer or dialog (`role="dialog"` or `"alertdialog"`); swipe right
   closes on touch screens.
 
