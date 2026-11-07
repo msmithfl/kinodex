@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { FaCheck } from "react-icons/fa";
+import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { getTMDBImages } from "../utils/tmdbApi";
 
 const TMDB_IMAGE = "https://image.tmdb.org/t/p";
@@ -82,28 +83,22 @@ export function useImagePicker({
   };
 
   const button = !tmdbId ? (
-    <p className="text-xs text-gray-400">
+    <p className="text-xs text-muted-foreground">
       Add a TMDB ID on the details tab to choose from TMDB's {type.noun}s.
     </p>
   ) : (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={loading}
-      aria-expanded={open}
-      className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-md transition cursor-pointer disabled:opacity-60 disabled:cursor-wait"
-    >
+    <Button type="button" variant="outline" size="sm" onClick={toggle} disabled={loading} aria-expanded={open}>
       {loading
-        ? `Loading ${type.noun}s...`
+        ? `Loading ${type.noun}s…`
         : open
           ? `Close ${type.noun} selection`
           : `Choose a different ${type.noun}`}
-    </button>
+    </Button>
   );
 
   const grid = !open ? null : (
     <div>
-      {error && <p className="text-xs text-gray-400">{error}</p>}
+      {error && <p className="text-xs text-muted-foreground">{error}</p>}
       {images && images.length > 0 && (
         <div className={`grid ${type.grid} gap-2 max-h-80 overflow-y-auto pr-1`}>
           {images.map((path) => {
@@ -116,8 +111,8 @@ export function useImagePicker({
                 type="button"
                 onClick={() => onSelect(url)}
                 aria-pressed={isSelected}
-                className={`relative block w-full ${type.aspect} rounded overflow-hidden border-2 transition cursor-pointer ${
-                  isSelected ? "border-indigo-500" : "border-transparent hover:border-gray-400"
+                className={`relative block w-full ${type.aspect} rounded-md overflow-hidden border-2 bg-muted transition cursor-pointer ${
+                  isSelected ? "border-primary" : "border-transparent hover:border-foreground/40"
                 }`}
               >
                 <img
@@ -127,8 +122,8 @@ export function useImagePicker({
                   className="absolute inset-0 w-full h-full object-cover"
                 />
                 {isSelected && (
-                  <span className="absolute top-1 right-1 bg-indigo-600 text-white rounded-full p-1">
-                    <FaCheck className="w-2.5 h-2.5" />
+                  <span className="absolute top-1 right-1 rounded-full bg-primary p-1 text-primary-foreground">
+                    <Check className="size-2.5" strokeWidth={3} />
                   </span>
                 )}
               </button>

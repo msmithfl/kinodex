@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { IoClose } from "react-icons/io5";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { DrawerActionsSlotContext } from "./drawerActions";
 
 interface DrawerProps {
@@ -44,7 +45,7 @@ function Drawer({ label, onClose, children }: DrawerProps) {
       // collection's), and don't close mid-typing in a field, where it could throw away an unsaved edit
       const target = e.target as HTMLElement;
       if (target.closest("input, textarea, select")) return;
-      const dialogs = document.querySelectorAll('[role="dialog"]');
+      const dialogs = document.querySelectorAll('[role="dialog"], [role="alertdialog"]');
       if (dialogs[dialogs.length - 1] !== panelRef.current) return;
       requestClose();
     };
@@ -105,10 +106,10 @@ function Drawer({ label, onClose, children }: DrawerProps) {
         : undefined;
 
   return createPortal(
-    // text-white: portalled outside the app's layout, so it doesn't inherit the app's white text
-    <div className="fixed inset-0 z-50 text-white">
+    // text-foreground: portalled outside the app's layout, so it doesn't inherit the app's text colour
+    <div className="fixed inset-0 z-50 text-foreground">
       <div
-        className={`absolute inset-0 bg-black/50 ${closing ? "animate-fade-out" : "animate-fade-in"}`}
+        className={cn("absolute inset-0 bg-black/60 backdrop-blur-[2px]", closing ? "animate-fade-out" : "animate-fade-in")}
         style={backdropStyle}
         onClick={requestClose}
         aria-hidden="true"
@@ -119,7 +120,10 @@ function Drawer({ label, onClose, children }: DrawerProps) {
         aria-modal="true"
         aria-label={label}
         // touch-pan-y: the browser keeps vertical scrolling; horizontal moves are the swipe's
-        className={`${closing ? "animate-drawer-out" : "animate-drawer-in"} touch-pan-y absolute inset-y-0 right-0 w-full md:w-[42rem] lg:w-[48rem] bg-gray-900 shadow-2xl border-l border-white/10`}
+        className={cn(
+          closing ? "animate-drawer-out" : "animate-drawer-in",
+          "touch-pan-y absolute inset-y-0 right-0 w-full md:w-[42rem] lg:w-[48rem] shadow-2xl border-l bg-background border-border",
+        )}
         style={panelStyle}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -139,10 +143,10 @@ function Drawer({ label, onClose, children }: DrawerProps) {
         <button
           type="button"
           onClick={requestClose}
-          className="md:hidden absolute top-3 right-3 z-40 p-1.5 rounded-full bg-gray-900/70 text-gray-300 hover:text-white backdrop-blur-sm cursor-pointer"
+          className="md:hidden absolute top-3 right-3 z-40 grid size-9 cursor-pointer place-items-center rounded-full border border-white/10 bg-background/70 text-foreground/80 backdrop-blur-sm hover:text-foreground"
           aria-label="Close"
         >
-          <IoClose className="w-6 h-6" />
+          <X className="size-5" />
         </button>
         {/* Tablet up: close, then the content's own buttons, floating outside the panel's top-left
             corner. Inside the panel, so they slide in with it; on closing they fade out quickly,
@@ -153,10 +157,10 @@ function Drawer({ label, onClose, children }: DrawerProps) {
           <button
             type="button"
             onClick={requestClose}
-            className="p-2.5 rounded-full bg-gray-900/80 border border-white/10 shadow-lg text-gray-300 hover:text-white backdrop-blur-sm cursor-pointer"
+            className="grid size-11 cursor-pointer place-items-center rounded-full border border-border bg-popover/90 text-muted-foreground shadow-lg backdrop-blur-sm hover:text-foreground"
             aria-label="Close"
           >
-            <IoClose className="w-6 h-6" />
+            <X className="size-5" />
           </button>
           <div ref={setActionsSlot} className="contents" />
         </div>

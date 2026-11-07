@@ -1,6 +1,5 @@
-import { LuEye, LuEyeClosed } from "react-icons/lu";
-import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
-import DetailField from "../../components/DetailField";
+import { Eye, EyeOff, MonitorOff, MonitorPlay } from "lucide-react";
+import DetailField, { YesNo } from "../../components/DetailField";
 import TvShowSeasons from "./TvShowSeasons";
 import TvShowPurchaseList from "./TvShowPurchaseList";
 import type { TvShow } from "../../types";
@@ -15,13 +14,13 @@ interface TvShowDrawerDetailsProps {
 // then notes
 function TvShowDrawerDetails({ show, onEnlargeProductImage }: TvShowDrawerDetailsProps) {
   return (
-    <div className="px-4 md:px-6 py-4 flex flex-col gap-4">
+    <div className="flex flex-col gap-5 px-5 pt-6 pb-8 md:px-8">
       <TvShowSeasons show={show} />
       <TvShowPurchaseList show={show} />
 
       {/* The product shot (box art), click to enlarge */}
       {show.productPosterPath && (
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/60 border border-white/10">
+        <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
           <button
             type="button"
             onClick={onEnlargeProductImage}
@@ -31,56 +30,34 @@ function TvShowDrawerDetails({ show, onEnlargeProductImage }: TvShowDrawerDetail
             <img
               src={show.productPosterPath}
               alt={`${show.title} product`}
-              className="h-14 w-auto rounded shadow object-cover"
+              className="h-14 w-auto rounded-md bg-white object-cover"
               onError={(e) => {
                 e.currentTarget.style.display = "none";
               }}
             />
           </button>
-          <span className="text-xs font-medium uppercase tracking-wide text-gray-400">Product</span>
+          <span className="text-xs text-muted-foreground">Product</span>
         </div>
       )}
 
-      <dl className="grid grid-cols-3 gap-x-4 gap-y-3">
+      <dl className="grid grid-cols-3 gap-x-4 gap-y-4 rounded-xl border border-border bg-card p-4">
         <DetailField label="Watched">
-          <span className="flex items-center gap-1.5">
-            {show.hasWatched ? (
-              <>
-                <LuEye className="w-4 h-4" /> Yes
-              </>
-            ) : (
-              <>
-                <LuEyeClosed className="w-4 h-4" /> No
-              </>
-            )}
-          </span>
+          <YesNo yes={show.hasWatched} on={<Eye />} off={<EyeOff />} />
         </DetailField>
         <DetailField label="Streaming">
-          <span className="flex items-center gap-1.5">
-            {show.isStreaming ? (
-              <>
-                <HiSignal className="w-4 h-4" /> Yes
-              </>
-            ) : (
-              <>
-                <HiOutlineSignalSlash className="w-4 h-4" /> No
-              </>
-            )}
-          </span>
+          <YesNo yes={show.isStreaming} on={<MonitorPlay />} off={<MonitorOff />} />
         </DetailField>
       </dl>
 
       {/* Review / notes */}
-      <div className="p-3 rounded-lg bg-gray-800/60 border border-white/10">
-        <h3 className="text-xs font-medium uppercase tracking-wide text-gray-400">
-          Review / Notes
-        </h3>
+      <section className="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-4">
+        <h3 className="text-xs text-muted-foreground">Review / notes</h3>
         {show.review ? (
-          <p className="mt-1 text-sm text-white whitespace-pre-wrap">{show.review}</p>
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">{show.review}</p>
         ) : (
-          <p className="mt-1 text-sm text-gray-500 italic">No review or notes added</p>
+          <p className="text-sm text-muted-foreground italic">No review or notes added</p>
         )}
-      </div>
+      </section>
     </div>
   );
 }

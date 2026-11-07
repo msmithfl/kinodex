@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaFilm, FaPlus } from "react-icons/fa";
-import { MdDashboard } from "react-icons/md";
-import { FaMagnifyingGlass } from "react-icons/fa6";
-import { IoCameraOutline } from "react-icons/io5";
+import { Film, LayoutDashboard, Plus, ScanBarcode, Search } from "lucide-react";
 import { AddItemModal } from "./AddItemModal";
 import BarcodeScanner from "./BarcodeScanner";
 
@@ -27,14 +24,14 @@ function BottomNav() {
   // Icon-only items; pb-10 lifts the icons off the bottom edge. Each keeps an aria-label for screen readers.
   const itemClass = (active: boolean) =>
     `flex items-center justify-center pb-10 transition-colors ${
-      active ? "text-indigo-400" : "text-gray-400 hover:text-white"
+      active ? "text-primary-text" : "text-muted-foreground hover:text-foreground"
     }`;
 
   return (
     <>
       <nav
         aria-label="Quick actions"
-        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-gray-800 border-t border-white/10 pb-[env(safe-area-inset-bottom)]"
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t border-border pb-[env(safe-area-inset-bottom)]"
       >
         {/* h-24 (6rem) must match --bottom-nav-height in index.css */}
         <div className="grid grid-cols-5 h-24">
@@ -43,7 +40,7 @@ function BottomNav() {
             className={itemClass(pathname === "/library")}
             aria-label="Library"
           >
-            <FaFilm className="w-6 h-6" />
+            <Film className="size-6" />
           </Link>
 
           <Link
@@ -51,7 +48,7 @@ function BottomNav() {
             className={itemClass(pathname === "/search")}
             aria-label="Search"
           >
-            <FaMagnifyingGlass className="w-6 h-6" />
+            <Search className="size-6" />
           </Link>
 
           {/* Add sits in the middle and stands out */}
@@ -61,8 +58,8 @@ function BottomNav() {
             className="flex items-center justify-center pb-10 cursor-pointer"
             aria-label="Add a movie or TV show"
           >
-            <span className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg transition-colors">
-              <FaPlus className="w-5 h-5" />
+            <span className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors hover:bg-primary/90">
+              <Plus className="size-5" />
             </span>
           </button>
 
@@ -72,11 +69,11 @@ function BottomNav() {
             className={`${itemClass(false)} cursor-pointer`}
             aria-label="Scan a barcode"
           >
-            <IoCameraOutline className="w-7 h-7" />
+            <ScanBarcode className="size-6" />
           </button>
 
           <Link to="/" className={itemClass(pathname === "/")} aria-label="Dashboard">
-            <MdDashboard className="w-6 h-6" />
+            <LayoutDashboard className="size-6" />
           </Link>
         </div>
       </nav>

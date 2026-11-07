@@ -1,10 +1,29 @@
 import { useState, useRef } from "react";
-import { FaDownload, FaUpload } from "react-icons/fa";
+import { Download, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useApi } from "../utils/api";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { useImportMovies, type ImportResult } from "../features/movies/api";
+
+// The rows an import couldn't use
+function RowErrors({ errors }: { errors: string[] }) {
+  if (errors.length === 0) return null;
+  return (
+    <div>
+      <p className="mb-1 text-sm font-medium text-amber-300">Some rows had errors:</p>
+      <ul className="list-inside list-disc space-y-0.5 text-xs text-amber-200">
+        {errors.map((e, i) => (
+          <li key={i}>{e}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 function CsvExport() {
   const api = useApi();
+  // Fills the screen below the header and above the mobile bottom bar
+  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>();
   // Imports refresh every screen showing movies
   const importMovies = useImportMovies();
   const [loading, setLoading] = useState(false);
@@ -92,110 +111,89 @@ function CsvExport() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Export/Import Database</h1>
+    <div ref={viewportRef} className="h-[calc(100dvh-5rem)] overflow-y-auto bg-background" style={viewportStyle}>
+      <div className="flex max-w-3xl flex-col gap-4 px-4 pt-4 pb-8 md:px-20 md:pt-7">
+        <h1 className="mb-2 text-2xl font-semibold tracking-tight md:text-[28px]">Export and import</h1>
 
-      {error && (
-        <div className="mb-4 px-4 py-3 bg-red-900/40 border border-red-600 rounded-md text-red-300 text-sm">
-          {error}
-        </div>
-      )}
+        {error && (
+          <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/15 px-4 py-2 text-sm text-red-300">
+            {error}
+          </p>
+        )}
 
-      {success && (
-        <div className="mb-4 px-4 py-3 bg-green-900/40 border border-green-600 rounded-md text-green-300 text-sm">
-          {success}
-        </div>
-      )}
+        {success && (
+          <p role="status" className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
+            {success}
+          </p>
+        )}
 
-      {/* Export */}
-      <div className="bg-gray-800 rounded-lg p-8 mb-6">
-        <h2 className="text-lg font-semibold mb-2">Export</h2>
-        <p className="text-gray-400 text-sm mb-4">
-          Download your entire collection with all fields.
-        </p>
-        <button
-          onClick={handleExport}
-          disabled={loading}
-          className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-md transition cursor-pointer"
-        >
-          <FaDownload className="w-4 h-4" />
-          {loading ? "Exporting..." : "Download CSV"}
-        </button>
-      </div>
-
-      {/* Import */}
-      <div className="bg-gray-800 rounded-lg p-8">
-        <h2 className="text-lg font-semibold mb-2">Import</h2>
-        <p className="text-gray-400 text-sm mb-4">
-          Upload a Kinodex CSV file to import movies into your collection.
-        </p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".csv"
-          className="hidden"
-          onChange={handleImport}
-        />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={importing}
-          className="flex items-center gap-2 px-6 py-3 bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-md transition cursor-pointer"
-        >
-          <FaUpload className="w-4 h-4" />
-          {importing ? "Importing..." : "Upload CSV"}
-        </button>
-
-        {importResult && importResult.errors.length > 0 && (
-          <div className="mt-4">
-            <p className="text-yellow-400 text-sm font-medium mb-1">Some rows had errors:</p>
-            <ul className="text-yellow-300 text-xs space-y-0.5 list-disc list-inside">
-              {importResult.errors.map((e, i) => <li key={i}>{e}</li>)}
-            </ul>
+        {/* Export */}
+        <section className="flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-5">
+          <div>
+            <h2 className="text-base font-semibold">Export</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Download your entire collection with all fields.</p>
           </div>
-        )}
-      </div>
+          <Button onClick={handleExport} disabled={loading}>
+            <Download />
+            {loading ? "Exporting…" : "Download CSV"}
+          </Button>
+        </section>
 
-      {/* Letterboxd Import */}
-      <div className="bg-gray-800 rounded-lg p-8 mt-6">
-        <div className="flex items-center gap-2 mb-2">
-          <img src="/letterboxd-icon.png" alt="Letterboxd" className="w-5 h-5" />
-          <h2 className="text-lg font-semibold">Import from Letterboxd</h2>
-        </div>
-        <p className="text-gray-400 text-sm mb-1">
-          Upload a Letterboxd list export CSV. Movies will be imported with title and year,
-          and automatically enriched with poster/backdrop images from TMDB.
-        </p>
-        <p className="text-gray-500 text-xs mb-4">
-          In Letterboxd: open your list → click the <strong className="text-gray-400">↓</strong> export button → upload the downloaded CSV here.
-        </p>
-        <input
-          ref={letterboxdFileInputRef}
-          type="file"
-          accept=".csv"
-          className="hidden"
-          onChange={handleLetterboxdImport}
-        />
-        <button
-          onClick={() => letterboxdFileInputRef.current?.click()}
-          disabled={importingLetterboxd}
-          className="flex items-center gap-2 px-6 py-3 bg-[#00c030]/80 hover:bg-[#00c030] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-md transition cursor-pointer"
-        >
-          <FaUpload className="w-4 h-4" />
-          {importingLetterboxd ? "Importing..." : "Upload Letterboxd CSV"}
-        </button>
-
-        {importingLetterboxd && (
-          <p className="text-gray-400 text-xs mt-3">Looking up TMDB data for each film — this may take a moment for large lists...</p>
-        )}
-
-        {letterboxdResult && letterboxdResult.errors.length > 0 && (
-          <div className="mt-4">
-            <p className="text-yellow-400 text-sm font-medium mb-1">Some rows had errors:</p>
-            <ul className="text-yellow-300 text-xs space-y-0.5 list-disc list-inside">
-              {letterboxdResult.errors.map((e, i) => <li key={i}>{e}</li>)}
-            </ul>
+        {/* Import */}
+        <section className="flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-5">
+          <div>
+            <h2 className="text-base font-semibold">Import</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Upload a Kinodex CSV file to import movies into your collection.
+            </p>
           </div>
-        )}
+          <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
+            <Upload />
+            {importing ? "Importing…" : "Upload CSV"}
+          </Button>
+          {importResult && <RowErrors errors={importResult.errors} />}
+        </section>
+
+        {/* Letterboxd Import */}
+        <section className="flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-5">
+          <div>
+            <div className="flex items-center gap-2">
+              <img src="/letterboxd-icon.png" alt="" className="size-5" />
+              <h2 className="text-base font-semibold">Import from Letterboxd</h2>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Upload a Letterboxd list export CSV. Movies will be imported with title and year, and automatically
+              enriched with poster/backdrop images from TMDB.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              In Letterboxd: open your list → click the <strong className="text-foreground/85">↓</strong> export button →
+              upload the downloaded CSV here.
+            </p>
+          </div>
+          <input
+            ref={letterboxdFileInputRef}
+            type="file"
+            accept=".csv"
+            className="hidden"
+            onChange={handleLetterboxdImport}
+          />
+          <Button
+            variant="outline"
+            onClick={() => letterboxdFileInputRef.current?.click()}
+            disabled={importingLetterboxd}
+          >
+            <Upload />
+            {importingLetterboxd ? "Importing…" : "Upload Letterboxd CSV"}
+          </Button>
+
+          {importingLetterboxd && (
+            <p className="text-xs text-muted-foreground">
+              Looking up TMDB data for each film. This may take a moment for large lists…
+            </p>
+          )}
+          {letterboxdResult && <RowErrors errors={letterboxdResult.errors} />}
+        </section>
       </div>
     </div>
   );

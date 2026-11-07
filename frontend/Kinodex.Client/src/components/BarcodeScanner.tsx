@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Quagga, { type QuaggaJSResultObject } from "@ericblade/quagga2";
+import { Button } from "@/components/ui/button";
 
 // Median of a list of numbers (0 when empty); used to judge a scan's decode quality
 const getMedian = (arr: number[]) => {
@@ -145,27 +146,22 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   }, [onDetected]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-      <div className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4">
-        <div className="mb-4">
-          <h3 className="text-xl font-bold text-white">Scan Barcode</h3>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-[2px]">
+      <div className="mx-4 w-full max-w-2xl rounded-2xl border border-border bg-card p-5 text-foreground shadow-2xl">
+        <h3 className="mb-4 text-lg leading-none font-semibold tracking-tight">Scan barcode</h3>
 
         {error ? (
-          <div className="text-center py-8">
-            <p className="text-red-400 mb-4">{error}</p>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition"
-            >
+          <div className="py-8 text-center">
+            <p className="mb-4 text-sm text-red-300">{error}</p>
+            <Button type="button" variant="outline" onClick={onClose}>
               Close
-            </button>
+            </Button>
           </div>
         ) : (
           <>
             <div
               ref={scannerRef}
-              className="relative bg-black rounded-lg overflow-hidden border-2 border-blue-500"
+              className="relative overflow-hidden rounded-xl border border-border bg-black"
               style={{ height: "400px", maxHeight: "60vh" }}
             >
               <style>{`
@@ -178,24 +174,21 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
                 }
               `}</style>
             </div>
-            <div className="mt-4 space-y-2">
-              <p className="text-gray-400 text-sm text-center">
+            <div className="mt-4 flex flex-col gap-1.5 text-center">
+              <p className="text-sm text-muted-foreground">
                 {isInitialized
                   ? "Hold barcode steady in the center. Keep it well-lit and in focus."
-                  : "Initializing camera..."}
+                  : "Initializing camera…"}
               </p>
-              <p className="text-gray-500 text-xs text-center">
+              <p className="text-xs text-muted-foreground/70">
                 Best results: barcode fills about 60-80% of the scanning area
               </p>
             </div>
             {/* Close sits at the bottom centre, within easy reach of a thumb */}
             <div className="mt-4 flex justify-center">
-              <button
-                onClick={onClose}
-                className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition cursor-pointer"
-              >
+              <Button type="button" variant="outline" onClick={onClose} className="px-6">
                 Close
-              </button>
+              </Button>
             </div>
           </>
         )}

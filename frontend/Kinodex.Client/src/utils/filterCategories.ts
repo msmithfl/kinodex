@@ -1,14 +1,31 @@
 import type { Movie } from '../types';
 
+export interface FilterOption {
+  label: string;
+  value: string;
+}
+
+// How the filter panel shows a category: a row of pills (format), an Any / Yes / No switch
+// (options "true" and "false"), or a row that opens a checklist
+export type FilterKind = 'pills' | 'toggle' | 'list';
+
+export interface FilterCategory {
+  id: string;
+  label: string;
+  options: FilterOption[];
+  kind?: FilterKind;
+}
+
 export function buildFilterCategories(
   movies: Movie[],
   shelfSections: string[],
   collections: string[]
-) {
+): FilterCategory[] {
   return [
     {
       id: 'format',
       label: 'Format',
+      kind: 'pills',
       options: [
         { label: '4K', value: '4K' },
         { label: 'Blu-ray', value: 'Blu-ray' },
@@ -20,6 +37,7 @@ export function buildFilterCategories(
       // Every genre that appears in the collection
       id: 'genre',
       label: 'Genre',
+      kind: 'list',
       options: Array.from(new Set(movies.flatMap(m => m.genres ?? [])))
         .sort()
         .map(genre => ({ label: genre, value: genre })),
@@ -27,6 +45,7 @@ export function buildFilterCategories(
     {
       id: 'condition',
       label: 'Condition',
+      kind: 'list',
       options: Array.from(new Set(movies.map(m => m.condition)))
         .sort()
         .map(condition => ({ label: condition, value: condition })),
@@ -34,6 +53,7 @@ export function buildFilterCategories(
     {
       id: 'hdd',
       label: 'HDD Number',
+      kind: 'list',
       options: [
         { label: 'No HDD', value: '0' },
         ...Array.from(new Set(movies.map(m => m.hdDriveNumber)))
@@ -45,11 +65,13 @@ export function buildFilterCategories(
     {
       id: 'collection',
       label: 'Collection',
+      kind: 'list',
       options: collections.map(collection => ({ label: collection, value: collection })),
     },
     {
       id: 'streaming',
       label: 'Streaming',
+      kind: 'toggle',
       options: [
         { label: 'Streaming', value: 'true' },
         { label: 'Not streaming', value: 'false' },
@@ -58,6 +80,7 @@ export function buildFilterCategories(
     {
       id: 'hasWatched',
       label: 'Has Watched',
+      kind: 'toggle',
       options: [
         { label: 'Watched', value: 'true' },
         { label: 'Not Watched', value: 'false' },
@@ -66,6 +89,7 @@ export function buildFilterCategories(
     {
       id: 'gift',
       label: 'Gift',
+      kind: 'toggle',
       options: [
         { label: 'Gift', value: 'true' },
         { label: 'Not a gift', value: 'false' },
@@ -74,11 +98,13 @@ export function buildFilterCategories(
     {
       id: 'shelfSection',
       label: 'Shelf Section',
+      kind: 'list',
       options: shelfSections.map(section => ({ label: section, value: section })),
     },
     {
       id: 'shelfNumber',
       label: 'Shelf Number',
+      kind: 'list',
       options: [
         { label: 'Unshelved', value: '0' },
         ...Array.from(new Set(movies.map(m => m.shelfNumber)))

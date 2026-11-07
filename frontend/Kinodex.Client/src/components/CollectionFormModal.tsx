@@ -1,10 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
-import { IoChevronBack, IoClose } from "react-icons/io5";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { ChevronLeft, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { FormField } from "./FormFields";
+import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 import { getTMDBImages, searchTMDB, searchTMDBPeople, type TMDBPerson } from "../utils/tmdbApi";
 import { ApiError } from "../utils/api";
 import { useCreateCollection, useUpdateCollection } from "../features/collections/api";
 import type { Collection, Movie, TMDBMovie } from "../types";
-import { useBackdropClose } from "../utils/useBackdropClose";
 
 interface CollectionFormModalProps {
   // The collection to edit; leave out to create a new one
@@ -20,6 +26,51 @@ type CollectionKind = "collection" | "director";
 // How many matching posters to offer while searching movies
 const MAX_POSTER_RESULTS = 10;
 
+// A poster or backdrop to pick, and a search result row (a person or a movie)
+const TILE_CLASS =
+  "block cursor-pointer overflow-hidden rounded-md border border-white/10 bg-muted transition-colors hover:border-primary";
+const ROW_CLASS =
+  "flex w-full cursor-pointer items-center gap-3 rounded-md p-2 text-left text-sm transition-colors hover:bg-accent";
+
+const Hint = ({ children }: { children: ReactNode }) => (
+  <p className="text-xs text-muted-foreground">{children}</p>
+);
+const Message = ({ children }: { children: ReactNode }) => (
+  <p className="py-4 text-center text-sm text-muted-foreground">{children}</p>
+);
+
+// A chosen cover or backdrop, with a way to remove it
+function ChosenImage({
+  src,
+  label,
+  imageClass,
+  removeLabel,
+  onRemove,
+}: {
+  src: string;
+  label: string;
+  imageClass: string;
+  removeLabel: string;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-border bg-muted/40 p-2">
+      <img src={src} alt="" className={cn("shrink-0 rounded-sm object-cover", imageClass)} />
+      <span className="min-w-0 flex-1 truncate text-sm">{label}</span>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        onClick={onRemove}
+        aria-label={removeLabel}
+        className="rounded-full text-muted-foreground"
+      >
+        <X />
+      </Button>
+    </div>
+  );
+}
+
 // Creates or edits a collection. The name and the cover are set separately: a normal collection
 // searches movies for a poster; a director collection searches TMDB for the director's photo.
 // Without a cover, the card uses one of the collection's posters. The backdrop, shown behind the
@@ -31,8 +82,7 @@ function CollectionFormModal({
   onClose,
   onSaved,
 }: CollectionFormModalProps) {
-  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
-  const backdropClose = useBackdropClose(onClose);
+  const nameRef = useRef<HTMLInputElement>(null);
   const editing = collection !== undefined;
   const [kind, setKind] = useState<CollectionKind>(
     collection?.isDirectorCollection ? "director" : "collection",
@@ -158,165 +208,139 @@ function CollectionFormModal({
     }
   };
 
-  const tabClass = (active: boolean) =>
-    `flex-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
-      active ? "bg-indigo-600 text-white" : "text-gray-300 hover:text-white"
-    }`;
-  const inputClass =
-    "w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500";
   const hasQuery = !!query.trim();
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      {...backdropClose}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={editing ? `Edit ${collection.name}` : "Create new collection"}
-        className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4 max-h-[90dvh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        className={cn(FORM_MODAL_CLASS, "h-fit max-h-[92dvh] md:h-fit md:max-h-[90dvh] md:max-w-lg")}
+        onEscapeKeyDown={keepOpenWhileTyping}
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          nameRef.current?.focus();
+        }}
       >
-        <h2 className="text-2xl font-bold mb-4 truncate">
-          {editing ? `Edit ${collection.name}` : "Create New Collection"}
-        </h2>
-
-        <div className="flex p-0.5 mb-4 rounded-full bg-gray-900 border border-white/10">
-          <button type="button" className={tabClass(kind === "collection")} onClick={() => switchKind("collection")}>
-            Collection
-          </button>
-          <button type="button" className={tabClass(kind === "director")} onClick={() => switchKind("director")}>
-            Director
-          </button>
+        <div className="shrink-0 border-b border-border px-5 py-4">
+          <DialogTitle className="truncate">{editing ? `Edit ${collection.name}` : "New collection"}</DialogTitle>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto -mx-1 px-1">
-          <label className="block mb-4">
-            <span className="text-sm text-gray-300">Collection name</span>
-            <input
-              type="text"
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+          <ToggleGroup
+            type="single"
+            value={kind}
+            onValueChange={(next) => next && switchKind(next as CollectionKind)}
+            aria-label="Collection type"
+            className="w-full"
+          >
+            <ToggleGroupItem value="collection" className="flex-1">
+              Collection
+            </ToggleGroupItem>
+            <ToggleGroupItem value="director" className="flex-1">
+              Director
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          <FormField label="Collection name" htmlFor="collection-name">
+            <Input
+              ref={nameRef}
+              id="collection-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && save()}
               placeholder={kind === "director" ? "e.g. Christopher Nolan" : "e.g. Criterion"}
-              autoFocus
-              className={`${inputClass} mt-1`}
             />
-          </label>
+          </FormField>
 
-          <span className="text-sm text-gray-300">
-            {kind === "director" ? "Director photo" : "Cover"}
-          </span>
-          {cover ? (
-            // The chosen cover, with a way to pick a different one
-            <div className="flex items-center gap-3 mt-1 p-2 rounded-md bg-gray-700/60 border border-gray-600">
-              <img src={cover.url} alt="" className="w-12 aspect-2/3 rounded object-cover shrink-0" />
-              <span className="flex-1 min-w-0 truncate">{cover.label}</span>
-              <button
-                type="button"
-                onClick={() => setCover(null)}
-                className="p-1.5 rounded-full text-gray-400 hover:text-white hover:bg-gray-600 cursor-pointer"
-                aria-label="Remove cover"
-              >
-                <IoClose className="w-5 h-5" />
-              </button>
-            </div>
-          ) : (
-            <>
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={
-                  kind === "director"
-                    ? "Search TMDB for the director"
-                    : "Search your movies"
-                }
-                className={`${inputClass} mt-1`}
+          <FormField label={kind === "director" ? "Director photo" : "Cover"} htmlFor="collection-cover">
+            {cover ? (
+              // The chosen cover, with a way to pick a different one
+              <ChosenImage
+                src={cover.url}
+                label={cover.label}
+                imageClass="w-12 aspect-2/3"
+                removeLabel="Remove cover"
+                onRemove={() => setCover(null)}
               />
-              {!hasQuery ? (
-                <p className="text-xs text-gray-500 mt-2">
-                  Optional: without one, a poster from the collection is used.
-                </p>
-              ) : kind === "collection" ? (
-                posterMatches.length === 0 ? (
-                  <p className="text-sm text-gray-400 py-4 text-center">No movies with posters match.</p>
+            ) : (
+              <>
+                <Input
+                  id="collection-cover"
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={kind === "director" ? "Search TMDB for the director" : "Search your movies"}
+                />
+                {!hasQuery ? (
+                  <Hint>Optional: without one, a poster from the collection is used.</Hint>
+                ) : kind === "collection" ? (
+                  posterMatches.length === 0 ? (
+                    <Message>No movies with posters match.</Message>
+                  ) : (
+                    <div className="grid grid-cols-5 gap-2">
+                      {posterMatches.map((movie) => (
+                        <button
+                          key={movie.id}
+                          type="button"
+                          onClick={() => setCover({ url: movie.posterPath, label: movie.title })}
+                          className={TILE_CLASS}
+                          title={movie.title}
+                        >
+                          <img src={movie.posterPath} alt={movie.title} className="aspect-2/3 w-full object-cover" loading="lazy" />
+                        </button>
+                      ))}
+                    </div>
+                  )
+                ) : searching && people.length === 0 ? (
+                  <Message>Searching…</Message>
+                ) : people.length === 0 ? (
+                  <Message>No one with a photo found on TMDB.</Message>
                 ) : (
-                  <div className="grid grid-cols-5 gap-2 mt-3">
-                    {posterMatches.map((movie) => (
-                      <button
-                        key={movie.id}
-                        type="button"
-                        onClick={() => setCover({ url: movie.posterPath, label: movie.title })}
-                        className="aspect-2/3 rounded overflow-hidden border border-white/20 hover:border-indigo-400 cursor-pointer"
-                        title={movie.title}
-                      >
-                        <img src={movie.posterPath} alt={movie.title} className="w-full h-full object-cover" loading="lazy" />
-                      </button>
+                  <ul className="flex flex-col gap-1">
+                    {people.map((person) => (
+                      <li key={person.id}>
+                        <button
+                          type="button"
+                          onClick={() => setCover({ url: person.photoUrl!, label: person.name })}
+                          className={ROW_CLASS}
+                        >
+                          <img src={person.photoUrl!} alt="" className="aspect-2/3 w-8 shrink-0 rounded-sm bg-muted object-cover" loading="lazy" />
+                          <span className="min-w-0 flex-1 truncate font-medium">{person.name}</span>
+                        </button>
+                      </li>
                     ))}
-                  </div>
-                )
-              ) : searching && people.length === 0 ? (
-                <p className="text-sm text-gray-400 py-4 text-center">Searching…</p>
-              ) : people.length === 0 ? (
-                <p className="text-sm text-gray-400 py-4 text-center">No one with a photo found on TMDB.</p>
-              ) : (
-                <ul className="flex flex-col gap-1 mt-2">
-                  {people.map((person) => (
-                    <li key={person.id}>
-                      <button
-                        type="button"
-                        onClick={() => setCover({ url: person.photoUrl!, label: person.name })}
-                        className="w-full flex items-center gap-3 p-2 rounded-md text-left cursor-pointer transition-colors hover:bg-gray-700"
-                      >
-                        <img src={person.photoUrl!} alt="" className="w-10 aspect-2/3 rounded object-cover shrink-0" loading="lazy" />
-                        <span className="flex-1 min-w-0 truncate font-medium">{person.name}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </>
-          )}
+                  </ul>
+                )}
+              </>
+            )}
+          </FormField>
 
-          <span className="block text-sm text-gray-300 mt-4">Backdrop</span>
-          {backdrop ? (
-            <div className="flex items-center gap-3 mt-1 p-2 rounded-md bg-gray-700/60 border border-gray-600">
-              <img src={backdrop.url} alt="" className="w-24 aspect-video rounded object-cover shrink-0" />
-              <span className="flex-1 min-w-0 truncate">{backdrop.label}</span>
-              <button
-                type="button"
-                onClick={() => setBackdrop(null)}
-                className="p-1.5 rounded-full text-gray-400 hover:text-white hover:bg-gray-600 cursor-pointer"
-                aria-label="Remove backdrop"
-              >
-                <IoClose className="w-5 h-5" />
-              </button>
-            </div>
-          ) : (
-            backdropMovie ? (
+          <FormField label="Backdrop" htmlFor="collection-backdrop">
+            {backdrop ? (
+              <ChosenImage
+                src={backdrop.url}
+                label={backdrop.label}
+                imageClass="w-24 aspect-video"
+                removeLabel="Remove backdrop"
+                onRemove={() => setBackdrop(null)}
+              />
+            ) : backdropMovie ? (
               // Step 2: the chosen movie's backdrops
               <>
-                <div className="flex items-center gap-2 mt-1">
-                  <button
-                    type="button"
-                    onClick={() => setBackdropMovie(null)}
-                    className="flex items-center gap-1 text-sm text-indigo-400 hover:text-indigo-300 cursor-pointer"
-                  >
-                    <IoChevronBack className="w-4 h-4" />
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setBackdropMovie(null)}>
+                    <ChevronLeft />
                     Back
-                  </button>
-                  <span className="flex-1 min-w-0 truncate text-sm text-gray-300">
-                    {backdropMovie.title}
-                  </span>
+                  </Button>
+                  <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{backdropMovie.title}</span>
                 </div>
                 {backdropOptions === null ? (
-                  <p className="text-sm text-gray-400 py-4 text-center">Loading backdrops…</p>
+                  <Message>Loading backdrops…</Message>
                 ) : backdropOptions.length === 0 ? (
-                  <p className="text-sm text-gray-400 py-4 text-center">TMDB has no backdrops for this movie.</p>
+                  <Message>TMDB has no backdrops for this movie.</Message>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2 mt-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {backdropOptions.map((path) => (
                       <button
                         key={path}
@@ -327,12 +351,12 @@ function CollectionFormModal({
                             label: backdropMovie.title,
                           })
                         }
-                        className="aspect-video rounded overflow-hidden border border-white/20 hover:border-indigo-400 cursor-pointer bg-gray-700"
+                        className={TILE_CLASS}
                       >
                         <img
                           src={`https://image.tmdb.org/t/p/w300${path}`}
                           alt=""
-                          className="w-full h-full object-cover"
+                          className="aspect-video w-full object-cover"
                           loading="lazy"
                         />
                       </button>
@@ -343,41 +367,37 @@ function CollectionFormModal({
             ) : (
               // Step 1: search TMDB for the movie
               <>
-                <input
+                <Input
+                  id="collection-backdrop"
                   type="search"
                   value={backdropQuery}
                   onChange={(e) => setBackdropQuery(e.target.value)}
                   placeholder="Search TMDB for a movie"
-                  className={`${inputClass} mt-1`}
                 />
                 {!backdropQuery.trim() ? (
-                  <p className="text-xs text-gray-500 mt-2">Optional: shown behind the collection's details.</p>
+                  <Hint>Optional: shown behind the collection's details.</Hint>
                 ) : searchingMovies && tmdbMovies.length === 0 ? (
-                  <p className="text-sm text-gray-400 py-4 text-center">Searching…</p>
+                  <Message>Searching…</Message>
                 ) : tmdbMovies.length === 0 ? (
-                  <p className="text-sm text-gray-400 py-4 text-center">No movies found on TMDB.</p>
+                  <Message>No movies found on TMDB.</Message>
                 ) : (
-                  <ul className="flex flex-col gap-1 mt-2">
+                  <ul className="flex flex-col gap-1">
                     {tmdbMovies.map((movie) => (
                       <li key={movie.id}>
-                        <button
-                          type="button"
-                          onClick={() => chooseBackdropMovie(movie)}
-                          className="w-full flex items-center gap-3 p-2 rounded-md text-left cursor-pointer transition-colors hover:bg-gray-700"
-                        >
+                        <button type="button" onClick={() => chooseBackdropMovie(movie)} className={ROW_CLASS}>
                           {movie.poster_path ? (
                             <img
                               src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
                               alt=""
-                              className="w-10 aspect-2/3 rounded object-cover shrink-0"
+                              className="aspect-2/3 w-8 shrink-0 rounded-sm bg-muted object-cover"
                               loading="lazy"
                             />
                           ) : (
-                            <div className="w-10 aspect-2/3 rounded bg-gray-700 shrink-0" />
+                            <span className="aspect-2/3 w-8 shrink-0 rounded-sm bg-muted" />
                           )}
-                          <span className="flex-1 min-w-0 truncate font-medium">{movie.title}</span>
+                          <span className="min-w-0 flex-1 truncate font-medium">{movie.title}</span>
                           {movie.release_date && (
-                            <span className="text-sm text-gray-400 shrink-0">
+                            <span className="shrink-0 text-muted-foreground tabular-nums">
                               {movie.release_date.slice(0, 4)}
                             </span>
                           )}
@@ -387,30 +407,32 @@ function CollectionFormModal({
                   </ul>
                 )}
               </>
-            )
+            )}
+          </FormField>
+        </div>
+
+        <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card px-5 py-3">
+          {nameTaken && (
+            <p role="alert" className="text-sm text-red-300">
+              A collection with that name already exists.
+            </p>
           )}
+          {error && (
+            <p role="alert" className="text-sm text-red-300">
+              {error}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={save} disabled={!canSave}>
+              {saving ? "Saving…" : editing ? "Save" : "Create"}
+            </Button>
+          </div>
         </div>
-
-        {nameTaken && <p className="text-sm text-red-400 mt-3">A collection with that name already exists.</p>}
-        {error && <p className="text-sm text-red-400 mt-3">{error}</p>}
-
-        <div className="flex gap-3 mt-4">
-          <button
-            onClick={save}
-            disabled={!canSave}
-            className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 disabled:cursor-not-allowed text-white rounded-md transition cursor-pointer font-semibold"
-          >
-            {saving ? "Saving…" : editing ? "Save" : "Create"}
-          </button>
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

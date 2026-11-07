@@ -20,7 +20,7 @@ interface TvShowImagesTabProps {
 // no product image lookup here.
 function TvShowImagesTab({ formData, setFormData, posterPicker, backdropPicker }: TvShowImagesTabProps) {
   return (
-    <div className="space-y-2 pb-2">
+    <div className="flex flex-col gap-4 pb-2">
       <ImageUrlField
         id="posterPath"
         label="Show Poster URL"

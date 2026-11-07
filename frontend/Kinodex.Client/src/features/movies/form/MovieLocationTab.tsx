@@ -1,8 +1,12 @@
-import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
-import { FaPlus, FaMinus } from "react-icons/fa6";
-import { SingleChipSelect } from "../../../components/ChipSelect";
-import { inputClass, labelClass } from "../../../components/formStyles";
+import { Minus, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Movie } from "../../../types";
+import { FormField, SwitchField } from "../../../components/FormFields";
+
+// The Select's value for "no shelf section" (its items can't use an empty string)
+const UNSHELVED = "__unshelved__";
 
 interface MovieLocationTabProps {
   formData: Movie;
@@ -37,97 +41,79 @@ function MovieLocationTab({
   addShelfSection,
 }: MovieLocationTabProps) {
   return (
-    <div className="space-y-2 pb-2">
-      {/* Shelf Section: pick one, or add a new one with + */}
-      <div>
-        <label className={labelClass}>Shelf Section</label>
+    <div className="flex flex-col gap-4 pb-2">
+      {/* Shelf section: pick one, or add a new one with + */}
+      <FormField label="Shelf section">
         <div className="flex flex-wrap gap-2">
-          <SingleChipSelect
-            value={formData.shelfSection || "Unshelved"}
-            options={[
-              { value: "Unshelved" },
-              ...shelfSections.map((section) => ({ value: section.name })),
-            ]}
-            onChange={(shelfSection) => setFormData({ ...formData, shelfSection })}
-            className="flex-1"
-          />
-
-          <button
-            type="button"
-            onClick={() => setShowShelfSectionInput(!showShelfSectionInput)}
-            className="px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer shrink-0"
+          <Select
+            value={formData.shelfSection || UNSHELVED}
+            onValueChange={(value) => setFormData({ ...formData, shelfSection: value === UNSHELVED ? "" : value })}
           >
-            {showShelfSectionInput ? <FaMinus /> : <FaPlus />}
-          </button>
-
+            <SelectTrigger className="flex-1" aria-label="Shelf section">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={UNSHELVED}>Unshelved</SelectItem>
+              {shelfSections.map((section) => (
+                <SelectItem key={section.id} value={section.name}>
+                  {section.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setShowShelfSectionInput(!showShelfSectionInput)}
+            aria-label={showShelfSectionInput ? "Cancel new shelf section" : "New shelf section"}
+          >
+            {showShelfSectionInput ? <Minus /> : <Plus />}
+          </Button>
           {showShelfSectionInput && (
-            <div className="flex gap-2 basis-full sm:basis-0 sm:flex-1">
-              <input
-                type="text"
+            <div className="flex basis-full gap-2">
+              <Input
                 value={newShelfSection}
                 onChange={(e) => setNewShelfSection(e.target.value)}
                 placeholder="New shelf section name"
-                className={inputClass + " flex-1"}
+                aria-label="New shelf section name"
+                className="flex-1"
               />
-              <button
-                type="button"
-                onClick={addShelfSection}
-                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition cursor-pointer shrink-0"
-              >
+              <Button type="button" variant="secondary" onClick={addShelfSection}>
                 Add
-              </button>
+              </Button>
             </div>
           )}
         </div>
-      </div>
+      </FormField>
 
       <div className="grid grid-cols-2 gap-4">
-        {/* Shelf Number */}
-        <div>
-          <label htmlFor="shelfNumber" className={labelClass}>
-            Shelf Number
-          </label>
-          <input
-            type="text"
+        <FormField label="Shelf #" htmlFor="shelfNumber">
+          <Input
             id="shelfNumber"
+            inputMode="numeric"
             value={shelfInput}
             onChange={(e) => onShelfChange(e.target.value)}
-            className={inputClass}
           />
-        </div>
-        {/* HDD Number */}
-        <div>
-          <label htmlFor="hdDriveNumber" className={labelClass}>
-            HDD Number
-          </label>
-          <input
-            type="text"
+        </FormField>
+        <FormField label="HDD #" htmlFor="hdDriveNumber">
+          <Input
             id="hdDriveNumber"
+            inputMode="numeric"
             value={hddInput}
             onChange={(e) => onHddChange(e.target.value)}
-            className={inputClass}
           />
-        </div>
+        </FormField>
       </div>
 
-      {/* Available to Stream */}
-      <div className="flex flex-col items-center">
-        <label className="block text-sm font-medium text-gray-300 mb-2 mt-2">
-          Available to Stream
-        </label>
-        <button
-          type="button"
-          onClick={() => setFormData({ ...formData, isStreaming: !formData.isStreaming })}
-          className="cursor-pointer"
-          title={formData.isStreaming ? "Available to stream" : "Not available to stream"}
-        >
-          {formData.isStreaming ? (
-            <HiSignal className="w-8 h-8 text-indigo-400" />
-          ) : (
-            <HiOutlineSignalSlash className="w-8 h-8 text-gray-500 hover:text-indigo-400" />
-          )}
-        </button>
-      </div>
+      <FormField label="Streaming">
+        <SwitchField
+          id="isStreaming"
+          label="Available to stream"
+          checked={formData.isStreaming}
+          onCheckedChange={(isStreaming) => setFormData({ ...formData, isStreaming })}
+        />
+      </FormField>
     </div>
   );
 }

@@ -27,7 +27,7 @@ function MovieImagesTab({
   productPicker,
 }: MovieImagesTabProps) {
   return (
-    <div className="space-y-2 pb-2">
+    <div className="flex flex-col gap-4 pb-2">
       <ImageUrlField
         id="posterPath"
         label="Movie Poster URL"

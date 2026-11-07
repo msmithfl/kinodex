@@ -194,7 +194,6 @@ function CustomersView() {
               ? "No customers found. Try adjusting your search."
               : "No customers yet. Add your first customer to get started."
           }
-          showAddButton={false}
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

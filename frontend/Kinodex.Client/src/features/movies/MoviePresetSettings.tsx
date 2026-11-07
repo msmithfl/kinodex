@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
-import ConfirmDialog from "../../components/ConfirmDialog";
+import { Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import DeleteConfirm from "../../components/DeleteConfirm";
 import { formatPurchaseDate } from "../../utils/dateUtils";
 import { useDeleteMoviePreset, useMoviePresets, useSaveMoviePreset } from "./presets";
 import type { MoviePreset } from "../../types";
@@ -34,7 +36,9 @@ function MoviePresetSettings({ onError }: { onError: (message: string) => void }
   const savePreset = useSaveMoviePreset();
   const deletePreset = useDeleteMoviePreset();
   const [renaming, setRenaming] = useState<{ id: number; name: string } | null>(null);
+  // The preset being deleted stays set while the box closes, so its name doesn't vanish mid-animation
   const [deleting, setDeleting] = useState<MoviePreset | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const rename = async (preset: MoviePreset, name: string) => {
     onError("");
@@ -47,7 +51,6 @@ function MoviePresetSettings({ onError }: { onError: (message: string) => void }
   };
 
   const remove = async (preset: MoviePreset) => {
-    setDeleting(null);
     onError("");
     try {
       await deletePreset.mutateAsync(preset.id!);
@@ -59,13 +62,13 @@ function MoviePresetSettings({ onError }: { onError: (message: string) => void }
   return (
     <>
       {isLoading ? null : presets.length === 0 ? (
-        <p className="text-gray-400 text-sm py-3">
+        <p className="py-3 text-sm text-muted-foreground">
           No presets yet. In Add Movie, fill in the values you repeat and choose Save as preset.
         </p>
       ) : (
-        <ul className="divide-y divide-gray-700">
+        <ul className="divide-y divide-border">
           {presets.map((preset) => (
-            <li key={preset.id} className="flex items-center gap-3 py-3">
+            <li key={preset.id} className="flex items-center gap-2 py-3">
               {renaming && renaming.id === preset.id ? (
                 <form
                   className="flex flex-1 items-center gap-2"
@@ -74,62 +77,58 @@ function MoviePresetSettings({ onError }: { onError: (message: string) => void }
                     if (renaming.name.trim()) rename(preset, renaming.name);
                   }}
                 >
-                  <input
-                    type="text"
+                  <Input
                     autoFocus
                     value={renaming.name}
                     onChange={(e) => setRenaming({ id: renaming.id, name: e.target.value })}
-                    className="flex-1 min-w-0 h-8 px-3 text-sm bg-gray-900 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="h-8 min-w-0 flex-1"
                     aria-label="Preset name"
                   />
-                  <button
-                    type="submit"
-                    className="h-8 px-3 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-md cursor-pointer"
-                  >
+                  <Button type="submit" size="sm">
                     Save
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRenaming(null)}
-                    className="h-8 px-3 text-sm text-gray-300 hover:text-white cursor-pointer"
-                  >
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setRenaming(null)}>
                     Cancel
-                  </button>
+                  </Button>
                 </form>
               ) : (
                 <>
                   <div className="min-w-0 flex-1">
-                    <p className="text-white font-medium truncate">{preset.name}</p>
-                    <p className="text-gray-400 text-sm truncate">{describe(preset) || "All blank"}</p>
+                    <p className="truncate text-sm font-medium">{preset.name}</p>
+                    <p className="truncate text-sm text-muted-foreground">{describe(preset) || "All blank"}</p>
                   </div>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
                     onClick={() => setRenaming({ id: preset.id!, name: preset.name })}
-                    className="text-indigo-400 hover:text-indigo-300 p-2 cursor-pointer"
                     aria-label={`Rename ${preset.name}`}
                   >
-                    <FaEdit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setDeleting(preset)}
-                    className="text-red-400 hover:text-red-300 p-2 cursor-pointer"
+                    <Pencil />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => {
+                      setDeleting(preset);
+                      setConfirmOpen(true);
+                    }}
+                    className="text-red-300 hover:bg-destructive/15 hover:text-red-200"
                     aria-label={`Delete ${preset.name}`}
                   >
-                    <FaTrash className="w-4 h-4" />
-                  </button>
+                    <Trash2 />
+                  </Button>
                 </>
               )}
             </li>
           ))}
         </ul>
       )}
-      <ConfirmDialog
-        isOpen={deleting !== null}
-        title="Delete Preset"
-        message={`Delete the ${deleting?.name ?? ""} preset? Movies added with it aren't affected.`}
-        confirmText="Delete"
-        cancelText="Cancel"
+      <DeleteConfirm
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`the ${deleting?.name ?? ""} preset`}
+        description="Movies added with it aren't affected."
         onConfirm={() => deleting && remove(deleting)}
-        onCancel={() => setDeleting(null)}
       />
     </>
   );

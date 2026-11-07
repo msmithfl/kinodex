@@ -1,9 +1,10 @@
 import type { TvShow } from "../../types";
+import type { FilterCategory } from "../../utils/filterCategories";
 import { ownsEverySeason } from "../../utils/tvShowPurchases";
 
 // The TV list's filter menu, like the movie list's. Format, condition and gift are per purchase,
 // so a show matches when any of its purchases does.
-export function buildTvShowFilterCategories(shows: TvShow[]) {
+export function buildTvShowFilterCategories(shows: TvShow[]): FilterCategory[] {
   const yesNo = (yes: string, no: string) => [
     { label: yes, value: "true" },
     { label: no, value: "false" },
@@ -12,6 +13,7 @@ export function buildTvShowFilterCategories(shows: TvShow[]) {
     {
       id: "format",
       label: "Format",
+      kind: "pills",
       options: [
         { label: "4K", value: "4K" },
         { label: "Blu-ray", value: "Blu-ray" },
@@ -23,6 +25,7 @@ export function buildTvShowFilterCategories(shows: TvShow[]) {
       // Every genre that appears in the collection
       id: "genre",
       label: "Genre",
+      kind: "list",
       options: Array.from(new Set(shows.flatMap((s) => s.genres ?? [])))
         .sort()
         .map((genre) => ({ label: genre, value: genre })),
@@ -30,15 +33,16 @@ export function buildTvShowFilterCategories(shows: TvShow[]) {
     {
       id: "condition",
       label: "Condition",
+      kind: "list",
       options: Array.from(new Set(shows.flatMap((s) => s.purchases.map((p) => p.condition))))
         .filter(Boolean)
         .sort()
         .map((condition) => ({ label: condition, value: condition })),
     },
-    { id: "complete", label: "Seasons", options: yesNo("Complete", "Incomplete") },
-    { id: "streaming", label: "Streaming", options: yesNo("Streaming", "Not streaming") },
-    { id: "hasWatched", label: "Has Watched", options: yesNo("Watched", "Not Watched") },
-    { id: "gift", label: "Gift", options: yesNo("Includes a gift", "No gifts") },
+    { id: "complete", label: "Complete set", kind: "toggle", options: yesNo("Complete", "Incomplete") },
+    { id: "streaming", label: "Streaming", kind: "toggle", options: yesNo("Streaming", "Not streaming") },
+    { id: "hasWatched", label: "Has Watched", kind: "toggle", options: yesNo("Watched", "Not Watched") },
+    { id: "gift", label: "Gift", kind: "toggle", options: yesNo("Includes a gift", "No gifts") },
   ];
 }
 

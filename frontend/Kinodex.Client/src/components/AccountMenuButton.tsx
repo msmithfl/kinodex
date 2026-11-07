@@ -4,27 +4,36 @@ import { UserButton, useUser } from "@clerk/clerk-react";
 
 interface AccountMenuButtonProps {
   size?: number; // Avatar size in px
+  // Where the menu opens: below the avatar (default), or above it (the sidebar's bottom corner)
+  placement?: "below" | "above";
 }
 
 // The user's avatar, opening Clerk's account menu to the RIGHT of it. Clerk's own <UserButton>
 // always opens its menu leftward and has no option to change that, so this draws its own avatar
-// trigger and renders only Clerk's menu (standalone mode), placed below the avatar's left edge.
-// The menu is portalled to <body> so a scrolling parent can't clip it.
+// trigger and renders only Clerk's menu (standalone mode), placed below (or above) the avatar's
+// left edge. The menu is portalled to <body> so a scrolling parent can't clip it.
 //
 // Uses Clerk's experimental provider/outlet pattern (`__experimental_asProvider`,
 // `__experimental_Outlet`, `__experimental_asStandalone`); if a Clerk update breaks it, swap this
 // back to a plain <UserButton />.
-function AccountMenuButton({ size = 56 }: AccountMenuButtonProps) {
+function AccountMenuButton({ size = 56, placement = "below" }: AccountMenuButtonProps) {
   const { user } = useUser();
   const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [position, setPosition] = useState<{ top?: number; bottom?: number; left: number }>({
+    top: 0,
+    left: 0,
+  });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const toggle = () => {
     if (!open && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      setPosition({ top: rect.bottom + 8, left: rect.left });
+      setPosition(
+        placement === "above"
+          ? { bottom: window.innerHeight - rect.top + 8, left: rect.left }
+          : { top: rect.bottom + 8, left: rect.left },
+      );
     }
     setOpen((o) => !o);
   };
@@ -76,7 +85,7 @@ function AccountMenuButton({ size = 56 }: AccountMenuButtonProps) {
           <div
             ref={menuRef}
             className="fixed z-50"
-            style={{ top: position.top, left: position.left }}
+            style={position}
           >
             {/* Clerk's account menu on its own (its provider + outlet pattern for custom popovers);
                 the outlet reports when an action inside the menu closes it */}

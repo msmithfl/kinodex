@@ -1,8 +1,8 @@
-import { LuEye, LuEyeClosed } from "react-icons/lu";
-import { HiSignal, HiOutlineSignalSlash } from "react-icons/hi2";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ChipSelect } from "../../../components/ChipSelect";
 import { StarRatingInput } from "../../../components/StarRating";
-import { inputClass, labelClass } from "../../../components/formStyles";
+import { FormField, SwitchField } from "../../../components/FormFields";
 import { TV_GENRE_MAP } from "../../../utils/tmdbApi";
 import type { TvShow } from "../../../types";
 
@@ -21,7 +21,7 @@ interface TvShowDetailsTabProps {
   onTmdbChange: (value: string) => void;
 }
 
-// The TV show form's first tab: title, year, TMDB id, genres, watched, streaming, rating, notes
+// The TV show form's first tab: title, year, TMDB id, genres, rating, watched, streaming, notes
 function TvShowDetailsTab({
   formData,
   setFormData,
@@ -31,121 +31,79 @@ function TvShowDetailsTab({
   onTmdbChange,
 }: TvShowDetailsTabProps) {
   return (
-    <div className="space-y-2 pb-2">
-      {/* Title */}
-      <div>
-        <label htmlFor="title" className={labelClass}>
-          Show Title *
-        </label>
-        <input
-          type="text"
+    <div className="flex flex-col gap-4 pb-2">
+      <FormField label="Title" htmlFor="title">
+        <Input
           id="title"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
-          className={inputClass}
         />
-      </div>
+      </FormField>
 
       <div className="grid grid-cols-2 gap-4">
-        {/* Year */}
-        <div>
-          <label htmlFor="year" className={labelClass}>
-            Year
-          </label>
-          <input
-            type="text"
+        <FormField label="Year" htmlFor="year">
+          <Input
             id="year"
+            inputMode="numeric"
             value={yearInput}
             onChange={(e) => onYearChange(e.target.value)}
             placeholder="First air year"
-            className={inputClass}
           />
-        </div>
-        {/* TMDB ID */}
-        <div>
-          <label htmlFor="tmdbId" className={labelClass}>
-            TMDB ID
-          </label>
-          <input
-            type="text"
+        </FormField>
+        <FormField label="TMDB ID" htmlFor="tmdbId">
+          <Input
             id="tmdbId"
+            inputMode="numeric"
             value={tmdbInput}
             onChange={(e) => onTmdbChange(e.target.value)}
-            className={inputClass}
+            className="font-mono"
           />
-        </div>
+        </FormField>
       </div>
 
-      {/* Genres */}
-      <div>
-        <label className={labelClass}>Genres</label>
+      <FormField label="Genres">
         <ChipSelect
+          placeholder="Add genres"
           values={formData.genres}
           options={GENRE_OPTIONS}
           onChange={(genres) => setFormData({ ...formData, genres })}
-          chipColor="bg-purple-600"
           listHeight="max-h-50"
         />
-      </div>
+      </FormField>
 
-      {/* Watched and Streaming side by side; on phones Rating wraps to its own centred row */}
-      <div className="flex flex-wrap items-start justify-center gap-x-12 gap-y-4 sm:gap-x-16">
-        {/* Watched */}
-        <div className="flex flex-col items-center">
-          <label className="block text-sm font-medium text-gray-300 mb-2">Watched</label>
-          <button
-            type="button"
-            onClick={() => setFormData({ ...formData, hasWatched: !formData.hasWatched })}
-            className="cursor-pointer"
-            title={formData.hasWatched ? "Watched" : "Not watched"}
-          >
-            {formData.hasWatched ? (
-              <LuEye className="w-8 h-8 text-indigo-400" />
-            ) : (
-              <LuEyeClosed className="w-8 h-8 text-gray-500 hover:text-indigo-400" />
-            )}
-          </button>
-        </div>
-        {/* Available to Stream */}
-        <div className="flex flex-col items-center">
-          <label className="block text-sm font-medium text-gray-300 mb-2">Streaming</label>
-          <button
-            type="button"
-            onClick={() => setFormData({ ...formData, isStreaming: !formData.isStreaming })}
-            className="cursor-pointer"
-            title={formData.isStreaming ? "Available to stream" : "Not available to stream"}
-          >
-            {formData.isStreaming ? (
-              <HiSignal className="w-8 h-8 text-indigo-400" />
-            ) : (
-              <HiOutlineSignalSlash className="w-8 h-8 text-gray-500 hover:text-indigo-400" />
-            )}
-          </button>
-        </div>
-        {/* Rating */}
-        <div className="w-full sm:w-auto flex flex-col items-center sm:items-start">
-          <label className={labelClass}>Rating</label>
-          <StarRatingInput
-            value={formData.rating}
-            onChange={(rating) => setFormData({ ...formData, rating })}
+      <FormField label="Rating">
+        <StarRatingInput value={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} />
+      </FormField>
+
+      <div className="grid grid-cols-2 gap-4">
+        <FormField label="Watched">
+          <SwitchField
+            id="hasWatched"
+            label={formData.hasWatched ? "Watched" : "Not watched yet"}
+            checked={formData.hasWatched}
+            onCheckedChange={(hasWatched) => setFormData({ ...formData, hasWatched })}
           />
-        </div>
+        </FormField>
+        <FormField label="Streaming">
+          <SwitchField
+            id="isStreaming"
+            label="Available to stream"
+            checked={formData.isStreaming}
+            onCheckedChange={(isStreaming) => setFormData({ ...formData, isStreaming })}
+          />
+        </FormField>
       </div>
 
-      {/* Review / Notes */}
-      <div>
-        <label htmlFor="review" className={labelClass}>
-          Review / Notes
-        </label>
-        <textarea
+      <FormField label="Review / notes" htmlFor="review">
+        <Textarea
           id="review"
           value={formData.review}
           onChange={(e) => setFormData({ ...formData, review: e.target.value })}
           rows={4}
-          className={inputClass}
+          className="min-h-24"
         />
-      </div>
+      </FormField>
     </div>
   );
 }

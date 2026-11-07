@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { IoClose } from "react-icons/io5";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useBackdropClose } from "../utils/useBackdropClose";
 
 interface ImageLightboxProps {
@@ -35,26 +36,28 @@ function ImageLightbox({ src, alt, onClose }: ImageLightboxProps) {
   // whatever stacking context the page that opens it is in
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 cursor-zoom-out"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 cursor-zoom-out backdrop-blur-sm"
       {...backdropClose}
       role="dialog"
       aria-modal="true"
       aria-label={alt}
     >
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         onClick={onClose}
-        className="absolute top-4 right-4 text-gray-300 hover:text-white cursor-pointer"
+        className="absolute top-3 right-3 rounded-full text-white/80 hover:bg-white/10 hover:text-white"
         aria-label="Close"
       >
-        <IoClose className="w-8 h-8" />
-      </button>
+        <X className="size-5" />
+      </Button>
       <img
         src={imageSrc}
         alt={alt}
         onClick={(e) => e.stopPropagation()}
         onError={() => setImageSrc(src)}
-        className="max-h-[90dvh] max-w-full object-contain rounded shadow-2xl cursor-default"
+        className="max-h-[90dvh] max-w-full object-contain rounded-lg shadow-2xl cursor-default"
       />
     </div>,
     document.body,

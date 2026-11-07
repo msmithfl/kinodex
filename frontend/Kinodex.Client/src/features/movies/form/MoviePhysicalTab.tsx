@@ -1,11 +1,12 @@
-import { IoCameraOutline } from "react-icons/io5";
-import { LuGift } from "react-icons/lu";
-import { ChipSelect } from "../../../components/ChipSelect";
-import { inputClass, labelClass } from "../../../components/formStyles";
+import { ScanBarcode } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Movie } from "../../../types";
+import { FormField, PillToggles, SwitchField } from "../../../components/FormFields";
 
 const FORMAT_OPTIONS = [
-  { value: "4K", label: "4K Ultra HD" },
+  { value: "4K" },
   { value: "Blu-ray" },
   { value: "DVD" },
   { value: "VHS" },
@@ -35,109 +36,86 @@ function MoviePhysicalTab({
   onPurchasePriceChange,
 }: MoviePhysicalTabProps) {
   return (
-    <div className="space-y-2 pb-2">
-      {/* UPC */}
-      <div>
-        <label htmlFor="upc" className={labelClass}>
-          UPC Number
-        </label>
+    <div className="flex flex-col gap-4 pb-2">
+      <FormField label="UPC" htmlFor="upc">
         <div className="flex gap-2">
-          <input
-            type="text"
+          <Input
             id="upc"
+            inputMode="numeric"
             value={formData.upcNumber}
             onChange={(e) => setFormData({ ...formData, upcNumber: e.target.value })}
-            className={inputClass + " flex-1"}
+            className="flex-1 font-mono"
           />
           {showScanButton && onScanClick && (
-            <button
-              type="button"
-              onClick={onScanClick}
-              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
-              title="Scan barcode"
-            >
-              <IoCameraOutline className="w-6 h-6" />
-            </button>
+            <Button type="button" variant="outline" size="icon" onClick={onScanClick} aria-label="Scan barcode">
+              <ScanBarcode />
+            </Button>
           )}
         </div>
-      </div>
+      </FormField>
 
-      {/* Formats */}
-      <div>
-        <label className={labelClass}>Formats</label>
-        <ChipSelect
-          values={formData.formats}
+      <FormField label="Format">
+        <PillToggles
+          label="Formats"
           options={FORMAT_OPTIONS}
+          values={formData.formats}
           onChange={(formats) => setFormData({ ...formData, formats })}
-          rowPadding="py-2"
         />
-      </div>
+      </FormField>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {/* Purchase Price */}
-        <div>
-          <label htmlFor="purchasePrice" className={labelClass}>
-            Purchase Price
-          </label>
-          <input
-            type="number"
-            id="purchasePrice"
-            value={purchasePriceInput}
-            onChange={(e) => onPurchasePriceChange(e.target.value)}
-            placeholder="0.00"
-            className={inputClass}
-          />
-        </div>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <FormField label="Purchase price" htmlFor="purchasePrice">
+          <div className="relative">
+            <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
+              $
+            </span>
+            <Input
+              type="number"
+              id="purchasePrice"
+              step="0.01"
+              value={purchasePriceInput}
+              onChange={(e) => onPurchasePriceChange(e.target.value)}
+              placeholder="0.00"
+              className="pl-6 font-mono"
+            />
+          </div>
+        </FormField>
 
-        {/* Purchase Date: when it was bought, which can be before it was added */}
-        <div>
-          <label htmlFor="purchasedAt" className={labelClass}>
-            Purchased
-          </label>
-          <input
+        {/* When it was bought, which can be before it was added */}
+        <FormField label="Purchased" htmlFor="purchasedAt">
+          <Input
             type="date"
             id="purchasedAt"
             value={formData.purchasedAt}
             onChange={(e) => setFormData({ ...formData, purchasedAt: e.target.value })}
-            className={inputClass + " scheme-dark"}
+            className="scheme-dark"
           />
-        </div>
+        </FormField>
 
-        {/* Condition */}
-        <div className="col-span-2 sm:col-span-1">
-          <label htmlFor="condition" className={labelClass}>
-            Condition
-          </label>
-          <select
-            id="condition"
-            value={formData.condition}
-            onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-            className={inputClass + " cursor-pointer"}
-          >
-            {CONDITIONS.map((condition) => (
-              <option key={condition} value={condition}>
-                {condition}
-              </option>
-            ))}
-          </select>
-        </div>
+        <FormField label="Condition" className="col-span-2 sm:col-span-1">
+          <Select value={formData.condition} onValueChange={(condition) => setFormData({ ...formData, condition })}>
+            <SelectTrigger className="w-full" aria-label="Condition">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CONDITIONS.map((condition) => (
+                <SelectItem key={condition} value={condition}>
+                  {condition}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
       </div>
 
-      {/* Gift */}
-      <div className="flex flex-col items-center">
-        <label className="block text-sm font-medium text-gray-300 mb-2 mt-2">Gift</label>
-        <button
-          type="button"
-          onClick={() => setFormData({ ...formData, isGift: !formData.isGift })}
-          className="cursor-pointer"
-          title={formData.isGift ? "A gift" : "Not a gift"}
-          aria-pressed={formData.isGift}
-        >
-          <LuGift
-            className={`w-8 h-8 ${formData.isGift ? "text-indigo-400" : "text-gray-500 hover:text-indigo-400"}`}
-          />
-        </button>
-      </div>
+      <FormField label="Gift">
+        <SwitchField
+          id="isGift"
+          label="Received as a gift"
+          checked={formData.isGift}
+          onCheckedChange={(isGift) => setFormData({ ...formData, isGift })}
+        />
+      </FormField>
     </div>
   );
 }

@@ -1,5 +1,6 @@
-import { Fragment, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { to: "/library", label: "Movies" },
@@ -29,43 +30,25 @@ function SubNavigation() {
   }, [location.pathname]);
 
   return (
-    <nav>
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Segmented control, matching the scope switch on the Stats page */}
-        <div className="flex justify-center pt-4">
-          <div
-            ref={scrollRef}
-            className="relative inline-flex max-w-full overflow-x-auto bg-gray-800 rounded-lg p-0.5"
+    // Phones only: from tablet up these pages are in the sidebar
+    <nav aria-label="Library" className="flex justify-center bg-background px-4 pt-4 md:hidden">
+      <div
+        ref={scrollRef}
+        className="no-scrollbar relative inline-flex max-w-full gap-0.5 overflow-x-auto rounded-lg border border-input bg-card p-[3px]"
+      >
+        {NAV_LINKS.map(({ to, label }) => (
+          <Link
+            key={to}
+            to={to}
+            aria-current={isActive(to) ? "page" : undefined}
+            className={cn(
+              "shrink-0 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",
+              isActive(to) ? "bg-primary-soft text-primary-text" : "text-muted-foreground hover:text-foreground",
+            )}
           >
-            {NAV_LINKS.map(({ to, label }, index) => {
-              // A light divider between tabs, hidden beside the selected tab's pill.
-              // `invisible` keeps its space so the tabs don't shift when the selection changes.
-              const besideActive =
-                isActive(to) || (index > 0 && isActive(NAV_LINKS[index - 1].to));
-              return (
-                <Fragment key={to}>
-                  {index > 0 && (
-                    <span
-                      aria-hidden="true"
-                      className={`shrink-0 self-center w-px h-4 bg-white/15 ${besideActive ? "invisible" : ""}`}
-                    />
-                  )}
-                  <Link
-                    to={to}
-                    aria-current={isActive(to) ? "page" : undefined}
-                    className={`shrink-0 whitespace-nowrap px-3 md:px-4 py-1.5 text-sm font-medium rounded-md transition ${
-                      isActive(to)
-                        ? "bg-indigo-600 text-white"
-                        : "text-gray-400 hover:text-white"
-                    }`}
-                  >
-                    {label}
-                  </Link>
-                </Fragment>
-              );
-            })}
-          </div>
-        </div>
+            {label}
+          </Link>
+        ))}
       </div>
     </nav>
   );

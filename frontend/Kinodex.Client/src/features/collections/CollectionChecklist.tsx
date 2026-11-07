@@ -1,5 +1,8 @@
 import { useRef, useState } from "react";
-import { FaTrash, FaChevronDown } from "react-icons/fa";
+import { ChevronDown, Circle, CircleCheck, Loader2, Search, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { searchTMDB } from "../../utils/tmdbApi";
 import { isChecklistItemOwned } from "../../utils/checklist";
 import { useAddChecklistItem, useChecklistItems, useRemoveChecklistItem } from "./api";
@@ -104,171 +107,151 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
     listItems.length > 0 ? Math.round((ownedCount / listItems.length) * 100) : 0;
 
   return (
-    <div className="mt-8 bg-gray-800 rounded-lg p-4 md:p-6">
+    <section className="rounded-xl border border-border bg-card p-4">
       {/* Section header: click anywhere on it to collapse or expand the checklist */}
       <button
         type="button"
         onClick={toggleChecklist}
-        className="w-full flex items-center justify-between gap-4 text-left cursor-pointer"
+        className="flex w-full cursor-pointer items-center justify-between gap-4 text-left"
         aria-expanded={checklistOpen}
         aria-controls="collection-checklist"
       >
-        <h2 className="text-2xl font-bold">Collection Checklist</h2>
-        <FaChevronDown
-          className={`w-5 h-5 text-gray-400 shrink-0 transition-transform duration-200 ${checklistOpen ? "rotate-180" : ""}`}
+        <h2 className="text-base font-semibold">Collection checklist</h2>
+        <ChevronDown
+          className={cn("size-4 shrink-0 text-muted-foreground transition-transform duration-200", checklistOpen && "rotate-180")}
           aria-hidden="true"
         />
       </button>
 
       {checklistOpen && (
-        <div id="collection-checklist" className="mt-4">
+        <div id="collection-checklist" className="mt-4 flex flex-col gap-4">
           {/* Search to add movies */}
-          <div className="mb-6">
-            <div className="flex flex-col md:flex-row gap-3 mb-2">
+          <div className="relative">
+            <div className="flex flex-col gap-2 md:flex-row">
               <div className="relative flex-1">
-                <input
+                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="Search TMDB to add movies..."
-                  className="w-full px-4 py-3 pl-10 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Search TMDB to add movies"
+                  aria-label="Search TMDB to add movies"
+                  className="pr-9 pl-9"
                 />
-                <svg
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
                 {isSearching && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-indigo-500"></div>
-                  </div>
+                  <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
                 )}
               </div>
-              <input
+              <Input
                 type="text"
+                inputMode="numeric"
                 value={searchYear}
                 onChange={(e) => handleYearChange(e.target.value)}
                 placeholder="Year (optional)"
-                className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                aria-label="Year (optional)"
+                className="md:w-36"
                 maxLength={4}
               />
             </div>
-            <div className="relative">
-              {/* Search Results - Absolute positioned dropdown */}
-              {searchResults.length > 0 && (
-                <div className="absolute z-10 w-full bg-gray-700 border border-gray-600 rounded-md shadow-lg max-h-96 overflow-y-auto">
-                  {searchResults.map((movie) => {
-                    const year = movie.release_date
-                      ? new Date(movie.release_date).getFullYear()
-                      : "N/A";
-                    const alreadyInList = listItems.some((item) => item.tmdbId === movie.id);
 
-                    return (
-                      <button
-                        key={movie.id}
-                        onClick={() => !alreadyInList && handleAddToList(movie)}
-                        disabled={alreadyInList || addItem.isPending}
-                        className={`w-full px-4 py-3 text-left transition-colors border-b border-gray-600 last:border-b-0 ${
-                          alreadyInList
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-gray-600 cursor-pointer"
-                        }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          {movie.poster_path ? (
-                            <img
-                              src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
-                              alt={movie.title}
-                              className="w-12 h-18 object-cover rounded"
-                            />
-                          ) : (
-                            <div className="w-12 h-18 bg-gray-600 rounded flex items-center justify-center">
-                              <span className="text-gray-400 text-xs">No Image</span>
-                            </div>
-                          )}
-                          <div>
-                            <p className="text-white font-medium">{movie.title}</p>
-                            <p className="text-gray-400 text-sm">{year}</p>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            {/* Search results, in a dropdown over the list */}
+            {searchResults.length > 0 && (
+              <div className="absolute top-full z-10 mt-1 max-h-96 w-full overflow-y-auto rounded-lg border border-border bg-popover p-1 shadow-lg">
+                {searchResults.map((movie) => {
+                  const year = movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A";
+                  const alreadyInList = listItems.some((item) => item.tmdbId === movie.id);
+
+                  return (
+                    <button
+                      key={movie.id}
+                      type="button"
+                      onClick={() => !alreadyInList && handleAddToList(movie)}
+                      disabled={alreadyInList || addItem.isPending}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors",
+                        alreadyInList ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-accent",
+                      )}
+                    >
+                      {movie.poster_path ? (
+                        <img
+                          src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                          alt=""
+                          className="h-12 w-8 shrink-0 rounded-sm bg-muted object-cover"
+                        />
+                      ) : (
+                        <span className="h-12 w-8 shrink-0 rounded-sm bg-muted" />
+                      )}
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium">{movie.title}</span>
+                        <span className="block text-xs text-muted-foreground">{year}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* List Items */}
+          {/* List items */}
           {listItems.length > 0 ? (
-            <div>
-              <div className="flex items-baseline justify-between gap-3 mb-3">
-                <h3 className="text-lg font-semibold">
-                  Checklist ({ownedCount} of {listItems.length})
-                </h3>
-                <span
-                  className={`text-sm ${
-                    completionPercentage === 100 ? "text-green-400 font-semibold" : "text-gray-400"
-                  }`}
-                >
+            <div className="flex flex-col gap-2">
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="text-muted-foreground">
+                  {ownedCount} of {listItems.length} owned
+                </span>
+                <span className={completionPercentage === 100 ? "font-medium text-emerald-400" : "text-muted-foreground"}>
                   {completionPercentage}% complete
                 </span>
               </div>
-              <div className="space-y-2 overflow-y-auto max-h-96">
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn("h-full rounded-full", completionPercentage === 100 ? "bg-emerald-400" : "bg-primary")}
+                  style={{ width: `${completionPercentage}%` }}
+                />
+              </div>
+              <ul className="mt-1 max-h-96 overflow-y-auto">
                 {[...listItems]
                   .sort((a, b) => a.year - b.year)
                   .map((item) => {
                     const owned = isOwned(item);
 
                     return (
-                      <div
+                      <li
                         key={item.id}
-                        className={`flex items-center justify-between p-3 rounded ${
-                          owned ? "bg-green-900/30 border border-green-700" : "bg-gray-700"
-                        }`}
+                        className="flex items-center gap-3 border-b border-border/60 py-1.5 last:border-b-0"
                       >
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={owned}
-                            readOnly
-                            className="w-5 h-5 cursor-default"
-                          />
-                          <div>
-                            <span className={`font-medium ${owned ? "text-green-400" : "text-white"}`}>
-                              {item.title}
-                            </span>
-                            <span className="text-gray-400 ml-2">({item.year})</span>
-                          </div>
-                        </div>
-                        <button
+                        {owned ? (
+                          <CircleCheck className="size-4 shrink-0 text-emerald-400" aria-label="Owned" />
+                        ) : (
+                          <Circle className="size-4 shrink-0 text-muted-foreground/60" aria-label="Not owned" />
+                        )}
+                        <span className="min-w-0 flex-1 truncate text-sm" title={item.title}>
+                          {item.title}
+                          <span className="ml-2 text-muted-foreground tabular-nums">{item.year}</span>
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => item.id && handleRemoveFromList(item.id)}
-                          className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer"
-                          aria-label="Remove from checklist"
+                          className="text-red-300 hover:bg-destructive/15 hover:text-red-200"
+                          aria-label={`Remove ${item.title} from checklist`}
                         >
-                          <FaTrash className="w-4 h-4" />
-                        </button>
-                      </div>
+                          <Trash2 />
+                        </Button>
+                      </li>
                     );
                   })}
-              </div>
+              </ul>
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-400">
-              <p>No items in checklist yet. Search above to add movies!</p>
-            </div>
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              No items in checklist yet. Search above to add movies!
+            </p>
           )}
         </div>
       )}
-    </div>
+    </section>
   );
 }
 

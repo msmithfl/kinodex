@@ -1,5 +1,10 @@
-import { IoClose } from "react-icons/io5";
-import { useBackdropClose } from "../utils/useBackdropClose";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormField } from "./FormFields";
+import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 
 interface BulkEditData {
   shelfNumber: string;
@@ -21,8 +26,53 @@ interface BulkEditModalProps {
   shelfSections: string[];
   setShowBulkEditModal: (open: boolean) => void;
   handleBulkEdit: () => void;
+  saving: boolean;
 }
 
+// The select can't use an empty value, so "Don't change" has its own; the form still stores ""
+const DONT_CHANGE = "__dont_change__";
+
+const YES_NO = [
+  { value: "true", label: "Yes" },
+  { value: "false", label: "No" },
+];
+const FORMATS = ["4K", "Blu-ray", "DVD", "Digital", "VHS"].map((value) => ({ value }));
+const CONDITIONS = ["Sealed", "Like New", "Good", "Poor", "Damaged"].map((value) => ({ value }));
+
+function BulkSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label?: string }[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <FormField label={label}>
+      <Select
+        value={value || DONT_CHANGE}
+        onValueChange={(next) => onChange(next === DONT_CHANGE ? "" : next)}
+      >
+        <SelectTrigger className={cn("w-full", !value && "text-muted-foreground")} aria-label={label}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={DONT_CHANGE}>Don't change</SelectItem>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label ?? option.value}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </FormField>
+  );
+}
+
+// Change the same fields on every selected movie; anything left alone keeps its current value
 export function BulkEditModal({
   selectedMovieIds,
   bulkEditData,
@@ -30,215 +80,109 @@ export function BulkEditModal({
   shelfSections,
   setShowBulkEditModal,
   handleBulkEdit,
+  saving,
 }: BulkEditModalProps) {
-  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
-  const backdropClose = useBackdropClose(() => setShowBulkEditModal(false));
+  const set = (field: keyof BulkEditData) => (value: string) =>
+    setBulkEditData((prev) => ({ ...prev, [field]: value }));
+
+  const count = selectedMovieIds.size;
+  const movies = `${count} movie${count === 1 ? "" : "s"}`;
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-      {...backdropClose}
-    >
-      <div
-        className="flex flex-col mx-2 bg-gray-800 shadow-2xl w-full max-w-3xl h-full max-h-3/4 relative"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && setShowBulkEditModal(false)}>
+      <DialogContent
+        showCloseButton={false}
+        className={cn(FORM_MODAL_CLASS, "h-fit max-h-[92dvh] md:h-fit md:max-h-[90dvh] md:max-w-2xl")}
+        onEscapeKeyDown={keepOpenWhileTyping}
       >
-        <div className="flex gap-4 justify-between bg-gray-700 p-2">
-          <p className="text-white text-xl pl-2">
-            Bulk Editing {selectedMovieIds.size} Movie{selectedMovieIds.size !== 1 ? "s" : ""}
-          </p>
-          <button
-            onClick={() => setShowBulkEditModal(false)}
-            className="text-gray-400 hover:text-white cursor-pointer"
-          >
-            <IoClose className="w-6 h-6" />
-          </button>
+        <div className="flex shrink-0 flex-col gap-1.5 border-b border-border px-5 py-4">
+          <DialogTitle>Edit {movies}</DialogTitle>
+          <DialogDescription className="text-xs">
+            Anything left blank or set to “Don't change” keeps its current value.
+          </DialogDescription>
         </div>
 
-        <div className="flex flex-col flex-1 min-h-0 px-4 overflow-y-auto">
-          <p className="text-gray-400 text-sm my-3">
-            Leave fields empty to keep their current values
-          </p>
+        <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-4 overflow-y-auto px-5 py-4 md:px-6">
+          <BulkSelect label="Format" value={bulkEditData.formats} options={FORMATS} onChange={set("formats")} />
+          <BulkSelect
+            label="Condition"
+            value={bulkEditData.condition}
+            options={CONDITIONS}
+            onChange={set("condition")}
+          />
 
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="bulk-shelf-number" className="block text-sm font-medium text-gray-300 mb-2">
-                Shelf Number
-              </label>
-              <input
-                id="bulk-shelf-number"
-                type="number"
-                value={bulkEditData.shelfNumber}
-                onChange={(e) => setBulkEditData((prev) => ({ ...prev, shelfNumber: e.target.value }))}
-                placeholder="Enter shelf number"
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="bulk-shelf-section" className="block text-sm font-medium text-gray-300 mb-2">
-                Shelf Section
-              </label>
-              <select
-                id="bulk-shelf-section"
-                value={bulkEditData.shelfSection}
-                onChange={(e) => setBulkEditData((prev) => ({ ...prev, shelfSection: e.target.value }))}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-              >
-                <option value="">-- Keep Current --</option>
-                <option value="Unshelved">Unshelved</option>
-                {shelfSections.map((section) => (
-                  <option key={section} value={section}>{section}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="bulk-hdd-number" className="block text-sm font-medium text-gray-300 mb-2">
-                HDD Number
-              </label>
-              <input
-                id="bulk-hdd-number"
-                type="number"
-                value={bulkEditData.hdDriveNumber}
-                onChange={(e) => setBulkEditData((prev) => ({ ...prev, hdDriveNumber: e.target.value }))}
-                placeholder="Enter HDD number"
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="bulk-is-streaming" className="block text-sm font-medium text-gray-300 mb-2">
-                Streaming
-              </label>
-              <select
-                id="bulk-is-streaming"
-                value={bulkEditData.isStreaming}
-                onChange={(e) => setBulkEditData((prev) => ({ ...prev, isStreaming: e.target.value }))}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-              >
-                <option value="">Don't change</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="bulk-has-watched" className="block text-sm font-medium text-gray-300 mb-2">
-                Watched?
-              </label>
-              <select
-                id="bulk-has-watched"
-                value={bulkEditData.hasWatched}
-                onChange={(e) => setBulkEditData((prev) => ({ ...prev, hasWatched: e.target.value }))}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-              >
-                <option value="">Don't change</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="bulk-is-gift" className="block text-sm font-medium text-gray-300 mb-2">
-                Gift?
-              </label>
-              <select
-                id="bulk-is-gift"
-                value={bulkEditData.isGift}
-                onChange={(e) => setBulkEditData((prev) => ({ ...prev, isGift: e.target.value }))}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-              >
-                <option value="">Don't change</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="bulk-condition" className="block text-sm font-medium text-gray-300 mb-2">
-                Condition
-              </label>
-              <select
-                id="bulk-condition"
-                value={bulkEditData.condition}
-                onChange={(e) => setBulkEditData((prev) => ({ ...prev, condition: e.target.value }))}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-              >
-                <option value="">-- Keep Current --</option>
-                <option value="Sealed">Sealed</option>
-                <option value="Like New">Like New</option>
-                <option value="Good">Good</option>
-                <option value="Poor">Poor</option>
-                <option value="Damaged">Damaged</option>
-              </select>
-            </div>
-
-            <div className="">
-              <label htmlFor="bulk-purchase-price" className="block text-sm font-medium text-gray-300 mb-2">
-                Purchase Price
-              </label>
-              <input
+          <FormField label="Purchase price" htmlFor="bulk-purchase-price">
+            <div className="relative">
+              <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
+                $
+              </span>
+              <Input
                 id="bulk-purchase-price"
                 type="number"
+                step="0.01"
                 value={bulkEditData.purchasePrice}
-                onChange={(e) => setBulkEditData((prev) => ({ ...prev, purchasePrice: e.target.value }))}
-                placeholder="Enter purchase price"
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                onChange={(e) => set("purchasePrice")(e.target.value)}
+                placeholder="0.00"
+                className="pl-6 font-mono"
               />
             </div>
-            <div className="">
-              <label htmlFor="bulk-purchase-date" className="block text-sm font-medium text-gray-300 mb-2">
-                Purchase Date
-              </label>
-              <input
-                id="bulk-purchase-date"
-                type="date"
-                value={bulkEditData.purchasedAt}
-                onChange={(e) => setBulkEditData((prev) => ({ ...prev, purchasedAt: e.target.value }))}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent scheme-dark"
-              />
-            </div>
-            <div className="pb-6">
-              <label htmlFor="bulk-formats" className="block text-sm font-medium text-gray-300 mb-2">
-                Formats
-              </label>
-              <select
-                id="bulk-formats"
-                value={bulkEditData.formats}
-                onChange={(e) => setBulkEditData((prev) => ({ ...prev, formats: e.target.value }))}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent cursor-pointer"
-              >
-                <option value="">-- Keep Current --</option>
-                <option value="4K">4K</option>
-                <option value="Blu-ray">Blu-ray</option>
-                <option value="DVD">DVD</option>
-                <option value="Digital">Digital</option>
-                <option value="VHS">VHS</option>
-              </select>
-            </div>
-          </div>
+          </FormField>
+          <FormField label="Purchased" htmlFor="bulk-purchase-date">
+            <Input
+              id="bulk-purchase-date"
+              type="date"
+              value={bulkEditData.purchasedAt}
+              onChange={(e) => set("purchasedAt")(e.target.value)}
+              className="scheme-dark"
+            />
+          </FormField>
+
+          <BulkSelect label="Streaming" value={bulkEditData.isStreaming} options={YES_NO} onChange={set("isStreaming")} />
+          <BulkSelect label="Watched" value={bulkEditData.hasWatched} options={YES_NO} onChange={set("hasWatched")} />
+
+          <BulkSelect label="Gift" value={bulkEditData.isGift} options={YES_NO} onChange={set("isGift")} />
+          <FormField label="HDD number" htmlFor="bulk-hdd-number">
+            <Input
+              id="bulk-hdd-number"
+              type="number"
+              value={bulkEditData.hdDriveNumber}
+              onChange={(e) => set("hdDriveNumber")(e.target.value)}
+              className="font-mono"
+            />
+          </FormField>
+
+          <BulkSelect
+            label="Shelf section"
+            value={bulkEditData.shelfSection}
+            options={["Unshelved", ...shelfSections].map((value) => ({ value }))}
+            onChange={set("shelfSection")}
+          />
+          <FormField label="Shelf number" htmlFor="bulk-shelf-number">
+            <Input
+              id="bulk-shelf-number"
+              type="number"
+              value={bulkEditData.shelfNumber}
+              onChange={(e) => set("shelfNumber")(e.target.value)}
+              className="font-mono"
+            />
+          </FormField>
         </div>
 
-        <div className="flex flex-col px-6 py-3 bg-gray-700 gap-2">
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => {
-                setShowBulkEditModal(false);
-                setBulkEditData({ shelfNumber: "", shelfSection: "", hdDriveNumber: "", purchasePrice: "", purchasedAt: "", isStreaming: "", hasWatched: "", isGift: "", condition: "", formats: "" });
-              }}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleBulkEdit}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
-            >
-              Update Movies
-            </button>
-          </div>
+        <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-card px-5 py-3">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setShowBulkEditModal(false);
+              setBulkEditData({ shelfNumber: "", shelfSection: "", hdDriveNumber: "", purchasePrice: "", purchasedAt: "", isStreaming: "", hasWatched: "", isGift: "", condition: "", formats: "" });
+            }}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleBulkEdit} disabled={saving}>
+            {saving ? "Updating…" : `Update ${movies}`}
+          </Button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

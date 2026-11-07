@@ -11,14 +11,8 @@ import {
   tvSpend,
   type SpendEntry,
 } from "../utils/spending";
-import {
-  FaFilm,
-  FaDownload,
-  FaChartPie,
-  FaPlus,
-  FaCog,
-} from "react-icons/fa";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
+import { ChartPie, ChevronLeft, ChevronRight, Download, Film, Plus, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AddItemModal } from "../components/AddItemModal";
 import AccountMenuButton from "../components/AccountMenuButton";
 
@@ -45,7 +39,9 @@ interface RecentItem {
 // On mobile each card is 26% of the row, so three fit with part of the fourth peeking in
 // to show the row scrolls; from tablet up the cards share the row
 const quickActionClass =
-  "shrink-0 w-[26%] md:w-auto md:flex-1 bg-gray-800 hover:bg-gray-700 rounded-lg shadow-lg p-3 md:p-8 transition-all duration-200 transform hover:scale-105 text-center";
+  "shrink-0 w-[26%] cursor-pointer rounded-xl border border-border bg-card p-3 text-center shadow-xs outline-none transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:bg-accent focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:w-auto md:flex-1 md:p-6";
+const quickActionIconClass = "mb-2 flex h-6 items-center justify-center text-muted-foreground md:mb-3 md:h-8 [&_svg]:size-5 md:[&_svg]:size-7";
+const quickActionLabelClass = "text-sm leading-tight font-medium md:text-base";
 
 // Total spent in the given calendar month, across movies and TV purchases
 function getMonthSpend(entries: SpendEntry[], monthStart: Date): MonthSpend {
@@ -81,22 +77,19 @@ function RecentCarousel({ title, items }: { title: string; items: RecentItem[] }
     // the page needs no scrolling; on desktop the posters have a fixed width
     <section className="flex-1 min-h-32 flex flex-col lg:flex-none lg:min-h-0">
       <div className="shrink-0 flex items-center justify-between mb-2 md:mb-3">
-        <h2 className="text-lg md:text-xl font-bold">{title}</h2>
+        <h2 className="text-base font-semibold tracking-tight md:text-lg">{title}</h2>
         <div className="hidden md:flex gap-2">
           {([-1, 1] as const).map((direction) => (
-            <button
+            <Button
               key={direction}
               type="button"
+              variant="outline"
+              size="icon-sm"
               onClick={() => scroll(direction)}
-              className="p-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-md text-gray-300 hover:text-white transition-colors cursor-pointer"
               aria-label={direction < 0 ? "Scroll back" : "Scroll forward"}
             >
-              {direction < 0 ? (
-                <FaChevronLeft className="w-3 h-3" />
-              ) : (
-                <FaChevronRight className="w-3 h-3" />
-              )}
-            </button>
+              {direction < 0 ? <ChevronLeft /> : <ChevronRight />}
+            </Button>
           ))}
         </div>
       </div>
@@ -110,7 +103,8 @@ function RecentCarousel({ title, items }: { title: string; items: RecentItem[] }
             <Link
               to={item.to}
               title={item.title}
-              className="block w-full h-full rounded border border-white/20 overflow-hidden shadow-lg transition-colors duration-200 hover:border-indigo-500"
+              data-slot="recent-poster"
+              className="block h-full w-full overflow-hidden rounded-[4px] border border-white/10 bg-muted shadow-md outline-none transition-colors duration-200 hover:border-primary focus-visible:border-ring md:rounded-lg"
             >
               {item.posterPath ? (
                 <img
@@ -119,8 +113,8 @@ function RecentCarousel({ title, items }: { title: string; items: RecentItem[] }
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-                  <span className="text-gray-400 text-xs text-center px-2">{item.title}</span>
+                <div className="flex h-full w-full items-center justify-center">
+                  <span className="px-2 text-center text-xs text-muted-foreground">{item.title}</span>
                 </div>
               )}
             </Link>
@@ -172,7 +166,7 @@ function Dashboard() {
   return (
     <div
       ref={containerRef}
-      className="flex h-[calc(100dvh-5rem)] pt-2"
+      className="flex h-[calc(100dvh-5rem)] bg-background pt-2"
       style={containerStyle}
     >
       {/* Same content width as the Stats page */}
@@ -203,34 +197,29 @@ function Dashboard() {
                   <div className="hidden lg:flex">
                     <AccountMenuButton size={56} />
                   </div>
-                  <p className="text-lg font-semibold text-white truncate">
+                  <p className="truncate text-lg font-semibold tracking-tight">
                     {user?.username || user?.firstName || "Welcome"}
                   </p>
                 </div>
-                <Link
-                  to="/settings"
-                  className="shrink-0 flex items-center gap-2 px-3 py-1.5 text-sm text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 rounded-md transition-colors"
-                >
-                  <FaCog className="w-4 h-4" />
-                  Settings
-                </Link>
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/settings">
+                    <Settings />
+                    Settings
+                  </Link>
+                </Button>
               </div>
 
               {/* Spending This Month and Last Month */}
-              <div className="bg-linear-to-br from-green-600 to-green-700 rounded-lg shadow-lg p-3 md:p-6">
-                <div className="grid grid-cols-2 divide-x divide-green-500">
+              <div className="rounded-xl border border-border bg-card p-3 md:p-6">
+                <div className="grid grid-cols-2 divide-x divide-border">
                   {[
-                    { title: "This Month", month: stats.thisMonth },
-                    { title: "Last Month", month: stats.lastMonth },
+                    { title: "This month", month: stats.thisMonth },
+                    { title: "Last month", month: stats.lastMonth },
                   ].map(({ title, month }, idx) => (
                     <div key={idx} className={idx === 0 ? "pr-3 md:pr-6" : "pl-3 md:pl-6"}>
-                      <p className="text-white text-sm md:text-base font-semibold">
-                        {title}
-                      </p>
-                      <p className="text-green-200 text-xs md:text-sm font-medium">
-                        {month.label}
-                      </p>
-                      <p className="text-2xl md:text-4xl font-bold text-white mt-1 md:mt-2">
+                      <p className="text-sm font-medium md:text-base">{title}</p>
+                      <p className="text-xs text-muted-foreground md:text-sm">{month.label}</p>
+                      <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums md:mt-2 md:text-4xl">
                         ${month.spend.toFixed(2)}
                       </p>
                     </div>
@@ -240,46 +229,38 @@ function Dashboard() {
 
 
               {/* Quick Actions */}
-              {/* Mobile: three cards fit across and the rest scroll. Tablet: four in a row. Desktop: a 2x2 grid in the left column. Padding leaves room for the hover scale; on mobile the row runs to the screen edges, like the carousels. */}
-              <div className="flex lg:grid lg:grid-cols-2 gap-3 md:gap-6 overflow-x-auto md:overflow-x-visible no-scrollbar -my-2 py-2 -mx-4 px-4 md:-m-2 md:p-2">
-                <Link
-                  to="/library"
-                  className={quickActionClass}
-                >
-                  <div className="h-6 md:h-12 mb-2 md:mb-4 flex items-center justify-center">
-                    <FaFilm className="text-xl md:text-5xl" />
+              {/* Mobile: three cards fit across and the rest scroll. Tablet: four in a row. Desktop: a 2x2 grid in the left column. Padding leaves room for the hover lift and focus ring; on mobile the row runs to the screen edges, like the carousels. */}
+              <div className="flex lg:grid lg:grid-cols-2 gap-3 md:gap-4 overflow-x-auto md:overflow-x-visible no-scrollbar -my-2 py-2 -mx-4 px-4 md:-m-2 md:p-2">
+                <Link to="/library" data-slot="quick-action" className={quickActionClass}>
+                  <div className={quickActionIconClass}>
+                    <Film />
                   </div>
-                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">Library</h3>
+                  <h3 className={quickActionLabelClass}>Library</h3>
                 </Link>
 
                 <button
                   type="button"
+                  data-slot="quick-action"
                   onClick={() => setShowAddModal(true)}
-                  className={`${quickActionClass} cursor-pointer`}
+                  className={quickActionClass}
                 >
-                  <div className="h-6 md:h-12 mb-2 md:mb-4 flex items-center justify-center">
-                    <FaPlus className="text-2xl md:text-5xl" />
+                  <div className={quickActionIconClass}>
+                    <Plus />
                   </div>
-                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">Add</h3>
+                  <h3 className={quickActionLabelClass}>Add</h3>
                 </button>
 
-                <Link
-                  to="/stats"
-                  className={quickActionClass}
-                >
-                  <div className="h-6 md:h-12 mb-2 md:mb-4 flex items-center justify-center">
-                    <FaChartPie className="text-2xl md:text-5xl" />
+                <Link to="/stats" data-slot="quick-action" className={quickActionClass}>
+                  <div className={quickActionIconClass}>
+                    <ChartPie />
                   </div>
-                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">Stats</h3>
+                  <h3 className={quickActionLabelClass}>Stats</h3>
                 </Link>
-                <Link
-                  to="/export"
-                  className={quickActionClass}
-                >
-                  <div className="h-6 md:h-12 mb-2 md:mb-4 flex items-center justify-center">
-                    <FaDownload className="text-2xl md:text-5xl" />
+                <Link to="/export" data-slot="quick-action" className={quickActionClass}>
+                  <div className={quickActionIconClass}>
+                    <Download />
                   </div>
-                  <h3 className="text-sm md:text-xl font-semibold leading-tight md:mb-2">CSV</h3>
+                  <h3 className={quickActionLabelClass}>CSV</h3>
                 </Link>
               </div>
             </div>

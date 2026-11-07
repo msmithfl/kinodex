@@ -1,19 +1,27 @@
-import { IoClose } from "react-icons/io5";
-import { LuBookmarkPlus } from "react-icons/lu";
-import { useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Bookmark, BookmarkPlus, Check, ChevronRight, PenLine, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Movie, MoviePreset, TMDBMovie } from "../types";
 import { GENRE_MAP, searchTMDB } from "../utils/tmdbApi";
 import MovieForm from "./MovieForm";
-import TmdbSearchStep from "./TmdbSearchStep";
 import BarcodeScanner from "./BarcodeScanner";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
-import { useCreateMovie } from "../features/movies/api";
+import { MOD_KEY } from "./navigation";
+import TmdbSearch from "./TmdbSearch";
+import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
+import { useCreateMovie, useMovies } from "../features/movies/api";
 import { ApiError } from "../utils/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";
 import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
-import { useBackdropClose } from "../utils/useBackdropClose";
 import { todayDate } from "../utils/dateUtils";
+import { isMobile } from "../utils/isMobile";
 import {
   PRESET_EXCLUDED_LABEL,
   presetFields,
@@ -26,6 +34,10 @@ import {
 interface AddMovieModalProps {
   onClose: () => void;
 }
+
+const FORM_ID = "add-movie-form";
+// The preset Select's value for "no preset" (its items can't use an empty string)
+const DEFAULT_PRESET = "default";
 
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
 
@@ -66,10 +78,38 @@ const readPresetId = () => {
   }
 };
 
+// A keyboard shortcut hint on a button; desktop only
+function Kbd({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <kbd className={cn("hidden rounded border px-1 font-sans text-[10px] leading-4 md:inline", className)}>
+      {children}
+    </kbd>
+  );
+}
+
+// The movie being added, as TMDB (or the form) describes it: the poster, or the title on a tile
+function PreviewPoster({ movie, className }: { movie: Movie; className?: string }) {
+  return movie.posterPath ? (
+    <img
+      src={movie.posterPath}
+      alt=""
+      className={cn("aspect-2/3 rounded-lg border border-white/10 bg-muted object-cover shadow-lg", className)}
+    />
+  ) : (
+    <div
+      className={cn(
+        "flex aspect-2/3 items-center justify-center rounded-lg border border-border bg-muted p-2 text-center text-xs text-muted-foreground",
+        className,
+      )}
+    >
+      {movie.title || "No poster"}
+    </div>
+  );
+}
+
 export function AddMovieModal({ onClose }: AddMovieModalProps) {
-  // Only a deliberate click on the backdrop closes it (not a drag that ends outside)
-  const backdropClose = useBackdropClose(onClose);
   const navigate = useNavigate();
+  const { data: movies = [] } = useMovies();
   const { data: collectionList = [] } = useCollections();
   const { data: shelfSectionList = [] } = useShelfSections();
   const createMovie = useCreateMovie();
@@ -77,6 +117,8 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const createShelfSection = useCreateShelfSection();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Movie>(emptyMovie);
+  // "Save & add another", for the Ctrl/⌘+Enter shortcut
+  const addAnotherRef = useRef<HTMLButtonElement>(null);
 
   // Presets fill the repeating fields (format, price, watched, ...) for batches of similar movies
   const { data: presets = [] } = useMoviePresets();
@@ -91,12 +133,12 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   }
   // Naming a new preset from the form's current values
   const [presetName, setPresetName] = useState<string | null>(null);
-  // After "Save & add another": which movie was just added
-  const [addedTitle, setAddedTitle] = useState("");
   // Remounts the TMDB search so each new movie starts with an empty search
   const [searchKey, setSearchKey] = useState(0);
   const collections = [...collectionList].sort(byName);
   const shelfSections = [...shelfSectionList].sort(byName);
+  // TMDB results already in the library get an "In library" badge
+  const ownedTmdbIds = new Set(movies.flatMap((m) => (m.tmdbId ? [m.tmdbId] : [])));
   const [showCollectionInput, setShowCollectionInput] = useState(false);
   const [showShelfSectionInput, setShowShelfSectionInput] = useState(false);
   const [newCollection, setNewCollection] = useState("");
@@ -106,25 +148,12 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
 
-  // Check if device is mobile
-  const isMobile = () => {
-    return (
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
-      ) || window.innerWidth <= 768
-    );
-  };
-
+  // A TMDB result fills in the title, year, genres and images, then shows the form
   const handleMovieSelect = (movie: TMDBMovie) => {
-    // Map genre IDs to genre names
     const genres = movie.genre_ids.map((id) => GENRE_MAP[id]).filter(Boolean);
-
-    // Extract year from release date
     const year = movie.release_date
       ? parseInt(movie.release_date.split("-")[0])
       : new Date().getFullYear();
-
-    // Construct poster and backdrop URLs
     const posterPath = movie.poster_path
       ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
       : "";
@@ -132,19 +161,22 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
       ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
       : "";
 
-    // Update form data with TMDB info including TMDB ID
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       title: movie.title,
       year,
       genres,
       posterPath,
       backdropPath,
       tmdbId: movie.id,
-    });
-
-    // Switch to manual entry mode with pre-filled data
+    }));
     setShowForm(true);
+  };
+
+  // Back to the search to pick a different TMDB match; the other fields are kept
+  const changeMovie = () => {
+    setShowForm(false);
+    setSearchKey((key) => key + 1);
   };
 
   // Creates a collection from the form and adds this movie to it
@@ -209,6 +241,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
       // The form already holds its values, so it needn't be filled in again
       setAppliedPresetId(saved.id ?? null);
       choosePreset(saved.id ?? null);
+      toast.success(existing ? `Updated the ${saved.name} preset` : `Saved the ${saved.name} preset`);
     } catch (error) {
       console.error("Error saving preset:", error);
       setSubmitError(
@@ -222,12 +255,15 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     (p) => p.name.toLowerCase() === (presetName ?? "").trim().toLowerCase(),
   );
 
-  const handleSubmit = (e: React.FormEvent) => saveMovie(e, false);
+  // The form passed its checks. Which footer button submitted it says whether to add another.
+  const handleSubmit = (e: React.FormEvent) => {
+    const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLElement | null;
+    return saveMovie(submitter?.dataset.mode === "another");
+  };
 
   // Saves the movie, then closes and shows the list, or with addAnother starts the next movie
   // (back to the TMDB search, with the preset's values filled in again)
-  const saveMovie = async (e: React.FormEvent, addAnother: boolean) => {
-    e.preventDefault();
+  const saveMovie = async (addAnother: boolean) => {
     if (!formData.title.trim()) {
       setSubmitError("Movie title is required.");
       return;
@@ -235,9 +271,19 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
     setSubmitError("");
     try {
       // The server makes it the signed-in user's movie; every movie list refreshes itself
-      await createMovie.mutateAsync(formData);
+      const created = await createMovie.mutateAsync(formData);
+      const openIt = () => navigate(`/library?movie=${created.id}`);
       if (addAnother) {
-        setAddedTitle(formData.title);
+        toast.success(`Added ${created.title}`, {
+          description: "Ready for the next movie",
+          action: {
+            label: "Open",
+            onClick: () => {
+              onClose();
+              openIt();
+            },
+          },
+        });
         setFormData({ ...emptyMovie(), ...(preset ? presetValues(preset) : {}) });
         setShowCollectionInput(false);
         setShowShelfSectionInput(false);
@@ -247,6 +293,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
       }
       onClose();
       navigate("/library");
+      toast.success(`Added ${created.title}`, { action: { label: "Open", onClick: openIt } });
     } catch (error) {
       console.error("Error adding movie:", error);
       setSubmitError(
@@ -266,52 +313,80 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   };
 
   const handleBarcodeDetected = (code: string) => {
-    setFormData({ ...formData, upcNumber: code });
+    setFormData((prev) => ({ ...prev, upcNumber: code }));
     setShowScanner(false);
   };
 
+  const meta = [formData.year || null, formData.genres.slice(0, 2).join(", ") || null].filter(Boolean).join(" · ");
+
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30"
-      {...backdropClose}
-    >
-      <div
-        className="flex flex-col mx-2 bg-gray-800 shadow-2xl w-full max-w-3xl h-full max-h-3/4 relative"
-        onClick={(e) => e.stopPropagation()}
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        className={FORM_MODAL_CLASS}
+        onEscapeKeyDown={keepOpenWhileTyping}
+        onKeyDown={(e) => {
+          // Ctrl/⌘+Enter: Save & add another
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && showForm) {
+            e.preventDefault();
+            const form = document.getElementById(FORM_ID) as HTMLFormElement | null;
+            form?.requestSubmit(addAnotherRef.current);
+          }
+        }}
       >
-        <div className="flex gap-4 items-center bg-gray-700 p-2 pr-4">
-          <p className="text-white text-xl pl-2 mr-auto">Add Movie</p>
+        {/* Title and steps, then the preset */}
+        <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border px-5 py-4">
+          <div className="mr-auto flex min-w-0 flex-col gap-1">
+            <DialogTitle>Add movie</DialogTitle>
+            <ol aria-label="Steps" className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <li className={cn("flex items-center gap-1", !showForm && "font-medium text-foreground")}>
+                {showForm && <Check className="size-3" aria-hidden="true" />}
+                Search
+              </li>
+              <ChevronRight className="size-3" aria-hidden="true" />
+              <li className={cn(showForm && "font-medium text-foreground")}>Details</li>
+            </ol>
+          </div>
           {/* Preset: fills the repeating fields for a batch of similar movies */}
           {presets.length > 0 && (
-            <label className="flex items-center gap-2 min-w-0 text-sm text-gray-300">
-              Preset:
-              <select
-                value={preset?.id ?? ""}
-                onChange={(e) => choosePreset(e.target.value ? Number(e.target.value) : null)}
-                className="h-8 min-w-0 max-w-32 sm:max-w-44 px-2 text-sm bg-gray-800 border border-gray-600 rounded-md text-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            <div className="flex items-center gap-2">
+              <span id="preset-label" className="text-sm text-muted-foreground">
+                Preset
+              </span>
+              <Select
+                value={preset?.id ? String(preset.id) : DEFAULT_PRESET}
+                onValueChange={(value) => choosePreset(value === DEFAULT_PRESET ? null : Number(value))}
               >
-                <option value="">Default</option>
-                {presets.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                <SelectTrigger size="sm" aria-labelledby="preset-label" className="w-36 sm:w-44">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent align="end">
+                  <SelectItem value={DEFAULT_PRESET}>Default</SelectItem>
+                  {presets.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setPresetName(presetName === null ? (preset?.name ?? "") : null)}
-            className="shrink-0 flex items-center gap-1.5 text-sm text-gray-300 hover:text-white cursor-pointer"
-            title="Save these values as a preset"
+            aria-expanded={presetName !== null}
+            aria-label="Save these values as a preset"
           >
-            <LuBookmarkPlus className="w-5 h-5" />
+            <BookmarkPlus />
             <span className="hidden sm:inline">Save as preset</span>
-          </button>
+          </Button>
         </div>
 
         {/* Naming a preset: saves the form's current values (blank fields included) */}
         {presetName !== null && (
-          <div className="flex flex-col gap-2 px-4 py-3 bg-gray-700 border-t border-gray-600">
+          <div className="flex shrink-0 flex-col gap-2 border-b border-border bg-muted/40 px-5 py-3">
             <form
               className="flex items-center gap-2"
               onSubmit={(e) => {
@@ -319,31 +394,28 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
                 savePreset();
               }}
             >
-              <input
-                type="text"
+              <Input
                 autoFocus
                 value={presetName}
                 onChange={(e) => setPresetName(e.target.value)}
                 placeholder="Preset name, e.g. Bookstore"
-                className="flex-1 min-w-0 h-9 px-3 text-sm bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                aria-label="Preset name"
+                className="flex-1"
               />
-              <button
-                type="submit"
-                disabled={!presetName.trim() || saveMoviePreset.isPending}
-                className="h-9 px-3 text-sm bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-md transition cursor-pointer disabled:cursor-default"
-              >
+              <Button type="submit" disabled={!presetName.trim() || saveMoviePreset.isPending}>
                 {presetNameTaken ? "Update preset" : "Save preset"}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setPresetName(null)}
-                className="text-gray-400 hover:text-white cursor-pointer"
                 aria-label="Cancel saving preset"
               >
-                <IoClose className="w-5 h-5" />
-              </button>
+                <X />
+              </Button>
             </form>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-muted-foreground">
               Saves every field as it is now, blanks included, except the {PRESET_EXCLUDED_LABEL},
               which come from TMDB. A purchase date of today isn't fixed: the preset uses the day
               you add each movie.
@@ -351,90 +423,129 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
           </div>
         )}
 
-        {!showForm && addedTitle && (
-          <p className="mx-4 mt-3 text-sm text-green-400">Added {addedTitle}. Next movie:</p>
-        )}
-        {!showForm && (
-          <TmdbSearchStep
+        {!showForm ? (
+          <TmdbSearch
             key={searchKey}
             search={searchTMDB}
-            toOption={(movie) => ({
+            toOption={(movie: TMDBMovie) => ({
               id: movie.id,
               title: movie.title,
               date: movie.release_date,
               posterPath: movie.poster_path,
             })}
             onSelect={handleMovieSelect}
-            onManualEntry={() => setShowForm(true)}
-            placeholder="Search TMDB for a movie..."
+            ownedTmdbIds={ownedTmdbIds}
+            placeholder="Search TMDB for a movie…"
           />
-        )}
-        {showForm && (
-          <div className="flex flex-col flex-1 min-h-0 px-4">
-            <MovieForm
-              formData={formData}
-              setFormData={setFormData}
-              collections={collections}
-              shelfSections={shelfSections}
-              showCollectionInput={showCollectionInput}
-              setShowCollectionInput={setShowCollectionInput}
-              showShelfSectionInput={showShelfSectionInput}
-              setShowShelfSectionInput={setShowShelfSectionInput}
-              newCollection={newCollection}
-              setNewCollection={setNewCollection}
-              newShelfSection={newShelfSection}
-              setNewShelfSection={setNewShelfSection}
-              addCollection={addCollection}
-              addShelfSection={addShelfSection}
-              onSubmit={handleSubmit}
-              onCancel={onClose}
-              submitButtonText="Add to Collection"
-              showScanButton={true}
-              onScanClick={handleScanClick}
-            />
+        ) : (
+          <div className="flex min-h-0 flex-1 gap-7 px-5 pt-4 md:px-6 md:pt-5">
+            {/* Tablet up: the movie being added, beside the form */}
+            <aside className="hidden w-44 shrink-0 flex-col gap-3 md:flex">
+              <PreviewPoster movie={formData} className="w-full" />
+              <div className="flex flex-col gap-1">
+                <span className="text-base leading-tight font-semibold">{formData.title || "Untitled"}</span>
+                {meta && <span className="text-xs text-muted-foreground">{meta}</span>}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {formData.tmdbId && (
+                  <Badge variant="outline" className="font-mono font-normal text-muted-foreground">
+                    TMDB {formData.tmdbId}
+                  </Badge>
+                )}
+                <Button variant="link" size="sm" className="h-auto px-0 text-xs" onClick={changeMovie}>
+                  {formData.tmdbId ? "Change movie" : "Search TMDB"}
+                </Button>
+              </div>
+            </aside>
 
-            {showScanner && (
-              <BarcodeScanner
-                onDetected={handleBarcodeDetected}
-                onClose={() => setShowScanner(false)}
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              {/* Phones: the movie in a compact row */}
+              <div className="mb-3 flex items-center gap-3 md:hidden">
+                <PreviewPoster movie={formData} className="w-10 shrink-0 rounded-sm text-[0px]" />
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-semibold">{formData.title || "Untitled"}</span>
+                  {meta && <span className="truncate text-xs text-muted-foreground">{meta}</span>}
+                </div>
+                <Button variant="link" size="sm" className="px-0 text-xs" onClick={changeMovie}>
+                  Change
+                </Button>
+              </div>
+              {preset && (
+                <div className="mb-3 flex shrink-0 items-center gap-2 rounded-md bg-primary-soft px-3 py-2 text-xs text-primary-text">
+                  <Bookmark className="size-3.5 shrink-0" aria-hidden="true" />
+                  Filled from the {preset.name} preset
+                </div>
+              )}
+              <MovieForm
+                id={FORM_ID}
+                formData={formData}
+                setFormData={setFormData}
+                collections={collections}
+                shelfSections={shelfSections}
+                showCollectionInput={showCollectionInput}
+                setShowCollectionInput={setShowCollectionInput}
+                showShelfSectionInput={showShelfSectionInput}
+                setShowShelfSectionInput={setShowShelfSectionInput}
+                newCollection={newCollection}
+                setNewCollection={setNewCollection}
+                newShelfSection={newShelfSection}
+                setNewShelfSection={setNewShelfSection}
+                addCollection={addCollection}
+                addShelfSection={addShelfSection}
+                onSubmit={handleSubmit}
+                onCancel={onClose}
+                submitButtonText="Add to Collection"
+                showScanButton={true}
+                onScanClick={handleScanClick}
               />
-            )}
-
-            {showMobileOnlyMessage && (
-              <MobileOnlyMessage
-                setShowMobileOnlyMessage={setShowMobileOnlyMessage}
-              />
-            )}
+            </div>
           </div>
         )}
 
-        <div className="flex flex-col px-6 py-3 bg-gray-700 gap-2">
+        <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card px-5 py-3">
           {submitError && (
-            <p className="text-red-400 text-sm text-right">{submitError}</p>
+            <p role="alert" className="text-sm text-red-300">
+              {submitError}
+            </p>
           )}
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-md transition cursor-pointer"
-            >
-              Close
-            </button>
-            <button
-              onClick={(e) => saveMovie(e, true)}
-              className="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500 text-indigo-200 rounded-md transition cursor-pointer"
-            >
-              <span className="sm:hidden">Save & new</span>
-              <span className="hidden sm:inline">Save & add another</span>
-            </button>
-            <button
-              onClick={handleSubmit}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition cursor-pointer"
-            >
-              Save
-            </button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={onClose} className="mr-auto">
+              Cancel
+            </Button>
+            {showForm ? (
+              <>
+                {/* Save comes first in the page so Enter in a field picks it; it's shown last */}
+                <Button type="submit" form={FORM_ID} data-mode="save" disabled={createMovie.isPending} className="order-last">
+                  Save
+                  <Kbd className="border-white/30 text-white/80">↵</Kbd>
+                </Button>
+                <Button
+                  ref={addAnotherRef}
+                  type="submit"
+                  form={FORM_ID}
+                  data-mode="another"
+                  variant="outline"
+                  disabled={createMovie.isPending}
+                >
+                  <span className="sm:hidden">Save &amp; new</span>
+                  <span className="hidden sm:inline">Save &amp; add another</span>
+                  <Kbd className="border-border text-muted-foreground">{MOD_KEY}↵</Kbd>
+                </Button>
+              </>
+            ) : (
+              <Button variant="outline" onClick={() => setShowForm(true)}>
+                <PenLine />
+                Enter details manually
+              </Button>
+            )}
           </div>
         </div>
-      </div>
-    </div>
+
+        {showScanner && (
+          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setShowScanner(false)} />
+        )}
+        {showMobileOnlyMessage && <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />}
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,10 +1,12 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import GenreCard, { GENRE_OVERLAYS } from "../components/GenreCard";
 import EmptyState from "../components/EmptyState";
-import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
 import { useMovies } from "../features/movies/api";
 import type { Movie } from "../types";
+
+const GENRE_GRID = "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
 function GenresView() {
   // Genres have no table of their own: they're whatever genres the user's movies have
@@ -40,7 +42,17 @@ function GenresView() {
     return (
       <>
         <SubNavigation />
-        <LoadingSpinner />
+        <div className="flex flex-col gap-4 bg-background px-6 pt-4 md:px-10 md:pt-7" aria-busy="true" aria-label="Loading genres">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-8 w-28" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+          <div className={GENRE_GRID}>
+            {Array.from({ length: 12 }, (_, i) => (
+              <Skeleton key={i} className="h-28 rounded-xl md:h-32" />
+            ))}
+          </div>
+        </div>
       </>
     );
   }
@@ -48,12 +60,20 @@ function GenresView() {
   return (
     <>
       <SubNavigation />
-      <div ref={viewportRef} className="flex h-[calc(100dvh-9rem)] pt-2" style={viewportStyle}>
-        <div className="flex-1 min-h-0 overflow-y-auto px-8 pt-2">
+      <div ref={viewportRef} className="flex h-[calc(100dvh-5rem)] flex-col bg-background" style={viewportStyle}>
+        <div className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7">
+          <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">Genres</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {genres.length} {genres.length === 1 ? "genre" : "genres"}
+          </p>
+        </div>
+
+        {/* Scrolls on its own; the small top inset keeps the hover ring and lift inside it */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-2 pb-8 md:px-10">
           {genres.length === 0 ? (
             <EmptyState message="No genres yet." />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className={GENRE_GRID}>
               {genres.map((genre, index) => (
                 <GenreCard
                   key={genre}

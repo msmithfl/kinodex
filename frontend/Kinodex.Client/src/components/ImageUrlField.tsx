@@ -1,4 +1,6 @@
-import { inputClass, labelClass } from "./formStyles";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface ImageUrlFieldProps {
   id: string;
@@ -30,7 +32,10 @@ function ImageUrlField({
   return (
     <div className="flex gap-4 items-start">
       <div
-        className={`w-24 ${shape === "tall" ? "h-36" : "aspect-video"} rounded-md bg-gray-900 shrink-0 flex items-center justify-center overflow-hidden`}
+        className={cn(
+          "w-24 shrink-0 flex items-center justify-center overflow-hidden rounded-md border border-border bg-muted",
+          shape === "tall" ? "h-36" : "aspect-video",
+        )}
       >
         {value ? (
           <img
@@ -40,21 +45,16 @@ function ImageUrlField({
             onError={(e) => (e.currentTarget.style.display = "none")}
           />
         ) : (
-          <span className="text-gray-600 text-xs text-center px-1">{emptyText}</span>
+          <span className="text-xs text-center px-1 text-muted-foreground">{emptyText}</span>
         )}
       </div>
-      <div className="flex-1">
-        <label htmlFor={id} className={labelClass}>
-          {label}
-        </label>
-        <input
-          type="text"
-          id={id}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className={inputClass}
-        />
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={id} className="text-xs text-muted-foreground">
+            {label}
+          </Label>
+          <Input id={id} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+        </div>
         {picker && <div className="mt-2">{picker}</div>}
       </div>
     </div>

@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
 import { useSettings } from "../settings/useSettings";
 import type { UserSettings } from "../settings/settings";
 import MoviePresetSettings from "../features/movies/MoviePresetSettings";
+import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 
 interface ToggleRowProps {
   label: string;
@@ -16,26 +18,10 @@ function ToggleRow({ label, description, checked, disabled, onChange }: ToggleRo
   return (
     <div className="flex items-center justify-between gap-4 py-3">
       <div className="min-w-0">
-        <p className="text-white font-medium">{label}</p>
-        <p className="text-gray-400 text-sm">{description}</p>
+        <p className="text-sm font-medium">{label}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
-        className={`relative shrink-0 w-11 h-6 rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-          checked ? "bg-indigo-600" : "bg-gray-600"
-        }`}
-      >
-        <span
-          className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-            checked ? "translate-x-5" : "translate-x-0"
-          }`}
-        />
-      </button>
+      <Switch aria-label={label} checked={checked} disabled={disabled} onCheckedChange={onChange} />
     </div>
   );
 }
@@ -43,6 +29,8 @@ function ToggleRow({ label, description, checked, disabled, onChange }: ToggleRo
 function Settings() {
   const { settings, loaded, updateSettings } = useSettings();
   const [saveError, setSaveError] = useState("");
+  // Fills the screen below the header and above the mobile bottom bar
+  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>();
 
   const update = async (changes: Partial<UserSettings>) => {
     setSaveError("");
@@ -53,37 +41,35 @@ function Settings() {
   };
 
   return (
-    <div className="px-4 md:px-20 pt-4 md:pt-6 pb-8 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-1">Settings</h1>
-      <p className="text-gray-400 text-sm mb-6">
-        Saved to your account, so they apply on every device you sign in on.
-      </p>
-
-      {saveError && (
-        <p className="mb-4 bg-red-600/20 border border-red-600 text-red-300 text-sm rounded-md px-4 py-2">
-          {saveError}
+    <div ref={viewportRef} className="h-[calc(100dvh-5rem)] overflow-y-auto bg-background" style={viewportStyle}>
+      <div className="max-w-3xl px-4 pt-4 pb-8 md:px-20 md:pt-7">
+        <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">Settings</h1>
+        <p className="mt-1 mb-6 text-sm text-muted-foreground">
+          Saved to your account, so they apply on every device you sign in on.
         </p>
-      )}
 
-      <section className="bg-gray-800 rounded-lg px-5 py-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-400 pt-3 pb-1">
-          Collections
-        </h2>
-        <ToggleRow
-          label="Show completion on collection posters"
-          description="The progress ring on the Collections page for collections with a checklist."
-          checked={settings.showCollectionCompletion}
-          disabled={!loaded}
-          onChange={(checked) => update({ showCollectionCompletion: checked })}
-        />
-      </section>
+        {saveError && (
+          <p role="alert" className="mb-4 rounded-md border border-destructive/40 bg-destructive/15 px-4 py-2 text-sm text-red-300">
+            {saveError}
+          </p>
+        )}
 
-      <section className="bg-gray-800 rounded-lg px-5 py-2 mt-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-400 pt-3 pb-1">
-          Add Movie presets
-        </h2>
-        <MoviePresetSettings onError={setSaveError} />
-      </section>
+        <section className="rounded-xl border border-border bg-card px-5 py-2">
+          <h2 className="pt-3 pb-1 text-base font-semibold">Collections</h2>
+          <ToggleRow
+            label="Show completion on collection posters"
+            description="The progress ring on the Collections page for collections with a checklist."
+            checked={settings.showCollectionCompletion}
+            disabled={!loaded}
+            onChange={(checked) => update({ showCollectionCompletion: checked })}
+          />
+        </section>
+
+        <section className="mt-4 rounded-xl border border-border bg-card px-5 py-2">
+          <h2 className="pt-3 pb-1 text-base font-semibold">Add Movie presets</h2>
+          <MoviePresetSettings onError={setSaveError} />
+        </section>
+      </div>
     </div>
   );
 }
