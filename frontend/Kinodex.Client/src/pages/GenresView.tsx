@@ -62,6 +62,7 @@ function GenresView() {
       <PageShell deps={[loading]}>
         <PageHeader
           title="Genres"
+          subtitleBeside
           subtitle={`${genres.length} ${genres.length === 1 ? "genre" : "genres"}`}
           className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7"
         />

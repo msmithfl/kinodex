@@ -89,6 +89,7 @@ function CollectionsView() {
       <PageShell deps={[loading]}>
         <PageHeader
           title="Collections"
+          subtitleBeside
           subtitle={`${collections.length} ${collections.length === 1 ? "collection" : "collections"}`}
           className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7"
         />

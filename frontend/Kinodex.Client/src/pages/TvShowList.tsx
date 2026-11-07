@@ -192,6 +192,7 @@ function TvShowList() {
         <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
           <PageHeader
             title="TV Shows"
+            subtitleBeside
             subtitle={`${shows.length} in your collection${narrowed ? ` · ${filteredShows.length} shown` : ""}`}
             actions={
               // Phones add and scan from the bottom bar
