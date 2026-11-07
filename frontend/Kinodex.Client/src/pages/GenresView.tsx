@@ -1,5 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { useFillViewportHeight } from "../utils/useFillViewportHeight";
+import PageHeader from "../components/PageHeader";
+import PageShell from "../components/PageShell";
 import GenreCard, { GENRE_OVERLAYS } from "../components/GenreCard";
 import EmptyState from "../components/EmptyState";
 import SubNavigation from "../components/SubNavigation";
@@ -12,8 +13,6 @@ function GenresView() {
   // Genres have no table of their own: they're whatever genres the user's movies have
   const { data: movies = [], isLoading: loading } = useMovies();
   const genres = Array.from(new Set(movies.flatMap((movie) => movie.genres ?? []))).sort();
-  // Fills the screen below the header and above the mobile bottom bar
-  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
 
   const getMovieCount = (genreName: string) => {
     return movies.filter(
@@ -42,7 +41,7 @@ function GenresView() {
     return (
       <>
         <SubNavigation />
-        <div className="flex flex-col gap-4 bg-background px-6 pt-4 md:px-10 md:pt-7" aria-busy="true" aria-label="Loading genres">
+        <div className="flex flex-col gap-4 px-6 pt-4 md:px-10 md:pt-7" aria-busy="true" aria-label="Loading genres">
           <div className="flex flex-col gap-2">
             <Skeleton className="h-8 w-28" />
             <Skeleton className="h-4 w-20" />
@@ -60,13 +59,12 @@ function GenresView() {
   return (
     <>
       <SubNavigation />
-      <div ref={viewportRef} className="flex h-[calc(100dvh-5rem)] flex-col bg-background" style={viewportStyle}>
-        <div className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7">
-          <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">Genres</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {genres.length} {genres.length === 1 ? "genre" : "genres"}
-          </p>
-        </div>
+      <PageShell deps={[loading]}>
+        <PageHeader
+          title="Genres"
+          subtitle={`${genres.length} ${genres.length === 1 ? "genre" : "genres"}`}
+          className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7"
+        />
 
         {/* Scrolls on its own; the small top inset keeps the hover ring and lift inside it */}
         <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-2 pb-8 md:px-10">
@@ -86,7 +84,7 @@ function GenresView() {
             </div>
           )}
         </div>
-      </div>
+      </PageShell>
     </>
   );
 }

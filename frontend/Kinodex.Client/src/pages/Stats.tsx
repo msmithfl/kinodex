@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { useFillViewportHeight } from "../utils/useFillViewportHeight";
+import PageHeader from "../components/PageHeader";
+import PageShell from "../components/PageShell";
+import { useStoredState } from "../utils/useStoredState";
 import { useMovies } from "../features/movies/api";
 import { useTvShows } from "../features/tvShows/api";
 import {
@@ -91,20 +92,10 @@ function Stats() {
   const movies = movieData ?? NO_MOVIES;
   const shows = showData ?? NO_SHOWS;
   const loading = moviesLoading || showsLoading;
-  const [startMonth, setStartMonth] = useState(
-    () => localStorage.getItem("statsMonthlySpendStart") || "",
-  );
-  const [endMonth, setEndMonth] = useState(
-    () => localStorage.getItem("statsMonthlySpendEnd") || "",
-  );
-  // Fills the screen below the header and above the mobile bottom bar
-  const { ref: viewportRef, style: viewportStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
-
-  // Save the monthly spending range to localStorage
-  useEffect(() => {
-    localStorage.setItem("statsMonthlySpendStart", startMonth);
-    localStorage.setItem("statsMonthlySpendEnd", endMonth);
-  }, [startMonth, endMonth]);
+  // The monthly spending range ("" for all), remembered in this browser as plain text
+  const asText = { parse: (saved: string) => saved, serialize: (value: string) => value };
+  const [startMonth, setStartMonth] = useStoredState("statsMonthlySpendStart", "", asText);
+  const [endMonth, setEndMonth] = useStoredState("statsMonthlySpendEnd", "", asText);
 
   // Every stat covers movies and TV shows together
   const items: StatItem[] = [...movies.map(movieItem), ...shows.map(tvItem)];
@@ -235,9 +226,8 @@ function Stats() {
   });
 
   return (
-    <div ref={viewportRef} className="flex h-[calc(100dvh-5rem)] flex-col bg-background" style={viewportStyle}>
-      <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto px-4 pt-4 pb-8 md:px-20 md:pt-7">
-        <h1 className="mb-4 text-2xl font-semibold tracking-tight md:mb-6 md:text-[28px]">Collection statistics</h1>
+    <PageShell layout="scroll" deps={[loading]} className="overflow-x-auto px-4 pt-4 pb-8 md:px-20 md:pt-7">
+        <PageHeader title="Collection statistics" className="mb-4 md:mb-6" />
 
         {loading ? (
           <div className="flex flex-col gap-4 md:gap-6" aria-busy="true" aria-label="Loading statistics">
@@ -410,8 +400,7 @@ function Stats() {
             </div>
           </>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }
 

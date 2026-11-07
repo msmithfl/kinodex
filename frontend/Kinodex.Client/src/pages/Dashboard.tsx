@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useMovies } from "../features/movies/api";
 import { useTvShows } from "../features/tvShows/api";
-import { useFillViewportHeight } from "../utils/useFillViewportHeight";
+import PageShell from "../components/PageShell";
 import {
   monthKey,
   movieSpend,
@@ -132,8 +132,6 @@ function Dashboard() {
   const { data: shows = [], isLoading: showsLoading } = useTvShows();
   const loading = moviesLoading || showsLoading;
   const [showAddModal, setShowAddModal] = useState(false);
-  // Size the page to the viewport so the columns scroll instead of running off screen
-  const { ref: containerRef, style: containerStyle } = useFillViewportHeight<HTMLDivElement>();
 
   // Spending this month and last, across movies and TV purchases
   const now = new Date();
@@ -164,11 +162,8 @@ function Dashboard() {
   );
 
   return (
-    <div
-      ref={containerRef}
-      className="flex h-[calc(100dvh-5rem)] bg-background pt-2"
-      style={containerStyle}
-    >
+    // Sized to the screen so the columns scroll instead of running off it
+    <PageShell className="flex-row pt-2">
       {/* Same content width as the Stats page */}
       <div className="flex-1 flex flex-col min-h-0 w-full px-4 md:px-20">
         {loading ? (
@@ -278,7 +273,7 @@ function Dashboard() {
       {showAddModal && (
         <AddItemModal onClose={() => setShowAddModal(false)} />
       )}
-    </div>
+    </PageShell>
   );
 }
 

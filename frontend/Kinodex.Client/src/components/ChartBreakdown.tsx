@@ -12,6 +12,7 @@ import { ChartPie, Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { CHART_TOOLTIP, labelColorOn } from "../utils/chartColors";
+import { useStoredChoice } from "../utils/useStoredState";
 
 // Each slice's percentage, in whichever text colour reads on it; slices under 5% go without
 const percentLabel = (colors: string[]) =>
@@ -90,25 +91,11 @@ export default function ChartBreakdown({
   storageKey,
   countLabel = (n) => `${n} movie${n !== 1 ? "s" : ""}`,
 }: ChartBreakdownProps) {
-  const [selectedId, setSelectedId] = useState<string>(() => {
-    try {
-      return localStorage.getItem(storageKey) ?? options[0]?.id ?? "";
-    } catch {
-      return options[0]?.id ?? "";
-    }
-  });
+  // The chosen dataset, remembered in this browser; an unknown one falls back to the first
+  const [selectedId, select] = useStoredChoice(storageKey, options.map((o) => o.id), options[0]?.id ?? "");
   const [showTable, setShowTable] = useState(false);
 
   const selected = options.find((o) => o.id === selectedId) ?? options[0];
-
-  const select = (id: string) => {
-    setSelectedId(id);
-    try {
-      localStorage.setItem(storageKey, id);
-    } catch {
-      // Storage unavailable; the choice just isn't remembered
-    }
-  };
 
   if (!selected) return null;
   const { data, fullData = data, colors } = selected;

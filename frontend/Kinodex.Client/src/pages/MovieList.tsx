@@ -2,12 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { toast } from "sonner";
-import { Columns3, LayoutGrid, Pencil, Plus, ScanBarcode, Search, Table2, Trash2, X } from "lucide-react";
+import { Columns3, Pencil, Plus, ScanBarcode, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import ListSkeleton from "../components/ListSkeleton";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import PageShell from "../components/PageShell";
+import PageHeader from "../components/PageHeader";
+import ViewModeToggle, { VIEW_MODES, type ViewMode } from "../components/ViewModeToggle";
+import { POSTER_GRID } from "../components/posterGrid";
+import { useStoredChoice, useStoredState } from "../utils/useStoredState";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -40,7 +44,6 @@ import { BulkEditModal } from "../components/BulkEditModal";
 import { applyFilters } from "../utils/applyFilters";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { isMobile } from "../utils/isMobile";
-import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import Pagination from "../components/Pagination";
 
 const PAGE_SIZE = 100;
@@ -67,14 +70,12 @@ function MovieList() {
   const { data: collectionList = [] } = useCollections();
   const updateMovies = useUpdateMovies();
   const deleteMovies = useDeleteMovies();
-  const [sortBy, setSortBy] = useState<SortOption>(() => {
-    const saved = localStorage.getItem("movieListSortBy");
-    return (saved as SortOption) || "alphabetic";
+  // Sort, view and columns are remembered in this browser
+  const [sortBy, setSortBy] = useStoredState<SortOption>("movieListSortBy", "alphabetic", {
+    parse: (saved) => (saved as SortOption) || undefined,
+    serialize: (value) => value,
   });
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(() => {
-    const saved = localStorage.getItem("movieListSortDirection");
-    return (saved as "asc" | "desc") || "asc";
-  });
+  const [sortDirection, setSortDirection] = useStoredChoice("movieListSortDirection", ["asc", "desc"], "asc");
   // Search text; the bottom bar can open this page already searching (?search=) or focused (?focus=search)
   const {
     query: searchQuery,
@@ -113,23 +114,10 @@ function MovieList() {
   const [showScanner, setShowScanner] = useState(false);
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
-    try {
-      return localStorage.getItem("movieListView") === "poster"
-        ? "poster"
-        : "table";
-    } catch {
-      return "table";
-    }
-  });
-  const [visibleColumns, setVisibleColumns] = useState<VisibleColumns>(() => {
-    try {
-      const saved = localStorage.getItem("movieListColumns");
-      // Merge over the defaults so a column added later still has a value
-      return saved ? { ...DEFAULT_COLUMNS, ...JSON.parse(saved) } : DEFAULT_COLUMNS;
-    } catch {
-      return DEFAULT_COLUMNS;
-    }
+  const [viewMode, setViewMode] = useStoredChoice<ViewMode>("movieListView", VIEW_MODES, "table");
+  const [visibleColumns, setVisibleColumns] = useStoredState<VisibleColumns>("movieListColumns", DEFAULT_COLUMNS, {
+    // Merge over the defaults so a column added later still has a value
+    parse: (saved) => ({ ...DEFAULT_COLUMNS, ...JSON.parse(saved) }),
   });
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, string[]>
@@ -143,19 +131,6 @@ function MovieList() {
   // Names for the filter menu
   const shelfSections = shelfSectionList.map((section) => section.name).sort();
   const collections = collectionList.map((collection) => collection.name).sort();
-  // Size the list to fill the viewport below the header and sub-navigation
-  const { ref: containerRef, style: containerStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
-
-  // Save column preferences to localStorage
-  useEffect(() => {
-    localStorage.setItem("movieListColumns", JSON.stringify(visibleColumns));
-  }, [visibleColumns]);
-
-  // Save sorting preferences to localStorage
-  useEffect(() => {
-    localStorage.setItem("movieListSortBy", sortBy);
-    localStorage.setItem("movieListSortDirection", sortDirection);
-  }, [sortBy, sortDirection]);
 
   const sortedMovies = getSortedMovies(movies, sortBy, sortDirection);
 
@@ -227,14 +202,9 @@ function MovieList() {
   };
 
   // Posters can't be selected, so leaving the table clears any selection
-  const handleViewModeChange = (mode: "table" | "poster") => {
+  const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
     setSelectedMovieIds(new Set());
-    try {
-      localStorage.setItem("movieListView", mode);
-    } catch {
-      // Storage unavailable; the choice just isn't remembered
-    }
   };
 
   const handleCheckboxChange = (
@@ -361,33 +331,26 @@ function MovieList() {
           <MovieDetail key={openMovieId} movieId={openMovieId} onDeleted={closeMovie} />
         </Drawer>
       )}
-      <div
-        ref={containerRef}
-        className="flex h-[calc(100dvh-9rem)] flex-col bg-background"
-        style={containerStyle}
-      >
+      <PageShell deps={[loading]}>
         {/* Title, toolbar and active filters */}
         <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">Movies</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {movies.length} in your collection
-                {narrowed && ` · ${filteredMovies.length} shown`}
-              </p>
-            </div>
-            {/* Phones add and scan from the bottom bar */}
-            <div className="hidden gap-2 md:flex">
-              <Button variant="outline" onClick={handleScanClick}>
-                <ScanBarcode />
-                Scan
-              </Button>
-              <Button onClick={() => setShowAddModal(true)}>
-                <Plus />
-                Add movie
-              </Button>
-            </div>
-          </div>
+          <PageHeader
+            title="Movies"
+            subtitle={`${movies.length} in your collection${narrowed ? ` · ${filteredMovies.length} shown` : ""}`}
+            actions={
+              // Phones add and scan from the bottom bar
+              <div className="hidden gap-2 md:flex">
+                <Button variant="outline" onClick={handleScanClick}>
+                  <ScanBarcode />
+                  Scan
+                </Button>
+                <Button onClick={() => setShowAddModal(true)}>
+                  <Plus />
+                  Add movie
+                </Button>
+              </div>
+            }
+          />
 
           {movies.length > 0 && (
             <div className="flex items-center gap-2">
@@ -432,21 +395,7 @@ function MovieList() {
                 onDirectionChange={setSortDirection}
               />
               <div className="ml-auto flex items-center gap-2">
-                <ToggleGroup
-                  type="single"
-                  value={viewMode}
-                  onValueChange={(mode) => mode && handleViewModeChange(mode as "table" | "poster")}
-                  aria-label="View"
-                >
-                  <ToggleGroupItem value="table" aria-label="Table view">
-                    <Table2 />
-                    <span className="hidden lg:inline">Table</span>
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="poster" aria-label="Poster view">
-                    <LayoutGrid />
-                    <span className="hidden lg:inline">Posters</span>
-                  </ToggleGroupItem>
-                </ToggleGroup>
+                <ViewModeToggle value={viewMode} onChange={handleViewModeChange} showLabels />
                 {viewMode === "table" && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -493,7 +442,7 @@ function MovieList() {
             // hover ring and lift inside the scroll area.
             <div key={page} className="-mx-2 h-full overflow-y-auto px-2 pt-2 pb-6">
               <MotionConfig reducedMotion="user">
-                <div className="grid grid-cols-4 gap-1 md:gap-x-4 md:gap-y-7 lg:grid-cols-5 xl:grid-cols-8">
+                <div className={POSTER_GRID}>
                   {pageMovies.map((movie, index) => (
                     <motion.div
                       key={movie.id}
@@ -587,7 +536,7 @@ function MovieList() {
             onPageChange={setRequestedPage}
           />
         </div>
-      </div>
+      </PageShell>
 
       {showAddModal && <AddMovieModal onClose={() => setShowAddModal(false)} />}
 

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { LayoutGrid, Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import ViewModeToggle, { VIEW_MODES, type ViewMode } from "../../components/ViewModeToggle";
+import { POSTER_GRID_DRAWER } from "../../components/posterGrid";
+import { useStoredChoice } from "../../utils/useStoredState";
 import CollectionFormModal from "../../components/CollectionFormModal";
 import DeleteConfirm from "../../components/DeleteConfirm";
 import { DetailActions, DetailBackdrop, DetailSkeleton } from "../../components/DetailHeader";
@@ -39,41 +40,10 @@ function CollectionDetail({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // A table like the Movies and TV Shows lists, or a poster grid
-  const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
-    try {
-      return localStorage.getItem("collectionViewMode") === "poster" ? "poster" : "table";
-    } catch {
-      return "table";
-    }
-  });
-
-  // The Movies or Checklist tab, remembered in this browser
-  const [tab, setTab] = useState<"movies" | "checklist">(() => {
-    try {
-      return localStorage.getItem("collectionTab") === "checklist" ? "checklist" : "movies";
-    } catch {
-      return "movies";
-    }
-  });
-  const handleTabChange = (next: string) => {
-    const value = next === "checklist" ? "checklist" : "movies";
-    setTab(value);
-    try {
-      localStorage.setItem("collectionTab", value);
-    } catch {
-      // Storage unavailable; the choice just isn't remembered
-    }
-  };
-
-  const handleViewModeChange = (mode: "table" | "poster") => {
-    setViewMode(mode);
-    try {
-      localStorage.setItem("collectionViewMode", mode);
-    } catch {
-      // Storage unavailable; the choice just isn't remembered
-    }
-  };
+  // A table like the Movies and TV Shows lists or a poster grid, and the Movies or Checklist tab;
+  // both remembered in this browser
+  const [viewMode, setViewMode] = useStoredChoice<ViewMode>("collectionViewMode", VIEW_MODES, "table");
+  const [tab, setTab] = useStoredChoice("collectionTab", ["movies", "checklist"], "movies");
 
   if (moviesLoading || collectionsLoading) {
     return <DetailSkeleton label="Loading collection" />;
@@ -103,11 +73,9 @@ function CollectionDetail({
   };
 
   return (
-    // Fills the drawer. From tablet up the whole drawer scrolls; on phones the header and tabs
-    // stay put and only the open tab's content scrolls, so it all fits on one screen.
-    // The scrollbar's space is always kept, so content doesn't shift sideways when a tab's
-    // length makes it come and go
-    <div className="flex h-full flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable] max-md:overflow-hidden">
+    // Fills the drawer without scrolling it: the header and tabs stay put and only the open tab's
+    // content (the table, the posters or the checklist) scrolls
+    <div className="flex h-full flex-col overflow-hidden">
       <div className="shrink-0">
         <DetailBackdrop backdropPath={backdropUrl}>
           {collection && (
@@ -122,8 +90,8 @@ function CollectionDetail({
 
       <Tabs
         value={tab}
-        onValueChange={handleTabChange}
-        className="relative -mt-12 gap-4 px-5 pb-8 max-md:min-h-0 max-md:flex-1 max-md:pb-5 md:px-8"
+        onValueChange={(next) => setTab(next === "checklist" ? "checklist" : "movies")}
+        className="relative -mt-12 min-h-0 flex-1 gap-4 px-5 pb-5 md:px-8 md:pb-8"
       >
         <div className="min-w-0 shrink-0">
           <h1 className="text-2xl font-semibold tracking-tight text-balance md:text-3xl">{collectionName}</h1>
@@ -140,28 +108,15 @@ function CollectionDetail({
           </TabsList>
           {/* Hidden on Checklist but still taking its space, so the row (and everything below it)
               doesn't move when switching tabs */}
-          <ToggleGroup
-              type="single"
-              value={viewMode}
-              onValueChange={(mode) => mode && handleViewModeChange(mode as "table" | "poster")}
-              aria-label="View"
-              aria-hidden={tab !== "movies"}
-              className={cn("mb-1.5", tab !== "movies" && "invisible")}
-            >
-              <ToggleGroupItem value="table" aria-label="Table view">
-                <Table2 />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="poster" aria-label="Poster view">
-                <LayoutGrid />
-              </ToggleGroupItem>
-            </ToggleGroup>
+          <ViewModeToggle value={viewMode} onChange={setViewMode} hidden={tab !== "movies"} className="mb-1.5" />
         </div>
 
-        <TabsContent value="movies" className="flex flex-col max-md:min-h-0">
+        <TabsContent value="movies" className="flex min-h-0 flex-col">
           {movies.length === 0 ? (
             <EmptyState message="No movies in this collection yet." />
           ) : viewMode === "poster" ? (
-            <div className="grid grid-cols-3 content-start gap-x-3 gap-y-5 max-md:min-h-0 max-md:overflow-y-auto max-md:overscroll-contain sm:grid-cols-4 md:gap-x-4 md:gap-y-7 lg:grid-cols-5">
+            // The small inset keeps the posters' hover ring and lift inside the scroll area
+            <div className={cn(POSTER_GRID_DRAWER, "-mx-2 -mt-2 min-h-0 content-start overflow-y-auto overscroll-contain px-2 pt-2 pb-2")}>
               {movies.map((movie) => (
                 <PosterCard
                   key={movie.id}
@@ -176,19 +131,19 @@ function CollectionDetail({
               ))}
             </div>
           ) : (
-            // Its own height, shrinking (and scrolling, under a header row that stays put) only
-            // when a phone screen runs out
+            // Its own height, shrinking and scrolling (under a header row that stays put) only
+            // when the drawer runs out of room
             <SimpleMovieTable
               movies={movies}
               onOpen={onOpenMovie}
               showRating={false}
               fitWidth
-              className="max-md:min-h-0 max-md:overflow-y-auto max-md:overscroll-contain"
+              className="min-h-0 overflow-y-auto overscroll-contain"
             />
           )}
         </TabsContent>
 
-        <TabsContent value="checklist" className="max-md:min-h-0 max-md:overflow-y-auto max-md:overscroll-contain">
+        <TabsContent value="checklist" className="min-h-0 overflow-y-auto overscroll-contain">
           {collection && <CollectionChecklist collection={collection} ownedMovies={movies} />}
         </TabsContent>
       </Tabs>

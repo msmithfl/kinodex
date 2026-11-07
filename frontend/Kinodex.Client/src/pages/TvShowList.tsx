@@ -1,10 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { MotionConfig, motion } from "motion/react";
-import { Columns3, LayoutGrid, Plus, ScanBarcode, Search, Table2, X } from "lucide-react";
+import { Columns3, Plus, ScanBarcode, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import PageShell from "../components/PageShell";
+import PageHeader from "../components/PageHeader";
+import ViewModeToggle, { VIEW_MODES, type ViewMode } from "../components/ViewModeToggle";
+import { POSTER_GRID } from "../components/posterGrid";
+import { useStoredChoice, useStoredState } from "../utils/useStoredState";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -29,7 +33,6 @@ import type { SortOption } from "../types";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { formatSeasons } from "../utils/formatSeasons";
 import { allFormats, ownedSeasons, totalPaid } from "../utils/tvShowPurchases";
-import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import { isMobile } from "../utils/isMobile";
 import BarcodeScanner from "../components/BarcodeScanner";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
@@ -58,14 +61,12 @@ function TvShowList() {
     : error instanceof ApiError
       ? `Could not load TV shows (${error.status}).`
       : "Could not reach the server to load TV shows.";
-  const [sortBy, setSortBy] = useState<SortOption>(() => {
-    const saved = localStorage.getItem("tvShowListSortBy");
-    return (saved as SortOption) || "alphabetic";
+  // Sort, view and columns are remembered in this browser
+  const [sortBy, setSortBy] = useStoredState<SortOption>("tvShowListSortBy", "alphabetic", {
+    parse: (saved) => (saved as SortOption) || undefined,
+    serialize: (value) => value,
   });
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(() => {
-    const saved = localStorage.getItem("tvShowListSortDirection");
-    return (saved as "asc" | "desc") || "asc";
-  });
+  const [sortDirection, setSortDirection] = useStoredChoice("tvShowListSortDirection", ["asc", "desc"], "asc");
   // Search text; the bottom bar can open this page already searching (?search=) or focused (?focus=search)
   const {
     query: searchQuery,
@@ -101,52 +102,15 @@ function TvShowList() {
   const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
-  const [viewMode, setViewMode] = useState<"table" | "poster">(() => {
-    try {
-      return localStorage.getItem("tvShowListView") === "poster"
-        ? "poster"
-        : "table";
-    } catch {
-      return "table";
-    }
+  const [viewMode, setViewMode] = useStoredChoice<ViewMode>("tvShowListView", VIEW_MODES, "table");
+  const [visibleColumns, setVisibleColumns] = useStoredState<VisibleColumns>("tvShowListColumns", DEFAULT_COLUMNS, {
+    // Merge over the defaults so a column added later still has a value
+    parse: (saved) => ({ ...DEFAULT_COLUMNS, ...JSON.parse(saved) }),
   });
-
-  const handleViewModeChange = (mode: "table" | "poster") => {
-    setViewMode(mode);
-    try {
-      localStorage.setItem("tvShowListView", mode);
-    } catch {
-      // Storage unavailable; the choice just isn't remembered
-    }
-  };
-  const [visibleColumns, setVisibleColumns] = useState<VisibleColumns>(() => {
-    try {
-      const saved = localStorage.getItem("tvShowListColumns");
-      // Merge over the defaults so a column added later still has a value
-      return saved
-        ? { ...DEFAULT_COLUMNS, ...JSON.parse(saved) }
-        : DEFAULT_COLUMNS;
-    } catch {
-      return DEFAULT_COLUMNS;
-    }
-  });
-  // Size the list to fill the viewport below the header
-  const { ref: containerRef, style: containerStyle } = useFillViewportHeight<HTMLDivElement>([loading]);
-
-  // Save column preferences to localStorage
-  useEffect(() => {
-    localStorage.setItem("tvShowListColumns", JSON.stringify(visibleColumns));
-  }, [visibleColumns]);
 
   const toggleColumn = (column: keyof VisibleColumns) => {
     setVisibleColumns((prev) => ({ ...prev, [column]: !prev[column] }));
   };
-
-  // Save sorting preferences to localStorage
-  useEffect(() => {
-    localStorage.setItem("tvShowListSortBy", sortBy);
-    localStorage.setItem("tvShowListSortDirection", sortDirection);
-  }, [sortBy, sortDirection]);
 
   // Table headers: a new column sorts ascending, the current one flips the direction
   const handleColumnClick = (column: SortOption) => {
@@ -223,33 +187,26 @@ function TvShowList() {
         </Drawer>
       )}
 
-      <div
-        ref={containerRef}
-        className="flex h-[calc(100dvh-5rem)] flex-col bg-background"
-        style={containerStyle}
-      >
+      <PageShell deps={[loading]}>
         {/* Title, toolbar and active filters */}
         <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">TV Shows</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {shows.length} in your collection
-                {narrowed && ` · ${filteredShows.length} shown`}
-              </p>
-            </div>
-            {/* Phones add and scan from the bottom bar */}
-            <div className="hidden gap-2 md:flex">
-              <Button variant="outline" onClick={handleScanClick}>
-                <ScanBarcode />
-                Scan
-              </Button>
-              <Button onClick={() => setShowAddModal(true)}>
-                <Plus />
-                Add TV show
-              </Button>
-            </div>
-          </div>
+          <PageHeader
+            title="TV Shows"
+            subtitle={`${shows.length} in your collection${narrowed ? ` · ${filteredShows.length} shown` : ""}`}
+            actions={
+              // Phones add and scan from the bottom bar
+              <div className="hidden gap-2 md:flex">
+                <Button variant="outline" onClick={handleScanClick}>
+                  <ScanBarcode />
+                  Scan
+                </Button>
+                <Button onClick={() => setShowAddModal(true)}>
+                  <Plus />
+                  Add TV show
+                </Button>
+              </div>
+            }
+          />
 
           {shows.length > 0 && (
             <div className="flex items-center gap-2">
@@ -295,21 +252,7 @@ function TvShowList() {
                 options={TV_SORT_OPTIONS}
               />
               <div className="ml-auto flex items-center gap-2">
-                <ToggleGroup
-                  type="single"
-                  value={viewMode}
-                  onValueChange={(mode) => mode && handleViewModeChange(mode as "table" | "poster")}
-                  aria-label="View"
-                >
-                  <ToggleGroupItem value="table" aria-label="Table view">
-                    <Table2 />
-                    <span className="hidden lg:inline">Table</span>
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="poster" aria-label="Poster view">
-                    <LayoutGrid />
-                    <span className="hidden lg:inline">Posters</span>
-                  </ToggleGroupItem>
-                </ToggleGroup>
+                <ViewModeToggle value={viewMode} onChange={setViewMode} showLabels />
                 {viewMode === "table" && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -357,7 +300,7 @@ function TvShowList() {
             // The small inset keeps the hover ring and lift inside the scroll area
             <div className="-mx-2 h-full overflow-y-auto px-2 pt-2 pb-6">
               <MotionConfig reducedMotion="user">
-                <div className="grid grid-cols-4 gap-1 md:gap-x-4 md:gap-y-7 lg:grid-cols-5 xl:grid-cols-8">
+                <div className={POSTER_GRID}>
                   {filteredShows.map((show, index) => {
                     const seasons = formatSeasons(show.owned, show.totalSeasons);
                     return (
@@ -395,7 +338,7 @@ function TvShowList() {
             />
           )}
         </div>
-      </div>
+      </PageShell>
 
       {showAddModal && <AddTvShowModal onClose={() => setShowAddModal(false)} />}
 
