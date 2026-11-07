@@ -11,11 +11,40 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import LoadingSpinner from "../components/LoadingSpinner";
+import { Star } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Movie, TvShow } from "../types";
 import ChartBreakdown from "../components/ChartBreakdown";
 import { allFormats } from "../utils/tvShowPurchases";
 import { movieSpend, tvSpend } from "../utils/spending";
+import {
+  CATEGORICAL,
+  CHART_ACCENT,
+  CHART_NEUTRAL,
+  CHART_STAR,
+  CHART_TICK,
+  CHART_TOOLTIP,
+  ordinalRamp,
+} from "../utils/chartColors";
+
+// Fixed orders, so a format or condition keeps its colour whatever else the collection holds
+const FORMAT_ORDER = ["4K", "Blu-ray", "DVD", "VHS", "Digital"];
+const CONDITION_ORDER = ["Sealed", "Like New", "Good", "Poor", "Damaged"];
+const CONDITION_COLORS = ordinalRamp(CONDITION_ORDER.length);
+
+// Counted rows in a fixed order, with anything not in that order after them
+const inOrder = (rows: { name: string; value: number }[], order: string[]) => {
+  const rank = (name: string) => (order.includes(name) ? order.indexOf(name) : order.length);
+  return [...rows].sort((a, b) => rank(a.name) - rank(b.name));
+};
+
+// A row's colour from its place in the fixed order; anything unexpected is neutral
+const colorsInOrder = (rows: { name: string }[], order: string[], palette: string[]) =>
+  rows.map(({ name }) => (order.includes(name) ? palette[order.indexOf(name)] : CHART_NEUTRAL));
+
+// The select can't use an empty value, so "All" has its own; the range still stores ""
+const ALL_MONTHS = "__all__";
 
 // The fields the charts read, shared by movies and TV shows
 interface StatItem {
@@ -86,7 +115,7 @@ function Stats() {
 
   const watchedData = [
     { name: "Watched", value: watched },
-    { name: "Not Watched", value: notWatched },
+    { name: "Not watched", value: notWatched },
   ];
 
   const formatData = (() => {
@@ -96,7 +125,7 @@ function Stats() {
         counts[fmt] = (counts[fmt] || 0) + 1;
       });
     });
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+    return inOrder(Object.entries(counts).map(([name, value]) => ({ name, value })), FORMAT_ORDER);
   })();
 
   const genreDataFull = (() => {
@@ -120,7 +149,7 @@ function Stats() {
         counts[c] = (counts[c] || 0) + 1;
       });
     });
-    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+    return inOrder(Object.entries(counts).map(([name, value]) => ({ name, value })), CONDITION_ORDER);
   })();
 
   const decadeData = (() => {
@@ -134,38 +163,6 @@ function Stats() {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([name, value]) => ({ name, value }));
   })();
-
-  const WATCHED_COLORS = ["#6366f1", "#374151"];
-  const FORMAT_COLORS = ["#06b6d4", "#8b5cf6", "#a855f7", "#ec4899"];
-  const GENRE_COLORS = [
-    "#6366f1",
-    "#8b5cf6",
-    "#a855f7",
-    "#ec4899",
-    "#f43f5e",
-    "#f97316",
-    "#eab308",
-    "#22c55e",
-  ];
-  const CONDITION_COLORS = [
-    "#22c55e",
-    "#6366f1",
-    "#eab308",
-    "#f97316",
-    "#ef4444",
-  ];
-  const DECADE_COLORS = [
-    "#06b6d4",
-    "#6366f1",
-    "#8b5cf6",
-    "#a855f7",
-    "#ec4899",
-    "#f43f5e",
-    "#f97316",
-    "#eab308",
-    "#22c55e",
-    "#14b8a6",
-  ];
 
   const totalSpend = spend.reduce((sum, e) => sum + e.amount, 0);
   const sumSpend = (kind: "movie" | "tv") =>
@@ -185,14 +182,10 @@ function Stats() {
   const streamingCount = items.filter((m) => m.isStreaming).length;
 
   // A small labelled figure in the lower half of a summary card
-  const summaryStat = (
-    label: string,
-    value: string | number,
-    valueClass = "text-white",
-  ) => (
-    <div className="px-2 min-w-0">
-      <p className={`text-lg font-semibold ${valueClass}`}>{value}</p>
-      <p className="text-gray-400 text-xs truncate">{label}</p>
+  const summaryStat = (label: string, value: string | number) => (
+    <div className="min-w-0 px-3 first:pl-0">
+      <p className="text-lg font-semibold tracking-tight">{value}</p>
+      <p className="truncate text-xs text-muted-foreground">{label}</p>
     </div>
   );
 
@@ -242,47 +235,54 @@ function Stats() {
   });
 
   return (
-    <div ref={viewportRef} className="flex flex-col h-[calc(100dvh-5rem)] pt-2" style={viewportStyle}>
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto px-4 md:px-20 pt-2 md:pt-4 pb-8">
-        <h1 className="text-2xl font-bold mb-4">Collection Statistics</h1>
+    <div ref={viewportRef} className="flex h-[calc(100dvh-5rem)] flex-col bg-background" style={viewportStyle}>
+      <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto px-4 pt-4 pb-8 md:px-20 md:pt-7">
+        <h1 className="mb-4 text-2xl font-semibold tracking-tight md:mb-6 md:text-[28px]">Collection statistics</h1>
 
         {loading ? (
-          <LoadingSpinner />
+          <div className="flex flex-col gap-4 md:gap-6" aria-busy="true" aria-label="Loading statistics">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+              {Array.from({ length: 3 }, (_, i) => (
+                <Skeleton key={i} className="h-36 rounded-xl" />
+              ))}
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-2">
+              {Array.from({ length: 2 }, (_, i) => (
+                <Skeleton key={i} className="h-96 rounded-xl" />
+              ))}
+            </div>
+          </div>
         ) : (
           <>
             {/* Summary cards: spending, collection, ratings. Stacked until desktop, where they share a row at equal height */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4 md:mb-10">
+            <div className="mb-4 grid grid-cols-1 gap-4 md:mb-6 lg:grid-cols-3">
               {/* Total Spent, with the Movies / TV split */}
-              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5">
-                <div className="text-center">
-                  <p className="text-gray-400 text-sm mb-1">Total Spent</p>
-                  <p className="text-4xl font-bold text-green-400">
-                    ${totalSpend.toFixed(2)}
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 divide-x divide-gray-700 border-t border-gray-700 mt-3 pt-3 text-center">
+              <div className="flex flex-col justify-center rounded-xl border border-border bg-card p-5">
+                <p className="mb-1 text-sm text-muted-foreground">Total spent</p>
+                <p className="text-4xl font-semibold tracking-tight">${totalSpend.toFixed(2)}</p>
+                <div className="mt-3 grid grid-cols-2 divide-x divide-border border-t border-border pt-3">
                   {summaryStat("Movies", `$${sumSpend("movie").toFixed(2)}`)}
-                  {summaryStat("TV Shows", `$${sumSpend("tv").toFixed(2)}`)}
+                  {summaryStat("TV shows", `$${sumSpend("tv").toFixed(2)}`)}
                 </div>
               </div>
 
               {/* Collection: the title count, the Movies / TV split, and how many are streaming */}
-              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5">
-                <div className="text-center">
-                  <p className="text-gray-400 text-sm mb-1">Total Titles</p>
-                  <p className="text-4xl font-bold text-white">{items.length}</p>
-                </div>
-                <div className="grid grid-cols-3 divide-x divide-gray-700 border-t border-gray-700 mt-3 pt-3 text-center">
+              <div className="flex flex-col justify-center rounded-xl border border-border bg-card p-5">
+                <p className="mb-1 text-sm text-muted-foreground">Total titles</p>
+                <p className="text-4xl font-semibold tracking-tight">{items.length}</p>
+                <div className="mt-3 grid grid-cols-3 divide-x divide-border border-t border-border pt-3">
                   {summaryStat("Movies", movies.length)}
-                  {summaryStat("TV Shows", shows.length)}
-                  {summaryStat("Streaming", streamingCount, "text-indigo-400")}
+                  {summaryStat("TV shows", shows.length)}
+                  {summaryStat("Streaming", streamingCount)}
                 </div>
               </div>
-              <div className="flex flex-col justify-center bg-gray-800 rounded-lg p-5">
-                <div className="flex items-baseline justify-between mb-2">
-                  <p className="text-gray-400 text-sm">Ratings</p>
-                  <p className="text-yellow-400 text-sm font-bold">
-                    Avg {avgRating > 0 ? avgRating.toFixed(1) : "—"}
+
+              <div className="flex flex-col justify-center rounded-xl border border-border bg-card p-5">
+                <div className="mb-2 flex items-baseline justify-between">
+                  <p className="text-sm text-muted-foreground">Ratings</p>
+                  <p className="flex items-center gap-1 text-sm font-semibold">
+                    <Star className="size-3.5 self-center fill-yellow-500 text-yellow-500" aria-hidden="true" />
+                    Avg {avgRating > 0 ? avgRating.toFixed(1) : "–"}
                   </p>
                 </div>
                 <ResponsiveContainer width="100%" height={72}>
@@ -294,21 +294,11 @@ function Stats() {
                     <XAxis dataKey="label" hide />
                     <YAxis hide domain={[0, "auto"]} />
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1f2937",
-                        border: "none",
-                        borderRadius: "8px",
-                        color: "#fff",
-                      }}
+                      {...CHART_TOOLTIP}
                       formatter={(value: number | undefined) => [value ?? 0, "Titles"]}
                       labelFormatter={(label) => `★ ${label}`}
                     />
-                    <Bar
-                      dataKey="count"
-                      fill="#eab308"
-                      radius={[2, 2, 0, 0]}
-                      minPointSize={2}
-                    />
+                    <Bar dataKey="count" fill={CHART_STAR} radius={[2, 2, 0, 0]} minPointSize={2} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -316,77 +306,73 @@ function Stats() {
 
             {/* Spending and the breakdown donut: stacked on mobile, side by side on desktop,
                 where the grid stretches both cards to the same height */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
+            <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-2">
               {/* Monthly Spend bar chart */}
-              <div className="bg-gray-800 rounded-lg p-6 min-w-0">
+              <div className="min-w-0 rounded-xl border border-border bg-card p-5">
                 {/* min-h-9 and the divider match the Breakdown header so both charts start at the same line */}
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-4 min-h-9 pb-3 border-b border-gray-700">
-                  <h2 className="text-xl font-semibold">Monthly Spending</h2>
-                  <div className="flex items-center gap-3 text-sm">
-                    <label className="text-gray-400">From</label>
-                    <select
-                      value={startMonth}
-                      onChange={(e) => {
-                        setStartMonth(e.target.value);
-                        if (endMonth && e.target.value > endMonth)
-                          setEndMonth("");
+                <div className="mb-4 flex min-h-9 flex-wrap items-center justify-between gap-4 border-b border-border pb-3">
+                  <h2 className="text-base font-semibold">Monthly spending</h2>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>From</span>
+                    <Select
+                      value={startMonth || ALL_MONTHS}
+                      onValueChange={(value) => {
+                        const next = value === ALL_MONTHS ? "" : value;
+                        setStartMonth(next);
+                        if (endMonth && next > endMonth) setEndMonth("");
                       }}
-                      className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
                     >
-                      <option value="">All</option>
-                      {allMonthlyData.map((d) => (
-                        <option key={d.key} value={d.key}>
-                          {d.month}
-                        </option>
-                      ))}
-                    </select>
-                    <label className="text-gray-400">To</label>
-                    <select
-                      value={endMonth}
-                      onChange={(e) => setEndMonth(e.target.value)}
-                      className="bg-gray-700 text-white rounded px-3 py-1.5 border border-gray-600 focus:outline-none focus:border-indigo-500"
-                    >
-                      <option value="">All</option>
-                      {allMonthlyData
-                        .filter((d) => !startMonth || d.key >= startMonth)
-                        .map((d) => (
-                          <option key={d.key} value={d.key}>
+                      <SelectTrigger size="sm" aria-label="From month" className="text-foreground">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL_MONTHS}>All</SelectItem>
+                        {allMonthlyData.map((d) => (
+                          <SelectItem key={d.key} value={d.key}>
                             {d.month}
-                          </option>
+                          </SelectItem>
                         ))}
-                    </select>
+                      </SelectContent>
+                    </Select>
+                    <span>To</span>
+                    <Select
+                      value={endMonth || ALL_MONTHS}
+                      onValueChange={(value) => setEndMonth(value === ALL_MONTHS ? "" : value)}
+                    >
+                      <SelectTrigger size="sm" aria-label="To month" className="text-foreground">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ALL_MONTHS}>All</SelectItem>
+                        {allMonthlyData
+                          .filter((d) => !startMonth || d.key >= startMonth)
+                          .map((d) => (
+                            <SelectItem key={d.key} value={d.key}>
+                              {d.month}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 {monthlySpendData.length === 0 ? (
-                  <p className="text-gray-400 text-center py-12">No data yet.</p>
+                  <p className="py-12 text-center text-sm text-muted-foreground">No data yet.</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart
-                      data={monthlySpendData}
-                      margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                      <XAxis
-                        dataKey="month"
-                        tick={{ fill: "#9ca3af", fontSize: 12 }}
-                      />
+                    <BarChart data={monthlySpendData} margin={{ top: 5, right: 8, left: 0, bottom: 5 }}>
+                      <CartesianGrid vertical={false} stroke="var(--border)" />
+                      <XAxis dataKey="month" tick={CHART_TICK} tickLine={false} axisLine={{ stroke: "var(--border)" }} />
                       <YAxis
-                        tick={{ fill: "#9ca3af", fontSize: 12 }}
+                        tick={CHART_TICK}
+                        tickLine={false}
+                        axisLine={false}
                         tickFormatter={(v) => `$${v}`}
                       />
                       <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#1f2937",
-                          border: "none",
-                          borderRadius: "8px",
-                          color: "#fff",
-                        }}
-                        formatter={(value: number | undefined) => [
-                          `$${(value ?? 0).toFixed(2)}`,
-                          "Spent",
-                        ]}
+                        {...CHART_TOOLTIP}
+                        formatter={(value: number | undefined) => [`$${(value ?? 0).toFixed(2)}`, "Spent"]}
                       />
-                      <Bar dataKey="total" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="total" fill={CHART_ACCENT} radius={[4, 4, 0, 0]} maxBarSize={32} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -394,21 +380,31 @@ function Stats() {
 
               {/* Breakdown donut, one dataset at a time */}
               <ChartBreakdown
-                title="Collection Breakdown"
+                title="Collection breakdown"
                 storageKey="statsBreakdown"
                 countLabel={(n) => `${n} title${n !== 1 ? "s" : ""}`}
                 options={[
-                  { id: "watched", label: "Watched", data: watchedData, colors: WATCHED_COLORS },
-                  { id: "formats", label: "Formats", data: formatData, colors: FORMAT_COLORS },
+                  { id: "watched", label: "Watched", data: watchedData, colors: [CHART_ACCENT, CHART_NEUTRAL] },
+                  {
+                    id: "formats",
+                    label: "Formats",
+                    data: formatData,
+                    colors: colorsInOrder(formatData, FORMAT_ORDER, CATEGORICAL),
+                  },
                   {
                     id: "genres",
-                    label: "Top Genres",
+                    label: "Top genres",
                     data: genreData,
                     fullData: genreDataFull,
-                    colors: GENRE_COLORS,
+                    colors: CATEGORICAL,
                   },
-                  { id: "decades", label: "Decades", data: decadeData, colors: DECADE_COLORS },
-                  { id: "condition", label: "Condition", data: conditionData, colors: CONDITION_COLORS },
+                  { id: "decades", label: "Decades", data: decadeData, colors: ordinalRamp(decadeData.length) },
+                  {
+                    id: "condition",
+                    label: "Condition",
+                    data: conditionData,
+                    colors: colorsInOrder(conditionData, CONDITION_ORDER, CONDITION_COLORS),
+                  },
                 ]}
               />
             </div>

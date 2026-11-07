@@ -159,8 +159,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   row), `FormFields` (`FormField`, `SwitchField`, `PillToggles`), `formModal.ts` (the add/edit
   windows' size and Escape rule), `TmdbSearch` (keyboard-driven TMDB search, movies and TV),
   `DetailHeader`, `DetailField`, `DeleteConfirm`.
-- **Controls (classic, for screens not yet redesigned):** `ViewToggle` (+ `utils/viewOptions.ts`),
-  `SubNavigation`, `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`
+- **Charts:** `ChartBreakdown` (Stats donut/table); colours and tooltip style in `utils/chartColors.ts`.
+- **Controls (classic, for screens not yet redesigned):** `SubNavigation`, `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`
   + `utils/applyFilters.ts` (movies), `features/tvShows/filters.ts` (TV).
 - **Data layer:** `utils/api.ts`, `utils/queryClient.ts`, `features/*/api.ts` (see below).
 - **Utilities:** `upc.ts` (eBay sold-listings link, copy-to-clipboard with a `Copied!` flash),
