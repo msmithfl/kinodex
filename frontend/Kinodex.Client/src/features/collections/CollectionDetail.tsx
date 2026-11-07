@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { LayoutGrid, Table2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import CollectionFormModal from "../../components/CollectionFormModal";
@@ -104,7 +105,9 @@ function CollectionDetail({
   return (
     // Fills the drawer. From tablet up the whole drawer scrolls; on phones the header and tabs
     // stay put and only the open tab's content scrolls, so it all fits on one screen.
-    <div className="flex h-full flex-col overflow-y-auto overscroll-contain max-md:overflow-hidden">
+    // The scrollbar's space is always kept, so content doesn't shift sideways when a tab's
+    // length makes it come and go
+    <div className="flex h-full flex-col overflow-y-auto overscroll-contain [scrollbar-gutter:stable] max-md:overflow-hidden">
       <div className="shrink-0">
         <DetailBackdrop backdropPath={backdropUrl}>
           {collection && (
@@ -135,13 +138,15 @@ function CollectionDetail({
             <TabsTrigger value="movies">Movies</TabsTrigger>
             <TabsTrigger value="checklist">Checklist</TabsTrigger>
           </TabsList>
-          {tab === "movies" && (
-            <ToggleGroup
+          {/* Hidden on Checklist but still taking its space, so the row (and everything below it)
+              doesn't move when switching tabs */}
+          <ToggleGroup
               type="single"
               value={viewMode}
               onValueChange={(mode) => mode && handleViewModeChange(mode as "table" | "poster")}
               aria-label="View"
-              className="mb-1.5"
+              aria-hidden={tab !== "movies"}
+              className={cn("mb-1.5", tab !== "movies" && "invisible")}
             >
               <ToggleGroupItem value="table" aria-label="Table view">
                 <Table2 />
@@ -150,7 +155,6 @@ function CollectionDetail({
                 <LayoutGrid />
               </ToggleGroupItem>
             </ToggleGroup>
-          )}
         </div>
 
         <TabsContent value="movies" className="flex flex-col max-md:min-h-0">
