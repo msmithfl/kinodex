@@ -7,6 +7,7 @@ import "@fontsource-variable/geist-mono";
 import "./index.css";
 import App from "./App.tsx";
 import ClearCacheOnUserChange from "./components/ClearCacheOnUserChange";
+import { clerkAppearance } from "./utils/clerkAppearance";
 import { queryClient } from "./utils/queryClient";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -18,6 +19,7 @@ if (!PUBLISHABLE_KEY) {
 createRoot(document.getElementById("root")!).render(
     <ClerkProvider
       publishableKey={PUBLISHABLE_KEY}
+      appearance={clerkAppearance}
       afterSignOutUrl="/"
       signUpForceRedirectUrl="/profile"
     >
