@@ -21,24 +21,10 @@ interface DetailHeaderProps {
   onDelete: () => void;
 }
 
-// The top of a redesigned detail drawer (movies, TV shows): the backdrop across the top fading
-// into the panel (a plain band without one), the poster overlapping it with the title, the meta
-// line, stars and TMDB beside it. Edit and delete float beside the drawer's close button from
-// tablet up, and sit over the backdrop's top-left corner on phones.
-function DetailHeader({
-  title,
-  backdropPath,
-  posterPath,
-  onEnlargePoster,
-  meta,
-  rating,
-  tmdb,
-  kind,
-  onEdit,
-  onDelete,
-}: DetailHeaderProps) {
+// A detail drawer's edit and delete: floating below the drawer's close button from tablet up, and
+// over the top-left corner of the band they're placed in on phones
+export function DetailActions({ kind, onEdit, onDelete }: Pick<DetailHeaderProps, "kind" | "onEdit" | "onDelete">) {
   const actionsSlot = useContext(DrawerActionsSlotContext);
-  const hasBackdrop = Boolean(backdropPath);
 
   const editButton = (
     <Button variant="ghost" size="icon" onClick={onEdit} aria-label={`Edit ${kind}`} className="rounded-full">
@@ -74,17 +60,45 @@ function DetailHeader({
           </div>,
           actionsSlot,
         )}
-
-      {/* The backdrop, fading into the panel; a plain band when there isn't one */}
-      <div className={cn("relative", hasBackdrop ? "h-52 md:h-64" : "h-40 bg-card md:h-32")}>
-        {hasBackdrop && <img src={backdropPath} alt="" className="absolute inset-0 h-full w-full object-cover" />}
-        <div className="absolute inset-0 bg-linear-to-b from-background/10 via-background/45 to-background" />
-        {/* Phones: edit and delete over the top-left corner */}
-        <div className="absolute top-3 left-3 flex gap-0.5 rounded-full border border-white/10 bg-background/70 p-0.5 backdrop-blur-sm md:hidden">
-          {editButton}
-          {deleteButton}
-        </div>
+      <div className="absolute top-3 left-3 flex gap-0.5 rounded-full border border-white/10 bg-background/70 p-0.5 backdrop-blur-sm md:hidden">
+        {editButton}
+        {deleteButton}
       </div>
+    </>
+  );
+}
+
+// The band across the top of a detail drawer: the backdrop fading into the panel, or a plain band
+// when there isn't one
+export function DetailBackdrop({ backdropPath, children }: { backdropPath?: string | null; children?: ReactNode }) {
+  return (
+    <div className={cn("relative", backdropPath ? "h-52 md:h-64" : "h-40 bg-card md:h-32")}>
+      {backdropPath && <img src={backdropPath} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+      <div className="absolute inset-0 bg-linear-to-b from-background/10 via-background/45 to-background" />
+      {children}
+    </div>
+  );
+}
+
+// The top of a redesigned detail drawer (movies, TV shows): the backdrop band, the poster
+// overlapping it with the title, the meta line, stars and TMDB beside it, plus edit and delete
+function DetailHeader({
+  title,
+  backdropPath,
+  posterPath,
+  onEnlargePoster,
+  meta,
+  rating,
+  tmdb,
+  kind,
+  onEdit,
+  onDelete,
+}: DetailHeaderProps) {
+  return (
+    <>
+      <DetailBackdrop backdropPath={backdropPath}>
+        <DetailActions kind={kind} onEdit={onEdit} onDelete={onDelete} />
+      </DetailBackdrop>
 
       {/* The poster, overlapping the backdrop, with the title beside it */}
       <header className="relative -mt-24 flex items-end gap-4 px-5 md:-mt-28 md:gap-6 md:px-8">

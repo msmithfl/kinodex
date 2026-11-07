@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useFillViewportHeight } from "../utils/useFillViewportHeight";
 import CollectionCard from "../components/CollectionCard";
-import LoadingSpinner from "../components/LoadingSpinner";
 import SubNavigation from "../components/SubNavigation";
 import { useSettings } from "../settings/useSettings";
 import CollectionFormModal from "../components/CollectionFormModal";
@@ -13,10 +14,11 @@ import MovieDetail from "../features/movies/MovieDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
 import { useAllChecklistItems, useCollections } from "../features/collections/api";
 import { movieKeys, useMovies } from "../features/movies/api";
+import type { Collection } from "../types";
 
-// Same grid as the movie list's poster view
+// The movie list's poster widths from tablet up; phones stay 3 across, with names
 const POSTER_GRID =
-  "grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-x-3 gap-y-5 md:gap-x-4 md:gap-y-8";
+  "grid grid-cols-3 gap-x-3 gap-y-5 md:grid-cols-4 md:gap-x-4 md:gap-y-7 lg:grid-cols-5 xl:grid-cols-8";
 
 function CollectionsView() {
   // "Show completion on collection posters" from the Settings page
@@ -67,84 +69,69 @@ function CollectionsView() {
     return (
       <>
         <SubNavigation />
-        <LoadingSpinner />
+        <div className="flex flex-col gap-4 bg-background px-6 pt-4 md:px-10 md:pt-7" aria-busy="true" aria-label="Loading collections">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-8 w-36" />
+            <Skeleton className="h-4 w-28" />
+          </div>
+          <div className={POSTER_GRID}>
+            {Array.from({ length: 16 }, (_, i) => (
+              <Skeleton key={i} className="aspect-2/3 rounded-[4px] md:rounded-lg" />
+            ))}
+          </div>
+        </div>
       </>
     );
   }
 
+  const renderCard = (collection: Collection) => (
+    <CollectionCard
+      key={collection.id}
+      collection={collection}
+      completionPercentage={
+        settings.showCollectionCompletion ? getCompletionPercentage(collection.id, collection.name) : null
+      }
+      coverPath={collection.imageUrl || getCoverPath(collection.name)}
+      onOpen={() => openCollection(collection.name)}
+    />
+  );
+  const directorCollections = collections.filter((c) => c.isDirectorCollection);
+
   return (
     <>
       <SubNavigation />
-      <div ref={viewportRef} className="flex flex-col h-[calc(100dvh-9rem)] pt-2" style={viewportStyle}>
-        {/* Scrollable content section */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-6 md:px-12 pb-8">
-          <>
-              {/* Standard Collections Section */}
-              <div className="mb-12 pt-2">
-                  <div className={POSTER_GRID}>
-                    {/* New collection: poster-shaped to line up with the cards */}
-                    <button
-                      onClick={() => setShowCreateInput(true)}
-                      className="aspect-2/3 bg-gray-800 hover:bg-gray-700 rounded border-2 border-dashed border-gray-600 hover:border-indigo-500 flex items-center justify-center transition-colors cursor-pointer"
-                      aria-label="New collection"
-                    >
-                      <span className="text-5xl text-gray-500">+</span>
-                    </button>
-                    {collections
-                      .filter((c) => !c.isDirectorCollection)
-                      .map((collection) => {
-                        const completionPercentage = getCompletionPercentage(
-                          collection.id,
-                          collection.name,
-                        );
-
-                        return (
-                          <CollectionCard
-                            key={collection.id}
-                            collection={collection}
-                            completionPercentage={
-                              settings.showCollectionCompletion ? completionPercentage : null
-                            }
-                            coverPath={collection.imageUrl || getCoverPath(collection.name)}
-                            onOpen={() => openCollection(collection.name)}
-                          />
-                        );
-                      })}
-                  </div>
-                </div>
-
-              {/* Director Collections Section */}
-              {collections.filter((c) => c.isDirectorCollection).length > 0 && (
-                <div>
-                  <div className="flex mb-4 gap-4">
-                    <h2 className="text-2xl font-bold">Director Collections</h2>
-                  </div>
-                  <div className={POSTER_GRID}>
-                    {collections
-                      .filter((c) => c.isDirectorCollection)
-                      .map((collection) => {
-                        const completionPercentage = getCompletionPercentage(
-                          collection.id,
-                          collection.name,
-                        );
-
-                        return (
-                          <CollectionCard
-                            key={collection.id}
-                            collection={collection}
-                            completionPercentage={
-                              settings.showCollectionCompletion ? completionPercentage : null
-                            }
-                            coverPath={collection.imageUrl || getCoverPath(collection.name)}
-                            onOpen={() => openCollection(collection.name)}
-                          />
-                        );
-                      })}
-                  </div>
-                </div>
-              )}
-            </>
+      <div ref={viewportRef} className="flex h-[calc(100dvh-5rem)] flex-col bg-background" style={viewportStyle}>
+        <div className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7">
+          <h1 className="text-2xl font-semibold tracking-tight md:text-[28px]">Collections</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {collections.length} {collections.length === 1 ? "collection" : "collections"}
+          </p>
         </div>
+
+        {/* Scrolls on its own; the small top inset keeps the hover ring and lift inside it */}
+        <div className="flex min-h-0 flex-1 flex-col gap-10 overflow-y-auto px-6 pt-1 pb-8 md:px-10">
+          <div className={POSTER_GRID}>
+            {/* New collection: poster-shaped to line up with the cards */}
+            <button
+              type="button"
+              data-slot="new-collection"
+              onClick={() => setShowCreateInput(true)}
+              className="flex aspect-2/3 cursor-pointer items-center justify-center self-start rounded-[4px] border-2 border-dashed border-border text-muted-foreground transition-colors outline-none hover:border-primary hover:bg-primary-soft hover:text-primary-text focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:rounded-lg"
+              aria-label="New collection"
+            >
+              <Plus className="size-8" />
+            </button>
+            {collections.filter((c) => !c.isDirectorCollection).map(renderCard)}
+          </div>
+
+          {directorCollections.length > 0 && (
+            <section className="flex flex-col gap-4">
+              <h2 className="text-lg font-semibold tracking-tight">Director collections</h2>
+              <div className={POSTER_GRID}>{directorCollections.map(renderCard)}</div>
+            </section>
+          )}
+        </div>
+      </div>
 
       {openCollectionName && (
         <Drawer label="Collection details" onClose={closeCollection}>
@@ -158,7 +145,7 @@ function CollectionsView() {
         </Drawer>
       )}
       {openMovieId && (
-        <Drawer label="Movie details" onClose={closeMovie} appearance="modern">
+        <Drawer label="Movie details" onClose={closeMovie}>
           <MovieDetail
             key={openMovieId}
             movieId={openMovieId}
@@ -179,7 +166,6 @@ function CollectionsView() {
           onSaved={() => setShowCreateInput(false)}
         />
       )}
-      </div>
     </>
   );
 }

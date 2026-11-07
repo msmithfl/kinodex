@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { QuickRating } from "./StarRating";
 import { useRateMovie } from "../features/movies/api";
 import type { Movie } from "../types";
@@ -25,30 +27,30 @@ function SimpleMovieTable({
   // The Rating column's stars save straight away
   const rateMovie = useRateMovie();
   const headings = ["Title", "Year", "Format", ...(showRating ? ["Rating"] : [])];
-  // Narrower padding when fitting, to leave the title as much room as possible
-  const pad = fitWidth ? "px-3 md:px-4" : "px-4 md:px-6";
+  const cellClass = "border-b border-border/60 px-3 py-2 align-middle md:px-4";
   return (
     <div
-      className={`rounded border border-white/10 ${fitWidth ? "overflow-hidden" : "overflow-x-auto overscroll-x-contain"}`}
+      className={cn(
+        "rounded-xl border border-border bg-card",
+        fitWidth ? "overflow-hidden" : "overflow-x-auto overscroll-x-contain",
+      )}
     >
-      <table className={`w-full border-separate border-spacing-0 ${fitWidth ? "table-fixed" : ""}`}>
+      <table className={cn("w-full border-separate border-spacing-0 text-sm", fitWidth && "table-fixed")}>
         {fitWidth && (
           // The title takes whatever width the fixed columns leave
           <colgroup>
             <col />
             <col className="w-18" />
-            <col className="w-28 md:w-36" />
+            <col className="w-32 md:w-44" />
             {showRating && <col className="w-32" />}
           </colgroup>
         )}
-        <thead className="bg-gray-700">
+        <thead>
           <tr>
-            {headings.map((heading, i, all) => (
+            {headings.map((heading) => (
               <th
                 key={heading}
-                className={`${pad} py-2 text-left text-sm font-semibold text-gray-200 whitespace-nowrap ${
-                  i < all.length - 1 ? "border-r border-gray-600" : ""
-                }`}
+                className="border-b border-border px-3 py-2.5 text-left text-xs font-medium whitespace-nowrap text-muted-foreground md:px-4"
               >
                 {heading}
               </th>
@@ -56,15 +58,13 @@ function SimpleMovieTable({
           </tr>
         </thead>
         <tbody>
-          {movies.map((movie, index) => (
+          {movies.map((movie) => (
             <tr
               key={movie.id}
               onClick={() => onOpen(movie.id)}
-              className={`text-sm cursor-pointer ${index % 2 === 0 ? "bg-gray-800" : "bg-gray-900"} hover:bg-gray-700 transition-colors duration-150`}
+              className="cursor-pointer transition-colors hover:bg-accent/50 [&:last-child>td]:border-b-0"
             >
-              <td
-                className={`${pad} py-2 text-white align-middle ${fitWidth ? "" : "max-w-56 md:max-w-80"}`}
-              >
+              <td className={cn(cellClass, !fitWidth && "max-w-56 md:max-w-80")}>
                 <Link
                   to={`/library?movie=${movie.id}`}
                   onClick={(e) => {
@@ -74,26 +74,40 @@ function SimpleMovieTable({
                     e.preventDefault();
                     onOpen(movie.id);
                   }}
-                  className="inline-block truncate max-w-full align-middle hover:underline"
+                  className="flex min-w-0 items-center gap-3 hover:underline"
                   title={movie.title}
                 >
-                  {movie.title}
+                  {movie.posterPath ? (
+                    <img
+                      src={movie.posterPath}
+                      alt=""
+                      loading="lazy"
+                      className="h-10 w-7 shrink-0 rounded-sm border border-white/10 bg-muted object-cover"
+                    />
+                  ) : (
+                    <span className="h-10 w-7 shrink-0 rounded-sm bg-muted" />
+                  )}
+                  <span className="truncate font-medium">{movie.title}</span>
                 </Link>
               </td>
-              <td className={`${pad} py-2 text-gray-300 whitespace-nowrap align-middle`}>
-                {movie.year || "-"}
+              <td className={cn(cellClass, "whitespace-nowrap text-muted-foreground tabular-nums")}>
+                {movie.year || "–"}
               </td>
-              <td
-                className={`${pad} py-2 align-middle ${fitWidth ? "wrap-break-word" : "whitespace-nowrap"}`}
-              >
+              <td className={cn(cellClass, !fitWidth && "whitespace-nowrap")}>
                 {movie.formats.length > 0 ? (
-                  movie.formats.join(", ")
+                  <span className={cn("flex gap-1", fitWidth && "flex-wrap")}>
+                    {movie.formats.map((fmt) => (
+                      <Badge key={fmt} variant="outline" className="font-normal text-foreground/85">
+                        {fmt}
+                      </Badge>
+                    ))}
+                  </span>
                 ) : (
-                  <span className="text-gray-500">-</span>
+                  <span className="text-muted-foreground">–</span>
                 )}
               </td>
               {showRating && (
-                <td className={`${pad} py-2 whitespace-nowrap align-middle`}>
+                <td className={cn(cellClass, "whitespace-nowrap")}>
                   {/* Click to rate; clicks don't open the row's drawer */}
                   <QuickRating
                     rating={movie.rating}

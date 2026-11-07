@@ -356,7 +356,7 @@ function MovieList() {
     <>
       <SubNavigation />
       {openMovieId && (
-        <Drawer label="Movie details" onClose={closeMovie} appearance="modern">
+        <Drawer label="Movie details" onClose={closeMovie}>
           {/* Keyed by id so switching movies starts the details fresh */}
           <MovieDetail key={openMovieId} movieId={openMovieId} onDeleted={closeMovie} />
         </Drawer>

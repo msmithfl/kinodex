@@ -13,6 +13,8 @@ interface PosterCardProps {
   // Runs on a plain click (e.g. to open a drawer); ctrl/cmd/shift-clicks still follow the link
   onOpen?: () => void;
   hideCaptionOnMobile?: boolean; // Phones show just the posters
+  badge?: React.ReactNode; // Over the poster's top-right corner, e.g. a collection's completion ring
+  fallback?: React.ReactNode; // Shown when there's no poster, instead of the title
 }
 
 const isPlainClick = (e: React.MouseEvent) =>
@@ -20,7 +22,7 @@ const isPlainClick = (e: React.MouseEvent) =>
 
 // A redesigned poster grid card: the poster lifts and gets an accent ring on hover, with the
 // formats and rating over it; the title and subtitle sit underneath.
-function PosterCard({ title, posterPath, subtitle, formats = [], rating = 0, to, onOpen, hideCaptionOnMobile }: PosterCardProps) {
+function PosterCard({ title, posterPath, subtitle, formats = [], rating = 0, to, onOpen, hideCaptionOnMobile, badge, fallback }: PosterCardProps) {
   // A poster that fails to load falls back to the title on a plain tile
   const [broken, setBroken] = useState(false);
   const showOverlay = formats.length > 0 || rating > 0;
@@ -47,9 +49,10 @@ function PosterCard({ title, posterPath, subtitle, formats = [], rating = 0, to,
           />
         ) : (
           <div className="flex h-full items-center justify-center p-2 text-center text-xs text-muted-foreground">
-            {title}
+            {fallback ?? title}
           </div>
         )}
+        {badge && <div className="absolute top-1.5 right-1.5 z-10">{badge}</div>}
         {showOverlay && (
           <div className="pointer-events-none absolute inset-0 hidden flex-col justify-end gap-1.5 bg-black/55 p-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:flex">
             {formats.length > 0 && (

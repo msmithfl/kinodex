@@ -120,7 +120,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Floating actions:** from tablet up, edit/delete render outside the panel next to the close
   button, through a portal slot (`components/drawerActions.ts` context).
 - **Movie drawer tabs:** only Details for now, so the tab bar is hidden; the tab mechanism is kept for the planned Ledger and Log.
-- **Movie drawer (redesigned):** `Drawer appearance="modern"` wherever a movie opens; the backdrop
+- **Movie drawer (redesigned):** `Drawer` wherever a movie opens; the backdrop
   across the top fading into the panel, the poster overlapping it with title, year · genres,
   stars and TMDB; then `MovieDrawerDetails` as cards in the agreed order (Format | Condition,
   Paid | Purchased | Gift; product shot + UPC copy + eBay sold; Shelf | Shelf # | HDD #, Watched |
@@ -129,8 +129,10 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **TV drawer (redesigned):** the same `DetailHeader` (shared backdrop/poster/title/actions header,
   plus `DetailSkeleton`), then `TvShowDrawerDetails`: season tiles, one card per purchase (Format |
   Condition, Paid | Purchased | Gift, UPC copy + eBay sold), product shot, Watched | Streaming,
-  notes. Both drawers' fields use `DetailField` / `YesNo` / `NotSet`. The collection drawer keeps
-  the classic `Drawer` look.
+  notes. Both drawers' fields use `DetailField` / `YesNo` / `NotSet`.
+- **Collection drawer (redesigned):** the shared `DetailBackdrop` and `DetailActions` (also parts of
+  `DetailHeader`), the name and movie count with a table/poster switch, the movies
+  (`SimpleMovieTable` or `PosterCard`), then the collapsible `CollectionChecklist` card.
 - Escape closes only the topmost drawer or dialog (`role="dialog"` or `"alertdialog"`); swipe right
   closes on touch screens.
 
@@ -148,8 +150,9 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 
 ### Shared building blocks
 
-- **Cards and lists:** `MovieCardPoster` (also used for TV), `MovieCardDetail` (shelf page),
-  `CollectionCard`, `GenreCard`, `SimpleMovieTable` (collection/genre table view),
+- **Cards and lists:** `PosterCard` (movie, TV and collection grids; `CollectionCard` wraps it),
+  `MovieCardPoster` (genre and shelf pages), `MovieCardDetail` (shelf page),
+  `GenreCard`, `SimpleMovieTable` (collection/genre table view),
   `features/movies/MovieTable` (the movie list's table).
 - **Shared bits:** `StarRating` (`Stars` display, `StarRatingInput` picker), `TmdbLink`,
   `ChipSelect` (chip dropdown for genres and collections), `ImageUrlField` (preview + URL + picker
