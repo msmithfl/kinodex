@@ -69,7 +69,7 @@ function GenresView() {
         </div>
 
         {/* Scrolls on its own; the small top inset keeps the hover ring and lift inside it */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-8 md:px-10">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-2 pb-8 md:px-10">
           {genres.length === 0 ? (
             <EmptyState message="No genres yet." />
           ) : (

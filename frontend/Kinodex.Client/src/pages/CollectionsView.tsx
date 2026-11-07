@@ -109,7 +109,7 @@ function CollectionsView() {
         </div>
 
         {/* Scrolls on its own; the small top inset keeps the hover ring and lift inside it */}
-        <div className="flex min-h-0 flex-1 flex-col gap-10 overflow-y-auto px-6 pt-1 pb-8 md:px-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-10 overflow-y-auto px-6 pt-2 pb-8 md:px-10">
           <div className={POSTER_GRID}>
             {/* New collection: poster-shaped to line up with the cards */}
             <button

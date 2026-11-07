@@ -355,7 +355,7 @@ function TvShowList() {
             <EmptyState message="No TV shows match your search or filters." />
           ) : viewMode === "poster" ? (
             // The small inset keeps the hover ring and lift inside the scroll area
-            <div className="-mx-2 h-full overflow-y-auto px-2 pt-1 pb-6">
+            <div className="-mx-2 h-full overflow-y-auto px-2 pt-2 pb-6">
               <MotionConfig reducedMotion="user">
                 <div className="grid grid-cols-4 gap-1 md:gap-x-4 md:gap-y-7 lg:grid-cols-5 xl:grid-cols-8">
                   {filteredShows.map((show, index) => {
