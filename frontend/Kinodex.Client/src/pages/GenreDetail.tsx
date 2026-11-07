@@ -44,6 +44,7 @@ function GenreDetail() {
       <PageShell deps={[loading]}>
         <PageHeader
           title={genreName}
+          subtitleBeside
           subtitle={`${movies.length} ${movies.length === 1 ? "movie" : "movies"}`}
           actions={<ViewModeToggle value={viewMode} onChange={setViewMode} showLabels />}
           className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7"
