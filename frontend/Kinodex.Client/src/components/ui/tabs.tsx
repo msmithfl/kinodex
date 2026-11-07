@@ -20,12 +20,23 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
   );
 }
 
-function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+// Radix focuses a tab from code when it's pressed, which browsers then treat as keyboard focus, so
+// the ring would show after every click or tap. A pressed tab is marked until it loses focus, and
+// only unmarked (keyboard-focused) tabs show the ring.
+function TabsTrigger({ className, onPointerDown, onBlur, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
+      onPointerDown={(e) => {
+        e.currentTarget.dataset.pointerFocus = "";
+        onPointerDown?.(e);
+      }}
+      onBlur={(e) => {
+        delete e.currentTarget.dataset.pointerFocus;
+        onBlur?.(e);
+      }}
       className={cn(
-        "-mb-px inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 border-b-2 border-transparent text-sm font-medium whitespace-nowrap transition-colors outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary data-[state=active]:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "-mb-px inline-flex h-9 cursor-pointer items-center justify-center gap-1.5 border-b-2 border-transparent text-sm font-medium whitespace-nowrap transition-colors outline-none hover:text-foreground focus-visible:not-data-[pointer-focus]:ring-[3px] focus-visible:not-data-[pointer-focus]:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-primary data-[state=active]:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
