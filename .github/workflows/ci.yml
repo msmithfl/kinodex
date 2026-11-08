@@ -1,0 +1,68 @@
+# Checks every pull request and every push to main: the frontend's type-check, lint, tests and
+# build, and the backend's build and tests (against a throwaway PostgreSQL in a container).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push to the same branch cancels the run still going for the older one
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/Kinodex.Client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/Kinodex.Client/package-lock.json
+      - run: npm ci
+      - name: Type-check
+        run: npx tsc -b
+      - name: Lint (warnings fail too)
+        run: npx eslint . --max-warnings 0
+      - name: Tests
+        run: npm test
+      - name: Build
+        run: npx vite build
+
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: kinodex
+          POSTGRES_PASSWORD: kinodex
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kinodex"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # The tests create and drop their own database on this server (see KinodexApiFactory)
+      KINODEX_TEST_POSTGRES: Host=localhost;Port=5432;Username=kinodex;Password=kinodex;Database=postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet restore Kinodex.sln
+      - name: Build
+        run: dotnet build Kinodex.sln --no-restore
+      - name: Tests
+        run: dotnet test Kinodex.sln --no-build

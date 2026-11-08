@@ -42,6 +42,10 @@ const inOrder = (rows: { name: string; value: number }[], order: string[]) => {
 const colorsInOrder = (rows: { name: string }[], order: string[], palette: string[], neutral: string) =>
   rows.map(({ name }) => (order.includes(name) ? palette[order.indexOf(name)] : neutral));
 
+// The breakdown's tooltip text; defined here so it's the same function every render, letting the
+// donut skip re-renders that change nothing
+const titleCount = (n: number) => `${n} title${n !== 1 ? "s" : ""}`;
+
 // The select can't use an empty value, so "All" has its own; the range still stores ""
 const ALL_MONTHS = "__all__";
 
@@ -90,7 +94,7 @@ function Stats() {
   const movies = movieData ?? NO_MOVIES;
   const shows = showData ?? NO_SHOWS;
   const loading = moviesLoading || showsLoading;
-  // The neutral and the ordered ramp differ between light and dark
+  // The neutral differs between light and dark
   const { neutral, ordinalRamp } = useChartColors();
   // The monthly spending range ("" for all), remembered in this browser as plain text
   const asText = { parse: (saved: string) => saved, serialize: (value: string) => value };
@@ -372,7 +376,7 @@ function Stats() {
               <ChartBreakdown
                 title="Collection breakdown"
                 storageKey="statsBreakdown"
-                countLabel={(n) => `${n} title${n !== 1 ? "s" : ""}`}
+                countLabel={titleCount}
                 options={[
                   { id: "watched", label: "Watched", data: watchedData, colors: [CHART_ACCENT, neutral] },
                   {

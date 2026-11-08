@@ -344,6 +344,10 @@ cd frontend/Kinodex.Client
 npm test
 ```
 
+**CI** (`.github/workflows/ci.yml`) runs on every pull request and every push to main: the
+frontend's type-check, lint (any warning fails), tests and build, and the backend's build and
+tests against a PostgreSQL container.
+
 ## Feature status
 
 - **Core (being stabilized):** movies, TV shows, collections (+ checklists, covers, backdrops),
@@ -365,8 +369,7 @@ Pointers for cleanup, roughly in the order they'd come up:
 - Unused API endpoints from the removed pages: `/api/customers`, `/api/checkouts`, `/api/tmdb/*`
   matching, and shelf section reorder/rename/delete.
 - Largest page is `Stats` (~420 lines); the other core pages are 350–490 lines.
-- Frontend tests cover the plain logic only (see Tests); no component tests yet, and nothing runs
-  the tests automatically (no CI).
+- Frontend tests cover the plain logic only (see Tests); no component tests yet.
 - TMDB token is built into the frontend bundle.
 - Lint: no errors; some `react-hooks/exhaustive-deps` warnings on the per-page fetch effects
   (go away with the data-layer change).
