@@ -34,7 +34,7 @@ import { getSortedMovies } from "../utils/getSortedMovies";
 import { formatSeasons } from "../utils/formatSeasons";
 import { allFormats, ownedSeasons, totalPaid } from "../utils/tvShowPurchases";
 import { isMobile } from "../utils/isMobile";
-import BarcodeScanner from "../components/BarcodeScanner";
+import { BarcodeScanner } from "../components/lazyComponents";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import SubNavigation from "../components/SubNavigation";
 import Drawer from "../components/Drawer";
@@ -187,7 +187,7 @@ function TvShowList() {
         </Drawer>
       )}
 
-      <PageShell deps={[loading]}>
+      <PageShell remeasureWhen={loading}>
         {/* Title, toolbar and active filters */}
         <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
           <PageHeader

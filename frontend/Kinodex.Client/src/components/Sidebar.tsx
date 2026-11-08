@@ -9,7 +9,7 @@ import { useMovies } from "@/features/movies/api";
 import { useTvShows } from "@/features/tvShows/api";
 import { useStoredState } from "@/utils/useStoredState";
 import AccountMenuButton from "./AccountMenuButton";
-import { AddItemModal } from "./AddItemModal";
+import { AddItemModal } from "./lazyComponents";
 import CommandPalette from "./CommandPalette";
 import {
   INSIGHTS_LINKS,

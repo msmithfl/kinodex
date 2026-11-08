@@ -13,7 +13,7 @@ import { TV_GENRE_MAP, getTMDBTvSeasonCount, searchTMDBTv } from "../utils/tmdbA
 import { isMobile } from "../utils/isMobile";
 import TmdbSearch from "./TmdbSearch";
 import TvShowForm from "./TvShowForm";
-import BarcodeScanner from "./BarcodeScanner";
+import { BarcodeScanner } from "./lazyComponents";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 

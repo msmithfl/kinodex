@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { Movie } from "../types";
 import MovieForm from "./MovieForm";
-import BarcodeScanner from "./BarcodeScanner";
+import { BarcodeScanner } from "./lazyComponents";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { useMovie, useUpdateMovie } from "../features/movies/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";

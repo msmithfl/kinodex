@@ -13,7 +13,7 @@ import {
 } from "../utils/spending";
 import { ChartPie, ChevronLeft, ChevronRight, Download, Film, Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AddItemModal } from "../components/AddItemModal";
+import { AddItemModal } from "../components/lazyComponents";
 import AccountMenuButton from "../components/AccountMenuButton";
 
 interface Stats {

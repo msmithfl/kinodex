@@ -1,4 +1,4 @@
-import { useTheme } from "./theme";
+import { useTheme, type Theme } from "./theme";
 
 // Chart colours and shared chart styling: the one place besides index.css that holds colour values.
 // The palettes are hex rather than tokens because labelColorOn reads them, and they were checked
@@ -35,10 +35,15 @@ function rampOf(ramp: string[], count: number): string[] {
   });
 }
 
-// The colours that differ by theme, for the theme showing
-export function useChartColors() {
-  const { neutral, ordinal } = THEMED[useTheme()];
+// The colours that differ by theme
+export function chartColorsFor(theme: Theme) {
+  const { neutral, ordinal } = THEMED[theme];
   return { neutral, ordinalRamp: (count: number) => rampOf(ordinal, count) };
+}
+
+// ...for the theme showing
+export function useChartColors() {
+  return chartColorsFor(useTheme());
 }
 
 // Dark or white text, whichever reads on this fill

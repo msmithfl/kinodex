@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import ListSkeleton from "../components/ListSkeleton";
 import PageShell from "../components/PageShell";
@@ -15,13 +14,12 @@ import CollectionDetail from "../features/collections/CollectionDetail";
 import MovieDetail from "../features/movies/MovieDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
 import { useAllChecklistItems, useCollections } from "../features/collections/api";
-import { movieKeys, useMovies } from "../features/movies/api";
+import { useMovies } from "../features/movies/api";
 import type { Collection } from "../types";
 
 function CollectionsView() {
   // "Show completion on collection posters" from the Settings page
   const { settings } = useSettings();
-  const queryClient = useQueryClient();
   // Loaded once and shared with the collection drawer; saving anywhere refreshes them
   const { data: collections = [], isLoading: collectionsLoading } = useCollections();
   const { data: movies = [], isLoading: moviesLoading } = useMovies();
@@ -86,7 +84,7 @@ function CollectionsView() {
   return (
     <>
       <SubNavigation />
-      <PageShell deps={[loading]}>
+      <PageShell remeasureWhen={loading}>
         <PageHeader
           title="Collections"
           subtitleBeside
@@ -135,12 +133,7 @@ function CollectionsView() {
           <MovieDetail
             key={openMovieId}
             movieId={openMovieId}
-            onDeleted={() => {
-              closeMovie();
-              // The movie page deletes on its own (not through the shared cache yet), so refresh
-              // the movies the cards and the collection drawer show
-              queryClient.invalidateQueries({ queryKey: movieKeys.all });
-            }}
+            onDeleted={closeMovie}
           />
         </Drawer>
       )}

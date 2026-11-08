@@ -226,7 +226,7 @@ function Stats() {
   });
 
   return (
-    <PageShell layout="scroll" deps={[loading]} className="overflow-x-auto px-4 pt-4 pb-8 md:px-20 md:pt-7">
+    <PageShell layout="scroll" remeasureWhen={loading} className="overflow-x-auto px-4 pt-4 pb-8 md:px-20 md:pt-7">
         <PageHeader title="Collection statistics" className="mb-4 md:mb-6" />
 
         {loading ? (

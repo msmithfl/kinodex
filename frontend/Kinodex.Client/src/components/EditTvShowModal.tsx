@@ -9,7 +9,7 @@ import { useDeleteTvShow, useUpdateTvShow } from "../features/tvShows/api";
 import { isMobile } from "../utils/isMobile";
 import { withClientKeys } from "../utils/tvShowPurchases";
 import TvShowForm from "./TvShowForm";
-import BarcodeScanner from "./BarcodeScanner";
+import { BarcodeScanner } from "./lazyComponents";
 import DeleteConfirm from "./DeleteConfirm";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";

@@ -9,4 +9,10 @@ export default defineConfig({
     // "@/..." is src/ (shadcn/ui components import each other this way)
     alias: { '@': path.resolve(__dirname, './src') },
   },
+  build: {
+    // The first download (React, the router, Clerk, Radix, the data layer) is ~540 kB; pages,
+    // Stats' charts, the barcode scanner and the Add window are separate downloads (App.tsx,
+    // components/lazyComponents.tsx). Warn if any one file grows past this.
+    chunkSizeWarningLimit: 600,
+  },
 })
