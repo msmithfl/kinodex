@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -11,37 +11,38 @@ import type { PieLabelRenderProps } from "recharts";
 import { ChartPie, Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { CHART_TOOLTIP, labelColorOn } from "../utils/chartColors";
+import { CHART_SLICE_LABEL, CHART_TOOLTIP } from "../utils/chartColors";
 import { useStoredChoice } from "../utils/useStoredState";
 
-// Each slice's percentage, in whichever text colour reads on it; slices under 5% go without
-const percentLabel = (colors: string[]) =>
-  function PercentLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: PieLabelRenderProps) {
-    const pct = percent as number;
-    if (pct < 0.05) return null;
-    const RADIAN = Math.PI / 180;
-    const radius = (innerRadius as number) + ((outerRadius as number) - (innerRadius as number)) * 0.5;
-    const x = (cx as number) + radius * Math.cos(-(midAngle as number) * RADIAN);
-    const y = (cy as number) + radius * Math.sin(-(midAngle as number) * RADIAN);
-    return (
-      <text
-        x={x}
-        y={y}
-        fill={labelColorOn(colors[(index as number) % colors.length])}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={12}
-        fontWeight={600}
-      >
-        {`${(pct * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
+// Each slice's percentage, centred in the ring, in white (the chart colours are all dark enough for
+// it). Slices under 5% go without.
+function PercentLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelRenderProps) {
+  const pct = percent as number;
+  if (pct < 0.05) return null;
+  const RADIAN = Math.PI / 180;
+  const radius = (innerRadius as number) + ((outerRadius as number) - (innerRadius as number)) * 0.5;
+  const x = (cx as number) + radius * Math.cos(-(midAngle as number) * RADIAN);
+  const y = (cy as number) + radius * Math.sin(-(midAngle as number) * RADIAN);
+  return (
+    <text
+      x={x}
+      y={y}
+      fill={CHART_SLICE_LABEL}
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={12}
+      fontWeight={600}
+    >
+      {`${(pct * 100).toFixed(0)}%`}
+    </text>
+  );
+}
 
+// The chart's exact height (300px), so switching between donut and table doesn't move anything
 function DataTable({ data }: { data: { name: string; value: number }[] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   return (
-    <div className="max-h-75 overflow-y-auto">
+    <div className="h-75 overflow-y-auto">
       <table className="w-full border-separate border-spacing-0 text-sm">
         <thead className="sticky top-0 bg-card">
           <tr className="text-left text-xs text-muted-foreground">
@@ -68,6 +69,63 @@ function DataTable({ data }: { data: { name: string; value: number }[] }) {
   );
 }
 
+type Row = { name: string; value: number };
+
+const sameRows = (a: Row[], b: Row[]) =>
+  a.length === b.length && a.every((row, i) => row.name === b[i].name && row.value === b[i].value);
+const sameColors = (a: string[], b: string[]) => a.length === b.length && a.every((c, i) => c === b[i]);
+
+interface DonutProps {
+  data: Row[];
+  colors: string[];
+  countLabel: (count: number) => string;
+}
+
+// The donut itself. Recharts restarts a pie's animation (hiding its labels while it plays) every
+// time the pie re-renders, even with the same data, and the page re-renders on its own now and
+// then (e.g. Clerk renewing the sign-in token about once a minute). So this only re-renders when
+// the numbers or colours actually change: the animation plays on a real change, not at random.
+const Donut = memo(
+  function Donut({ data, colors, countLabel }: DonutProps) {
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="50%"
+            innerRadius={76}
+            outerRadius={110}
+            paddingAngle={2}
+            cornerRadius={3}
+            stroke="none"
+            dataKey="value"
+            labelLine={false}
+            label={PercentLabel}
+          >
+            {data.map((_, index) => (
+              <Cell key={index} fill={colors[index % colors.length]} />
+            ))}
+          </Pie>
+          <Tooltip
+            {...CHART_TOOLTIP}
+            formatter={(value: number | undefined, name) => [countLabel(value ?? 0), name]}
+          />
+          <Legend
+            iconType="circle"
+            iconSize={8}
+            formatter={(value) => <span className="text-xs text-muted-foreground">{value}</span>}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    );
+  },
+  (prev, next) =>
+    sameRows(prev.data, next.data) && sameColors(prev.colors, next.colors) && prev.countLabel === next.countLabel,
+);
+
+const movieCount = (n: number) => `${n} movie${n !== 1 ? "s" : ""}`;
+
 export interface BreakdownOption {
   id: string;
   label: string;
@@ -80,7 +138,9 @@ interface ChartBreakdownProps {
   title: string;
   options: BreakdownOption[];
   storageKey: string; // Remembers the chosen option between visits
-  countLabel?: (count: number) => string; // Tooltip text for a slice's count
+  // Tooltip text for a slice's count. Pass a function defined outside the component, so it's the
+  // same function every render (see Donut).
+  countLabel?: (count: number) => string;
 }
 
 // One donut chart with a list of datasets to choose from: a sidebar on wider screens,
@@ -89,7 +149,7 @@ export default function ChartBreakdown({
   title,
   options,
   storageKey,
-  countLabel = (n) => `${n} movie${n !== 1 ? "s" : ""}`,
+  countLabel = movieCount,
 }: ChartBreakdownProps) {
   // The chosen dataset, remembered in this browser; an unknown one falls back to the first
   const [selectedId, select] = useStoredChoice(storageKey, options.map((o) => o.id), options[0]?.id ?? "");
@@ -150,36 +210,7 @@ export default function ChartBreakdown({
           ) : showTable ? (
             <DataTable data={fullData} />
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={76}
-                  outerRadius={110}
-                  paddingAngle={2}
-                  cornerRadius={3}
-                  stroke="none"
-                  dataKey="value"
-                  labelLine={false}
-                  label={percentLabel(colors)}
-                >
-                  {data.map((_, index) => (
-                    <Cell key={index} fill={colors[index % colors.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  {...CHART_TOOLTIP}
-                  formatter={(value: number | undefined, name) => [countLabel(value ?? 0), name]}
-                />
-                <Legend
-                  iconType="circle"
-                  iconSize={8}
-                  formatter={(value) => <span className="text-xs text-muted-foreground">{value}</span>}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <Donut data={data} colors={colors} countLabel={countLabel} />
           )}
         </div>
       </div>

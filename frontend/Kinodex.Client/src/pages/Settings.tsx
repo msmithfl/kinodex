@@ -102,7 +102,7 @@ function Settings() {
         </section>
 
         <section className="mt-4 rounded-xl border border-border bg-card px-5 py-2">
-          <h2 className="pt-3 pb-1 text-base font-semibold">Add Movie presets</h2>
+          <h2 className="pt-3 pb-1 text-base font-semibold">Add movie presets</h2>
           <MoviePresetSettings onError={setSaveError} />
         </section>
       </div>

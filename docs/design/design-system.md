@@ -134,14 +134,17 @@ toolbars or content.
 
 - **Colours come from `utils/chartColors.ts` only:** the 8 categorical colours (in fixed order),
   the ordinal ramp for ordered things (decades, condition) and the neutral for "Other". They're
-  checked for colour-blind separation against both themes; re-run the dataviz validator if you
-  change one.
+  checked for colour-blind separation and contrast against both cards, and every one is dark
+  enough for white text; re-run the dataviz validator (and the white-text contrast) if you change
+  one.
 - **Colour follows the thing, not its rank:** a format keeps its colour whatever it's sorted by or
   filtered to (`colorsInOrder`). Never generate a ninth colour; fold the rest into "Other".
-- **Every chart has a table view** (the breakdown's Table toggle). The monthly spending bars
-  don't yet; add one before adding more bar charts.
-- Labels and numbers use text tokens, never the series colour; `labelColorOn` picks the text on a
-  coloured fill.
+- **Table views where the chart hides the numbers:** the breakdown donut has a Donut/Table toggle
+  (the table lists every row, e.g. all genres, not just the top 8), the table the chart's exact
+  height so switching doesn't move anything. The spending bars and the ratings bars show their
+  values in the tooltip and have no table.
+- Labels and numbers use text tokens, never the series colour. Text drawn on a coloured fill (the
+  donut's percentages) is plain white (`CHART_SLICE_LABEL`) on every slice.
 - One axis per chart.
 
 ## Before you call a screen done

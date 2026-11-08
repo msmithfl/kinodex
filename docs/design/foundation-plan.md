@@ -129,7 +129,9 @@ A short `docs/design/design-system.md` so new screens follow the system without 
 - chart rules: validated palettes, colour follows the entity, a table view for every chart
 
 Done on `feature/design-system`: [design-system.md](design-system.md), with a checklist for
-finishing a screen. It notes one gap: the Stats monthly spending chart has no table view yet.
+finishing a screen. CI followed on `feature/spending-table-ci` (`.github/workflows/ci.yml`), along
+with white percentages on every donut slice (the chart colours darkened to suit). The monthly
+spending chart stays without a table view, by choice.
 
 ## Small leftovers
 
