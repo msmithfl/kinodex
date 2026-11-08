@@ -161,6 +161,14 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   row), `FormFields` (`FormField`, `SwitchField`, `PillToggles`), `formModal.ts` (the add/edit
   windows' size and Escape rule), `TmdbSearch` (keyboard-driven TMDB search, movies and TV),
   `DetailHeader`, `DetailField`, `DeleteConfirm`.
+- **Colours:** every colour is a token in `index.css` (`text-destructive-text`, `text-success`,
+  `text-warning-text`, `text-star`, ...; red delete buttons use the Button's `ghost-destructive`
+  variant). The only other colour values are the chart palettes in `utils/chartColors.ts`; Clerk
+  reads the tokens (`utils/clerkAppearance.ts`, via `ThemedClerkProvider`). Parked pages and the
+  genre card overlays still use Tailwind's palette.
+- **Theme:** light and dark token sets; the choice (Settings → Appearance, per device) lives in
+  `utils/theme.ts` (`useTheme()`), applied before first paint by a script in `index.html`. See
+  `docs/design/light-theme.md`.
 - **Charts:** `ChartBreakdown` (Stats donut/table); colours and tooltip style in `utils/chartColors.ts`.
 - **Controls:** `SubNavigation` (phones), `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`
   + `utils/applyFilters.ts` (movies), `features/tvShows/filters.ts` (TV).

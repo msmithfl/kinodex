@@ -2,48 +2,58 @@
 @import 'tw-animate-css';
 
 /* ---------------------------------------------------------------------------------------------
-   Redesign tokens (shadcn/ui). New, semantic color names (bg-background, text-muted-foreground,
-   bg-primary, border-border, ...) used by the components in components/ui and the redesigned
-   screens. The existing gray-* classes are untouched, so screens not yet redesigned look as before.
-   The app is dark only for now: <html class="dark"> picks the .dark set. The :root set is the
-   light theme, ready for when that's built (docs/design/light-theme.md); nothing uses it yet.
+   Colour tokens. Every colour the app uses has a semantic name here (bg-background,
+   text-muted-foreground, text-destructive-text, text-star, ...); components use these names rather
+   than Tailwind's palette (red-300, yellow-400) or hex values. The exceptions are the chart
+   palettes (utils/chartColors.ts, checked for colour-blind separation) and the parked pages.
+   The :root set is the light theme and .dark the dark one; utils/theme.ts puts .dark on <html>
+   per the choice in Settings. Clerk's sign-in screens read these values too (utils/clerkAppearance.ts).
    --------------------------------------------------------------------------------------------- */
 @custom-variant dark (&:is(.dark *));
 
+/* Light: an off-white page with white cards, the same indigo accent, faint dark borders */
 :root {
+  color-scheme: light;
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
+  --background: #f7f7f8;
+  --foreground: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
   --primary: #4f46e5;
   --primary-foreground: #ffffff;
   --primary-soft: rgb(79 70 229 / 0.1);
   --primary-text: #4338ca;
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
+  --secondary: #f0f0f2;
+  --secondary-foreground: #09090b;
+  --muted: #f0f0f2;
+  --muted-foreground: #64646d;
+  --accent: #ececf0;
+  --accent-foreground: #09090b;
+  --destructive: #dc2626;
+  --destructive-text: #b91c1c;
+  --success: #059669;
+  --success-text: #047857;
+  --warning-text: #b45309;
+  --star: #eab308;
+  --star-hover: #facc15;
+  --border: rgb(0 0 0 / 0.09);
+  --input: rgb(0 0 0 / 0.14);
   --ring: #6366f1;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar: #fcfcfd;
+  --sidebar-foreground: #3f3f46;
   --sidebar-primary: #4f46e5;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: rgb(79 70 229 / 0.1);
   --sidebar-accent-foreground: #4338ca;
-  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-border: rgb(0 0 0 / 0.09);
   --sidebar-ring: #6366f1;
 }
 
 /* Near-black neutral base (no blue tint), one indigo accent, faint white borders */
 .dark {
+  color-scheme: dark;
   --background: #09090b;
   --foreground: #fafafa;
   --card: #0f0f12;
@@ -61,6 +71,16 @@
   --accent: #1f1f25;
   --accent-foreground: #fafafa;
   --destructive: #dc2626;
+  /* Red text: delete buttons, form errors, error banners */
+  --destructive-text: #fca5a5;
+  /* Green for done and saved: icons, the checklist's progress bar, success banners (tinted) */
+  --success: #34d399;
+  --success-text: #6ee7b7;
+  /* Amber text for warnings, e.g. import rows that had errors */
+  --warning-text: #fcd34d;
+  /* Rating stars; star-hover is the lighter yellow of a hover preview */
+  --star: #facc15;
+  --star-hover: #fde047;
   --border: rgb(255 255 255 / 0.08);
   --input: rgb(255 255 255 / 0.12);
   --ring: #6366f1;
@@ -102,6 +122,12 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-text: var(--destructive-text);
+  --color-success: var(--success);
+  --color-success-text: var(--success-text);
+  --color-warning-text: var(--warning-text);
+  --color-star: var(--star);
+  --color-star-hover: var(--star-hover);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

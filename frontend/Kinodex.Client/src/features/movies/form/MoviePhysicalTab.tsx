@@ -88,7 +88,6 @@ function MoviePhysicalTab({
             id="purchasedAt"
             value={formData.purchasedAt}
             onChange={(e) => setFormData({ ...formData, purchasedAt: e.target.value })}
-            className="scheme-dark"
           />
         </FormField>
 

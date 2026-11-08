@@ -91,7 +91,7 @@ export function useProductImagePicker({ upc, selected, onSelect }: ProductImageP
   const images = result?.images ?? [];
   const grid = !open ? null : (
     <div className="flex flex-col gap-2">
-      {error && <p className="text-xs text-red-300">{error}</p>}
+      {error && <p className="text-xs text-destructive-text">{error}</p>}
       {result && (
         <p className="text-xs text-muted-foreground">
           {result.found && result.title ? (

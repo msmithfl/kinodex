@@ -33,11 +33,11 @@ export function DetailActions({ kind, onEdit, onDelete }: Pick<DetailHeaderProps
   );
   const deleteButton = (
     <Button
-      variant="ghost"
+      variant="ghost-destructive"
       size="icon"
       onClick={onDelete}
       aria-label={`Delete ${kind}`}
-      className="rounded-full text-red-300 hover:bg-destructive/15 hover:text-red-200"
+      className="rounded-full"
     >
       <Trash2 />
     </Button>
@@ -60,7 +60,7 @@ export function DetailActions({ kind, onEdit, onDelete }: Pick<DetailHeaderProps
           </div>,
           actionsSlot,
         )}
-      <div className="absolute top-3 left-3 flex gap-0.5 rounded-full border border-white/10 bg-background/70 p-0.5 backdrop-blur-sm md:hidden">
+      <div className="absolute top-3 left-3 flex gap-0.5 rounded-full border border-border bg-background/70 p-0.5 backdrop-blur-sm md:hidden">
         {editButton}
         {deleteButton}
       </div>
@@ -113,7 +113,7 @@ function DetailHeader({
             <img
               src={posterPath}
               alt={`${title} poster`}
-              className="aspect-2/3 w-28 rounded-lg border border-white/10 bg-muted object-cover shadow-2xl md:w-36"
+              className="aspect-2/3 w-28 rounded-lg border border-border bg-muted object-cover shadow-2xl md:w-36"
             />
           </button>
         ) : (

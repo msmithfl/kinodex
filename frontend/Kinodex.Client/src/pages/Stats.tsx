@@ -22,17 +22,15 @@ import { movieSpend, tvSpend } from "../utils/spending";
 import {
   CATEGORICAL,
   CHART_ACCENT,
-  CHART_NEUTRAL,
   CHART_STAR,
   CHART_TICK,
   CHART_TOOLTIP,
-  ordinalRamp,
+  useChartColors,
 } from "../utils/chartColors";
 
 // Fixed orders, so a format or condition keeps its colour whatever else the collection holds
 const FORMAT_ORDER = ["4K", "Blu-ray", "DVD", "VHS", "Digital"];
 const CONDITION_ORDER = ["Sealed", "Like New", "Good", "Poor", "Damaged"];
-const CONDITION_COLORS = ordinalRamp(CONDITION_ORDER.length);
 
 // Counted rows in a fixed order, with anything not in that order after them
 const inOrder = (rows: { name: string; value: number }[], order: string[]) => {
@@ -41,8 +39,8 @@ const inOrder = (rows: { name: string; value: number }[], order: string[]) => {
 };
 
 // A row's colour from its place in the fixed order; anything unexpected is neutral
-const colorsInOrder = (rows: { name: string }[], order: string[], palette: string[]) =>
-  rows.map(({ name }) => (order.includes(name) ? palette[order.indexOf(name)] : CHART_NEUTRAL));
+const colorsInOrder = (rows: { name: string }[], order: string[], palette: string[], neutral: string) =>
+  rows.map(({ name }) => (order.includes(name) ? palette[order.indexOf(name)] : neutral));
 
 // The select can't use an empty value, so "All" has its own; the range still stores ""
 const ALL_MONTHS = "__all__";
@@ -92,6 +90,8 @@ function Stats() {
   const movies = movieData ?? NO_MOVIES;
   const shows = showData ?? NO_SHOWS;
   const loading = moviesLoading || showsLoading;
+  // The neutral and the ordered ramp differ between light and dark
+  const { neutral, ordinalRamp } = useChartColors();
   // The monthly spending range ("" for all), remembered in this browser as plain text
   const asText = { parse: (saved: string) => saved, serialize: (value: string) => value };
   const [startMonth, setStartMonth] = useStoredState("statsMonthlySpendStart", "", asText);
@@ -271,7 +271,7 @@ function Stats() {
                 <div className="mb-2 flex items-baseline justify-between">
                   <p className="text-sm text-muted-foreground">Ratings</p>
                   <p className="flex items-center gap-1 text-sm font-semibold">
-                    <Star className="size-3.5 self-center fill-yellow-500 text-yellow-500" aria-hidden="true" />
+                    <Star className="size-3.5 self-center fill-star text-star" aria-hidden="true" />
                     Avg {avgRating > 0 ? avgRating.toFixed(1) : "–"}
                   </p>
                 </div>
@@ -374,12 +374,12 @@ function Stats() {
                 storageKey="statsBreakdown"
                 countLabel={(n) => `${n} title${n !== 1 ? "s" : ""}`}
                 options={[
-                  { id: "watched", label: "Watched", data: watchedData, colors: [CHART_ACCENT, CHART_NEUTRAL] },
+                  { id: "watched", label: "Watched", data: watchedData, colors: [CHART_ACCENT, neutral] },
                   {
                     id: "formats",
                     label: "Formats",
                     data: formatData,
-                    colors: colorsInOrder(formatData, FORMAT_ORDER, CATEGORICAL),
+                    colors: colorsInOrder(formatData, FORMAT_ORDER, CATEGORICAL, neutral),
                   },
                   {
                     id: "genres",
@@ -393,7 +393,7 @@ function Stats() {
                     id: "condition",
                     label: "Condition",
                     data: conditionData,
-                    colors: colorsInOrder(conditionData, CONDITION_ORDER, CONDITION_COLORS),
+                    colors: colorsInOrder(conditionData, CONDITION_ORDER, ordinalRamp(CONDITION_ORDER.length), neutral),
                   },
                 ]}
               />

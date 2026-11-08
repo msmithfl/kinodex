@@ -80,11 +80,10 @@ function TvShowPurchaseEditor({
           </button>
           <Button
             type="button"
-            variant="ghost"
+            variant="ghost-destructive"
             size="icon-sm"
             onClick={onRemove}
             aria-label={`Remove purchase ${index + 1}`}
-            className="text-red-300 hover:bg-destructive/15 hover:text-red-200"
           >
             <Trash2 />
           </Button>
@@ -158,7 +157,6 @@ function TvShowPurchaseEditor({
             id={`purchasedAt-${index}`}
             value={purchase.purchasedAt}
             onChange={(e) => onChange({ ...purchase, purchasedAt: e.target.value })}
-            className="scheme-dark"
           />
         </FormField>
         <FormField label="Condition" className="col-span-2 sm:col-span-1">

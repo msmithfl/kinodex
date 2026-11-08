@@ -105,7 +105,7 @@ export function EditTvShowModal({
             <img
               src={formData.posterPath}
               alt=""
-              className="h-12 w-8 shrink-0 rounded-sm border border-white/10 bg-muted object-cover"
+              className="h-12 w-8 shrink-0 rounded-sm border border-border bg-muted object-cover"
             />
           )}
           <div className="flex min-w-0 flex-col gap-1">
@@ -126,15 +126,15 @@ export function EditTvShowModal({
 
         <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card px-5 py-3">
           {submitError && (
-            <p role="alert" className="text-sm text-red-300">
+            <p role="alert" className="text-sm text-destructive-text">
               {submitError}
             </p>
           )}
           <div className="flex items-center gap-2">
             <Button
-              variant="ghost"
+              variant="ghost-destructive"
               onClick={() => setShowDeleteConfirm(true)}
-              className="mr-auto text-red-300 hover:bg-destructive/15 hover:text-red-200"
+              className="mr-auto"
             >
               <Trash2 />
               Delete

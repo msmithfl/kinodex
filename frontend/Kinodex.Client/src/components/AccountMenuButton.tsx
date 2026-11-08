@@ -74,7 +74,7 @@ function AccountMenuButton({ size = 56, placement = "below" }: AccountMenuButton
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Account menu"
-        className="shrink-0 rounded-full overflow-hidden cursor-pointer ring-0 hover:ring-2 hover:ring-white/30 transition"
+        className="shrink-0 rounded-full overflow-hidden cursor-pointer ring-0 hover:ring-2 hover:ring-foreground/30 transition"
         style={{ width: size, height: size }}
       >
         <img src={user.imageUrl} alt="" className="w-full h-full object-cover" />

@@ -84,7 +84,7 @@ function PreviewPoster({ movie, className }: { movie: Movie; className?: string 
     <img
       src={movie.posterPath}
       alt=""
-      className={cn("aspect-2/3 rounded-lg border border-white/10 bg-muted object-cover shadow-lg", className)}
+      className={cn("aspect-2/3 rounded-lg border border-border bg-muted object-cover shadow-lg", className)}
     />
   ) : (
     <div
@@ -493,7 +493,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
 
         <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card px-5 py-3">
           {submitError && (
-            <p role="alert" className="text-sm text-red-300">
+            <p role="alert" className="text-sm text-destructive-text">
               {submitError}
             </p>
           )}

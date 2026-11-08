@@ -39,7 +39,7 @@ function PosterCard({ title, posterPath, subtitle, formats = [], rating = 0, to,
       data-slot="poster-card"
       className="group flex min-w-0 flex-col gap-2 outline-none"
     >
-      <div className="relative aspect-2/3 overflow-hidden rounded-[4px] border border-white/10 bg-muted shadow-md transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-2 group-hover:ring-primary group-focus-visible:ring-2 group-focus-visible:ring-ring md:rounded-lg">
+      <div className="relative aspect-2/3 overflow-hidden rounded-[4px] border border-border bg-muted shadow-md transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-2 group-hover:ring-primary group-focus-visible:ring-2 group-focus-visible:ring-ring md:rounded-lg">
         {posterPath && !broken ? (
           <img
             src={posterPath}

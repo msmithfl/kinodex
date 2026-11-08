@@ -1,12 +1,14 @@
 import type { CSSProperties } from "react";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
+import { useTheme } from "@/utils/theme";
 
 // Toast notifications ("Added Heat · Open"). Mounted once in App; show one with toast() from "sonner".
-// Dark only for now, like the rest of the app.
+// Follows the app's light or dark theme.
 function Toaster({ ...props }: ToasterProps) {
+  const theme = useTheme();
   return (
     <Sonner
-      theme="dark"
+      theme={theme}
       className="toaster group"
       style={
         {

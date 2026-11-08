@@ -5,7 +5,7 @@ const STARS = [1, 2, 3, 4, 5];
 
 // One of the five stars for a 0-5 rating in half steps: full, half or empty.
 // filled overrides the filled colour (e.g. a lighter yellow while previewing a hover).
-function StarIcon({ rating, star, icon, filled = "text-yellow-400" }: {
+function StarIcon({ rating, star, icon, filled = "text-star" }: {
   rating: number;
   star: number;
   icon: string;
@@ -63,7 +63,7 @@ export function QuickRating({ rating, onRate, label }: {
             rating={shown}
             star={star}
             icon="w-5 h-5"
-            filled={preview !== null ? "text-yellow-300" : "text-yellow-400"}
+            filled={preview !== null ? "text-star-hover" : "text-star"}
           />
           {[star - 0.5, star].map((value, i) => (
             <button
@@ -115,11 +115,11 @@ export function StarRatingInput({ value, onChange }: { value: number; onChange: 
               title={`${star} stars`}
             />
             {isFullStar ? (
-              <TiStarFullOutline className="w-8 h-8 text-yellow-400 absolute top-0 left-0" />
+              <TiStarFullOutline className="w-8 h-8 text-star absolute top-0 left-0" />
             ) : isHalfStar ? (
-              <TiStarHalfOutline className="w-8 h-8 text-yellow-400 absolute top-0 left-0" />
+              <TiStarHalfOutline className="w-8 h-8 text-star absolute top-0 left-0" />
             ) : (
-              <TiStarOutline className="w-8 h-8 text-muted-foreground/70 group-hover:text-yellow-200 absolute top-0 left-0" />
+              <TiStarOutline className="w-8 h-8 text-muted-foreground/70 group-hover:text-star-hover absolute top-0 left-0" />
             )}
           </div>
         );

@@ -40,6 +40,17 @@ remaining inline skeletons with a shared one where they match.
 
 ## 3. Finish the colour tokens
 
+Done on `feature/color-tokens`. Tokens added: `--destructive-text`, `--success`, `--success-text`,
+`--warning-text`, `--star`, `--star-hover` (named like `--primary-text`; shadcn's
+`--destructive-foreground` means text on a red fill, which isn't what these are), plus a
+`ghost-destructive` Button variant for the red delete buttons. The chart palettes stay hex in
+`chartColors.ts` (validated, and read by `labelColorOn`); the chart's star bar uses `var(--star)`
+and Clerk reads the tokens at startup. Left for step 4: the parked pages, `ConfirmDialog`,
+`MovieCardPoster`, `MovieCardDetail` and `formatIcon`; and the genre card overlays (step 1's open
+question). The light theme followed on the same branch: see [light-theme.md](light-theme.md).
+
+Original plan:
+
 Fixed colours are still written into components. Add semantic tokens in `index.css` (dark values
 now, light values later) and use them everywhere:
 

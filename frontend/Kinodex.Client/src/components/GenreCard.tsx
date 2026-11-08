@@ -30,7 +30,7 @@ function GenreCard({ name, movieCount, imagePath, overlay }: GenreCardProps) {
     <Link
       to={`/genres/${encodeURIComponent(name)}`}
       data-slot="genre-card"
-      className="group relative h-28 overflow-hidden rounded-xl border border-white/10 bg-muted shadow-md outline-none transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:ring-2 hover:ring-primary focus-visible:ring-2 focus-visible:ring-ring md:h-32"
+      className="group relative h-28 overflow-hidden rounded-xl border border-border bg-muted shadow-md outline-none transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:ring-2 hover:ring-primary focus-visible:ring-2 focus-visible:ring-ring md:h-32"
     >
       {imagePath && (
         <img

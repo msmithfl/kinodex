@@ -90,7 +90,7 @@ function TvShowPurchaseList({ show }: { show: TvShow }) {
                       <Barcode className="size-4 shrink-0 text-muted-foreground" />
                       <span className="truncate">{purchase.upcNumber}</span>
                       {copiedKey === key ? (
-                        <Check className="size-3.5 shrink-0 text-green-400" aria-label="Copied" />
+                        <Check className="size-3.5 shrink-0 text-success" aria-label="Copied" />
                       ) : (
                         <Copy className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                       )}
