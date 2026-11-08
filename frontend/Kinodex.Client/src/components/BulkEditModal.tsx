@@ -133,7 +133,6 @@ export function BulkEditModal({
               type="date"
               value={bulkEditData.purchasedAt}
               onChange={(e) => set("purchasedAt")(e.target.value)}
-              className="scheme-dark"
             />
           </FormField>
 

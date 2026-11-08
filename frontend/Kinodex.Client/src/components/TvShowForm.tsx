@@ -168,7 +168,7 @@ function TvShowForm({
         </TabsList>
 
       {validationError && (
-        <div role="alert" className="mt-4 shrink-0 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-red-300">
+        <div role="alert" className="mt-4 shrink-0 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive-text">
           {validationError}
         </div>
       )}

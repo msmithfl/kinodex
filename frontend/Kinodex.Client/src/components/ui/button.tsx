@@ -16,6 +16,8 @@ const buttonVariants = cva(
           "border border-input bg-card shadow-xs hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
+        // Red text with a red tint on hover: delete and remove buttons that sit among others
+        "ghost-destructive": "text-destructive-text hover:bg-destructive/15",
         link: "text-primary-text underline-offset-4 hover:underline",
       },
       size: {

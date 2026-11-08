@@ -84,7 +84,7 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
             <Barcode className="size-4 shrink-0 text-muted-foreground" />
             <span className="truncate">{movie.upcNumber}</span>
             {copied ? (
-              <Check className="size-3.5 shrink-0 text-green-400" aria-label="Copied" />
+              <Check className="size-3.5 shrink-0 text-success" aria-label="Copied" />
             ) : (
               <Copy className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
             )}

@@ -129,7 +129,7 @@ function TmdbSearch<T>({ search, toOption, onSelect, ownedTmdbIds, placeholder }
                 <img
                   src={`https://image.tmdb.org/t/p/w92${option.posterPath}`}
                   alt=""
-                  className="h-[60px] w-10 shrink-0 rounded-sm border border-white/10 bg-muted object-cover"
+                  className="h-[60px] w-10 shrink-0 rounded-sm border border-border bg-muted object-cover"
                 />
               ) : (
                 <span className="h-[60px] w-10 shrink-0 rounded-sm bg-muted" />

@@ -209,7 +209,7 @@ function SearchPage() {
               return (
                 <li key={item.key}>
                   <Link to={item.to} className="flex items-center gap-3 p-3 transition-colors hover:bg-accent/50">
-                    <div className="aspect-2/3 w-10 shrink-0 overflow-hidden rounded-sm border border-white/10 bg-muted">
+                    <div className="aspect-2/3 w-10 shrink-0 overflow-hidden rounded-sm border border-border bg-muted">
                       {item.posterPath && (
                         <img src={item.posterPath} alt="" className="h-full w-full object-cover" loading="lazy" />
                       )}

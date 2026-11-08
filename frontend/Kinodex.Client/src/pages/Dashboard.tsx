@@ -104,7 +104,7 @@ function RecentCarousel({ title, items }: { title: string; items: RecentItem[] }
               to={item.to}
               title={item.title}
               data-slot="recent-poster"
-              className="block h-full w-full overflow-hidden rounded-[4px] border border-white/10 bg-muted shadow-md outline-none transition-colors duration-200 hover:border-primary focus-visible:border-ring md:rounded-lg"
+              className="block h-full w-full overflow-hidden rounded-[4px] border border-border bg-muted shadow-md outline-none transition-colors duration-200 hover:border-primary focus-visible:border-ring md:rounded-lg"
             >
               {item.posterPath ? (
                 <img

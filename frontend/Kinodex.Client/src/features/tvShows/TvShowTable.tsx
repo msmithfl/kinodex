@@ -92,7 +92,7 @@ function TvShowTable({ shows, visibleColumns, sortBy, sortDirection, onSort, onO
                         src={show.posterPath}
                         alt=""
                         loading="lazy"
-                        className="h-10 w-7 shrink-0 rounded-sm border border-white/10 bg-muted object-cover"
+                        className="h-10 w-7 shrink-0 rounded-sm border border-border bg-muted object-cover"
                       />
                     ) : (
                       <span className="h-10 w-7 shrink-0 rounded-sm bg-muted" />

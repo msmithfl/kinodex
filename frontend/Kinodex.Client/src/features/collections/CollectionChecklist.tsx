@@ -164,13 +164,13 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
                 <span className="text-muted-foreground">
                   {ownedCount} of {listItems.length} owned
                 </span>
-                <span className={completionPercentage === 100 ? "font-medium text-emerald-400" : "text-muted-foreground"}>
+                <span className={completionPercentage === 100 ? "font-medium text-success" : "text-muted-foreground"}>
                   {completionPercentage}% complete
                 </span>
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
-                  className={cn("h-full rounded-full", completionPercentage === 100 ? "bg-emerald-400" : "bg-primary")}
+                  className={cn("h-full rounded-full", completionPercentage === 100 ? "bg-success" : "bg-primary")}
                   style={{ width: `${completionPercentage}%` }}
                 />
               </div>
@@ -186,7 +186,7 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
                         className="flex items-center gap-3 border-b border-border/60 py-1.5 last:border-b-0"
                       >
                         {owned ? (
-                          <CircleCheck className="size-4 shrink-0 text-emerald-400" aria-label="Owned" />
+                          <CircleCheck className="size-4 shrink-0 text-success" aria-label="Owned" />
                         ) : (
                           <Circle className="size-4 shrink-0 text-muted-foreground/60" aria-label="Not owned" />
                         )}
@@ -196,10 +196,9 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
                         </span>
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="ghost-destructive"
                           size="icon-sm"
                           onClick={() => item.id && handleRemoveFromList(item.id)}
-                          className="text-red-300 hover:bg-destructive/15 hover:text-red-200"
                           aria-label={`Remove ${item.title} from checklist`}
                         >
                           <Trash2 />

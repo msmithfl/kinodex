@@ -504,10 +504,9 @@ function MovieList() {
                     Edit
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="ghost-destructive"
                     size="sm"
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="text-red-300 hover:bg-destructive/15 hover:text-red-200"
                   >
                     <Trash2 />
                     Delete

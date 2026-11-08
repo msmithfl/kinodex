@@ -143,7 +143,7 @@ function Drawer({ label, onClose, children }: DrawerProps) {
         <button
           type="button"
           onClick={requestClose}
-          className="md:hidden absolute top-3 right-3 z-40 grid size-9 cursor-pointer place-items-center rounded-full border border-white/10 bg-background/70 text-foreground/80 backdrop-blur-sm hover:text-foreground"
+          className="md:hidden absolute top-3 right-3 z-40 grid size-9 cursor-pointer place-items-center rounded-full border border-border bg-background/70 text-foreground/80 backdrop-blur-sm hover:text-foreground"
           aria-label="Close"
         >
           <X className="size-5" />

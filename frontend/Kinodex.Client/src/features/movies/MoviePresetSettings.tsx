@@ -106,13 +106,12 @@ function MoviePresetSettings({ onError }: { onError: (message: string) => void }
                     <Pencil />
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="ghost-destructive"
                     size="icon-sm"
                     onClick={() => {
                       setDeleting(preset);
                       setConfirmOpen(true);
                     }}
-                    className="text-red-300 hover:bg-destructive/15 hover:text-red-200"
                     aria-label={`Delete ${preset.name}`}
                   >
                     <Trash2 />

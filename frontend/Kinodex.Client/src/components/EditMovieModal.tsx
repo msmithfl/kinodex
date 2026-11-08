@@ -151,7 +151,7 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
             <img
               src={formData.posterPath}
               alt=""
-              className="h-12 w-8 shrink-0 rounded-sm border border-white/10 bg-muted object-cover"
+              className="h-12 w-8 shrink-0 rounded-sm border border-border bg-muted object-cover"
             />
           )}
           <div className="flex min-w-0 flex-col gap-1">
@@ -187,7 +187,7 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
 
         <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card px-5 py-3">
           {submitError && (
-            <p role="alert" className="text-sm text-red-300">
+            <p role="alert" className="text-sm text-destructive-text">
               {submitError}
             </p>
           )}

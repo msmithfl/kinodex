@@ -28,7 +28,7 @@ const MAX_POSTER_RESULTS = 10;
 
 // A poster or backdrop to pick, and a search result row (a person or a movie)
 const TILE_CLASS =
-  "block cursor-pointer overflow-hidden rounded-md border border-white/10 bg-muted transition-colors hover:border-primary";
+  "block cursor-pointer overflow-hidden rounded-md border border-border bg-muted transition-colors hover:border-primary";
 const ROW_CLASS =
   "flex w-full cursor-pointer items-center gap-3 rounded-md p-2 text-left text-sm transition-colors hover:bg-accent";
 
@@ -413,12 +413,12 @@ function CollectionFormModal({
 
         <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card px-5 py-3">
           {nameTaken && (
-            <p role="alert" className="text-sm text-red-300">
+            <p role="alert" className="text-sm text-destructive-text">
               A collection with that name already exists.
             </p>
           )}
           {error && (
-            <p role="alert" className="text-sm text-red-300">
+            <p role="alert" className="text-sm text-destructive-text">
               {error}
             </p>
           )}

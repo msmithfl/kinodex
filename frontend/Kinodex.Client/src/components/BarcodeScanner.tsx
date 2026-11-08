@@ -152,7 +152,7 @@ function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
 
         {error ? (
           <div className="py-8 text-center">
-            <p className="mb-4 text-sm text-red-300">{error}</p>
+            <p className="mb-4 text-sm text-destructive-text">{error}</p>
             <Button type="button" variant="outline" onClick={onClose}>
               Close
             </Button>

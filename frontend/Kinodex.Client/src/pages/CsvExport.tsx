@@ -12,8 +12,8 @@ function RowErrors({ errors }: { errors: string[] }) {
   if (errors.length === 0) return null;
   return (
     <div>
-      <p className="mb-1 text-sm font-medium text-amber-300">Some rows had errors:</p>
-      <ul className="list-inside list-disc space-y-0.5 text-xs text-amber-200">
+      <p className="mb-1 text-sm font-medium text-warning-text">Some rows had errors:</p>
+      <ul className="list-inside list-disc space-y-0.5 text-xs text-warning-text">
         {errors.map((e, i) => (
           <li key={i}>{e}</li>
         ))}
