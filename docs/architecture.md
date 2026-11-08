@@ -1,7 +1,8 @@
 # Kinodex architecture map
 
 **What this is:** a description of the app *as it is today* (2026-10-25), to get oriented before
-changing things. It isn't a plan; plans live in [`docs/design/`](design/). Update it when the
+changing things. It isn't a plan; plans live in [`docs/design/`](design/), and the rules new
+screens follow are in [`docs/design/design-system.md`](design/design-system.md). Update it when the
 structure changes (new page, endpoint, model, or a feature moving between "core" and "parked").
 
 ## At a glance
