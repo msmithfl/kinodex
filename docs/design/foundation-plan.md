@@ -128,8 +128,10 @@ A short `docs/design/design-system.md` so new screens follow the system without 
 - phone rules: edge-to-edge carousels, one-screen layouts, no tap highlight
 - chart rules: validated palettes, colour follows the entity, a table view for every chart
 
+Done on `feature/design-system`: [design-system.md](design-system.md), with a checklist for
+finishing a screen. It notes one gap: the Stats monthly spending chart has no table view yet.
+
 ## Small leftovers
 
-- `main.tsx`: `signUpForceRedirectUrl="/profile"` points at a route that doesn't exist (the sign-up
-  page overrides it with `/`).
-- CSV export downloads as `movie-vault-export.csv`; rename to `kinodex-export.csv`.
+Done on `feature/design-system`: sign-up now redirects to `/` (it pointed at `/profile`, which
+doesn't exist), and the CSV export downloads as `kinodex-export.csv` (front end and backend).

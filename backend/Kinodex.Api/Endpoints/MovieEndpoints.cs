@@ -123,7 +123,7 @@ public static class MovieEndpoints
             }
 
             var bytes = Encoding.UTF8.GetBytes(csv.ToString());
-            return Results.File(bytes, "text/csv", "movie-vault-export.csv");
+            return Results.File(bytes, "text/csv", "kinodex-export.csv");
         }).RequireAuthorization();
 
         // POST import movies from Letterboxd CSV

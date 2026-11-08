@@ -12,7 +12,7 @@ function ThemedClerkProvider({ publishableKey, children }: { publishableKey: str
       publishableKey={publishableKey}
       appearance={appearance}
       afterSignOutUrl="/"
-      signUpForceRedirectUrl="/profile"
+      signUpForceRedirectUrl="/"
     >
       {children}
     </ClerkProvider>
