@@ -38,18 +38,6 @@ export type ShelfSection = Loosen<Schemas["ShelfSection"], "userId">;
 // HDD) for adding batches of similar movies
 export type MoviePreset = Loosen<Schemas["MoviePreset"], ServerSet>;
 
-export type Customer = Loosen<Omit<Schemas["Customer"], "checkouts">, ServerSet> & {
-  checkouts?: Checkout[];
-};
-
-export type Checkout = Loosen<
-  Omit<Schemas["Checkout"], "movie" | "customer">,
-  "id" | "isOverdue" | "isActive"
-> & {
-  movie?: Movie;
-  customer?: Customer;
-};
-
 export interface TMDBMovie {
   id: number;
   title: string;
@@ -66,31 +54,6 @@ export interface TMDBTvShow {
   poster_path: string;
   backdrop_path: string;
   genre_ids: number[];
-}
-
-export interface TmdbSearchResult {
-  tmdbId: number;
-  title: string;
-  year?: number;
-  posterPath?: string;
-  backdropPath?: string;
-  overview?: string;
-}
-
-export interface MatchSuggestion {
-  movieId: number;
-  movieTitle: string;
-  movieYear: number;
-  suggestedMatches: TmdbSearchResult[];
-}
-
-export interface MatchingResult {
-  success: boolean;
-  message: string;
-  totalUnmatched: number;
-  noMatchesFound: number;
-  suggestions: MatchSuggestion[];
-  errors: string[];
 }
 
 export const Genres = {

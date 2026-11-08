@@ -28,12 +28,6 @@ Status: built (November 2026, `feature/color-tokens`). Not yet checked in a brow
   progress ring): they sit on images.
 - The dimmed backdrop behind windows, drawers and the image lightbox.
 
-## Not themed
-
-The parked pages (shelves, lending, match movies) and their old components still use fixed dark
-Tailwind colours; they get cleaned up or removed in step 4 of
-[foundation-plan.md](foundation-plan.md).
-
 ## Adding a colour
 
 Add the token to both sets in `index.css` and to the `@theme inline` list, then use its class.

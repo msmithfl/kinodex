@@ -1,8 +1,9 @@
 # Frontend data layer: moving to a shared API client + React Query
 
 **Status:** Phases 1–3 (collections, movies, TV shows) done 2026-10-25; phase 4: settings and
-CSV import/export done; Match Movies left; shelf and lending pages parked
-**Last updated:** 2026-10-25
+CSV import/export done. Match Movies and the shelf and lending pages were removed from the
+frontend in November 2026 (foundation plan step 4), so every page is now on this data layer.
+**Last updated:** 2026-11-07
 **Scope:** `frontend/Kinodex.Client` (no backend changes needed)
 
 > **Priority (2026-10-25):** first make the existing core rock solid: movies, TV shows,

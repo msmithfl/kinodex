@@ -79,6 +79,13 @@ when those features come back. Then:
 - delete the old pieces listed above
 - remove the unused backend endpoints only once the features are confirmed gone (separate decision)
 
+Done on `feature/remove-parked-pages`: the six pages, `ConfirmDialog`, `MovieCardPoster`,
+`MovieCardDetail`, `formatIcon` and their types are gone; the stars use lucide and `react-icons`
+is uninstalled; unknown routes (including the old ones) redirect to the dashboard; the movie
+drawer's shelf name is plain text now that the shelf page is gone. `useBackdropClose` stays (the
+image lightbox uses it). Shelf sections stay as a movie field (forms, filters, bulk edit). The
+backend endpoints are untouched.
+
 ## 5. Guardrails
 
 - **Frontend tests** (Vitest + React Testing Library) for logic that breaks silently: filters
