@@ -41,7 +41,7 @@ function GenreDetail() {
           <MovieDetail key={openMovieId} movieId={openMovieId} onDeleted={closeMovie} />
         </Drawer>
       )}
-      <PageShell deps={[loading]}>
+      <PageShell remeasureWhen={loading}>
         <PageHeader
           title={genreName}
           subtitleBeside

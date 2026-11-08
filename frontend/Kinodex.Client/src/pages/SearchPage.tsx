@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useMovies } from "../features/movies/api";
 import { useTvShows } from "../features/tvShows/api";
@@ -6,7 +6,7 @@ import { Film, ScanBarcode, Search, Tv, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageShell from "../components/PageShell";
-import BarcodeScanner from "../components/BarcodeScanner";
+import { BarcodeScanner } from "../components/lazyComponents";
 import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import type { Movie, TvShow } from "../types";
 import { isMobile } from "../utils/isMobile";
@@ -95,16 +95,17 @@ function SearchPage() {
   }, [loading]);
 
   // Updates the URL in place, so typing doesn't stack up history entries
-  const updateQuery = (q: string) => {
-    setParams(q ? { q } : {}, { replace: true });
-  };
+  const updateQuery = useCallback(
+    (q: string) => setParams(q ? { q } : {}, { replace: true }),
+    [setParams],
+  );
 
   // Push the typed text to the URL once typing has paused
   useEffect(() => {
     if (text === query) return;
     const timer = window.setTimeout(() => updateQuery(text), SEARCH_DEBOUNCE_MS);
     return () => window.clearTimeout(timer);
-  }, [text]);
+  }, [text, query, updateQuery]);
 
   // Set the box and the search together, with no wait (clearing, scanning)
   const setQueryNow = (q: string) => {

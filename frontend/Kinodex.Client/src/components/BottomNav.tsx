@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Film, LayoutDashboard, Plus, ScanBarcode, Search } from "lucide-react";
-import { AddItemModal } from "./AddItemModal";
-import BarcodeScanner from "./BarcodeScanner";
+import { AddItemModal } from "./lazyComponents";
+import { BarcodeScanner } from "./lazyComponents";
 
 // Mobile-only bar fixed to the bottom of the screen; the sidebar covers these on wider screens.
 // Its height is reserved through the --bottom-nav-height CSS variable (index.css) so pages

@@ -169,6 +169,9 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Controls:** `SubNavigation` (phones), `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`
   + `utils/applyFilters.ts` (movies), `features/tvShows/filters.ts` (TV).
 - **Data layer:** `utils/api.ts`, `utils/queryClient.ts`, `features/*/api.ts` (see below).
+- **Downloads:** pages load on demand (`React.lazy` in `App.tsx`); so do the barcode scanner and
+  the Add window: import them from `components/lazyComponents.tsx`, never directly, or they land
+  back in the first download.
 - **Utilities:** `upc.ts` (eBay sold-listings link, copy-to-clipboard with a `Copied!` flash),
   `tmdbApi.ts` (browser-side TMDB calls), `useUrlSearchQuery` (search in the URL),
   `useFillViewportHeight` (pages that fill the screen above the bottom nav), `getSortedMovies`,
@@ -331,6 +334,15 @@ dotnet test backend/Kinodex.Api.Tests -c Release
 
 (`-c Release` because a running API locks the Debug build.)
 
+The frontend's plain logic (filters, spending, sorting, presets, chart colours, checklist
+matching) has Vitest tests beside each file (`*.test.ts`), with test items from
+`src/test/factories.ts`:
+
+```
+cd frontend/Kinodex.Client
+npm test
+```
+
 ## Feature status
 
 - **Core (being stabilized):** movies, TV shows, collections (+ checklists, covers, backdrops),
@@ -352,7 +364,8 @@ Pointers for cleanup, roughly in the order they'd come up:
 - Unused API endpoints from the removed pages: `/api/customers`, `/api/checkouts`, `/api/tmdb/*`
   matching, and shelf section reorder/rename/delete.
 - Largest page is `Stats` (~420 lines); the other core pages are 350–490 lines.
-- No frontend tests; backend tests cover the API (see Tests).
+- Frontend tests cover the plain logic only (see Tests); no component tests yet, and nothing runs
+  the tests automatically (no CI).
 - TMDB token is built into the frontend bundle.
 - Lint: no errors; some `react-hooks/exhaustive-deps` warnings on the per-page fetch effects
   (go away with the data-layer change).

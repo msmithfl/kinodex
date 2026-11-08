@@ -100,6 +100,22 @@ backend endpoints are untouched.
   `CollectionsView`), so other screens need a manual refresh. Route it through the movie hooks
   like every other save.
 
+Done on `feature/guardrails`:
+
+- **Tests:** Vitest (`npm test`), 33 tests next to the code they cover (`*.test.ts`): movie and TV
+  filters, spending, sorting, presets, chart colours, checklist matching. Test items come from
+  `src/test/factories.ts`. React Testing Library is left until there are component tests to write.
+- **Lint at zero:** the last two warnings were real (an effect missing dependencies on Search;
+  `PageShell`'s `deps` list), now `remeasureWhen`.
+- **Code splitting:** each page is its own download (`App.tsx`), and so are the barcode scanner
+  and the Add window (`components/lazyComponents.tsx`). The first download went from ~1.5 MB to
+  ~540 kB (167 kB compressed); Stats' charts (380 kB) and the scanner (160 kB) load only when
+  used. `vite.config.ts` warns if any file passes 600 kB.
+- **Line endings:** the repo already stored LF everywhere; the mix was only in working copies
+  (`core.autocrlf`). `.gitattributes` now pins LF on checkout too.
+- **One save path:** it already was (the drawer deletes through `useDeleteMovie`); the stale
+  comment and redundant refresh in `CollectionsView` are gone.
+
 ## 6. Write the design rules down
 
 A short `docs/design/design-system.md` so new screens follow the system without re-deriving it:

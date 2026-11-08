@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Movie, MoviePreset, TMDBMovie } from "../types";
 import { GENRE_MAP, searchTMDB } from "../utils/tmdbApi";
 import MovieForm from "./MovieForm";
-import BarcodeScanner from "./BarcodeScanner";
+import { BarcodeScanner } from "./lazyComponents";
 import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { MOD_KEY } from "./navigation";
 import TmdbSearch from "./TmdbSearch";

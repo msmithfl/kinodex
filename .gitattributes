@@ -1,0 +1,8 @@
+# Text files are stored with LF line endings (everything in the repo already is) and checked out
+# with LF on every machine too, whatever its core.autocrlf setting, so files written by tools and
+# files checked out by git match. Git tells text from binary itself.
+* text=auto eol=lf
+
+# Windows scripts need CRLF to run
+*.bat text eol=crlf
+*.cmd text eol=crlf

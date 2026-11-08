@@ -59,7 +59,7 @@ function GenresView() {
   return (
     <>
       <SubNavigation />
-      <PageShell deps={[loading]}>
+      <PageShell remeasureWhen={loading}>
         <PageHeader
           title="Genres"
           subtitleBeside

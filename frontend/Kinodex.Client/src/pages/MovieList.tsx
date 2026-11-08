@@ -28,7 +28,7 @@ import { useShelfSections } from "../features/shelfSections/api";
 import { useCollections } from "../features/collections/api";
 import MovieTable from "../features/movies/MovieTable";
 import { COLUMNS, DEFAULT_COLUMNS, type VisibleColumns } from "../features/movies/tableColumns";
-import BarcodeScanner from "../components/BarcodeScanner";
+import { BarcodeScanner } from "../components/lazyComponents";
 import FilterPanel from "../components/FilterPanel";
 import FilterChips from "../components/FilterChips";
 import SortMenu from "../components/SortMenu";
@@ -331,7 +331,7 @@ function MovieList() {
           <MovieDetail key={openMovieId} movieId={openMovieId} onDeleted={closeMovie} />
         </Drawer>
       )}
-      <PageShell deps={[loading]}>
+      <PageShell remeasureWhen={loading}>
         {/* Title, toolbar and active filters */}
         <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
           <PageHeader
