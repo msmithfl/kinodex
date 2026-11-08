@@ -98,11 +98,8 @@ the `useSettings()` hook (shared cache).
 | `/stats` | `Stats`: charts and breakdowns | Core |
 | `/settings` | `Settings`: collection completion rings; Add Movie presets (rename, delete; `features/movies/MoviePresetSettings.tsx`) | Core |
 | `/export` | `CsvExport`: CSV export/import, Letterboxd import | Core |
-| `/shelfsections`, `/shelfsections/:name` | `ShelfSectionsView`, `ShelfSectionDetail` | Reachable only via a movie's shelf link |
-| `/my-shelf` | `MyShelf` | Not linked |
-| `/match-movies` | `MatchMovies`: bulk TMDB matching | Not linked (admin-style tool) |
-| `/checkout`, `/customer` | `CheckoutsView`, `CustomersView` (lending) | Parked, not linked |
 | `/sign-in`, `/sign-up` | Clerk pages | Public |
+| anything else | Redirects to `/` (including the removed shelf, lending and Match Movies pages) | Redirect |
 
 ### Drawers
 
@@ -147,13 +144,12 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 | `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit, in the same redesigned window as movies (Add: Search › Details, preview beside the form, toast; Edit: Delete in the footer). Tabs in `features/tvShows/form/` (Details, Purchases using `TvShowPurchaseEditor` cards with season tiles, Images) |
 | `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop); saves via the collections hooks |
 | `BulkEditModal` | Bulk edit from the movie table |
-| `ConfirmDialog`, `ImageLightbox`, `BarcodeScanner`, `MobileOnlyMessage` | Shared helpers |
+| `ImageLightbox`, `BarcodeScanner`, `MobileOnlyMessage` | Shared helpers |
 | `useImagePicker` / `useProductImagePicker` | Hooks returning a button + grid: TMDB posters/backdrops; UPC product images |
 
 ### Shared building blocks
 
 - **Cards and lists:** `PosterCard` (movie, TV and collection grids; `CollectionCard` wraps it),
-  `MovieCardPoster` and `MovieCardDetail` (shelf page),
   `GenreCard`, `SimpleMovieTable` (collection/genre table view),
   `features/movies/MovieTable` (the movie list's table).
 - **Shared bits:** `StarRating` (`Stars` display, `StarRatingInput` picker), `TmdbLink`,
@@ -164,8 +160,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Colours:** every colour is a token in `index.css` (`text-destructive-text`, `text-success`,
   `text-warning-text`, `text-star`, ...; red delete buttons use the Button's `ghost-destructive`
   variant). The only other colour values are the chart palettes in `utils/chartColors.ts`; Clerk
-  reads the tokens (`utils/clerkAppearance.ts`, via `ThemedClerkProvider`). Parked pages and the
-  genre card overlays still use Tailwind's palette.
+  reads the tokens (`utils/clerkAppearance.ts`, via `ThemedClerkProvider`). Only the genre card
+  overlays still use Tailwind's palette.
 - **Theme:** light and dark token sets; the choice (Settings → Appearance, per device) lives in
   `utils/theme.ts` (`useTheme()`), applied before first paint by a script in `index.html`. See
   `docs/design/light-theme.md`.
@@ -177,7 +173,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   `tmdbApi.ts` (browser-side TMDB calls), `useUrlSearchQuery` (search in the URL),
   `useFillViewportHeight` (pages that fill the screen above the bottom nav), `getSortedMovies`,
   `spending.ts` / `tvShowPurchases.ts` / `formatSeasons.ts` (money and season maths),
-  `checklist.ts` (collection checklist matching), `formatIcon.tsx`, `dateUtils.ts`, `isMobile.ts`.
+  `checklist.ts` (collection checklist matching), `dateUtils.ts`, `isMobile.ts`.
 
 ### Redesign foundation (shadcn/ui, in progress on `feature/modernize-design`)
 
@@ -187,10 +183,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   source, not a package: edit them freely. `components.json` lets the shadcn CLI add more.
   `lib/utils.ts` has `cn()` for merging class names. `@/` imports resolve to `src/`.
 - **Tokens:** semantic colors in `index.css` (`bg-background`, `bg-card`, `text-muted-foreground`,
-  `bg-primary`, `bg-primary-soft`, `text-primary-text`, `border-border`, ...). `<html class="dark">`
-  selects the dark set; the `:root` set is the future light theme. Only the parked pages (and the
-  `MovieCardPoster`, `MovieCardDetail`, `ConfirmDialog` and `FormatIcon` pieces only they use) still
-  use the old `gray-*` classes.
+  `bg-primary`, `bg-primary-soft`, `text-primary-text`, `border-border`, ...): a light set
+  (`:root`) and a dark set (`.dark`); see Colours and Theme above. Icons are lucide throughout.
 - **Type and motion:** Geist and Geist Mono (self-hosted via `@fontsource-variable`, imported in
   `main.tsx`) are the app font. `tw-animate-css` gives the components their enter/exit
   animations; `motion` is installed for larger transitions.
@@ -209,7 +203,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   (sort-by and direction dropdown), `PosterCard` (poster grid card with hover lift, formats and
   rating), `SortHeader` (a table's sortable column header), `ListSkeleton` (loading placeholder for
   the movie and TV lists), `Pagination`.
-- **Redesigned screens:** everything in the core app (the parked pages are not). The sidebar and search palette; the movie list (`MovieList`:
+- **Redesigned screens:** every page in the app. The sidebar and search palette; the movie list (`MovieList`:
   title and count, Scan/Add, toolbar with search (`/` focuses it), filter, sort, Table/Posters,
   columns; filter chips; `MovieTable` with poster thumbnails, checkboxes and a select-all; a
   floating bulk-action bar; staggered poster fade-in; skeletons while loading; toasts after bulk
@@ -226,20 +220,12 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 
 ### How data loading works today
 
-**Converted (movies, TV shows, collections, genres, dashboard, stats, search):** load and save through a shared
+Every page loads and saves through a shared
 React Query cache: `utils/api.ts` (one client: address + sign-in token + `ApiError`) → hooks in
 `features/{movies,collections,shelfSections,tvShows}/api.ts` → components. Saves mark the
 affected data as out of date and every screen showing it refreshes. The cache empties when the
-signed-in user changes (`components/ClearCacheOnUserChange.tsx`).
-
-**Not yet converted (Match Movies, and the parked shelf and lending pages):** each page fetches
-what it needs itself (the ones that change movies or shelves then tell the cache):
-`useAuth().getToken()` → `fetch(API_BASE + path)` with a Bearer header → local `useState`. So:
-
-- they re-download their data each visit;
-- after changes they refresh themselves (`fetchData()` etc.).
-
-The remaining phases are in [design/frontend-data-layer.md](design/frontend-data-layer.md).
+signed-in user changes (`components/ClearCacheOnUserChange.tsx`). The design is in
+[design/frontend-data-layer.md](design/frontend-data-layer.md).
 
 **Computed in the browser, not the API:** stats, dashboard spending, genre lists (from each
 movie's `genres`), collection completion rings and checklist ownership, filters and sorting.
@@ -285,18 +271,18 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 | `/api/tvshows` | list, get/create/update/delete by id (purchases nested) | Owned | TV pages, dashboard, stats, search |
 | `/api/collections` | list, create, update (name/director/cover/backdrop), delete | Owned; rename/delete also update movies' `collections` lists | Collections |
 | `/api/collections/{id}/items`, `/api/collections/items/all` | checklist items: list, add, delete; all items for rings | Owned | Collections |
-| `/api/shelfsections` | list, create, reorder, rename, delete | Owned (auth set per route); rename/delete update movies | Movie forms, shelf pages |
+| `/api/shelfsections` | list, create, reorder, rename, delete | Owned (auth set per route); rename/delete update movies | Movie forms (list, create) |
 | `/api/settings` | get, update | Owned | `useSettings()` hook |
 | `/api/movie-presets` | list, create, update, delete (names unique per user; every Add Movie field TMDB does not fill in, purchase date optional) | Owned | `features/movies/presets.ts`; Add Movie modal picks and saves them |
 | `/api/upc/lookup/{upc}` | product title + images | Shared cache (`UpcLookups`), not per user | Product image picker |
-| `/api/tmdb/*` | unmatched, match, assign, fill-images, search | Owned (acts on the caller's movies) | `MatchMovies` |
-| `/api/customers`, `/api/checkouts` | CRUD, returns, overdue | Owned (checkouts via their movie's owner) | Parked lending pages |
+| `/api/tmdb/*` | unmatched, match, assign, fill-images, search | Owned (acts on the caller's movies) | Nothing (its Match Movies page was removed) |
+| `/api/customers`, `/api/checkouts` | CRUD, returns, overdue | Owned (checkouts via their movie's owner) | Nothing (the lending pages were removed) |
 | `/api/webhooks/clerk` | user created/updated/deleted | **No sign-in**; verified by Svix signature | Clerk |
 
 ### Data model
 
 ```
-User (Clerk id) ─── owns (by UserId string) ──┬─ Movie ─────────── Checkout ─── Customer   (lending, parked)
+User (Clerk id) ─── owns (by UserId string) ──┬─ Movie ─────────── Checkout ─── Customer   (lending; no frontend now)
                                                ├─ TvShow ── TvShowPurchase (seasons, price, date, gift, UPC, formats)
                                                ├─ Collection ── CollectionListItem (checklist)
                                                ├─ ShelfSection
@@ -351,21 +337,21 @@ dotnet test backend/Kinodex.Api.Tests -c Release
   genres, search, dashboard, stats, settings, CSV import/export, drawers, product image lookup.
 - **Core shelf tracking:** each movie's shelf section and shelf number (forms, drawer, filters,
   bulk edit), and creating a section from the movie form.
-- **Present but tucked away:** Match Movies.
-- **Parked (future features):** the shelf pages (`ShelfSectionsView`, `ShelfSectionDetail`,
-  `MyShelf`: browsing by shelf, reordering/renaming/deleting sections), lending
-  (customers/checkouts pages + API), a lending ledger and watch log in the movie drawer (not
-  built; tabs hidden).
+- **Removed from the frontend, to rebuild on the new foundation (November 2026; git history
+  has them):** the shelf pages (browsing by shelf, reordering/renaming/deleting sections), lending
+  (customers and checkouts) and Match Movies (bulk TMDB matching). Their API endpoints are still
+  there, unused; removing them is a separate decision.
+- **Future, not built:** a lending ledger and watch log in the movie drawer (tabs hidden).
 
 ## Known loose ends
 
 Pointers for cleanup, roughly in the order they'd come up:
 
-- Match Movies and the parked shelf/lending pages still load data themselves (data-layer
-  design doc, phase 4). `Svix` (Clerk webhooks) has a 2.x major version available; 1.86 isn't
-  flagged, so it hasn't been upgraded.
-- Largest remaining files are the parked/unconverted pages (`CheckoutsView` ~590, `Stats` ~420,
-  `MatchMovies`, shelf pages); the core pages are now 350–490 lines.
+- `Svix` (Clerk webhooks) has a 2.x major version available; 1.86 isn't flagged, so it hasn't
+  been upgraded.
+- Unused API endpoints from the removed pages: `/api/customers`, `/api/checkouts`, `/api/tmdb/*`
+  matching, and shelf section reorder/rename/delete.
+- Largest page is `Stats` (~420 lines); the other core pages are 350–490 lines.
 - No frontend tests; backend tests cover the API (see Tests).
 - TMDB token is built into the frontend bundle.
 - Lint: no errors; some `react-hooks/exhaustive-deps` warnings on the per-page fetch effects

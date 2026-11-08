@@ -1,30 +1,38 @@
 import { useState } from "react";
-import { TiStarOutline, TiStarHalfOutline, TiStarFullOutline } from "react-icons/ti";
+import { Star, StarHalf } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const STARS = [1, 2, 3, 4, 5];
 
-// One of the five stars for a 0-5 rating in half steps: full, half or empty.
-// filled overrides the filled colour (e.g. a lighter yellow while previewing a hover).
-function StarIcon({ rating, star, icon, filled = "text-star" }: {
+// One of the five stars for a 0-5 rating in half steps: full, half (the left half filled over an
+// empty outline) or empty. filled is the filled colour (e.g. the lighter yellow of a hover
+// preview); empty is the outline's.
+function StarIcon({ rating, star, size, filled = "text-star", empty = "text-muted-foreground/70" }: {
   rating: number;
   star: number;
-  icon: string;
+  size: string;
   filled?: string;
+  empty?: string;
 }) {
-  if (rating >= star) return <TiStarFullOutline className={`${icon} ${filled}`} />;
-  if (rating === star - 0.5) return <TiStarHalfOutline className={`${icon} ${filled}`} />;
-  return <TiStarOutline className={`${icon} text-muted-foreground/70`} />;
+  const full = rating >= star;
+  const half = rating === star - 0.5;
+  return (
+    <span className={cn("relative inline-block shrink-0", size)} aria-hidden="true">
+      <Star className={cn("absolute inset-0 size-full", full ? cn("fill-current", filled) : empty)} />
+      {half && <StarHalf className={cn("absolute inset-0 size-full fill-current", filled)} />}
+    </span>
+  );
 }
 
 // Five stars for a 0-5 rating in half steps. Renders just the stars, so the caller's own flex
 // row sets the spacing (and can add things after them, like the TMDB link).
 // size: "sm" in tables, "md" in detail headers.
 export function Stars({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" }) {
-  const icon = size === "md" ? "w-6 h-6" : "w-5 h-5";
+  const icon = size === "md" ? "size-6" : "size-5";
   return (
     <>
       {STARS.map((star) => (
-        <StarIcon key={star} rating={rating} star={star} icon={icon} />
+        <StarIcon key={star} rating={rating} star={star} size={icon} />
       ))}
     </>
   );
@@ -58,11 +66,11 @@ export function QuickRating({ rating, onRate, label }: {
       onClick={(e) => e.stopPropagation()}
     >
       {STARS.map((star) => (
-        <span key={star} className="relative w-5 h-5">
+        <span key={star} className="relative size-5">
           <StarIcon
             rating={shown}
             star={star}
-            icon="w-5 h-5"
+            size="size-5"
             filled={preview !== null ? "text-star-hover" : "text-star"}
           />
           {[star - 0.5, star].map((value, i) => (
@@ -94,36 +102,27 @@ export function QuickRating({ rating, onRate, label }: {
 // or Clear for no rating
 export function StarRatingInput({ value, onChange }: { value: number; onChange: (rating: number) => void }) {
   return (
-    <div className="flex">
-      {STARS.map((star) => {
-        const isFullStar = value >= star;
-        const isHalfStar = value === star - 0.5;
-        return (
+    <div className="flex items-center">
+      {STARS.map((star) => (
+        <div key={star} className="group relative size-8 cursor-pointer">
           <div
-            key={star}
-            className="relative cursor-pointer group"
-            style={{ width: "32px", height: "32px" }}
-          >
-            <div
-              className="absolute left-0 top-0 w-1/2 h-full z-10"
-              onClick={() => onChange(star - 0.5)}
-              title={`${star - 0.5} stars`}
-            />
-            <div
-              className="absolute right-0 top-0 w-1/2 h-full z-10"
-              onClick={() => onChange(star)}
-              title={`${star} stars`}
-            />
-            {isFullStar ? (
-              <TiStarFullOutline className="w-8 h-8 text-star absolute top-0 left-0" />
-            ) : isHalfStar ? (
-              <TiStarHalfOutline className="w-8 h-8 text-star absolute top-0 left-0" />
-            ) : (
-              <TiStarOutline className="w-8 h-8 text-muted-foreground/70 group-hover:text-star-hover absolute top-0 left-0" />
-            )}
-          </div>
-        );
-      })}
+            className="absolute top-0 left-0 z-10 h-full w-1/2"
+            onClick={() => onChange(star - 0.5)}
+            title={`${star - 0.5} stars`}
+          />
+          <div
+            className="absolute top-0 right-0 z-10 h-full w-1/2"
+            onClick={() => onChange(star)}
+            title={`${star} stars`}
+          />
+          <StarIcon
+            rating={value}
+            star={star}
+            size="size-8"
+            empty="text-muted-foreground/70 group-hover:text-star-hover"
+          />
+        </div>
+      ))}
       <button
         type="button"
         onClick={() => onChange(0)}

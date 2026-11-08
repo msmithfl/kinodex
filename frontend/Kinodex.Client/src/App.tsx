@@ -7,14 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import MovieList from "./pages/MovieList";
 import TvShowList from "./pages/TvShowList";
 import CollectionsView from "./pages/CollectionsView";
-import ShelfSectionsView from "./pages/ShelfSectionsView";
-import ShelfSectionDetail from "./pages/ShelfSectionDetail";
 import GenresView from "./pages/GenresView";
 import GenreDetail from "./pages/GenreDetail";
-import MatchMovies from "./pages/MatchMovies";
-import CustomersView from "./pages/CustomersView";
-import CheckoutsView from "./pages/CheckoutsView";
-import MyShelf from "./pages/MyShelf";
 import Stats from "./pages/Stats";
 import SearchPage from "./pages/SearchPage";
 import Settings from "./pages/Settings";
@@ -64,22 +58,18 @@ function App() {
                     <Route path="/library" element={<MovieList />} />
                     <Route path="/tv-shows" element={<TvShowList />} />
                     <Route path="/tv-shows/:id" element={<TvShowRedirect />} />
-                    <Route path="/my-shelf" element={<MyShelf />} />
                     <Route path="/dashboard" element={<Navigate to="/" replace />} />
                     <Route path="/collections" element={<CollectionsView />} />
                     <Route path="/collections/:collectionName" element={<CollectionRedirect />} />
-                    <Route path="/shelfsections" element={<ShelfSectionsView />} />
-                    <Route path="/shelfsections/:sectionName" element={<ShelfSectionDetail />} />
                     <Route path="/genres" element={<GenresView />} />
                     <Route path="/genres/:genreName" element={<GenreDetail />} />
-                    <Route path="/match-movies" element={<MatchMovies />} />
-                    <Route path="/checkout" element={<CheckoutsView />} />
-                    <Route path="/customer" element={<CustomersView />} />
                     <Route path="/movie/:id" element={<MovieRedirect />} />
                     <Route path="/search" element={<SearchPage />} />
                     <Route path="/stats" element={<Stats />} />
                     <Route path="/export" element={<CsvExport />} />
                     <Route path="/settings" element={<Settings />} />
+                    {/* Anything else, including the removed shelf, lending and match pages */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </main>
               </div>

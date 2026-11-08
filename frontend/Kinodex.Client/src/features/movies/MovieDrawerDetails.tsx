@@ -105,12 +105,7 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
       {/* Where it lives; watched and streaming */}
       <dl className={cn(card, "grid grid-cols-3 gap-x-4 gap-y-4 p-4")}>
         <Fact label="Shelf">
-          <Link
-            to={`/shelfsections/${encodeURIComponent(movie.shelfSection || "Unshelved")}`}
-            className="hover:underline"
-          >
-            {movie.shelfSection || "Unshelved"}
-          </Link>
+          {movie.shelfSection || "Unshelved"}
         </Fact>
         <Fact label="Shelf #">
           {movie.shelfNumber > 0 ? <span className="font-mono tabular-nums">{movie.shelfNumber}</span> : notSet}
