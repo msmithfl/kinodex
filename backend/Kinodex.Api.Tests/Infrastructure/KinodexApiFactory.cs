@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using Kinodex.Api.Data;
 using Microsoft.AspNetCore.Authentication;
@@ -20,6 +21,9 @@ public class KinodexApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly string _connectionString;
 
+    // The secret the test server checks Clerk webhook signatures with (Svix format)
+    public static readonly string WebhookSecret = "whsec_" + Convert.ToBase64String(RandomNumberGenerator.GetBytes(24));
+
     public KinodexApiFactory()
     {
         var server = new NpgsqlConnectionStringBuilder(FindServerConnectionString())
@@ -37,16 +41,17 @@ public class KinodexApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         // "Testing" keeps appsettings.Development.json (and its database) out of the running API
         builder.UseEnvironment("Testing");
+        builder.UseSetting("Clerk:WebhookSecret", WebhookSecret);
 
         builder.ConfigureTestServices(services =>
         {
-            services.AddAuthentication(TestAuthHandler.Scheme)
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.Scheme, _ => { });
+            services.AddAuthentication(TestAuthHandler.SchemeName)
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
             services.PostConfigure<AuthenticationOptions>(options =>
             {
-                options.DefaultScheme = TestAuthHandler.Scheme;
-                options.DefaultAuthenticateScheme = TestAuthHandler.Scheme;
-                options.DefaultChallengeScheme = TestAuthHandler.Scheme;
+                options.DefaultScheme = TestAuthHandler.SchemeName;
+                options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
             });
         });
     }

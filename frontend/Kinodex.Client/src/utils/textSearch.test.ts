@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { searchScore } from "./textSearch";
+import { searchScore, titleSearchScore } from "./textSearch";
 
 const HUNGER = ["The Hunger Games: The Ballad of Songbirds & Snakes", "2023"];
 
@@ -35,5 +35,19 @@ describe("searchScore", () => {
 
   it("matches everything for an empty search", () => {
     expect(searchScore(HUNGER, "   ")).toBe(1);
+  });
+});
+
+describe("titleSearchScore", () => {
+  it("finds a title by its words and year", () => {
+    expect(titleSearchScore("Alien", 1979, [], "alien 1979")).toBeGreaterThan(0);
+    expect(titleSearchScore("Alien", 1979, [], "alien 1986")).toBe(0);
+  });
+
+  it("finds a title by any of its UPCs, in part or with different leading zeros", () => {
+    const upcs = [null, "012345678905"];
+    expect(titleSearchScore("Alien", 1979, upcs, "5678")).toBe(1);
+    expect(titleSearchScore("Alien", 1979, upcs, "0012345678905")).toBe(1);
+    expect(titleSearchScore("Alien", 1979, upcs, "999999999999")).toBe(0);
   });
 });

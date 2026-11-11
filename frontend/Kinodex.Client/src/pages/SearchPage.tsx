@@ -11,7 +11,7 @@ import type { Movie, TvShow } from "../types";
 import { isMobile } from "../utils/isMobile";
 import { formatSeasons } from "../utils/formatSeasons";
 import { ownedSeasons } from "../utils/tvShowPurchases";
-import { upcMatches } from "../utils/barcode";
+import { titleSearchScore } from "../utils/textSearch";
 import { useScanInput } from "../utils/useBarcodeScan";
 
 // A movie or TV show in the results, with everything a row shows and searches
@@ -126,20 +126,14 @@ function SearchPage() {
   // starts a fresh search with the code, rather than adding it to what was there
   const handleSearchKeyDown = useScanInput(setQueryNow);
 
-  const needle = query.trim().toLowerCase();
-  const results = needle
+  // Best matches first (see titleSearchScore), then alphabetical
+  const searching = query.trim() !== "";
+  const results = searching
     ? items
-        .filter(
-          (item) =>
-            item.title.toLowerCase().includes(needle) ||
-            item.upcs.some((upc) => upcMatches(upc, needle)),
-        )
-        // Titles that start with the search come first, then alphabetical
-        .sort((a, b) => {
-          const aStarts = a.title.toLowerCase().startsWith(needle) ? 0 : 1;
-          const bStarts = b.title.toLowerCase().startsWith(needle) ? 0 : 1;
-          return aStarts - bStarts || a.title.localeCompare(b.title);
-        })
+        .map((item) => ({ item, score: titleSearchScore(item.title, item.year, item.upcs, query) }))
+        .filter(({ score }) => score > 0)
+        .sort((a, b) => b.score - a.score || a.item.title.localeCompare(b.item.title))
+        .map(({ item }) => item)
     : [];
 
   return (
@@ -190,7 +184,7 @@ function SearchPage() {
 
         {/* Result count */}
         <div className="mt-4 mb-3 min-h-5">
-          {needle && !loading && (
+          {searching && !loading && (
             <span className="text-sm text-muted-foreground">
               {results.length} result{results.length !== 1 ? "s" : ""}
             </span>
@@ -199,7 +193,7 @@ function SearchPage() {
 
         {/* Results. No spinner while the collection loads: the hint shows, and a search typed
             meanwhile just waits (rather than briefly claiming nothing matches) */}
-        {!needle ? (
+        {!searching ? (
           <p className="py-12 text-center text-sm text-muted-foreground">
             Search your whole collection by title or barcode.
           </p>

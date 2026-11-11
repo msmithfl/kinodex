@@ -44,7 +44,7 @@ import { applyFilters } from "../utils/applyFilters";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { isMobile } from "../utils/isMobile";
 import Pagination from "../components/Pagination";
-import { upcMatches } from "../utils/barcode";
+import { titleSearchScore } from "../utils/textSearch";
 
 const PAGE_SIZE = 100;
 
@@ -133,15 +133,11 @@ function MovieList() {
 
   const sortedMovies = getSortedMovies(movies, sortBy, sortDirection);
 
-  // Filter movies by search query and filters
+  // Filter movies by the filter menu, then the search (title words, year or UPC), keeping the sort
   const filteredMovies = applyFilters(sortedMovies, selectedFilters).filter(
-    (movie) => {
-      const query = searchQuery.trim().toLowerCase();
-      if (!query) return true;
-      const matchesTitle = movie.title.toLowerCase().includes(query);
-      const matchesUpc = upcMatches(movie.upcNumber, query);
-      return matchesTitle || matchesUpc;
-    },
+    (movie) =>
+      !searchQuery.trim() ||
+      titleSearchScore(movie.title, movie.year, [movie.upcNumber], searchQuery) > 0,
   );
 
   // One page of the filtered movies at a time. Changing what's shown (search, filters, sort,

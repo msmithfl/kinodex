@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
-import { upcMatches } from "../utils/barcode";
+import { titleSearchScore } from "../utils/textSearch";
 import { ApiError } from "../utils/api";
 import { useTvShows } from "../features/tvShows/api";
 import { applyTvShowFilters, buildTvShowFilterCategories } from "../features/tvShows/filters";
@@ -145,16 +145,14 @@ function TvShowList() {
     hasGift: show.purchases.some((p) => p.isGift),
   }));
 
-  // Apply the filter menu, then search by title or any purchase's UPC
-  const query = searchQuery.trim().toLowerCase();
+  // Apply the filter menu, then the search (title words, year or any purchase's UPC)
   const filteredShows = applyTvShowFilters(
     getSortedMovies(rows, sortBy, sortDirection),
     selectedFilters,
   ).filter(
     (show) =>
-      !query ||
-      show.title.toLowerCase().includes(query) ||
-      show.purchases.some((p) => upcMatches(p.upcNumber, query)),
+      !searchQuery.trim() ||
+      titleSearchScore(show.title, show.year, show.purchases.map((p) => p.upcNumber), searchQuery) > 0,
   );
   const filterCategories = buildTvShowFilterCategories(shows);
 

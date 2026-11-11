@@ -165,6 +165,11 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Theme:** light and dark token sets; the choice (Settings → Appearance, per device) lives in
   `utils/theme.ts` (`useTheme()`), applied before first paint by a script in `index.html`. See
   `docs/design/light-theme.md`.
+- **Searching the collection:** the search window, the Search page, the Movies and TV list
+  searches and the collection cover picker all match the same way (`utils/textSearch.ts`):
+  every word typed has to appear in the title or year, in any order, ignoring case, accents and
+  punctuation ("spiderman" finds Spider-Man), or the text is part of a UPC. The search window and
+  Search page put the best matches first; the lists keep their own sort.
 - **Barcodes:** phones and tablets scan with the camera (`BarcodeScanner`, from the bottom bar,
   Search, the list toolbars and the UPC fields); those scan buttons only show where `isMobile()`,
   so desktops have none. Desktop USB/Bluetooth scanners type the code and press Enter like a
@@ -340,7 +345,8 @@ temporary database `kinodex_test_…` with the real migrations on the Postgres s
 `KINODEX_TEST_POSTGRES` (or the API's `appsettings.Development.json`), and drops it afterwards.
 A stand-in sign-in (`X-Test-User` header) lets each test act as any user. They cover sign-in
 being required, per-user ownership for every data area, and the core rules (renaming/deleting
-collections updates movies, settings defaults, UPC validation).
+collections updates movies, settings defaults, UPC validation), and Clerk webhooks (signed ones
+add and delete users and their data; unsigned or wrongly signed ones are refused).
 
 ```
 dotnet test backend/Kinodex.Api.Tests -c Release
@@ -377,7 +383,5 @@ tests against a PostgreSQL container.
 
 Pointers for cleanup, roughly in the order they'd come up:
 
-- `Svix` (Clerk webhooks) has a 2.x major version available; 1.86 isn't flagged, so it hasn't
-  been upgraded.
 - Largest page is `Stats` (~420 lines); the other core pages are 350–490 lines.
 - Frontend tests cover the plain logic only (see Tests); no component tests yet.

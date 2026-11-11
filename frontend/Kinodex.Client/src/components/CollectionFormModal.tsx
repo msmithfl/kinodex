@@ -9,6 +9,7 @@ import { FormField } from "./FormFields";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 import { useTmdb, type TMDBPerson } from "../utils/tmdbApi";
 import { ApiError } from "../utils/api";
+import { searchScore } from "../utils/textSearch";
 import { useCreateCollection, useUpdateCollection } from "../features/collections/api";
 import type { Collection, Movie, TMDBMovie } from "../types";
 
@@ -109,8 +110,10 @@ function CollectionFormModal({
     const q = query.trim().toLowerCase();
     if (kind !== "collection" || !q) return [];
     return movies
-      .filter((m) => m.posterPath && m.title.toLowerCase().includes(q))
-      .sort((a, b) => a.title.localeCompare(b.title))
+      .map((m) => ({ m, score: m.posterPath ? searchScore([m.title, String(m.year || "")], q) : 0 }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score || a.m.title.localeCompare(b.m.title))
+      .map(({ m }) => m)
       .slice(0, MAX_POSTER_RESULTS);
   }, [movies, query, kind]);
 

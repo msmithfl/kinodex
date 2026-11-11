@@ -1,5 +1,7 @@
 // Matching a typed search against titles, for lists where the best matches should come first.
 
+import { upcMatches } from "./barcode";
+
 // Lower case, without accents, so "Amélie" and "amelie" compare equal
 const normalize = (text: string) =>
   text
@@ -29,4 +31,17 @@ export function searchScore(fields: string[], search: string): number {
   const firstTerm = compact(terms[0]);
   if (firstTerm && title.split(/[^a-z0-9]+/).some((word) => word.startsWith(firstTerm))) return 0.8;
   return 0.6;
+}
+
+// How well a movie or TV show in the collection matches a search box: by the words of its title
+// and its year (see searchScore), or by any of its UPCs, in full or in part (which counts as a
+// full match). The search window, the Search page and the list searches all match this way.
+export function titleSearchScore(
+  title: string,
+  year: number | null | undefined,
+  upcs: (string | null | undefined)[],
+  search: string,
+): number {
+  if (upcs.some((upc) => upcMatches(upc, search))) return 1;
+  return searchScore([title, year ? String(year) : ""], search);
 }
