@@ -178,7 +178,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   search matches a code however many leading zeros it came with (`upcMatches`). Detection is in
   `utils/barcode.ts` (`createScanDetector`, scanner-speed typing) and `utils/useBarcodeScan.ts`
   (`useBarcodeScan`, `useScanInput`).
-  Handing over between windows (search window to drawer or Add window, Add chooser to form)
+  Handing over between windows (search window to drawer or Add window, Add chooser to form, a
+  movie drawer's collection link to the collection drawer)
   keeps the dark backdrop on screen: `utils/windowHandoff.ts`.
 - **Charts:** `ChartBreakdown` (Stats donut/table); colours and tooltip style in `utils/chartColors.ts`.
 - **Controls:** `SubNavigation` (phones), `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`

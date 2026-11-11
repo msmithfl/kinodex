@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DrawerActionsSlotContext } from "./drawerActions";
-import { isTakingOver } from "../utils/windowHandoff";
+import { isOverAnotherDrawer, isTakingOver } from "../utils/windowHandoff";
 
 interface DrawerProps {
   label: string; // Screen reader name, e.g. "Movie details"
@@ -25,9 +25,12 @@ type SwipeMode = "idle" | "drag" | "settle" | "out";
 function Drawer({ label, onClose, children }: DrawerProps) {
   // Set while the slide-out animation plays; onClose runs when it finishes
   const [closing, setClosing] = useState(false);
-  // Opened from the search window, which hands over its backdrop: the backdrop starts dark, no
-  // fade-in (see utils/windowHandoff)
+  // Opened from the search window or another drawer's link, which hand over their backdrop: the
+  // backdrop starts dark, no fade-in (see utils/windowHandoff)
   const [takingOver] = useState(isTakingOver);
+  // Opened on top of a drawer that stays (a movie's over its collection's): no dimming of its own,
+  // so the screen doesn't get darker; the backdrop is still there to click to close this one
+  const [stacked] = useState(isOverAnotherDrawer);
   const requestClose = useCallback(() => setClosing(true), []);
 
   const panelRef = useRef<HTMLDivElement>(null);
@@ -111,10 +114,12 @@ function Drawer({ label, onClose, children }: DrawerProps) {
 
   return createPortal(
     // text-foreground: portalled outside the app's layout, so it doesn't inherit the app's text colour
-    <div className="fixed inset-0 z-50 text-foreground">
+    <div data-slot="drawer" className="fixed inset-0 z-50 text-foreground">
       <div
+        data-slot="drawer-backdrop"
         className={cn(
-          "absolute inset-0 bg-black/60 backdrop-blur-[2px]",
+          "absolute inset-0",
+          !stacked && "bg-black/60 backdrop-blur-[2px]",
           closing ? "animate-fade-out" : !takingOver && "animate-fade-in",
         )}
         style={backdropStyle}

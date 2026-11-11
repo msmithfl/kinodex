@@ -7,6 +7,7 @@ import { openEbaySoldListings, useCopyToClipboard } from "../../utils/upc";
 import { formatPurchaseDate } from "../../utils/dateUtils";
 import Fact, { NotSet, YesNo } from "../../components/DetailField";
 import type { Movie } from "../../types";
+import { handOverDrawer } from "../../utils/windowHandoff";
 
 interface MovieDrawerDetailsProps {
   movie: Movie;
@@ -131,6 +132,8 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
               <Link
                 key={col}
                 to={`/collections?collection=${encodeURIComponent(col)}`}
+                // The collection's drawer takes over this drawer's backdrop, so it doesn't flash
+                onClick={(e) => handOverDrawer(e.currentTarget)}
                 className="inline-flex h-7 items-center rounded-full border border-border bg-card px-3 text-xs transition-colors hover:bg-accent"
               >
                 {col}
