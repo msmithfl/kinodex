@@ -370,7 +370,7 @@ function MovieList() {
               />
               {/* Phones: the count, as the page header is hidden there */}
               <p className="text-sm whitespace-nowrap text-muted-foreground tabular-nums md:hidden">
-                {narrowed ? `${filteredMovies.length} of ${plural(movies.length, "movie")}` : plural(movies.length, "movie")}
+                {plural(filteredMovies.length, "movie")}
               </p>
               <div className="ml-auto flex items-center gap-2">
                 <ViewModeToggle value={viewMode} onChange={handleViewModeChange} showLabels />
@@ -504,7 +504,7 @@ function MovieList() {
         </div>
 
         {/* Stays below the list rather than scrolling with it; hidden when it's all one page */}
-        <div className="shrink-0 px-6 pb-2 md:px-10">
+        <div className="shrink-0 px-6 pb-1 md:px-10">
           <Pagination
             page={page}
             pageCount={pageCount}

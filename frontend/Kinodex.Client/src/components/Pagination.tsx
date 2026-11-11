@@ -30,7 +30,7 @@ function Pagination({ page, pageCount, pageSize, total, onPageChange }: Paginati
   const last = Math.min(page * pageSize, total);
 
   return (
-    <nav aria-label="Pages" className="flex items-center justify-between gap-3 py-2">
+    <nav aria-label="Pages" className="flex items-center justify-between gap-3 py-1.5">
       <span className="text-xs text-muted-foreground tabular-nums">
         {first}–{last} of {total}
       </span>
