@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormField, PillToggles } from "./FormFields";
 import type { TvShowPurchase } from "../types";
 import { formatSeasons } from "../utils/formatSeasons";
+import { ignoreEnter } from "../utils/barcode";
 
 const FORMAT_OPTIONS = ["4K", "Blu-ray", "DVD", "VHS", "Digital"].map((value) => ({ value }));
 const CONDITIONS = ["Sealed", "Like New", "Good", "Poor", "Damaged"];
@@ -189,6 +190,8 @@ function TvShowPurchaseEditor({
           <Input
             id={`upc-${index}`}
             inputMode="numeric"
+            // A scanner presses Enter after the code; here it only fills the field
+            onKeyDown={ignoreEnter}
             value={purchase.upcNumber}
             onChange={(e) => onChange({ ...purchase, upcNumber: e.target.value })}
             className="flex-1 font-mono"

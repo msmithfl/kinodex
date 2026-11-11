@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DrawerActionsSlotContext } from "./drawerActions";
+import { isTakingOver } from "../utils/windowHandoff";
 
 interface DrawerProps {
   label: string; // Screen reader name, e.g. "Movie details"
@@ -24,6 +25,9 @@ type SwipeMode = "idle" | "drag" | "settle" | "out";
 function Drawer({ label, onClose, children }: DrawerProps) {
   // Set while the slide-out animation plays; onClose runs when it finishes
   const [closing, setClosing] = useState(false);
+  // Opened from the search window, which hands over its backdrop: the backdrop starts dark, no
+  // fade-in (see utils/windowHandoff)
+  const [takingOver] = useState(isTakingOver);
   const requestClose = useCallback(() => setClosing(true), []);
 
   const panelRef = useRef<HTMLDivElement>(null);
@@ -109,7 +113,10 @@ function Drawer({ label, onClose, children }: DrawerProps) {
     // text-foreground: portalled outside the app's layout, so it doesn't inherit the app's text colour
     <div className="fixed inset-0 z-50 text-foreground">
       <div
-        className={cn("absolute inset-0 bg-black/60 backdrop-blur-[2px]", closing ? "animate-fade-out" : "animate-fade-in")}
+        className={cn(
+          "absolute inset-0 bg-black/60 backdrop-blur-[2px]",
+          closing ? "animate-fade-out" : !takingOver && "animate-fade-in",
+        )}
         style={backdropStyle}
         onClick={requestClose}
         aria-hidden="true"

@@ -14,8 +14,8 @@ import { isMobile } from "../utils/isMobile";
 import TmdbSearch from "./TmdbSearch";
 import TvShowForm from "./TvShowForm";
 import { BarcodeScanner } from "./lazyComponents";
-import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
+import { newPurchase } from "../utils/tvShowPurchases";
 
 const FORM_ID = "add-tv-show-form";
 
@@ -37,6 +37,10 @@ const emptyTvShow = (): TvShow => ({
 
 interface AddTvShowModalProps {
   onClose: () => void;
+  // A barcode to start with (as the first purchase), e.g. one scanned that isn't in the collection yet
+  initialUpc?: string;
+  // A title to start the TMDB search with, e.g. what was typed in the search window
+  initialSearch?: string;
 }
 
 // The show being added: its poster, or the title on a tile
@@ -60,20 +64,22 @@ function PreviewPoster({ show, className }: { show: TvShow; className?: string }
 }
 
 // Add a TV show: search TMDB, then fill in the details and purchases. Same window as Add Movie.
-export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
+export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }: AddTvShowModalProps) {
   const navigate = useNavigate();
   const { data: shows = [] } = useTvShows();
   // Adding refreshes every screen listing shows
   const createTvShow = useCreateTvShow();
   const saving = createTvShow.isPending;
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState<TvShow>(emptyTvShow);
+  const [formData, setFormData] = useState<TvShow>(() => ({
+    ...emptyTvShow(),
+    purchases: initialUpc ? [newPurchase([], { upcNumber: initialUpc })] : [],
+  }));
   const [submitError, setSubmitError] = useState("");
   // Remounts the TMDB search when going back to it
   const [searchKey, setSearchKey] = useState(0);
   // Which purchase a barcode scan fills in; null when the scanner is closed
   const [scanPurchaseIndex, setScanPurchaseIndex] = useState<number | null>(null);
-  const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   // TMDB results already in the library get an "In library" badge
   const ownedTmdbIds = new Set(shows.flatMap((s) => (s.tmdbId ? [s.tmdbId] : [])));
 
@@ -138,11 +144,7 @@ export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
   };
 
   const handleScanClick = (purchaseIndex: number) => {
-    if (isMobile()) {
-      setScanPurchaseIndex(purchaseIndex);
-    } else {
-      setShowMobileOnlyMessage(true);
-    }
+    setScanPurchaseIndex(purchaseIndex);
   };
 
   const handleBarcodeDetected = (code: string) => {
@@ -182,6 +184,8 @@ export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
         {!showForm ? (
           <TmdbSearch
             key={searchKey}
+            // Only the first search starts with it, not ones after "Change" or "Save & add another"
+            initialQuery={searchKey === 0 ? initialSearch : ""}
             search={searchTMDBTv}
             toOption={(show: TMDBTvShow) => ({
               id: show.id,
@@ -236,7 +240,7 @@ export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
                 formData={formData}
                 setFormData={setFormData}
                 onSubmit={handleSubmit}
-                onScanClick={handleScanClick}
+                onScanClick={isMobile() ? handleScanClick : undefined}
               />
             </div>
           </div>
@@ -269,7 +273,6 @@ export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
         {scanPurchaseIndex !== null && (
           <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setScanPurchaseIndex(null)} />
         )}
-        {showMobileOnlyMessage && <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />}
       </DialogContent>
     </Dialog>
   );

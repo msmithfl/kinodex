@@ -20,12 +20,21 @@ interface TmdbSearchProps<T> {
   // TMDB ids already in the library, marked "In library" in the results
   ownedTmdbIds: Set<number>;
   placeholder: string; // e.g. "Search TMDB for a movie…"
+  // Text to start with, searched straight away (e.g. what was typed in the search window)
+  initialQuery?: string;
 }
 
 // The add windows' first step: search TMDB by title (and optionally year), then pick a result with
 // the mouse or the arrow keys and Enter. Searches 300ms after typing stops.
-function TmdbSearch<T>({ search, toOption, onSelect, ownedTmdbIds, placeholder }: TmdbSearchProps<T>) {
-  const [query, setQuery] = useState("");
+function TmdbSearch<T>({
+  search,
+  toOption,
+  onSelect,
+  ownedTmdbIds,
+  placeholder,
+  initialQuery = "",
+}: TmdbSearchProps<T>) {
+  const [query, setQuery] = useState(initialQuery);
   const [year, setYear] = useState("");
   const [results, setResults] = useState<T[]>([]);
   const [status, setStatus] = useState<"idle" | "searching" | "done" | "failed">("idle");
@@ -60,6 +69,15 @@ function TmdbSearch<T>({ search, toOption, onSelect, ownedTmdbIds, placeholder }
       }
     }, 300);
   };
+
+  // Text it starts with is searched straight away
+  const scheduleSearchRef = useRef(scheduleSearch);
+  useEffect(() => {
+    scheduleSearchRef.current = scheduleSearch;
+  });
+  useEffect(() => {
+    if (initialQuery.trim()) scheduleSearchRef.current(initialQuery, "");
+  }, [initialQuery]);
 
   return (
     // The results are already TMDB's matches, so the list doesn't filter them again

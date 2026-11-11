@@ -3,6 +3,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { XIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { isTakingOver } from "@/utils/windowHandoff";
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -37,11 +38,16 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  overlayClassName,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content> & { showCloseButton?: boolean }) {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & { showCloseButton?: boolean; overlayClassName?: string }) {
+  // Taking over from a window handing over its backdrop (e.g. the search window): the backdrop
+  // starts dark, no fade-in (see utils/windowHandoff). Checked here rather than in the backdrop,
+  // which Radix only renders after this first render is on screen, by when the other has gone.
+  const [takingOver] = React.useState(isTakingOver);
   return (
     <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay />
+      <DialogOverlay className={cn(takingOver && "data-[state=open]:animate-none!", overlayClassName)} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(

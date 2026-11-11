@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Movie } from "../../../types";
 import { FormField, PillToggles, SwitchField } from "../../../components/FormFields";
+import { ignoreEnter } from "../../../utils/barcode";
 
 const FORMAT_OPTIONS = [
   { value: "4K" },
@@ -42,6 +43,8 @@ function MoviePhysicalTab({
           <Input
             id="upc"
             inputMode="numeric"
+            // A scanner presses Enter after the code; here it only fills the field
+            onKeyDown={ignoreEnter}
             value={formData.upcNumber}
             onChange={(e) => setFormData({ ...formData, upcNumber: e.target.value })}
             className="flex-1 font-mono"

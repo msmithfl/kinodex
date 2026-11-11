@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageShell from "../components/PageShell";
 import { BarcodeScanner } from "../components/lazyComponents";
-import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import type { Movie, TvShow } from "../types";
 import { isMobile } from "../utils/isMobile";
 import { formatSeasons } from "../utils/formatSeasons";
 import { ownedSeasons } from "../utils/tvShowPurchases";
+import { upcMatches } from "../utils/barcode";
+import { useScanInput } from "../utils/useBarcodeScan";
 
 // A movie or TV show in the results, with everything a row shows and searches
 interface SearchItem {
@@ -86,7 +87,6 @@ function SearchPage() {
   const loading = moviesLoading || showsLoading;
   const items: SearchItem[] = [...movies.map(movieItem), ...shows.map(tvItem)];
   const [showScanner, setShowScanner] = useState(false);
-  const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Put the cursor in the search box once the page is ready
@@ -114,11 +114,7 @@ function SearchPage() {
   };
 
   const handleScanClick = () => {
-    if (isMobile()) {
-      setShowScanner(true);
-    } else {
-      setShowMobileOnlyMessage(true);
-    }
+    setShowScanner(true);
   };
 
   const handleBarcodeDetected = (code: string) => {
@@ -126,13 +122,17 @@ function SearchPage() {
     setQueryNow(code);
   };
 
+  // A barcode scanner typing in the box (a Bluetooth one on a phone, or a desktop on this page)
+  // starts a fresh search with the code, rather than adding it to what was there
+  const handleSearchKeyDown = useScanInput(setQueryNow);
+
   const needle = query.trim().toLowerCase();
   const results = needle
     ? items
         .filter(
           (item) =>
             item.title.toLowerCase().includes(needle) ||
-            item.upcs.some((upc) => upc.toLowerCase().includes(needle)),
+            item.upcs.some((upc) => upcMatches(upc, needle)),
         )
         // Titles that start with the search come first, then alphabetical
         .sort((a, b) => {
@@ -153,6 +153,7 @@ function SearchPage() {
               ref={inputRef}
               type="search"
               placeholder="Search by title or UPC"
+              onKeyDown={handleSearchKeyDown}
               aria-label="Search movies and TV shows by title or UPC"
               value={text}
               onChange={(e) => setText(e.target.value)}
@@ -172,16 +173,19 @@ function SearchPage() {
               </button>
             )}
           </div>
-          <Button
-            type="button"
-            size="icon"
-            onClick={handleScanClick}
-            className="size-11"
-            title="Scan barcode"
-            aria-label="Scan barcode"
-          >
-            <ScanBarcode className="size-5" />
-          </Button>
+          {/* Only where the camera opens; desktops scan with a USB scanner (see CommandPalette) */}
+          {isMobile() && (
+            <Button
+              type="button"
+              size="icon"
+              onClick={handleScanClick}
+              className="size-11"
+              title="Scan barcode"
+              aria-label="Scan barcode"
+            >
+              <ScanBarcode className="size-5" />
+            </Button>
+          )}
         </div>
 
         {/* Result count */}
@@ -237,9 +241,6 @@ function SearchPage() {
             onDetected={handleBarcodeDetected}
             onClose={() => setShowScanner(false)}
           />
-        )}
-        {showMobileOnlyMessage && (
-          <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />
         )}
       </div>
     </PageShell>

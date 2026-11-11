@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
+import { upcMatches } from "../utils/barcode";
 import { ApiError } from "../utils/api";
 import { useTvShows } from "../features/tvShows/api";
 import { applyTvShowFilters, buildTvShowFilterCategories } from "../features/tvShows/filters";
@@ -35,7 +36,6 @@ import { formatSeasons } from "../utils/formatSeasons";
 import { allFormats, ownedSeasons, totalPaid } from "../utils/tvShowPurchases";
 import { isMobile } from "../utils/isMobile";
 import { BarcodeScanner } from "../components/lazyComponents";
-import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import SubNavigation from "../components/SubNavigation";
 import Drawer from "../components/Drawer";
 import TvShowDetail from "../features/tvShows/TvShowDetail";
@@ -99,7 +99,6 @@ function TvShowList() {
   }, []);
 
   const [showScanner, setShowScanner] = useState(false);
-  const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
   const [viewMode, setViewMode] = useStoredChoice<ViewMode>("tvShowListView", VIEW_MODES, "table");
@@ -123,11 +122,7 @@ function TvShowList() {
   };
 
   const handleScanClick = () => {
-    if (isMobile()) {
-      setShowScanner(true);
-    } else {
-      setShowMobileOnlyMessage(true);
-    }
+    setShowScanner(true);
   };
 
   // A scanned barcode goes into the search, which matches any purchase's UPC
@@ -159,9 +154,7 @@ function TvShowList() {
     (show) =>
       !query ||
       show.title.toLowerCase().includes(query) ||
-      show.purchases.some((p) =>
-        (p.upcNumber ?? "").toLowerCase().includes(query),
-      ),
+      show.purchases.some((p) => upcMatches(p.upcNumber, query)),
   );
   const filterCategories = buildTvShowFilterCategories(shows);
 
@@ -197,10 +190,13 @@ function TvShowList() {
             actions={
               // Phones add and scan from the bottom bar
               <div className="hidden gap-2 md:flex">
-                <Button variant="outline" onClick={handleScanClick}>
-                  <ScanBarcode />
-                  Scan
-                </Button>
+                {/* Only where the camera can scan (tablets); desktops use a USB scanner, whose scans open the search window (CommandPalette) */}
+                {isMobile() && (
+                  <Button variant="outline" onClick={handleScanClick}>
+                    <ScanBarcode />
+                    Scan
+                  </Button>
+                )}
                 <Button onClick={() => setShowAddModal(true)}>
                   <Plus />
                   Add TV show
@@ -347,11 +343,6 @@ function TvShowList() {
         <BarcodeScanner
           onDetected={handleBarcodeDetected}
           onClose={() => setShowScanner(false)}
-        />
-      )}
-      {showMobileOnlyMessage && (
-        <MobileOnlyMessage
-          setShowMobileOnlyMessage={setShowMobileOnlyMessage}
         />
       )}
     </>

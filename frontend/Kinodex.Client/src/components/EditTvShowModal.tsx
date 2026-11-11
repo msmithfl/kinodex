@@ -11,7 +11,6 @@ import { withClientKeys } from "../utils/tvShowPurchases";
 import TvShowForm from "./TvShowForm";
 import { BarcodeScanner } from "./lazyComponents";
 import DeleteConfirm from "./DeleteConfirm";
-import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 
 const FORM_ID = "edit-tv-show-form";
@@ -35,7 +34,6 @@ export function EditTvShowModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   // Which purchase a barcode scan fills in; null when the scanner is closed
   const [scanPurchaseIndex, setScanPurchaseIndex] = useState<number | null>(null);
-  const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   // Saving or deleting refreshes every screen showing the show
   const updateTvShow = useUpdateTvShow();
   const deleteTvShow = useDeleteTvShow();
@@ -73,11 +71,7 @@ export function EditTvShowModal({
   };
 
   const handleScanClick = (purchaseIndex: number) => {
-    if (isMobile()) {
-      setScanPurchaseIndex(purchaseIndex);
-    } else {
-      setShowMobileOnlyMessage(true);
-    }
+    setScanPurchaseIndex(purchaseIndex);
   };
 
   const handleBarcodeDetected = (code: string) => {
@@ -120,7 +114,7 @@ export function EditTvShowModal({
             formData={formData}
             setFormData={setFormData}
             onSubmit={handleSubmit}
-            onScanClick={handleScanClick}
+            onScanClick={isMobile() ? handleScanClick : undefined}
           />
         </div>
 
@@ -152,7 +146,6 @@ export function EditTvShowModal({
         {scanPurchaseIndex !== null && (
           <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setScanPurchaseIndex(null)} />
         )}
-        {showMobileOnlyMessage && <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />}
 
         <DeleteConfirm
           open={showDeleteConfirm}

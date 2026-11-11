@@ -145,7 +145,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 | `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit, in the same redesigned window as movies (Add: Search › Details, preview beside the form, toast; Edit: Delete in the footer). Tabs in `features/tvShows/form/` (Details, Purchases using `TvShowPurchaseEditor` cards with season tiles, Images) |
 | `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop); saves via the collections hooks |
 | `BulkEditModal` | Bulk edit from the movie table |
-| `ImageLightbox`, `BarcodeScanner`, `MobileOnlyMessage` | Shared helpers |
+| `ImageLightbox`, `BarcodeScanner` | Shared helpers |
 | `useImagePicker` / `useProductImagePicker` | Hooks returning a button + grid: TMDB posters/backdrops; UPC product images |
 
 ### Shared building blocks
@@ -166,13 +166,28 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Theme:** light and dark token sets; the choice (Settings → Appearance, per device) lives in
   `utils/theme.ts` (`useTheme()`), applied before first paint by a script in `index.html`. See
   `docs/design/light-theme.md`.
+- **Barcodes:** phones and tablets scan with the camera (`BarcodeScanner`, from the bottom bar,
+  Search, the list toolbars and the UPC fields); those scan buttons only show where `isMobile()`,
+  so desktops have none. Desktop USB/Bluetooth scanners type the code and press Enter like a
+  keyboard. A scan while no field or window is in use opens the search window (`CommandPalette`,
+  Ctrl/⌘K) with the code. When a search there finds no movie or TV show (a scanned code or typed
+  text), it offers Add as a movie or TV show, starting with the code in the UPC field or the text
+  in the TMDB search (`AddItemModal`'s `kind`, `upc` and `title`). On phones a scan goes to the
+  Search page instead. A scan into the search window or the Search page box replaces the search;
+  UPC fields ignore the Enter (`ignoreEnter`) so a scan doesn't save the form; and every UPC
+  search matches a code however many leading zeros it came with (`upcMatches`). Detection is in
+  `utils/barcode.ts` (`createScanDetector`, scanner-speed typing) and `utils/useBarcodeScan.ts`
+  (`useBarcodeScan`, `useScanInput`).
+  Handing over between windows (search window to drawer or Add window, Add chooser to form)
+  keeps the dark backdrop on screen: `utils/windowHandoff.ts`.
 - **Charts:** `ChartBreakdown` (Stats donut/table); colours and tooltip style in `utils/chartColors.ts`.
 - **Controls:** `SubNavigation` (phones), `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`
   + `utils/applyFilters.ts` (movies), `features/tvShows/filters.ts` (TV).
 - **Data layer:** `utils/api.ts`, `utils/queryClient.ts`, `features/*/api.ts` (see below).
 - **Downloads:** pages load on demand (`React.lazy` in `App.tsx`); so do the barcode scanner and
   the Add window: import them from `components/lazyComponents.tsx`, never directly, or they land
-  back in the first download.
+  back in the first download. The Add window is also fetched in the background once the app has
+  loaded, so it opens without a blank moment (e.g. when the search window hands over to it).
 - **Utilities:** `upc.ts` (eBay sold-listings link, copy-to-clipboard with a `Copied!` flash),
   `tmdbApi.ts` (browser-side TMDB calls), `useUrlSearchQuery` (search in the URL),
   `useFillViewportHeight` (pages that fill the screen above the bottom nav), `getSortedMovies`,

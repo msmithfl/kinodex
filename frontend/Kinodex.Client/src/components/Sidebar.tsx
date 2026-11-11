@@ -10,6 +10,7 @@ import { useTvShows } from "@/features/tvShows/api";
 import { useStoredState } from "@/utils/useStoredState";
 import AccountMenuButton from "./AccountMenuButton";
 import { AddItemModal } from "./lazyComponents";
+import type { AddItemOptions } from "./AddItemModal";
 import CommandPalette from "./CommandPalette";
 import {
   INSIGHTS_LINKS,
@@ -100,7 +101,8 @@ function Sidebar() {
   const { user } = useUser();
   const { data: movies } = useMovies();
   const { data: shows } = useTvShows();
-  const [showAddModal, setShowAddModal] = useState(false);
+  // The Add window, when open, and what it opens with (the palette can ask for a scanned barcode)
+  const [adding, setAdding] = useState<AddItemOptions | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   // Remembered in this browser
   const [collapsed, setCollapsed] = useStoredState(COLLAPSED_KEY, false, {
@@ -168,7 +170,7 @@ function Sidebar() {
         </WithTooltip>
         <WithTooltip show={collapsed} label="Add a movie or TV show">
           <Button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => setAdding({})}
             size={collapsed ? "icon" : "default"}
             aria-label={collapsed ? "Add a movie or TV show" : undefined}
             className={collapsed ? "w-full" : undefined}
@@ -222,8 +224,8 @@ function Sidebar() {
         </div>
       </div>
 
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onAdd={() => setShowAddModal(true)} />
-      {showAddModal && <AddItemModal onClose={() => setShowAddModal(false)} />}
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onAdd={(options) => setAdding(options ?? {})} />
+      {adding && <AddItemModal {...adding} onClose={() => setAdding(null)} />}
     </aside>
   );
 }
