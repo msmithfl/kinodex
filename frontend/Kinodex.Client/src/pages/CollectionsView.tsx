@@ -85,15 +85,15 @@ function CollectionsView() {
     <>
       <SubNavigation />
       <PageShell remeasureWhen={loading}>
+        {/* Tablet up: on phones the sub-tabs name the page */}
         <PageHeader
           title="Collections"
-          subtitleBeside
           subtitle={`${collections.length} ${collections.length === 1 ? "collection" : "collections"}`}
-          className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7"
+          className="hidden shrink-0 px-6 pt-4 pb-4 md:flex md:px-10 md:pt-7"
         />
 
         {/* Scrolls on its own; the small top inset keeps the hover ring and lift inside it */}
-        <div className="flex min-h-0 flex-1 flex-col gap-10 overflow-y-auto px-6 pt-2 pb-8 md:px-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-10 overflow-y-auto px-6 pt-4 md:pt-2 pb-8 md:px-10">
           <div className={POSTER_GRID_CAPTIONED}>
             {/* New collection: poster-shaped to line up with the cards */}
             <button

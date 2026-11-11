@@ -181,9 +181,10 @@ function TvShowList() {
       <PageShell remeasureWhen={loading}>
         {/* Title, toolbar and active filters */}
         <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
+          {/* Tablet up: on phones the sub-tabs name the page, and the count is in the toolbar */}
           <PageHeader
             title="TV Shows"
-            subtitleBeside
+            className="hidden md:flex"
             subtitle={`${shows.length} in your collection${narrowed ? ` · ${filteredShows.length} shown` : ""}`}
             actions={
               // Phones add and scan from the bottom bar
@@ -246,6 +247,10 @@ function TvShowList() {
                 onDirectionChange={setSortDirection}
                 options={TV_SORT_OPTIONS}
               />
+              {/* Phones: the count, as the page header is hidden there */}
+              <p className="text-sm whitespace-nowrap text-muted-foreground tabular-nums md:hidden">
+                {narrowed ? `${filteredShows.length} of ${plural(shows.length, "TV show")}` : plural(shows.length, "TV show")}
+              </p>
               <div className="ml-auto flex items-center gap-2">
                 <ViewModeToggle value={viewMode} onChange={setViewMode} showLabels />
                 {viewMode === "table" && (

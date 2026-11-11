@@ -8,11 +8,12 @@ interface ListSkeletonProps {
   grid?: string; // The poster grid's classes, from posterGrid.ts
 }
 
-// Shimmering stand-ins for a list page's header, toolbar and table or poster grid while it loads
+// Shimmering stand-ins for a list page's header (tablet up, as on the pages), toolbar and table or
+// poster grid while it loads
 function ListSkeleton({ viewMode, label, toolbar = true, grid = POSTER_GRID }: ListSkeletonProps) {
   return (
     <div className="flex flex-col gap-4 px-6 pt-4 md:px-10 md:pt-7" aria-busy="true" aria-label={label}>
-      <div className="flex flex-col gap-2">
+      <div className="hidden flex-col gap-2 md:flex">
         <Skeleton className="h-8 w-36" />
         <Skeleton className="h-4 w-48" />
       </div>

@@ -58,8 +58,8 @@ Text is written in sentence case ("Add movie", not "Add Movie"), and in plain wo
 ```tsx
 <SubNavigation />                       {/* only on pages with sub-pages (Movies, Genres) */}
 <PageShell remeasureWhen={loading}>     {/* fills the screen above the phone bottom bar */}
-  <PageHeader title="Genres" subtitle="12 genres" subtitleBeside actions={…}
-    className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7" />
+  <PageHeader title="Genres" subtitle="12 genres" actions={…}
+    className="hidden shrink-0 px-6 pt-4 pb-4 md:flex md:px-10 md:pt-7" />
   {/* toolbar: search, filters, sort, ViewModeToggle; shrink-0 */}
   <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-2 pb-8 md:px-10">
     {items.length === 0 ? <EmptyState message="No genres yet." /> : …}
@@ -69,8 +69,10 @@ Text is written in sentence case ("Add movie", not "Add Movie"), and in plain wo
 
 - **`PageShell`** (`layout="column"` by default): the header and toolbar stay put and the content
   scrolls on its own. `layout="scroll"` scrolls the whole page (dashboard, settings).
-- **`PageHeader`:** title, a count or one-line subtitle, actions at the right. `subtitleBeside`
-  puts a short count on the title's row on phones.
+- **`PageHeader`:** title, a count or one-line subtitle, actions at the right. The Library pages
+  (Movies, TV Shows, Collections, Genres) hide it on phones (`hidden md:flex`), since the sub-tabs
+  above name the page; the Movies and TV toolbars show the count beside sort there instead.
+  `subtitleBeside` (the genre page) puts a short count on the title's row on phones.
 - **Loading:** skeletons (`ui/skeleton`, `ListSkeleton`) shaped like what's coming, not spinners.
 - **Empty:** `EmptyState` with one short sentence.
 - **Remembered choices** (view mode, tab, sort): `useStoredState` / `useStoredChoice`, never
