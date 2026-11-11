@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { FormField } from "./FormFields";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
-import { getTMDBImages, searchTMDB, searchTMDBPeople, type TMDBPerson } from "../utils/tmdbApi";
+import { useTmdb, type TMDBPerson } from "../utils/tmdbApi";
 import { ApiError } from "../utils/api";
 import { useCreateCollection, useUpdateCollection } from "../features/collections/api";
 import type { Collection, Movie, TMDBMovie } from "../types";
@@ -83,6 +83,8 @@ function CollectionFormModal({
   onSaved,
 }: CollectionFormModalProps) {
   const nameRef = useRef<HTMLInputElement>(null);
+  // TMDB, through our API
+  const { getTMDBImages, searchTMDB, searchTMDBPeople } = useTmdb();
   const editing = collection !== undefined;
   const [kind, setKind] = useState<CollectionKind>(
     collection?.isDirectorCollection ? "director" : "collection",
@@ -134,7 +136,7 @@ function CollectionFormModal({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [backdropQuery]);
+  }, [backdropQuery, searchTMDB]);
 
   const chooseBackdropMovie = async (movie: TMDBMovie) => {
     setBackdropMovie(movie);
@@ -163,7 +165,7 @@ function CollectionFormModal({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [query, kind]);
+  }, [query, kind, searchTMDBPeople]);
 
   const switchKind = (next: CollectionKind) => {
     if (next === kind) return;

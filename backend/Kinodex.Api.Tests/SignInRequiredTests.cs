@@ -22,6 +22,7 @@ public class SignInRequiredTests(KinodexApiFactory api)
     [InlineData("GET", "/api/movie-presets")]
     [InlineData("DELETE", "/api/movie-presets/1")]
     [InlineData("GET", "/api/upc/lookup/012345678905")]
+    [InlineData("GET", "/api/tmdb/v3/search/movie?query=alien")]
     [InlineData("GET", "/api/tmdb/unmatched")]
     [InlineData("POST", "/api/tmdb/fill-images")]
     [InlineData("GET", "/api/customers")]

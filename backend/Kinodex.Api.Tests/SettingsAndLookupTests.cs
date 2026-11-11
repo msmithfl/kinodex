@@ -34,4 +34,29 @@ public class SettingsAndLookupTests(KinodexApiFactory api)
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
+    [Theory]
+    [InlineData("account")]
+    [InlineData("movie/603/credits")]
+    [InlineData("search/collection?query=alien")]
+    [InlineData("tv/abc")]
+    public async Task Tmdb_passes_on_only_the_requests_the_app_makes(string path)
+    {
+        var client = api.ClientFor(KinodexApiFactory.NewUserId());
+
+        var response = await client.GetAsync($"/api/tmdb/v3/{path}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Tmdb_says_when_this_server_has_no_key()
+    {
+        // The test server has no TMDB_API_KEY, so this never reaches TMDB
+        var client = api.ClientFor(KinodexApiFactory.NewUserId());
+
+        var response = await client.GetAsync("/api/tmdb/v3/search/movie?query=alien");
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+    }
 }
