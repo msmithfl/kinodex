@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import type { Movie } from "../types";
 import MovieForm from "./MovieForm";
 import { BarcodeScanner } from "./lazyComponents";
-import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { useMovie, useUpdateMovie } from "../features/movies/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";
 import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
@@ -73,7 +72,6 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
   const [submitError, setSubmitError] = useState("");
 
   const [showScanner, setShowScanner] = useState(false);
-  const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
 
   // Creates a collection from the form and adds this movie to it
   const addCollection = async () => {
@@ -124,11 +122,7 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
   };
 
   const handleScanClick = () => {
-    if (isMobile()) {
-      setShowScanner(true);
-    } else {
-      setShowMobileOnlyMessage(true);
-    }
+    setShowScanner(true);
   };
 
   const handleBarcodeDetected = (code: string) => {
@@ -180,7 +174,7 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
             onSubmit={handleSubmit}
             onCancel={onClose}
             submitButtonText="Save"
-            showScanButton={true}
+            showScanButton={isMobile()}
             onScanClick={handleScanClick}
           />
         </div>
@@ -204,7 +198,6 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
         {showScanner && (
           <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setShowScanner(false)} />
         )}
-        {showMobileOnlyMessage && <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />}
       </DialogContent>
     </Dialog>
   );

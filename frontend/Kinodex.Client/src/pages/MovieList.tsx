@@ -38,13 +38,13 @@ import PosterCard from "../components/PosterCard";
 import { AddMovieModal } from "../components/AddMovieModal";
 import { buildFilterCategories } from "../utils/filterCategories";
 import EmptyState from "../components/EmptyState";
-import { MobileOnlyMessage } from "../components/MobileOnlyMessage";
 import type { Movie, SortOption } from "../types";
 import { BulkEditModal } from "../components/BulkEditModal";
 import { applyFilters } from "../utils/applyFilters";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { isMobile } from "../utils/isMobile";
 import Pagination from "../components/Pagination";
+import { upcMatches } from "../utils/barcode";
 
 const PAGE_SIZE = 100;
 
@@ -112,7 +112,6 @@ function MovieList() {
   } = useDrawerParam("movie");
 
   const [showScanner, setShowScanner] = useState(false);
-  const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [viewMode, setViewMode] = useStoredChoice<ViewMode>("movieListView", VIEW_MODES, "table");
   const [visibleColumns, setVisibleColumns] = useStoredState<VisibleColumns>("movieListColumns", DEFAULT_COLUMNS, {
@@ -140,7 +139,7 @@ function MovieList() {
       const query = searchQuery.trim().toLowerCase();
       if (!query) return true;
       const matchesTitle = movie.title.toLowerCase().includes(query);
-      const matchesUpc = (movie.upcNumber ?? "").toLowerCase().includes(query);
+      const matchesUpc = upcMatches(movie.upcNumber, query);
       return matchesTitle || matchesUpc;
     },
   );
@@ -171,11 +170,7 @@ function MovieList() {
   };
 
   const handleScanClick = () => {
-    if (isMobile()) {
-      setShowScanner(true);
-    } else {
-      setShowMobileOnlyMessage(true);
-    }
+    setShowScanner(true);
   };
 
   const handleBarcodeDetected = (code: string) => {
@@ -341,10 +336,13 @@ function MovieList() {
             actions={
               // Phones add and scan from the bottom bar
               <div className="hidden gap-2 md:flex">
-                <Button variant="outline" onClick={handleScanClick}>
-                  <ScanBarcode />
-                  Scan
-                </Button>
+                {/* Only where the camera can scan (tablets); desktops use a USB scanner, whose scans open the search window (CommandPalette) */}
+                {isMobile() && (
+                  <Button variant="outline" onClick={handleScanClick}>
+                    <ScanBarcode />
+                    Scan
+                  </Button>
+                )}
                 <Button onClick={() => setShowAddModal(true)}>
                   <Plus />
                   Add movie
@@ -547,11 +545,6 @@ function MovieList() {
         />
       )}
 
-      {showMobileOnlyMessage && (
-        <MobileOnlyMessage
-          setShowMobileOnlyMessage={setShowMobileOnlyMessage}
-        />
-      )}
 
       {/* Bulk Edit Modal */}
       {showBulkEditModal && (

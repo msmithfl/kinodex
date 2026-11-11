@@ -13,7 +13,6 @@ import type { Movie, MoviePreset, TMDBMovie } from "../types";
 import { GENRE_MAP, searchTMDB } from "../utils/tmdbApi";
 import MovieForm from "./MovieForm";
 import { BarcodeScanner } from "./lazyComponents";
-import { MobileOnlyMessage } from "./MobileOnlyMessage";
 import { MOD_KEY } from "./navigation";
 import TmdbSearch from "./TmdbSearch";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
@@ -34,6 +33,10 @@ import {
 
 interface AddMovieModalProps {
   onClose: () => void;
+  // A barcode to start with, e.g. one scanned that isn't in the collection yet
+  initialUpc?: string;
+  // A title to start the TMDB search with, e.g. what was typed in the search window
+  initialSearch?: string;
 }
 
 const FORM_ID = "add-movie-form";
@@ -98,7 +101,7 @@ function PreviewPoster({ movie, className }: { movie: Movie; className?: string 
   );
 }
 
-export function AddMovieModal({ onClose }: AddMovieModalProps) {
+export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: AddMovieModalProps) {
   const navigate = useNavigate();
   const { data: movies = [] } = useMovies();
   const { data: collectionList = [] } = useCollections();
@@ -107,7 +110,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const createCollection = useCreateCollection();
   const createShelfSection = useCreateShelfSection();
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState<Movie>(emptyMovie);
+  const [formData, setFormData] = useState<Movie>(() => ({ ...emptyMovie(), upcNumber: initialUpc }));
   // "Save & add another", for the Ctrl/⌘+Enter shortcut
   const addAnotherRef = useRef<HTMLButtonElement>(null);
 
@@ -124,7 +127,11 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const [appliedPresetId, setAppliedPresetId] = useState<number | null>(null);
   if (preset?.id && appliedPresetId !== preset.id) {
     setAppliedPresetId(preset.id);
-    setFormData((prev) => ({ ...prev, ...presetValues(preset) }));
+    // A UPC already in the form (scanned, or typed) stays unless the preset has one of its own
+    setFormData((prev) => {
+      const values = presetValues(preset);
+      return { ...prev, ...values, upcNumber: values.upcNumber || prev.upcNumber };
+    });
   }
   // Naming a new preset from the form's current values
   const [presetName, setPresetName] = useState<string | null>(null);
@@ -141,7 +148,6 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   const [submitError, setSubmitError] = useState("");
 
   const [showScanner, setShowScanner] = useState(false);
-  const [showMobileOnlyMessage, setShowMobileOnlyMessage] = useState(false);
 
   // A TMDB result fills in the title, year, genres and images, then shows the form
   const handleMovieSelect = (movie: TMDBMovie) => {
@@ -294,11 +300,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
   };
 
   const handleScanClick = () => {
-    if (isMobile()) {
-      setShowScanner(true);
-    } else {
-      setShowMobileOnlyMessage(true);
-    }
+    setShowScanner(true);
   };
 
   const handleBarcodeDetected = (code: string) => {
@@ -415,6 +417,8 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
         {!showForm ? (
           <TmdbSearch
             key={searchKey}
+            // Only the first search starts with it, not ones after "Change" or "Save & add another"
+            initialQuery={searchKey === 0 ? initialSearch : ""}
             search={searchTMDB}
             toOption={(movie: TMDBMovie) => ({
               id: movie.id,
@@ -484,7 +488,7 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
                 onSubmit={handleSubmit}
                 onCancel={onClose}
                 submitButtonText="Add to Collection"
-                showScanButton={true}
+                showScanButton={isMobile()}
                 onScanClick={handleScanClick}
               />
             </div>
@@ -533,7 +537,6 @@ export function AddMovieModal({ onClose }: AddMovieModalProps) {
         {showScanner && (
           <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setShowScanner(false)} />
         )}
-        {showMobileOnlyMessage && <MobileOnlyMessage setShowMobileOnlyMessage={setShowMobileOnlyMessage} />}
       </DialogContent>
     </Dialog>
   );

@@ -3,8 +3,17 @@ import { Film, Tv } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { AddMovieModal } from "./AddMovieModal";
 import { AddTvShowModal } from "./AddTvShowModal";
+import { HANDOVER_BACKDROP_CLASS } from "../utils/windowHandoff";
 
-interface AddItemModalProps {
+// What to open with: straight to the movie or TV form (skipping the choice), and a barcode or a
+// title to start with (the search window offers this for a search that isn't in the collection)
+export interface AddItemOptions {
+  kind?: "movie" | "tv";
+  upc?: string;
+  title?: string;
+}
+
+interface AddItemModalProps extends AddItemOptions {
   onClose: () => void;
 }
 
@@ -15,15 +24,21 @@ const CHOICES = [
 
 // Entry point for the app's generic Add buttons: asks whether you're adding a movie or a
 // TV show, then opens that form in its place
-export function AddItemModal({ onClose }: AddItemModalProps) {
-  const [kind, setKind] = useState<"movie" | "tv" | null>(null);
+export function AddItemModal({ onClose, kind: startKind, upc, title }: AddItemModalProps) {
+  const [kind, setKind] = useState<"movie" | "tv" | null>(startKind ?? null);
 
-  if (kind === "movie") return <AddMovieModal onClose={onClose} />;
-  if (kind === "tv") return <AddTvShowModal onClose={onClose} />;
+  if (kind === "movie") return <AddMovieModal onClose={onClose} initialUpc={upc} initialSearch={title} />;
+  if (kind === "tv") return <AddTvShowModal onClose={onClose} initialUpc={upc} initialSearch={title} />;
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent showCloseButton={false} aria-describedby={undefined} className="p-5 sm:max-w-sm">
+      <DialogContent
+        showCloseButton={false}
+        aria-describedby={undefined}
+        className="p-5 sm:max-w-sm"
+        // Choosing swaps this for the form, which takes over the backdrop already dark
+        overlayClassName={HANDOVER_BACKDROP_CLASS}
+      >
         <DialogTitle>Add to collection</DialogTitle>
         <div className="grid grid-cols-2 gap-3">
           {CHOICES.map(({ id, label, icon: Icon }) => (
