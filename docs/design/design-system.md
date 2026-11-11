@@ -10,13 +10,13 @@ is the source of truth; this says where to look and what not to break. Built on 
   `text-primary-text`, `border-border` and so on, all defined in `src/index.css`. `:root` is the
   light theme, `.dark` the dark one; both must get a value for any new token. Writing `red-300` or
   `#eab308` in a component is a bug. The only exceptions are the chart palettes (below) and the
-  genre cards (white text, and coloured overlays still waiting on a decision, over artwork).
+  genre cards (white text and a coloured overlay per genre, over artwork).
 - **One accent: indigo** (`primary`). Fills use `bg-primary`; text and links on the page use
   `text-primary-text`, which is lighter in dark mode so it stays readable. Selected nav items and
   soft highlights use `bg-primary-soft`.
 - **Status colours have one job each:** `destructive` / `destructive-text` for delete and errors,
-  `success` / `success-text` for done and saved, `warning-text` for warnings, `star` /
-  `star-hover` for ratings. Don't borrow them for decoration.
+  `success` / `success-text` for done and saved (and the dashboard's spending amounts),
+  `warning-text` for warnings, `star` / `star-hover` for ratings. Don't borrow them for decoration.
 - **Surfaces, back to front:** `background` (the page), `card` (cards and panels), `popover`
   (menus, tooltips), `accent` (hover). Borders are faint (`border-border`, the default for every
   element) and `input` is a little stronger for fields.

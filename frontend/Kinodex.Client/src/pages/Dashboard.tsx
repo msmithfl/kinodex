@@ -214,7 +214,7 @@ function Dashboard() {
                     <div key={idx} className={idx === 0 ? "pr-3 md:pr-6" : "pl-3 md:pl-6"}>
                       <p className="text-sm font-medium md:text-base">{title}</p>
                       <p className="text-xs text-muted-foreground md:text-sm">{month.label}</p>
-                      <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums md:mt-2 md:text-4xl">
+                      <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums md:mt-2 md:text-4xl text-success-text">
                         ${month.spend.toFixed(2)}
                       </p>
                     </div>

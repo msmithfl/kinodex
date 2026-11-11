@@ -14,8 +14,10 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- Npgsql only asks for EF Core Relational 10.0.4; name the version the rest of EF Core uses so the tests see one version -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.14" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageReference Include="Svix" Version="1.86.0" />
+    <PackageReference Include="Svix" Version="2.10.0" />
   </ItemGroup>
 
 </Project>
