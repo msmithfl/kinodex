@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { MotionConfig, motion } from "motion/react";
-import { Columns3, Plus, ScanBarcode, Search, X } from "lucide-react";
+import { Columns3, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageShell from "../components/PageShell";
@@ -34,9 +34,6 @@ import type { SortOption } from "../types";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { formatSeasons } from "../utils/formatSeasons";
 import { allFormats, ownedSeasons, totalPaid } from "../utils/tvShowPurchases";
-import { isMobile } from "../utils/isMobile";
-import { BarcodeScanner } from "../components/lazyComponents";
-import SubNavigation from "../components/SubNavigation";
 import Drawer from "../components/Drawer";
 import TvShowDetail from "../features/tvShows/TvShowDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
@@ -98,7 +95,6 @@ function TvShowList() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const [showScanner, setShowScanner] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
   const [viewMode, setViewMode] = useStoredChoice<ViewMode>("tvShowListView", VIEW_MODES, "table");
@@ -119,16 +115,6 @@ function TvShowList() {
       setSortBy(column);
       setSortDirection("asc");
     }
-  };
-
-  const handleScanClick = () => {
-    setShowScanner(true);
-  };
-
-  // A scanned barcode goes into the search, which matches any purchase's UPC
-  const handleBarcodeDetected = (code: string) => {
-    setSearchQuery(code);
-    setShowScanner(false);
   };
 
   const handleFilterChange = (categoryId: string, values: string[]) => {
@@ -156,11 +142,9 @@ function TvShowList() {
   );
   const filterCategories = buildTvShowFilterCategories(shows);
 
-  // Keep the sub-navigation on screen while loading, as the movie pages do, so it doesn't blink
   if (loading) {
     return (
       <>
-        <SubNavigation />
         <ListSkeleton viewMode={viewMode} label="Loading TV shows" />
       </>
     );
@@ -170,7 +154,6 @@ function TvShowList() {
 
   return (
     <>
-      <SubNavigation />
       {openShowId && (
         <Drawer label="TV show details" onClose={closeShow}>
           {/* Keyed by id so switching shows starts the details fresh */}
@@ -181,21 +164,14 @@ function TvShowList() {
       <PageShell remeasureWhen={loading}>
         {/* Title, toolbar and active filters */}
         <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
-          {/* Tablet up: on phones the sub-tabs name the page, and the count is in the toolbar */}
+          {/* Tablet up: on phones the top bar's tabs name the page, and the count is in the toolbar */}
           <PageHeader
             title="TV Shows"
             className="hidden md:flex"
             subtitle={`${shows.length} in your collection${narrowed ? ` · ${filteredShows.length} shown` : ""}`}
             actions={
-              // Phones add and scan from the bottom bar
+              // Phones add from the bottom bar
               <div className="hidden gap-2 md:flex">
-                {/* Only where the camera can scan (tablets); desktops use a USB scanner, whose scans open the search window (CommandPalette) */}
-                {isMobile() && (
-                  <Button variant="outline" onClick={handleScanClick}>
-                    <ScanBarcode />
-                    Scan
-                  </Button>
-                )}
                 <Button onClick={() => setShowAddModal(true)}>
                   <Plus />
                   Add TV show
@@ -342,12 +318,6 @@ function TvShowList() {
 
       {showAddModal && <AddTvShowModal onClose={() => setShowAddModal(false)} />}
 
-      {showScanner && (
-        <BarcodeScanner
-          onDetected={handleBarcodeDetected}
-          onClose={() => setShowScanner(false)}
-        />
-      )}
     </>
   );
 }

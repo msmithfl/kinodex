@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { toast } from "sonner";
-import { Columns3, Pencil, Plus, ScanBarcode, Search, Trash2, X } from "lucide-react";
+import { Columns3, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -28,12 +28,10 @@ import { useShelfSections } from "../features/shelfSections/api";
 import { useCollections } from "../features/collections/api";
 import MovieTable from "../features/movies/MovieTable";
 import { COLUMNS, DEFAULT_COLUMNS, type VisibleColumns } from "../features/movies/tableColumns";
-import { BarcodeScanner } from "../components/lazyComponents";
 import FilterPanel from "../components/FilterPanel";
 import FilterChips from "../components/FilterChips";
 import SortMenu from "../components/SortMenu";
 import DeleteConfirm from "../components/DeleteConfirm";
-import SubNavigation from "../components/SubNavigation";
 import PosterCard from "../components/PosterCard";
 import { AddMovieModal } from "../components/AddMovieModal";
 import { buildFilterCategories } from "../utils/filterCategories";
@@ -42,7 +40,6 @@ import type { Movie, SortOption } from "../types";
 import { BulkEditModal } from "../components/BulkEditModal";
 import { applyFilters } from "../utils/applyFilters";
 import { getSortedMovies } from "../utils/getSortedMovies";
-import { isMobile } from "../utils/isMobile";
 import Pagination from "../components/Pagination";
 import { titleSearchScore } from "../utils/textSearch";
 
@@ -111,7 +108,6 @@ function MovieList() {
     close: closeMovie,
   } = useDrawerParam("movie");
 
-  const [showScanner, setShowScanner] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [viewMode, setViewMode] = useStoredChoice<ViewMode>("movieListView", VIEW_MODES, "table");
   const [visibleColumns, setVisibleColumns] = useStoredState<VisibleColumns>("movieListColumns", DEFAULT_COLUMNS, {
@@ -163,15 +159,6 @@ function MovieList() {
       setSortBy(column);
       setSortDirection("asc");
     }
-  };
-
-  const handleScanClick = () => {
-    setShowScanner(true);
-  };
-
-  const handleBarcodeDetected = (code: string) => {
-    setSearchQuery(code);
-    setShowScanner(false);
   };
 
   const toggleColumn = (column: keyof VisibleColumns) => {
@@ -305,7 +292,6 @@ function MovieList() {
   if (loading) {
     return (
       <>
-        <SubNavigation />
         <ListSkeleton viewMode={viewMode} label="Loading movies" />
       </>
     );
@@ -315,7 +301,6 @@ function MovieList() {
 
   return (
     <>
-      <SubNavigation />
       {openMovieId && (
         <Drawer label="Movie details" onClose={closeMovie}>
           {/* Keyed by id so switching movies starts the details fresh */}
@@ -325,21 +310,14 @@ function MovieList() {
       <PageShell remeasureWhen={loading}>
         {/* Title, toolbar and active filters */}
         <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
-          {/* Tablet up: on phones the sub-tabs name the page, and the count is in the toolbar */}
+          {/* Tablet up: on phones the top bar's tabs name the page, and the count is in the toolbar */}
           <PageHeader
             title="Movies"
             className="hidden md:flex"
             subtitle={`${movies.length} in your collection${narrowed ? ` · ${filteredMovies.length} shown` : ""}`}
             actions={
-              // Phones add and scan from the bottom bar
+              // Phones add from the bottom bar
               <div className="hidden gap-2 md:flex">
-                {/* Only where the camera can scan (tablets); desktops use a USB scanner, whose scans open the search window (CommandPalette) */}
-                {isMobile() && (
-                  <Button variant="outline" onClick={handleScanClick}>
-                    <ScanBarcode />
-                    Scan
-                  </Button>
-                )}
                 <Button onClick={() => setShowAddModal(true)}>
                   <Plus />
                   Add movie
@@ -539,12 +517,6 @@ function MovieList() {
 
       {showAddModal && <AddMovieModal onClose={() => setShowAddModal(false)} />}
 
-      {showScanner && (
-        <BarcodeScanner
-          onDetected={handleBarcodeDetected}
-          onClose={() => setShowScanner(false)}
-        />
-      )}
 
 
       {/* Bulk Edit Modal */}

@@ -17,7 +17,7 @@ import { barcodeKey, upcMatches } from "../utils/barcode";
 import { searchScore } from "../utils/textSearch";
 import { HANDOVER_BACKDROP_CLASS } from "../utils/windowHandoff";
 import { useBarcodeScan, useScanInput } from "../utils/useBarcodeScan";
-import { isMobile } from "../utils/isMobile";
+import { isMobile, isPhoneWidth } from "../utils/isMobile";
 import type { AddItemOptions } from "./AddItemModal";
 import type { Movie, TvShow } from "../types";
 
@@ -76,10 +76,11 @@ function CommandPalette({ open, onOpenChange, onAdd }: CommandPaletteProps) {
   const [search, setSearch] = useState("");
 
   // A barcode scanned with nothing in use opens this with the code, to show whether it's in the
-  // collection. On phones (where this sits in the hidden sidebar) it goes to the Search page
-  // instead, as the bottom bar's camera scan does; `external` puts the code in its box.
+  // collection. On phones and tablets, and in the phone layout (where this sits in the hidden
+  // sidebar), it goes to the Search page instead, as the bottom bar's camera scan does;
+  // `external` puts the code in its box.
   useBarcodeScan((code) => {
-    if (isMobile()) {
+    if (isMobile() || isPhoneWidth()) {
       navigate(`/search?q=${encodeURIComponent(code)}`, { state: { external: true } });
     } else {
       setSearch(code);

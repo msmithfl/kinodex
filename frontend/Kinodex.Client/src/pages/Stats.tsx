@@ -231,7 +231,8 @@ function Stats() {
 
   return (
     <PageShell layout="scroll" remeasureWhen={loading} className="overflow-x-auto px-4 pt-4 pb-8 md:px-20 md:pt-7">
-        <PageHeader title="Collection statistics" className="mb-4 md:mb-6" />
+        {/* Tablet up; on phones the top bar says Stats */}
+        <PageHeader title="Collection statistics" className="hidden md:mb-6 md:flex" />
 
         {loading ? (
           <div className="flex flex-col gap-4 md:gap-6" aria-busy="true" aria-label="Loading statistics">

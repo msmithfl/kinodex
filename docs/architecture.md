@@ -77,8 +77,7 @@ the `useSettings()` hook (shared cache).
 |---|---|
 | `Sidebar` (tablet up, redesigned) | Logo + collapse toggle (icon rail with tooltips, remembered in localStorage) · Search (opens `CommandPalette`) · Add (opens `AddItemModal`) · **Library:** Movies, TV Shows (with counts), Collections, Genres · **Insights:** Dashboard, Stats, CSV Export · Settings · account (`AccountMenuButton`, menu opens upward). Links are defined in `components/navigation.ts` |
 | `CommandPalette` (Ctrl/⌘K anywhere, or the sidebar's Search) | Every movie and TV show (title, year, UPC; opens its list with the drawer), the pages, and Add. Before typing it shows the newest few |
-| `SubNavigation` (phones only, tabs above library pages) | Movies · TV Shows · Collections · Genres (Shelves and My Shelf are commented out) |
-| `Header` (phones only) | Logo |
+| `Header` (phones only, the top bar; taller where a title sits over tabs or a search box) | Depends on the page: on Movies, TV Shows, Collections, Genres and a genre, "Library" over the tabs between them (`SubNavigation`); on Search, "Search" over the search box (the Search page puts it there through `utils/topBar.ts`); on Dashboard and Stats, the logo and the page name, and Settings at the right; on Settings, the logo and "Settings"; elsewhere the logo |
 | `BottomNav` (phones) | Library, Search, Add (opens `AddItemModal`: movie or TV), Scan, Dashboard |
 | `AccountMenuButton` | Clerk account menu, below or above the avatar |
 
@@ -89,7 +88,7 @@ the `useSettings()` hook (shared cache).
 | `/` | `Dashboard`: account row, spending, quick actions, recently added movies and TV shows (two sideways-scrolling poster rows, right column on desktop) | Core |
 | `/library` | `MovieList` (redesigned): title and count, table/poster views, search, filter panel and chips, sort, columns, floating bulk edit/delete bar, paged in the browser (`Pagination`, 100 per page) | Core |
 | `/movie/:id` | Redirects to `/library?movie=:id` (the full page is retired) | Core |
-| `/tv-shows` | `TvShowList` (redesigned, like `MovieList` without selection or paging): title and count, Scan/Add TV show, search, filter panel and chips (`features/tvShows/filters.ts`), sort, columns; `features/tvShows/TvShowTable` | Core |
+| `/tv-shows` | `TvShowList` (redesigned, like `MovieList` without selection or paging): title and count, Add TV show, search, filter panel and chips (`features/tvShows/filters.ts`), sort, columns; `features/tvShows/TvShowTable` | Core |
 | `/tv-shows/:id` | Redirects to `/tv-shows?show=:id` (the full page is retired) | Core |
 | `/collections` | `CollectionsView`: poster cards + create modal; hosts collection & movie drawers | Core |
 | `/collections/:name` | redirect → `/collections?collection=name` | Redirect |
@@ -171,8 +170,9 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   punctuation ("spiderman" finds Spider-Man), or the text is part of a UPC. The search window and
   Search page put the best matches first; the lists keep their own sort.
 - **Barcodes:** phones and tablets scan with the camera (`BarcodeScanner`, from the bottom bar,
-  Search, the list toolbars and the UPC fields); those scan buttons only show where `isMobile()`,
-  so desktops have none. Desktop USB/Bluetooth scanners type the code and press Enter like a
+  Search and the UPC fields); those scan buttons only show where `isMobile()`
+  (a phone or tablet, judged by the device rather than the window's width), so desktops have
+  none. Desktop USB/Bluetooth scanners type the code and press Enter like a
   keyboard. A scan while no field or window is in use opens the search window (`CommandPalette`,
   Ctrl/⌘K) with the code. When a search there finds no movie or TV show (a scanned code or typed
   text), it offers Add as a movie or TV show, starting with the code in the UPC field or the text
@@ -228,7 +228,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   rating), `SortHeader` (a table's sortable column header), `ListSkeleton` (loading placeholder for
   the movie and TV lists), `Pagination`.
 - **Redesigned screens:** every page in the app. The sidebar and search palette; the movie list (`MovieList`:
-  title and count, Scan/Add, toolbar with search (`/` focuses it), filter, sort, Table/Posters,
+  title and count, Add, toolbar with search (`/` focuses it), filter, sort, Table/Posters,
   columns; filter chips; `MovieTable` with poster thumbnails, checkboxes and a select-all; a
   floating bulk-action bar; staggered poster fade-in; skeletons while loading; toasts after bulk
   edit/delete); the Add and Edit Movie windows (Radix `Dialog`, a bottom sheet on phones, sized

@@ -53,11 +53,8 @@ function Settings() {
   return (
     <PageShell layout="scroll">
       <div className="max-w-3xl px-4 pt-4 pb-8 md:px-20 md:pt-7">
-        <PageHeader
-          title="Settings"
-          subtitle="Saved to your account, so they apply on every device you sign in on (except the theme)."
-          className="mb-6"
-        />
+        {/* Tablet up; on phones the top bar says Settings */}
+        <PageHeader title="Settings" className="hidden md:mb-6 md:flex" />
 
         {saveError && (
           <Alert variant="destructive" className="mb-4">

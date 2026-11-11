@@ -5,7 +5,6 @@ import PageShell from "../components/PageShell";
 import PageHeader from "../components/PageHeader";
 import { POSTER_GRID_CAPTIONED } from "../components/posterGrid";
 import CollectionCard from "../components/CollectionCard";
-import SubNavigation from "../components/SubNavigation";
 import { useSettings } from "../settings/useSettings";
 import CollectionFormModal from "../components/CollectionFormModal";
 import { isChecklistItemOwned } from "../utils/checklist";
@@ -62,7 +61,6 @@ function CollectionsView() {
   if (loading) {
     return (
       <>
-        <SubNavigation />
         <ListSkeleton viewMode="poster" toolbar={false} grid={POSTER_GRID_CAPTIONED} label="Loading collections" />
       </>
     );
@@ -83,9 +81,8 @@ function CollectionsView() {
 
   return (
     <>
-      <SubNavigation />
       <PageShell remeasureWhen={loading}>
-        {/* Tablet up: on phones the sub-tabs name the page */}
+        {/* Tablet up: on phones the top bar's tabs name the page */}
         <PageHeader
           title="Collections"
           subtitle={`${collections.length} ${collections.length === 1 ? "collection" : "collections"}`}
