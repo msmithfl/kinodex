@@ -184,7 +184,7 @@ function MovieForm({
 
 
   return (
-    <form id={id} onSubmit={handleSubmit} className="flex flex-col h-full w-full">
+    <form id={id} onSubmit={handleSubmit} className="flex min-h-0 w-full flex-1 flex-col">
       <Tabs value={activeTab} onValueChange={(tab) => setActiveTab(tab as Tab)} className="flex min-h-0 flex-1 flex-col gap-0">
         <TabsList className="shrink-0">
           {TABS.map((tab) => (

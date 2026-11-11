@@ -155,7 +155,7 @@ function TvShowForm({
     <form
       id={formId}
       onSubmit={handleSubmit}
-      className="flex flex-col h-full w-full"
+      className="flex min-h-0 w-full flex-1 flex-col"
     >
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(tab) => setActiveTab(tab as Tab)} className="flex min-h-0 flex-1 flex-col gap-0">
