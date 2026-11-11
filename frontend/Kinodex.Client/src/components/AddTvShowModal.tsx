@@ -221,7 +221,7 @@ export function AddTvShowModal({ onClose }: AddTvShowModalProps) {
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               {/* Phones: the show in a compact row */}
-              <div className="mb-3 flex items-center gap-3 md:hidden">
+              <div className="mb-3 flex shrink-0 items-center gap-3 md:hidden">
                 <PreviewPoster show={formData} className="w-10 shrink-0 rounded-sm text-[0px]" />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate text-sm font-semibold">{formData.title || "Untitled"}</span>
