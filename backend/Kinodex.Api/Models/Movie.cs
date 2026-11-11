@@ -30,5 +30,4 @@ public class Movie
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     // Navigation property
-    public List<Checkout> Checkouts { get; set; } = new();
 }

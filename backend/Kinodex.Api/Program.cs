@@ -153,9 +153,6 @@ app.MapShelfSectionEndpoints();
 app.MapUpcEndpoints();
 app.MapTmdbEndpoints();
 app.MapCollectionListItemEndpoints();
-app.MapTmdbMatchingEndpoints();
-app.MapCustomerEndpoints();
-app.MapCheckoutEndpoints();
 
 app.Run();
 
