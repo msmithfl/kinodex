@@ -1,109 +1,23 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Kinodex.Api.Data;
-using Kinodex.Api.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Kinodex.Api.Services;
 
+// TMDB movie search for the Letterboxd import, which matches each imported title to TMDB. (The
+// app's own TMDB calls go through /api/tmdb/v3 instead; see Endpoints/TmdbEndpoints.cs.)
 public class TmdbMatchingService
 {
-    private readonly MovieDbContext _db;
     private readonly HttpClient _httpClient;
     private readonly string? _apiKey;
 
-    public TmdbMatchingService(MovieDbContext db, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public TmdbMatchingService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
-        _db = db;
         _httpClient = httpClientFactory.CreateClient();
         _apiKey = configuration["TMDB_API_KEY"];
-        
-        // Log API key status (without revealing the key)
         if (string.IsNullOrEmpty(_apiKey))
         {
             Console.WriteLine("WARNING: TMDB_API_KEY is not configured!");
         }
-        else
-        {
-            Console.WriteLine($"TMDB_API_KEY loaded: {_apiKey.Substring(0, Math.Min(4, _apiKey.Length))}...{_apiKey.Substring(Math.Max(0, _apiKey.Length - 4))}");
-        }
-    }
-
-    // Each method works on one user's movies only
-    public async Task<MatchingResult> MatchMoviesWithTmdb(string userId)
-    {
-        if (string.IsNullOrEmpty(_apiKey))
-        {
-            return new MatchingResult
-            {
-                Success = false,
-                Message = "TMDB API key not configured. Please set TMDB_API_KEY in your environment variables or configuration."
-            };
-        }
-
-        var unmatchedMovies = await _db.Movies
-            .Where(m => m.UserId == userId && m.TmdbId == null)
-            .ToListAsync();
-
-        var result = new MatchingResult
-        {
-            Success = true,
-            TotalUnmatched = unmatchedMovies.Count
-        };
-
-        foreach (var movie in unmatchedMovies)
-        {
-            try
-            {
-                // Rate limiting - TMDB allows 50 requests per second, we'll be conservative
-                await Task.Delay(250);
-
-                var matches = await SearchTmdb(movie.Title, movie.Year);
-                
-                if (matches.Count > 0)
-                {
-                    var bestMatch = matches[0];
-                    result.Suggestions.Add(new MatchSuggestion
-                    {
-                        MovieId = movie.Id,
-                        MovieTitle = movie.Title,
-                        MovieYear = movie.Year,
-                        SuggestedMatches = matches
-                    });
-                }
-                else
-                {
-                    result.NoMatchesFound++;
-                }
-            }
-            catch (Exception ex)
-            {
-                result.Errors.Add($"Error matching '{movie.Title}': {ex.Message}");
-            }
-        }
-        
-        // Add specific message if all searches failed
-        if (result.Suggestions.Count == 0 && unmatchedMovies.Count > 0 && result.NoMatchesFound == 0)
-        {
-            result.Success = false;
-            result.Message = "All TMDB searches failed. This usually means the API key is invalid or not configured. Check server logs for details.";
-        }
-        else if (result.Suggestions.Count == 0 && result.NoMatchesFound > 0)
-        {
-            result.Message = $"No suggestions found. {result.NoMatchesFound} movies had no TMDB matches.";
-        }
-        
-        if (!result.Success)
-        {
-            return result;
-        }
-        
-        if (result.Suggestions.Count > 0)
-        {
-            result.Message = $"Found suggestions for {result.Suggestions.Count} of {unmatchedMovies.Count} unmatched movies.";
-        }
-
-        return result;
     }
 
     public async Task<List<TmdbSearchResult>> SearchTmdb(string title, int? year = null)
@@ -176,108 +90,6 @@ public class TmdbMatchingService
             return new List<TmdbSearchResult>();
         }
     }
-
-    public async Task<FillImagesResult> FillMissingImages(string userId)
-    {
-        if (string.IsNullOrEmpty(_apiKey))
-            return new FillImagesResult { Success = false, Message = "TMDB API key not configured." };
-
-        var movies = await _db.Movies
-            .Where(m => m.UserId == userId && m.TmdbId != null && (m.BackdropPath == null || m.BackdropPath == ""))
-            .ToListAsync();
-
-        var result = new FillImagesResult { Success = true, Total = movies.Count };
-
-        foreach (var movie in movies)
-        {
-            try
-            {
-                await Task.Delay(250);
-
-                var url = $"https://api.themoviedb.org/3/movie/{movie.TmdbId}";
-                var request = new HttpRequestMessage(HttpMethod.Get, url);
-
-                if (_apiKey.StartsWith("eyJ"))
-                    request.Headers.Add("Authorization", $"Bearer {_apiKey}");
-                else
-                    request.RequestUri = new Uri(url + $"?api_key={_apiKey}");
-
-                var response = await _httpClient.SendAsync(request);
-                if (!response.IsSuccessStatusCode)
-                {
-                    result.Errors.Add($"Failed to fetch '{movie.Title}': {response.StatusCode}");
-                    continue;
-                }
-
-                var json = await response.Content.ReadAsStringAsync();
-                var details = JsonSerializer.Deserialize<TmdbMovie>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                if (details != null)
-                {
-                    if (details.BackdropPath != null)
-                        movie.BackdropPath = $"https://image.tmdb.org/t/p/w1280{details.BackdropPath}";
-                    if (details.PosterPath != null && string.IsNullOrEmpty(movie.PosterPath))
-                        movie.PosterPath = $"https://image.tmdb.org/t/p/w500{details.PosterPath}";
-                    result.Updated++;
-                }
-            }
-            catch (Exception ex)
-            {
-                result.Errors.Add($"Error processing '{movie.Title}': {ex.Message}");
-            }
-        }
-
-        await _db.SaveChangesAsync();
-        result.Message = $"Updated {result.Updated} of {result.Total} movies.";
-        return result;
-    }
-
-    public async Task<bool> AssignTmdbId(string userId, int movieId, int tmdbId, string? posterPath = null, string? backdropPath = null)
-    {
-        var movie = await _db.Movies.FirstOrDefaultAsync(m => m.Id == movieId && m.UserId == userId);
-        if (movie == null) return false;
-
-        movie.TmdbId = tmdbId;
-        if (posterPath != null) movie.PosterPath = posterPath;
-        if (backdropPath != null) movie.BackdropPath = backdropPath;
-        await _db.SaveChangesAsync();
-        return true;
-    }
-
-    public async Task<List<Movie>> GetUnmatchedMovies(string userId)
-    {
-        return await _db.Movies
-            .Where(m => m.UserId == userId && m.TmdbId == null)
-            .OrderBy(m => m.Title)
-            .ToListAsync();
-    }
-}
-
-public class FillImagesResult
-{
-    public bool Success { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public int Total { get; set; }
-    public int Updated { get; set; }
-    public List<string> Errors { get; set; } = new();
-}
-
-public class MatchingResult
-{
-    public bool Success { get; set; }
-    public string Message { get; set; } = string.Empty;
-    public int TotalUnmatched { get; set; }
-    public int NoMatchesFound { get; set; }
-    public List<MatchSuggestion> Suggestions { get; set; } = new();
-    public List<string> Errors { get; set; } = new();
-}
-
-public class MatchSuggestion
-{
-    public int MovieId { get; set; }
-    public string MovieTitle { get; set; } = string.Empty;
-    public int MovieYear { get; set; }
-    public List<TmdbSearchResult> SuggestedMatches { get; set; } = new();
 }
 
 public class TmdbSearchResult

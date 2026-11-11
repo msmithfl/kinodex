@@ -32,7 +32,7 @@ Kinodex/
     Program.cs          startup: DB, CORS, Clerk JWT auth, maps every endpoint group
     Endpoints/          one file per area (minimal-API route groups)
     Models/             EF entities
-    Services/           TmdbMatchingService
+    Services/           TmdbMatchingService (TMDB search for the Letterboxd import)
     OpenApi/            StrictSchemaTransformer (keeps the OpenAPI description, and so the generated types, strict)
     Data/               MovieDbContext, MigrateDbAsync() (runs migrations on startup)
     Migrations/         EF migrations (Postgres)
@@ -290,19 +290,17 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 | `/api/tvshows` | list, get/create/update/delete by id (purchases nested) | Owned | TV pages, dashboard, stats, search |
 | `/api/collections` | list, create, update (name/director/cover/backdrop), delete | Owned; rename/delete also update movies' `collections` lists | Collections |
 | `/api/collections/{id}/items`, `/api/collections/items/all` | checklist items: list, add, delete; all items for rings | Owned | Collections |
-| `/api/shelfsections` | list, create, reorder, rename, delete | Owned (auth set per route); rename/delete update movies | Movie forms (list, create) |
+| `/api/shelfsections` | list, create | Owned (auth set per route) | Movie forms |
 | `/api/settings` | get, update | Owned | `useSettings()` hook |
 | `/api/movie-presets` | list, create, update, delete (names unique per user; every Add Movie field TMDB does not fill in, purchase date optional) | Owned | `features/movies/presets.ts`; Add Movie modal picks and saves them |
 | `/api/upc/lookup/{upc}` | product title + images | Shared cache (`UpcLookups`), not per user | Product image picker |
 | `/api/tmdb/v3/{path}` | TMDB's reply for the app's TMDB requests (searches, a title's images, a TV show's details); others are refused | Signed in; not per user | `utils/tmdbApi.ts` (`useTmdb`) |
-| `/api/tmdb/*` (except `v3`) | unmatched, match, assign, fill-images, search | Owned (acts on the caller's movies) | Nothing (its Match Movies page was removed) |
-| `/api/customers`, `/api/checkouts` | CRUD, returns, overdue | Owned (checkouts via their movie's owner) | Nothing (the lending pages were removed) |
 | `/api/webhooks/clerk` | user created/updated/deleted | **No sign-in**; verified by Svix signature | Clerk |
 
 ### Data model
 
 ```
-User (Clerk id) ─── owns (by UserId string) ──┬─ Movie ─────────── Checkout ─── Customer   (lending; no frontend now)
+User (Clerk id) ─── owns (by UserId string) ──┬─ Movie
                                                ├─ TvShow ── TvShowPurchase (seasons, price, date, gift, UPC, formats)
                                                ├─ Collection ── CollectionListItem (checklist)
                                                ├─ ShelfSection
@@ -314,7 +312,7 @@ Shared (not per user): UpcLookup (UPC → product images)
 
 - `Movie.Collections` is a list of collection **names**; `Movie.ShelfSection` is a section
   **name**; `Movie.Genres` / `TvShow.Genres` are names (genres have no table at all).
-- So renaming or deleting a collection or shelf section has to update every affected movie
+- So renaming or deleting a collection has to update every affected movie
   (the endpoints do this), and "genres" exist only as values found on movies.
 - List fields (`Formats`, `Collections`, `Genres`, `Seasons`, `Images`) are Postgres arrays.
 
@@ -371,8 +369,8 @@ tests against a PostgreSQL container.
   bulk edit), and creating a section from the movie form.
 - **Removed from the frontend, to rebuild on the new foundation (November 2026; git history
   has them):** the shelf pages (browsing by shelf, reordering/renaming/deleting sections), lending
-  (customers and checkouts) and Match Movies (bulk TMDB matching). Their API endpoints are still
-  there, unused; removing them is a separate decision.
+  (customers and checkouts) and Match Movies (bulk TMDB matching). Their API endpoints were removed
+  too (November 2026), and the customers and checkouts tables dropped (migration `RemoveLending`).
 - **Future, not built:** a lending ledger and watch log in the movie drawer (tabs hidden).
 
 ## Known loose ends
@@ -381,7 +379,5 @@ Pointers for cleanup, roughly in the order they'd come up:
 
 - `Svix` (Clerk webhooks) has a 2.x major version available; 1.86 isn't flagged, so it hasn't
   been upgraded.
-- Unused API endpoints from the removed pages: `/api/customers`, `/api/checkouts`, `/api/tmdb/*`
-  matching, and shelf section reorder/rename/delete.
 - Largest page is `Stats` (~420 lines); the other core pages are 350–490 lines.
 - Frontend tests cover the plain logic only (see Tests); no component tests yet.

@@ -23,42 +23,6 @@ namespace Kinodex.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Kinodex.Api.Models.Checkout", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CheckedOutDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("DueDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("MovieId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("ReturnedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("MovieId");
-
-                    b.ToTable("Checkouts");
-                });
-
             modelBuilder.Entity("Kinodex.Api.Models.Collection", b =>
                 {
                     b.Property<int>("Id")
@@ -125,38 +89,6 @@ namespace Kinodex.Api.Migrations
                     b.HasIndex("CollectionId");
 
                     b.ToTable("CollectionListItems");
-                });
-
-            modelBuilder.Entity("Kinodex.Api.Models.Customer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Customers");
                 });
 
             modelBuilder.Entity("Kinodex.Api.Models.Movie", b =>
@@ -539,25 +471,6 @@ namespace Kinodex.Api.Migrations
                     b.ToTable("UserSettings");
                 });
 
-            modelBuilder.Entity("Kinodex.Api.Models.Checkout", b =>
-                {
-                    b.HasOne("Kinodex.Api.Models.Customer", "Customer")
-                        .WithMany("Checkouts")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Kinodex.Api.Models.Movie", "Movie")
-                        .WithMany("Checkouts")
-                        .HasForeignKey("MovieId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Movie");
-                });
-
             modelBuilder.Entity("Kinodex.Api.Models.CollectionListItem", b =>
                 {
                     b.HasOne("Kinodex.Api.Models.Collection", "Collection")
@@ -576,16 +489,6 @@ namespace Kinodex.Api.Migrations
                         .HasForeignKey("TvShowId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Kinodex.Api.Models.Customer", b =>
-                {
-                    b.Navigation("Checkouts");
-                });
-
-            modelBuilder.Entity("Kinodex.Api.Models.Movie", b =>
-                {
-                    b.Navigation("Checkouts");
                 });
 
             modelBuilder.Entity("Kinodex.Api.Models.TvShow", b =>

@@ -23,10 +23,6 @@ public class SignInRequiredTests(KinodexApiFactory api)
     [InlineData("DELETE", "/api/movie-presets/1")]
     [InlineData("GET", "/api/upc/lookup/012345678905")]
     [InlineData("GET", "/api/tmdb/v3/search/movie?query=alien")]
-    [InlineData("GET", "/api/tmdb/unmatched")]
-    [InlineData("POST", "/api/tmdb/fill-images")]
-    [InlineData("GET", "/api/customers")]
-    [InlineData("GET", "/api/checkouts")]
     public async Task Signed_out_requests_are_rejected(string method, string url)
     {
         var client = api.ClientFor(null);

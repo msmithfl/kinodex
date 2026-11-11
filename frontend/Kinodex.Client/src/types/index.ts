@@ -11,8 +11,7 @@ type ServerSet = "id" | "userId" | "createdAt";
 // T with the given fields made optional
 type Loosen<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
-// Loans (checkouts) are parked; movies loaded for the core screens don't rely on them
-export type Movie = Loosen<Schemas["Movie"], ServerSet | "checkouts">;
+export type Movie = Loosen<Schemas["Movie"], ServerSet>;
 
 // One transaction: a complete set, a single season, or anything in between.
 // The same season may appear in more than one purchase (e.g. a DVD later upgraded to Blu-ray).
