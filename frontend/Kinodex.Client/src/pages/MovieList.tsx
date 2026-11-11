@@ -325,9 +325,10 @@ function MovieList() {
       <PageShell remeasureWhen={loading}>
         {/* Title, toolbar and active filters */}
         <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
+          {/* Tablet up: on phones the sub-tabs name the page, and the count is in the toolbar */}
           <PageHeader
             title="Movies"
-            subtitleBeside
+            className="hidden md:flex"
             subtitle={`${movies.length} in your collection${narrowed ? ` · ${filteredMovies.length} shown` : ""}`}
             actions={
               // Phones add and scan from the bottom bar
@@ -389,6 +390,10 @@ function MovieList() {
                 onSortByChange={setSortBy}
                 onDirectionChange={setSortDirection}
               />
+              {/* Phones: the count, as the page header is hidden there */}
+              <p className="text-sm whitespace-nowrap text-muted-foreground tabular-nums md:hidden">
+                {narrowed ? `${filteredMovies.length} of ${plural(movies.length, "movie")}` : plural(movies.length, "movie")}
+              </p>
               <div className="ml-auto flex items-center gap-2">
                 <ViewModeToggle value={viewMode} onChange={handleViewModeChange} showLabels />
                 {viewMode === "table" && (
