@@ -3,7 +3,7 @@ import { Circle, CircleCheck, Loader2, Search, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { searchTMDB } from "../../utils/tmdbApi";
+import { useTmdb } from "../../utils/tmdbApi";
 import { isChecklistItemOwned } from "../../utils/checklist";
 import { useAddChecklistItem, useChecklistItems, useRemoveChecklistItem } from "./api";
 import type { Collection, CollectionListItem, Movie, TMDBMovie } from "../../types";
@@ -17,6 +17,8 @@ interface CollectionChecklistProps {
 // The collection drawer's Checklist tab: the movies that make up a collection (searched on TMDB),
 // each ticked when one of the collection's movies matches it
 function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistProps) {
+  // TMDB, through our API
+  const { searchTMDB } = useTmdb();
   const { data: listItems = [] } = useChecklistItems(collection.id);
   const addItem = useAddChecklistItem(collection.id);
   const removeItem = useRemoveChecklistItem(collection.id);

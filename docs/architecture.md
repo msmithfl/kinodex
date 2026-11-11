@@ -12,14 +12,13 @@ structure changes (new page, endpoint, model, or a feature moving between "core"
    │
    ├─ React app (Vite, React 19, React Router 7, Tailwind 4)      hosted on Vercel
    │    ├─ Clerk: sign-in UI + tokens
-   │    ├─ TMDB: searched directly from the browser (VITE_TMDB_API_TOKEN)
-   │    └─ calls the API with  Authorization: Bearer <Clerk token>
+      │    └─ calls the API with  Authorization: Bearer <Clerk token>
    │
    ▼
  .NET 10 minimal API (frontend never touches the DB)               hosted on Railway
    ├─ verifies Clerk JWTs; every query filtered by the signed-in user's id
    ├─ EF Core → PostgreSQL (Railway); migrations run on startup
-   ├─ calls out to: TMDB (matching), UPCitemdb (product images)
+   ├─ calls out to: TMDB (search and images, for the browser), UPCitemdb (product images)
    └─ receives: Clerk webhooks (user created / updated / deleted)
 ```
 
@@ -190,7 +189,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   back in the first download. The Add window is also fetched in the background once the app has
   loaded, so it opens without a blank moment (e.g. when the search window hands over to it).
 - **Utilities:** `upc.ts` (eBay sold-listings link, copy-to-clipboard with a `Copied!` flash),
-  `tmdbApi.ts` (browser-side TMDB calls), `useUrlSearchQuery` (search in the URL),
+  `tmdbApi.ts` (`useTmdb`: TMDB through our API), `useUrlSearchQuery` (search in the URL),
   `useFillViewportHeight` (pages that fill the screen above the bottom nav), `getSortedMovies`,
   `spending.ts` / `tvShowPurchases.ts` / `formatSeasons.ts` (money and season maths),
   `checklist.ts` (collection checklist matching), `dateUtils.ts`, `isMobile.ts`.
@@ -295,7 +294,8 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 | `/api/settings` | get, update | Owned | `useSettings()` hook |
 | `/api/movie-presets` | list, create, update, delete (names unique per user; every Add Movie field TMDB does not fill in, purchase date optional) | Owned | `features/movies/presets.ts`; Add Movie modal picks and saves them |
 | `/api/upc/lookup/{upc}` | product title + images | Shared cache (`UpcLookups`), not per user | Product image picker |
-| `/api/tmdb/*` | unmatched, match, assign, fill-images, search | Owned (acts on the caller's movies) | Nothing (its Match Movies page was removed) |
+| `/api/tmdb/v3/{path}` | TMDB's reply for the app's TMDB requests (searches, a title's images, a TV show's details); others are refused | Signed in; not per user | `utils/tmdbApi.ts` (`useTmdb`) |
+| `/api/tmdb/*` (except `v3`) | unmatched, match, assign, fill-images, search | Owned (acts on the caller's movies) | Nothing (its Match Movies page was removed) |
 | `/api/customers`, `/api/checkouts` | CRUD, returns, overdue | Owned (checkouts via their movie's owner) | Nothing (the lending pages were removed) |
 | `/api/webhooks/clerk` | user created/updated/deleted | **No sign-in**; verified by Svix signature | Clerk |
 
@@ -328,11 +328,10 @@ HDD number. Collections have `IsDirectorCollection`, `ImageUrl` (cover), `Backdr
 |---|---|---|
 | `VITE_API_URL` | frontend build | API address (read in ~25 files) |
 | `VITE_CLERK_PUBLISHABLE_KEY` | frontend build | Clerk |
-| `VITE_TMDB_API_TOKEN` | frontend build | Browser-side TMDB search/images (ends up in the shipped JS) |
 | `DATABASE_URL` / `ConnectionStrings:DefaultConnection` | API | Postgres |
 | `CORS_ORIGINS` | API | Allowed frontend origins |
 | `Clerk:Domain`, `Clerk:WebhookSecret` | API | Token validation; webhook signatures |
-| `TMDB_API_KEY` | API | `TmdbMatchingService` |
+| `TMDB_API_KEY` | API | TMDB, for everyone using this server (`/api/tmdb/v3`, `TmdbMatchingService`): a read access token or an API key |
 
 ---
 
@@ -386,6 +385,3 @@ Pointers for cleanup, roughly in the order they'd come up:
   matching, and shelf section reorder/rename/delete.
 - Largest page is `Stats` (~420 lines); the other core pages are 350–490 lines.
 - Frontend tests cover the plain logic only (see Tests); no component tests yet.
-- TMDB token is built into the frontend bundle.
-- Lint: no errors; some `react-hooks/exhaustive-deps` warnings on the per-page fetch effects
-  (go away with the data-layer change).

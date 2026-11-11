@@ -151,6 +151,7 @@ app.MapMoviePresetEndpoints();
 app.MapCollectionEndpoints();
 app.MapShelfSectionEndpoints();
 app.MapUpcEndpoints();
+app.MapTmdbEndpoints();
 app.MapCollectionListItemEndpoints();
 app.MapTmdbMatchingEndpoints();
 app.MapCustomerEndpoints();

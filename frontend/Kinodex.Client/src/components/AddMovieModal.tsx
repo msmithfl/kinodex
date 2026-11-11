@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Movie, MoviePreset, TMDBMovie } from "../types";
-import { GENRE_MAP, searchTMDB } from "../utils/tmdbApi";
+import { GENRE_MAP, useTmdb } from "../utils/tmdbApi";
 import MovieForm from "./MovieForm";
 import { BarcodeScanner } from "./lazyComponents";
 import { MOD_KEY } from "./navigation";
@@ -102,6 +102,8 @@ function PreviewPoster({ movie, className }: { movie: Movie; className?: string 
 }
 
 export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: AddMovieModalProps) {
+  // TMDB, through our API
+  const { searchTMDB } = useTmdb();
   const navigate = useNavigate();
   const { data: movies = [] } = useMovies();
   const { data: collectionList = [] } = useCollections();

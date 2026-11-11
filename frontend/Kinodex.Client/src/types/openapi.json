@@ -5,6 +5,28 @@
     "version": "1.0.0"
   },
   "paths": {
+    "/api/tmdb/v3/{path}": {
+      "get": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/collections/items/all": {
       "get": {
         "tags": [

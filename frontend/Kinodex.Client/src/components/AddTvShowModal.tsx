@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ApiError } from "../utils/api";
 import { useCreateTvShow, useTvShows } from "../features/tvShows/api";
 import type { TMDBTvShow, TvShow } from "../types";
-import { TV_GENRE_MAP, getTMDBTvSeasonCount, searchTMDBTv } from "../utils/tmdbApi";
+import { TV_GENRE_MAP, useTmdb } from "../utils/tmdbApi";
 import { isMobile } from "../utils/isMobile";
 import TmdbSearch from "./TmdbSearch";
 import TvShowForm from "./TvShowForm";
@@ -65,6 +65,8 @@ function PreviewPoster({ show, className }: { show: TvShow; className?: string }
 
 // Add a TV show: search TMDB, then fill in the details and purchases. Same window as Add Movie.
 export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }: AddTvShowModalProps) {
+  // TMDB, through our API
+  const { getTMDBTvSeasonCount, searchTMDBTv } = useTmdb();
   const navigate = useNavigate();
   const { data: shows = [] } = useTvShows();
   // Adding refreshes every screen listing shows

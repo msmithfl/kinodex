@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getTMDBImages } from "../utils/tmdbApi";
+import { useTmdb } from "../utils/tmdbApi";
 
 const TMDB_IMAGE = "https://image.tmdb.org/t/p";
 
@@ -44,6 +44,8 @@ export function useImagePicker({
   onSelect,
 }: ImagePickerOptions) {
   const type = IMAGE_TYPES[imageType];
+  // TMDB, through our API
+  const { getTMDBImages } = useTmdb();
   const [images, setImages] = useState<string[] | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
