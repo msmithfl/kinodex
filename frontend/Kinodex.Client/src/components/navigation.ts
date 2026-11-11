@@ -4,7 +4,7 @@ import {
   Film,
   LayoutDashboard,
   LayoutGrid,
-  Settings2,
+  Settings,
   Tags,
   Tv,
   type LucideIcon,
@@ -30,7 +30,7 @@ export const INSIGHTS_LINKS: NavLinkItem[] = [
   { path: "/export", label: "CSV Export", icon: Download },
 ];
 
-export const SETTINGS_LINK: NavLinkItem = { path: "/settings", label: "Settings", icon: Settings2 };
+export const SETTINGS_LINK: NavLinkItem = { path: "/settings", label: "Settings", icon: Settings };
 
 // The current page is the link's path or anything under it ("/" only matches itself)
 export const isActivePath = (pathname: string, path: string) =>

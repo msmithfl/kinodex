@@ -3,7 +3,6 @@ import PageHeader from "../components/PageHeader";
 import PageShell from "../components/PageShell";
 import GenreCard, { GENRE_OVERLAYS } from "../components/GenreCard";
 import EmptyState from "../components/EmptyState";
-import SubNavigation from "../components/SubNavigation";
 import { useMovies } from "../features/movies/api";
 import type { Movie } from "../types";
 
@@ -40,7 +39,6 @@ function GenresView() {
   if (loading) {
     return (
       <>
-        <SubNavigation />
         <div className="flex flex-col gap-4 px-6 pt-4 md:px-10 md:pt-7" aria-busy="true" aria-label="Loading genres">
           <div className="hidden flex-col gap-2 md:flex">
             <Skeleton className="h-8 w-28" />
@@ -58,9 +56,8 @@ function GenresView() {
 
   return (
     <>
-      <SubNavigation />
       <PageShell remeasureWhen={loading}>
-        {/* Tablet up: on phones the sub-tabs name the page */}
+        {/* Tablet up: on phones the top bar's tabs name the page */}
         <PageHeader
           title="Genres"
           subtitle={`${genres.length} ${genres.length === 1 ? "genre" : "genres"}`}

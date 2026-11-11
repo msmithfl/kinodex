@@ -5,7 +5,6 @@ import PageHeader from "../components/PageHeader";
 import PageShell from "../components/PageShell";
 import PosterCard from "../components/PosterCard";
 import SimpleMovieTable from "../components/SimpleMovieTable";
-import SubNavigation from "../components/SubNavigation";
 import ViewModeToggle, { VIEW_MODES, type ViewMode } from "../components/ViewModeToggle";
 import { POSTER_GRID_CAPTIONED } from "../components/posterGrid";
 import Drawer from "../components/Drawer";
@@ -27,7 +26,6 @@ function GenreDetail() {
   if (loading) {
     return (
       <>
-        <SubNavigation />
         <ListSkeleton viewMode={viewMode} toolbar={false} grid={POSTER_GRID_CAPTIONED} label="Loading genre" />
       </>
     );
@@ -35,7 +33,6 @@ function GenreDetail() {
 
   return (
     <>
-      <SubNavigation />
       {openMovieId && (
         <Drawer label="Movie details" onClose={closeMovie}>
           <MovieDetail key={openMovieId} movieId={openMovieId} onDeleted={closeMovie} />

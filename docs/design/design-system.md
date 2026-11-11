@@ -56,7 +56,6 @@ Text is written in sentence case ("Add movie", not "Add Movie"), and in plain wo
 ## A page
 
 ```tsx
-<SubNavigation />                       {/* only on pages with sub-pages (Movies, Genres) */}
 <PageShell remeasureWhen={loading}>     {/* fills the screen above the phone bottom bar */}
   <PageHeader title="Genres" subtitle="12 genres" actions={…}
     className="hidden shrink-0 px-6 pt-4 pb-4 md:flex md:px-10 md:pt-7" />
@@ -70,8 +69,8 @@ Text is written in sentence case ("Add movie", not "Add Movie"), and in plain wo
 - **`PageShell`** (`layout="column"` by default): the header and toolbar stay put and the content
   scrolls on its own. `layout="scroll"` scrolls the whole page (dashboard, settings).
 - **`PageHeader`:** title, a count or one-line subtitle, actions at the right. The Library pages
-  (Movies, TV Shows, Collections, Genres) hide it on phones (`hidden md:flex`), since the sub-tabs
-  above name the page; the Movies and TV toolbars show the count beside sort there instead.
+  (Movies, TV Shows, Collections, Genres) hide it on phones (`hidden md:flex`), since the top bar's
+  tabs name the page; the Movies and TV toolbars show the count beside sort there instead.
   `subtitleBeside` (the genre page) puts a short count on the title's row on phones.
 - **Loading:** skeletons (`ui/skeleton`, `ListSkeleton`) shaped like what's coming, not spinners.
 - **Empty:** `EmptyState` with one short sentence.

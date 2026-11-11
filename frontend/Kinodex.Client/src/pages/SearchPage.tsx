@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useMovies } from "../features/movies/api";
 import { useTvShows } from "../features/tvShows/api";
@@ -13,6 +14,7 @@ import { formatSeasons } from "../utils/formatSeasons";
 import { ownedSeasons } from "../utils/tvShowPurchases";
 import { titleSearchScore } from "../utils/textSearch";
 import { useScanInput } from "../utils/useBarcodeScan";
+import { usePhoneTopBarSlot } from "../utils/topBar";
 
 // A movie or TV show in the results, with everything a row shows and searches
 interface SearchItem {
@@ -126,6 +128,9 @@ function SearchPage() {
   // starts a fresh search with the code, rather than adding it to what was there
   const handleSearchKeyDown = useScanInput(setQueryNow);
 
+  // On phones the search box is in the top bar (utils/topBar.ts)
+  const topBar = usePhoneTopBarSlot();
+
   // Best matches first (see titleSearchScore), then alphabetical
   const searching = query.trim() !== "";
   const results = searching
@@ -136,54 +141,59 @@ function SearchPage() {
         .map(({ item }) => item)
     : [];
 
+  // The search box, and scan where the camera opens. On phones it's in the top bar, without scan:
+  // the bottom bar's scan is just below.
+  const searchBox = (
+    <div className="flex min-w-0 gap-2">
+      <div className="relative flex-1">
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          ref={inputRef}
+          type="search"
+          placeholder="Search by title or UPC"
+          onKeyDown={handleSearchKeyDown}
+          aria-label="Search movies and TV shows by title or UPC"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          className="h-11 pr-10 pl-9 [&::-webkit-search-cancel-button]:hidden"
+        />
+        {text && (
+          <button
+            type="button"
+            onClick={() => {
+              setQueryNow("");
+              inputRef.current?.focus();
+            }}
+            className="absolute top-1/2 right-2 grid size-7 -translate-y-1/2 cursor-pointer place-items-center rounded text-muted-foreground hover:text-foreground"
+            aria-label="Clear search"
+          >
+            <X className="size-4" />
+          </button>
+        )}
+      </div>
+      {/* Only where the camera opens; desktops scan with a USB scanner (see CommandPalette) */}
+      {isMobile() && !topBar && (
+        <Button
+          type="button"
+          size="icon"
+          onClick={handleScanClick}
+          className="size-11"
+          title="Scan barcode"
+          aria-label="Scan barcode"
+        >
+          <ScanBarcode className="size-5" />
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <PageShell layout="scroll">
       <div className="max-w-4xl px-4 pt-4 pb-8 md:px-20 md:pt-7">
-        {/* Search box and scan */}
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              ref={inputRef}
-              type="search"
-              placeholder="Search by title or UPC"
-              onKeyDown={handleSearchKeyDown}
-              aria-label="Search movies and TV shows by title or UPC"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="h-11 pr-10 pl-9 [&::-webkit-search-cancel-button]:hidden"
-            />
-            {text && (
-              <button
-                type="button"
-                onClick={() => {
-                  setQueryNow("");
-                  inputRef.current?.focus();
-                }}
-                className="absolute top-1/2 right-2 grid size-7 -translate-y-1/2 cursor-pointer place-items-center rounded text-muted-foreground hover:text-foreground"
-                aria-label="Clear search"
-              >
-                <X className="size-4" />
-              </button>
-            )}
-          </div>
-          {/* Only where the camera opens; desktops scan with a USB scanner (see CommandPalette) */}
-          {isMobile() && (
-            <Button
-              type="button"
-              size="icon"
-              onClick={handleScanClick}
-              className="size-11"
-              title="Scan barcode"
-              aria-label="Scan barcode"
-            >
-              <ScanBarcode className="size-5" />
-            </Button>
-          )}
-        </div>
+        {topBar ? createPortal(searchBox, topBar) : searchBox}
 
         {/* Result count */}
-        <div className="mt-4 mb-3 min-h-5">
+        <div className="mb-3 min-h-5 md:mt-4">
           {searching && !loading && (
             <span className="text-sm text-muted-foreground">
               {results.length} result{results.length !== 1 ? "s" : ""}

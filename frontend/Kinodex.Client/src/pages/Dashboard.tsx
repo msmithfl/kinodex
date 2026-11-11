@@ -176,7 +176,7 @@ function Dashboard() {
             {/* Left column */}
             {/* lg:px-2/-mx-2 makes room for the quick actions' -m-2 hover margin, so the column never scrolls sideways */}
             <div className="shrink-0 flex flex-col gap-3 md:gap-6 lg:min-h-0 lg:overflow-y-auto lg:overflow-x-hidden lg:px-2 lg:-mx-2 lg:pb-8">
-              {/* Who's signed in: account badge (opens the Clerk account menu) and name, Settings on the right.
+              {/* Who's signed in: account badge (opens the Clerk account menu) and name, Settings on the right (tablet up).
                   mb-2 on phones adds to the column's 12px gap so the row has room to breathe */}
               <div className="flex items-center justify-between gap-4 mb-2 md:mb-0">
                 <div className="flex items-center gap-3 min-w-0">
@@ -196,7 +196,8 @@ function Dashboard() {
                     {user?.username || user?.firstName || "Welcome"}
                   </p>
                 </div>
-                <Button asChild variant="outline" size="sm">
+                {/* Tablet up; phones have Settings in the top bar */}
+                <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
                   <Link to="/settings">
                     <Settings />
                     Settings
