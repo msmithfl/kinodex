@@ -34,11 +34,11 @@ function Header() {
         // box-content: the height is the bar's own, and the status bar's space is added above it
         // (pt-[env(safe-area-inset-top)]; 0 unless the app is drawn under the status bar)
         "box-content flex shrink-0 flex-col justify-center gap-1 border-b border-border bg-card px-4 pt-[env(safe-area-inset-top)] md:hidden",
-        stacked ? "h-24" : "h-20",
+        stacked ? "h-26" : "h-20",
       )}
     >
       {stacked ? (
-        <p className={`${TITLE_CLASS} text-center`}>{inLibrary ? "Library" : "Search"}</p>
+        <p className={`${TITLE_CLASS} pt-2 text-center`}>{inLibrary ? "Library" : "Search"}</p>
       ) : (
         <div className="flex items-center gap-3">
           <Link to="/" className="flex shrink-0 items-center">
