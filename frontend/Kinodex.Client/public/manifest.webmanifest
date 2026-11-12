@@ -1,0 +1,18 @@
+{
+  "name": "Kinodex",
+  "short_name": "Kinodex",
+  "description": "Your movie collection assistant",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#0f0f12",
+  "icons": [
+    {
+      "src": "/kinodex-app-icon.png",
+      "sizes": "642x642",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

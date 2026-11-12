@@ -153,6 +153,34 @@
   /* No grey box flashed over links and buttons when they're tapped on phones */
   html {
     -webkit-tap-highlight-color: transparent;
+    /* No double-tap zoom, so taps respond at once; pinch zoom still works */
+    touch-action: manipulation;
+  }
+
+  /* Opened from the home screen, behave like an app (docs/design/home-screen-app.md). Only there,
+     so the website behaves normally in a browser. */
+  @media (display-mode: standalone) {
+    /* No rubber-banding of the whole screen and no pull-to-refresh (pages scroll inside it) */
+    html,
+    body {
+      overscroll-behavior: none;
+    }
+    /* No long-press menu (save image, open link) on posters and links */
+    img,
+    a {
+      -webkit-touch-callout: none;
+    }
+    /* Holding a button, tab or bar doesn't start selecting text */
+    button,
+    a,
+    label,
+    nav,
+    header,
+    [role="button"],
+    [role="tab"] {
+      -webkit-user-select: none;
+      user-select: none;
+    }
   }
 }
 
@@ -215,7 +243,7 @@
 }
 @media (width < 48rem) {
   :root {
-    --bottom-nav-height: calc(6rem + env(safe-area-inset-bottom));
+    --bottom-nav-height: calc(4rem + env(safe-area-inset-bottom));
   }
 }
 

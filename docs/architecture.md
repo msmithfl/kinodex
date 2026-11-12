@@ -169,6 +169,11 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   every word typed has to appear in the title or year, in any order, ignoring case, accents and
   punctuation ("spiderman" finds Spider-Man), or the text is part of a UPC. The search window and
   Search page put the best matches first; the lists keep their own sort.
+- **Home screen app:** saved to a phone's home screen, it opens full screen and drawn edge to
+  edge (`public/manifest.webmanifest`, the tags in `index.html`). The bars, the drawer and the
+  add/edit sheets keep clear of the status bar and home indicator (`env(safe-area-inset-*)`);
+  `theme-color` follows the top bar's colour (`utils/theme.ts`); `index.css` has the app-like
+  touch rules. Plan and phone checks: `docs/design/home-screen-app.md`.
 - **Barcodes:** phones and tablets scan with the camera (`BarcodeScanner`, from the bottom bar,
   Search and the UPC fields); those scan buttons only show where `isMobile()`
   (a phone or tablet, judged by the device rather than the window's width), so desktops have
