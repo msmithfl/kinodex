@@ -3,16 +3,17 @@ import { createPortal } from "react-dom";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useMovies } from "../features/movies/api";
 import { useTvShows } from "../features/tvShows/api";
-import { Film, ScanBarcode, Search, Tv, X } from "lucide-react";
+import { Film, Plus, ScanBarcode, Search, Tv, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageShell from "../components/PageShell";
-import { BarcodeScanner } from "../components/lazyComponents";
+import { AddItemModal, BarcodeScanner } from "../components/lazyComponents";
+import { GO_TO_LINKS } from "../components/navigation";
 import type { Movie, TvShow } from "../types";
 import { isMobile } from "../utils/isMobile";
 import { formatSeasons } from "../utils/formatSeasons";
 import { ownedSeasons } from "../utils/tvShowPurchases";
-import { titleSearchScore } from "../utils/textSearch";
+import { searchScore, titleSearchScore } from "../utils/textSearch";
 import { useScanInput } from "../utils/useBarcodeScan";
 import { usePhoneTopBarSlot } from "../utils/topBar";
 
@@ -57,6 +58,13 @@ const tvItem = (s: TvShow): SearchItem => {
   };
 };
 
+const ADD_LABEL = "Add a movie or TV show";
+
+// The sections' lists: a card of rows, like the results
+const LIST_CLASS = "divide-y divide-border overflow-hidden rounded-xl border border-border bg-card";
+const ROW_CLASS = "flex items-center gap-3 p-3 transition-colors hover:bg-accent/50";
+const HEADING_CLASS = "mb-3 text-sm text-muted-foreground";
+
 // One place to search the whole collection, movies and TV shows, by title or UPC.
 // The search text lives in the URL (?q=) so coming back from a result keeps it.
 const SEARCH_DEBOUNCE_MS = 250;
@@ -89,12 +97,8 @@ function SearchPage() {
   const loading = moviesLoading || showsLoading;
   const items: SearchItem[] = [...movies.map(movieItem), ...shows.map(tvItem)];
   const [showScanner, setShowScanner] = useState(false);
+  const [adding, setAdding] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Put the cursor in the search box once the page is ready
-  useEffect(() => {
-    if (!loading) inputRef.current?.focus();
-  }, [loading]);
 
   // Updates the URL in place, so typing doesn't stack up history entries
   const updateQuery = useCallback(
@@ -130,6 +134,17 @@ function SearchPage() {
 
   // On phones the search box is in the top bar (utils/topBar.ts)
   const topBar = usePhoneTopBarSlot();
+
+  // Put the cursor in the search box once the page is ready, from tablet up. Not on phones, where
+  // the box is only selected once it's tapped.
+  useEffect(() => {
+    if (!loading && !topBar) inputRef.current?.focus();
+  }, [loading, topBar]);
+
+  // As in the search window (CommandPalette): the pages to go to, and adding, matched against the
+  // search the same way (all of them before anything's typed)
+  const goTo = GO_TO_LINKS.filter((link) => searchScore([link.label], query) > 0);
+  const showAdd = searchScore([ADD_LABEL], query) > 0;
 
   // Best matches first (see titleSearchScore), then alphabetical
   const searching = query.trim() !== "";
@@ -192,54 +207,85 @@ function SearchPage() {
       <div className="max-w-4xl px-4 pt-4 pb-8 md:px-20 md:pt-7">
         {topBar ? createPortal(searchBox, topBar) : searchBox}
 
-        {/* Result count */}
-        <div className="mb-3 min-h-5 md:mt-4">
+        <div className="flex flex-col gap-6 md:mt-4">
+          {/* Results, under their count. Nothing while the collection loads: a search typed
+              meanwhile just waits (rather than briefly claiming nothing matches) */}
           {searching && !loading && (
-            <span className="text-sm text-muted-foreground">
-              {results.length} result{results.length !== 1 ? "s" : ""}
-            </span>
+            <section>
+              <p className={HEADING_CLASS}>
+                {results.length} result{results.length !== 1 ? "s" : ""}
+              </p>
+              {results.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Nothing in your collection matches "{query.trim()}".
+                </p>
+              ) : (
+                <ul className={LIST_CLASS}>
+                  {results.map((item) => {
+                    const KindIcon = item.kind === "tv" ? Tv : Film;
+                    return (
+                      <li key={item.key}>
+                        <Link to={item.to} className={ROW_CLASS}>
+                          <div className="aspect-2/3 w-10 shrink-0 overflow-hidden rounded-sm border border-border bg-muted">
+                            {item.posterPath && (
+                              <img src={item.posterPath} alt="" className="h-full w-full object-cover" loading="lazy" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium" title={item.title}>
+                              {item.title}
+                            </p>
+                            {item.subtitle && <p className="truncate text-xs text-muted-foreground">{item.subtitle}</p>}
+                          </div>
+                          <KindIcon
+                            className="size-4 shrink-0 text-muted-foreground"
+                            aria-label={item.kind === "tv" ? "TV show" : "Movie"}
+                          />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </section>
+          )}
+
+          {goTo.length > 0 && (
+            <section>
+              <h2 className={HEADING_CLASS}>Go to</h2>
+              <ul className={LIST_CLASS}>
+                {goTo.map(({ path, label, icon: Icon }) => (
+                  <li key={path}>
+                    <Link to={path} className={`${ROW_CLASS} text-sm font-medium`}>
+                      <Icon className="size-4 shrink-0 text-muted-foreground" />
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {showAdd && (
+            <section>
+              <h2 className={HEADING_CLASS}>Actions</h2>
+              <ul className={LIST_CLASS}>
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setAdding(true)}
+                    className={`${ROW_CLASS} w-full cursor-pointer text-left text-sm font-medium`}
+                  >
+                    <Plus className="size-4 shrink-0 text-muted-foreground" />
+                    {ADD_LABEL}
+                  </button>
+                </li>
+              </ul>
+            </section>
           )}
         </div>
 
-        {/* Results. No spinner while the collection loads: the hint shows, and a search typed
-            meanwhile just waits (rather than briefly claiming nothing matches) */}
-        {!searching ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">
-            Search your whole collection by title or barcode.
-          </p>
-        ) : loading ? null : results.length === 0 ? (
-          <p className="py-12 text-center text-sm text-muted-foreground">
-            Nothing in your collection matches "{query.trim()}".
-          </p>
-        ) : (
-          <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
-            {results.map((item) => {
-              const KindIcon = item.kind === "tv" ? Tv : Film;
-              return (
-                <li key={item.key}>
-                  <Link to={item.to} className="flex items-center gap-3 p-3 transition-colors hover:bg-accent/50">
-                    <div className="aspect-2/3 w-10 shrink-0 overflow-hidden rounded-sm border border-border bg-muted">
-                      {item.posterPath && (
-                        <img src={item.posterPath} alt="" className="h-full w-full object-cover" loading="lazy" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium" title={item.title}>
-                        {item.title}
-                      </p>
-                      {item.subtitle && <p className="truncate text-xs text-muted-foreground">{item.subtitle}</p>}
-                    </div>
-                    <KindIcon
-                      className="size-4 shrink-0 text-muted-foreground"
-                      aria-label={item.kind === "tv" ? "TV show" : "Movie"}
-                    />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
+        {adding && <AddItemModal onClose={() => setAdding(false)} />}
         {showScanner && (
           <BarcodeScanner
             onDetected={handleBarcodeDetected}
