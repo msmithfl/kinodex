@@ -43,7 +43,7 @@ Text is written in sentence case ("Add movie", not "Add Movie"), and in plain wo
 
 ## Spacing and shape
 
-- **Page gutters:** `px-6 md:px-10`; header top `pt-4 md:pt-7`; content bottom `pb-8`.
+- **Page gutters:** `px-4 md:px-20` on every page; header top `pt-4 md:pt-7`; content bottom `pb-8`.
 - **Gaps:** `gap-4` between cards (`md:gap-6` on Stats), `gap-2` between buttons in a row.
 - **Radius:** one base (`--radius`, 10px) with `rounded-md` for buttons and fields, `rounded-lg`
   for posters (`rounded-[4px]` on phones, where they're small), `rounded-xl` for cards and
@@ -58,9 +58,9 @@ Text is written in sentence case ("Add movie", not "Add Movie"), and in plain wo
 ```tsx
 <PageShell remeasureWhen={loading}>     {/* fills the screen above the phone bottom bar */}
   <PageHeader title="Genres" subtitle="12 genres" actions={…}
-    className="hidden shrink-0 px-6 pt-4 pb-4 md:flex md:px-10 md:pt-7" />
+    className="hidden shrink-0 px-4 pt-4 pb-4 md:flex md:px-20 md:pt-7" />
   {/* toolbar: search, filters, sort, ViewModeToggle; shrink-0 */}
-  <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-2 pb-8 md:px-10">
+  <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-8 md:px-20">
     {items.length === 0 ? <EmptyState message="No genres yet." /> : …}
   </div>
 </PageShell>
@@ -125,8 +125,8 @@ toolbars or content.
 - Below `md` (768px): the bottom bar (`BottomNav`) replaces the sidebar; pages stop above it
   (`--bottom-nav-height`, handled by `PageShell`).
 - Rows of cards and chips scroll sideways edge to edge rather than wrapping: a negative margin
-  matching the page gutter, the same padding back, and `no-scrollbar` (e.g. `-mx-6 px-6` in
-  `FilterChips`, `-mx-4 px-4` on the dashboard).
+  matching the page gutter, the same padding back, and `no-scrollbar` (`-mx-4 px-4`, e.g. in
+  `FilterChips` and on the dashboard).
 - The dashboard fits on one screen without scrolling.
 - No grey tap highlight (set globally); swipe right closes a drawer.
 - Touch targets at least 36px (`size-9`).

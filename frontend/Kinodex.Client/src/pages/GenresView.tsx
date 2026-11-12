@@ -39,7 +39,7 @@ function GenresView() {
   if (loading) {
     return (
       <>
-        <div className="flex flex-col gap-4 px-6 pt-4 md:px-10 md:pt-7" aria-busy="true" aria-label="Loading genres">
+        <div className="flex flex-col gap-4 px-4 pt-4 md:px-20 md:pt-7" aria-busy="true" aria-label="Loading genres">
           <div className="hidden flex-col gap-2 md:flex">
             <Skeleton className="h-8 w-28" />
             <Skeleton className="h-4 w-20" />
@@ -61,11 +61,11 @@ function GenresView() {
         <PageHeader
           title="Genres"
           subtitle={`${genres.length} ${genres.length === 1 ? "genre" : "genres"}`}
-          className="hidden shrink-0 px-6 pt-4 pb-4 md:flex md:px-10 md:pt-7"
+          className="hidden shrink-0 px-4 pt-4 pb-4 md:flex md:px-20 md:pt-7"
         />
 
         {/* Scrolls on its own; the small top inset keeps the hover ring and lift inside it */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-4 md:pt-2 pb-8 md:px-10">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-4 md:pt-2 pb-8 md:px-20">
           {genres.length === 0 ? (
             <EmptyState message="No genres yet." />
           ) : (

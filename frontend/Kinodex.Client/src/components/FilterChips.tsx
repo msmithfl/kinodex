@@ -25,7 +25,7 @@ function FilterChips({ categories, selectedFilters, onFilterChange, onReset }: F
   if (active.length === 0) return null;
 
   return (
-    <div className="no-scrollbar -mx-6 flex items-center gap-2 overflow-x-auto px-6 md:mx-0 md:flex-wrap md:px-0">
+    <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 md:mx-0 md:flex-wrap md:px-0">
       {active.map((category) => {
         const { label, value } = chipText(category, selectedFilters[category.id]);
         return (
