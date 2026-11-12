@@ -13,9 +13,12 @@ rewrite) come later, if at all; the API, database and Clerk don't change for any
    status bar style.
 3. **Status bar and theme colour:** `theme-color` follows the top bar's colour in the current
    theme (`utils/theme.ts`, and the pre-paint script in `index.html`). The iOS status bar is
-   see-through over the dark theme (the top bar runs up behind it) and solid over the light theme,
-   where its white text would vanish against the white bar. iOS reads the status bar style when the
-   app opens, so a theme change shows there on the next launch.
+   iOS's solid one, with the app below it. The see-through style (`black-translucent`, the app
+   running up behind the clock) was tried first, but from iOS 26.1 iOS lays a blur and dark fade
+   over the top of apps that use it, and the page can't turn that off; WebKit calls the style
+   deprecated. Other projects hit the same blur and moved to the solid bar (November 2026).
+   The app's outer box is `min-h-dvh`: in this mode `100vh` can include the status bar, and a
+   page a little too tall would scroll under the top edge, where iOS blurs too.
 4. **Safe areas:** with the app drawn edge to edge, everything at an edge keeps clear of the
    status bar, notch and home indicator (`env(safe-area-inset-*)`):
    - the top bar (`Header`) and the bottom bar (`BottomNav`, which also stops lifting its icons by
@@ -33,8 +36,9 @@ rewrite) come later, if at all; the API, database and Clerk don't change for any
 ## Checked on a phone (yours)
 
 - [ ] Re-add Kinodex to the home screen after this ships (iOS reads some of it when it's added)
-- [ ] Status bar: readable, and the top bar runs up behind it (dark theme) or sits under it (light)
-- [ ] The fade at the top: does it blend now? If not, try other colours or status bar styles
+- [x] The see-through status bar: iOS 26.1+ blurs the top of the app (seen on the phone, Nov 2026)
+- [ ] Solid status bar: no blur at the top, the bar's colour close to the top bar's, readable in
+      both themes, and nothing scrolls under it
 - [ ] Bottom bar icons sit where they did; nothing hidden behind the home indicator
 - [ ] Drawers: close button and content clear of the status bar; Save buttons in the add/edit
       sheets clear of the home indicator
