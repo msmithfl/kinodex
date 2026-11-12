@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/command";
 import { useMovies } from "@/features/movies/api";
 import { useTvShows } from "@/features/tvShows/api";
-import { INSIGHTS_LINKS, LIBRARY_LINKS, SETTINGS_LINK } from "./navigation";
+import { GO_TO_LINKS } from "./navigation";
 import { barcodeKey, upcMatches } from "../utils/barcode";
 import { searchScore } from "../utils/textSearch";
 import { HANDOVER_BACKDROP_CLASS } from "../utils/windowHandoff";
@@ -198,7 +198,7 @@ function CommandPalette({ open, onOpenChange, onAdd }: CommandPaletteProps) {
         )}
 
         <CommandGroup heading="Go to">
-          {[...LIBRARY_LINKS, ...INSIGHTS_LINKS, SETTINGS_LINK].map(({ path, label, icon: Icon }) => (
+          {GO_TO_LINKS.map(({ path, label, icon: Icon }) => (
             <CommandItem key={path} value={`Go to ${label}`} keywords={[label]} onSelect={() => go(path)}>
               <Icon />
               {label}

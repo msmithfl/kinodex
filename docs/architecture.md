@@ -93,7 +93,7 @@ the `useSettings()` hook (shared cache).
 | `/collections` | `CollectionsView`: poster cards + create modal; hosts collection & movie drawers | Core |
 | `/collections/:name` | redirect → `/collections?collection=name` | Redirect |
 | `/genres`, `/genres/:name` | `GenresView` (backdrop cards), `GenreDetail` (table/poster; movie drawer) | Core |
-| `/search` | `SearchPage`: movies + TV, debounced | Core |
+| `/search` | `SearchPage`: movies + TV, debounced; below the results, the search window's Go to pages and Add action (`GO_TO_LINKS`), filtered by the search. On phones the box is in the top bar and isn't selected until tapped | Core |
 | `/stats` | `Stats`: charts and breakdowns | Core |
 | `/settings` | `Settings`: collection completion rings; Add Movie presets (rename, delete; `features/movies/MoviePresetSettings.tsx`) | Core |
 | `/export` | `CsvExport`: CSV export/import, Letterboxd import | Core |

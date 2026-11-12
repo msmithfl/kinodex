@@ -32,6 +32,9 @@ export const INSIGHTS_LINKS: NavLinkItem[] = [
 
 export const SETTINGS_LINK: NavLinkItem = { path: "/settings", label: "Settings", icon: Settings };
 
+// Every page, in the sidebar's order: "Go to" in the search window and on the Search page
+export const GO_TO_LINKS: NavLinkItem[] = [...LIBRARY_LINKS, ...INSIGHTS_LINKS, SETTINGS_LINK];
+
 // The current page is the link's path or anything under it ("/" only matches itself)
 export const isActivePath = (pathname: string, path: string) =>
   pathname === path || (path !== "/" && pathname.startsWith(path + "/"));
