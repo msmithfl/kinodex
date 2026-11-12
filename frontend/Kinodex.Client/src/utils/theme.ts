@@ -29,10 +29,11 @@ const listeners = new Set<() => void>();
 const resolve = (c: ThemeChoice): Theme => (c === "system" ? (systemDark.matches ? "dark" : "light") : c);
 
 // The top bar's colour (--card in index.css) for each theme, which the browser and the phone's
-// status bar may take on through <meta name="theme-color">. Keep in step with index.css and index.html.
+// status bar take on through <meta name="theme-color">. Keep in step with index.css and index.html.
 const BAR_COLOURS: Record<Theme, string> = { dark: "#0f0f12", light: "#ffffff" };
 
-// Puts the theme on the page, then tells the components that follow it (charts, toasts, Clerk)
+// Puts the theme on the page, then tells the components that follow it (charts, toasts, Clerk).
+// (The iOS status bar style is only read when the app opens, so index.html sets that.)
 function apply() {
   const theme = resolve(choice);
   document.documentElement.classList.toggle("dark", theme === "dark");
