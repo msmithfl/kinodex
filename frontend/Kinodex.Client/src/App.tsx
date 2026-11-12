@@ -51,8 +51,10 @@ function App() {
         path="*"
         element={
           <ProtectedRoute>
-            {/* The sides keep clear of a notch in landscape (the app is drawn edge to edge, index.html) */}
-            <div className="min-h-screen bg-background text-foreground flex flex-col pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
+            {/* The sides keep clear of a notch in landscape (the app is drawn edge to edge, index.html).
+                min-h-dvh, not min-h-screen: in the home screen app 100vh can include the status bar,
+                which would make the page a little too tall and let it scroll under the top edge. */}
+            <div className="min-h-dvh bg-background text-foreground flex flex-col pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
               <Header />
               <div className="flex flex-1">
                 <Sidebar />
