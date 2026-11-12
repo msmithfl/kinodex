@@ -18,8 +18,9 @@ function SubNavigation() {
     container.scrollLeft = Math.max(0, offset);
   }, [pathname]);
 
+  // As tall as the Search page's box (h-11), so the titles above both sit at the same height
   return (
-    <nav aria-label="Library" className="flex min-w-0">
+    <nav aria-label="Library" className="flex h-11 min-w-0 items-center">
       <div
         ref={scrollRef}
         className="no-scrollbar relative flex w-full gap-0.5 overflow-x-auto rounded-lg border border-input bg-card p-[3px]"
