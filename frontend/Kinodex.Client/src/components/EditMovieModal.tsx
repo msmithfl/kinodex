@@ -179,7 +179,7 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
           />
         </div>
 
-        <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card px-5 py-3">
+        <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card px-5 py-3 max-md:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           {submitError && (
             <p role="alert" className="text-sm text-destructive-text">
               {submitError}

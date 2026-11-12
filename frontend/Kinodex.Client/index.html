@@ -4,16 +4,29 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/kinodex-favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/kinodex-app-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Saved to a phone's home screen, it opens as an app (docs/design/home-screen-app.md).
+         viewport-fit=cover draws it edge to edge; the bars keep clear of the status bar and home
+         indicator with env(safe-area-inset-*). -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Kinodex" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#0f0f12" />
     <title>Your Movie Collection Assistant | Kinodex</title>
     <script>
       // The theme chosen in Settings, applied before the page draws so it doesn't flash dark
       // first. Dark (the class above) unless Light, or System on a light system, was chosen.
+      // Light also gets the top bar's light colour for the browser and status bar, and a solid
+      // iOS status bar: the see-through one has white text, which would vanish on the white bar.
       // Keep in step with src/utils/theme.ts.
       try {
         var theme = localStorage.getItem("theme");
         if (theme === "light" || (theme === "system" && !matchMedia("(prefers-color-scheme: dark)").matches)) {
           document.documentElement.classList.remove("dark");
+          document.querySelector('meta[name="theme-color"]').setAttribute("content", "#ffffff");
+          document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').setAttribute("content", "default");
         }
       } catch (e) {}
     </script>

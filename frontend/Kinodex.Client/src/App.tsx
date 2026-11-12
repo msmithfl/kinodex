@@ -51,7 +51,8 @@ function App() {
         path="*"
         element={
           <ProtectedRoute>
-            <div className="min-h-screen bg-background text-foreground flex flex-col">
+            {/* The sides keep clear of a notch in landscape (the app is drawn edge to edge, index.html) */}
+            <div className="min-h-screen bg-background text-foreground flex flex-col pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
               <Header />
               <div className="flex flex-1">
                 <Sidebar />

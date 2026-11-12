@@ -135,6 +135,7 @@ function Drawer({ label, onClose, children }: DrawerProps) {
         className={cn(
           closing ? "animate-drawer-out" : "animate-drawer-in",
           "touch-pan-y absolute inset-y-0 right-0 w-full md:w-[42rem] lg:w-[48rem] shadow-2xl border-l bg-background border-border",
+          "pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)]",
         )}
         style={panelStyle}
         onTouchStart={handleTouchStart}
@@ -155,7 +156,7 @@ function Drawer({ label, onClose, children }: DrawerProps) {
         <button
           type="button"
           onClick={requestClose}
-          className="md:hidden absolute top-3 right-3 z-40 grid size-9 cursor-pointer place-items-center rounded-full border border-border bg-background/70 text-foreground/80 backdrop-blur-sm hover:text-foreground"
+          className="md:hidden absolute top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 z-40 grid size-9 cursor-pointer place-items-center rounded-full border border-border bg-background/70 text-foreground/80 backdrop-blur-sm hover:text-foreground"
           aria-label="Close"
         >
           <X className="size-5" />

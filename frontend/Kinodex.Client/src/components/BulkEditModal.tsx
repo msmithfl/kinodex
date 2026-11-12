@@ -167,7 +167,7 @@ export function BulkEditModal({
           </FormField>
         </div>
 
-        <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-card px-5 py-3">
+        <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-card px-5 py-3 max-md:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <Button
             variant="ghost"
             onClick={() => {

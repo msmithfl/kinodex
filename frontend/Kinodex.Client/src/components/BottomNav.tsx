@@ -21,9 +21,9 @@ function BottomNav() {
     navigate(`/search?q=${encodeURIComponent(code)}`, { state: { external: true } });
   };
 
-  // Icon-only items; pb-10 lifts the icons off the bottom edge. Each keeps an aria-label for screen readers.
+  // Icon-only items, each with an aria-label for screen readers
   const itemClass = (active: boolean) =>
-    `flex items-center justify-center pb-10 transition-colors ${
+    `flex items-center justify-center transition-colors ${
       active ? "text-primary-text" : "text-muted-foreground hover:text-foreground"
     }`;
 
@@ -33,8 +33,9 @@ function BottomNav() {
         aria-label="Quick actions"
         className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t border-border pb-[env(safe-area-inset-bottom)]"
       >
-        {/* h-24 (6rem) must match --bottom-nav-height in index.css */}
-        <div className="grid grid-cols-5 h-24">
+        {/* The icons' row; the nav's padding below it keeps clear of the home indicator.
+            h-16 (4rem) must match --bottom-nav-height in index.css */}
+        <div className="grid grid-cols-5 h-16">
           <Link
             to="/library"
             className={itemClass(pathname === "/library")}
@@ -55,7 +56,7 @@ function BottomNav() {
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
-            className="flex items-center justify-center pb-10 cursor-pointer"
+            className="flex items-center justify-center cursor-pointer"
             aria-label="Add a movie or TV show"
           >
             <span className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-colors hover:bg-primary/90">
