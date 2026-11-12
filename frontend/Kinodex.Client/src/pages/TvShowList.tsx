@@ -225,7 +225,7 @@ function TvShowList() {
               />
               {/* Phones: the count, as the page header is hidden there */}
               <p className="text-sm whitespace-nowrap text-muted-foreground tabular-nums md:hidden">
-                {narrowed ? `${filteredShows.length} of ${plural(shows.length, "TV show")}` : plural(shows.length, "TV show")}
+                {plural(filteredShows.length, "show")}
               </p>
               <div className="ml-auto flex items-center gap-2">
                 <ViewModeToggle value={viewMode} onChange={setViewMode} showLabels />
