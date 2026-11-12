@@ -182,8 +182,10 @@ function Dashboard() {
                 <div className="flex items-center gap-3 min-w-0">
                   {/* Mobile and tablet: Clerk's own button, at double its default 28px. A style object
                       rather than Tailwind classes: Tailwind v4's layered utilities lose to Clerk's
-                      own unlayered styles. */}
-                  <div className="lg:hidden flex">
+                      own unlayered styles. The box keeps the avatar's size (size-14, 3.5rem) from the
+                      first frame: Clerk draws the button a moment after the page, and the row growing
+                      then would shrink the poster rows below, which size to the height left. */}
+                  <div className="lg:hidden flex size-14 shrink-0">
                     <UserButton
                       appearance={{ elements: { avatarBox: { width: "3.5rem", height: "3.5rem" } } }}
                     />
