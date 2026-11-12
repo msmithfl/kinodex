@@ -12,7 +12,7 @@ interface ListSkeletonProps {
 // poster grid while it loads
 function ListSkeleton({ viewMode, label, toolbar = true, grid = POSTER_GRID }: ListSkeletonProps) {
   return (
-    <div className="flex flex-col gap-4 px-6 pt-4 md:px-10 md:pt-7" aria-busy="true" aria-label={label}>
+    <div className="flex flex-col gap-4 px-4 pt-4 md:px-20 md:pt-7" aria-busy="true" aria-label={label}>
       <div className="hidden flex-col gap-2 md:flex">
         <Skeleton className="h-8 w-36" />
         <Skeleton className="h-4 w-48" />

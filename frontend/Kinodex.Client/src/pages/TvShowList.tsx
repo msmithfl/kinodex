@@ -163,7 +163,7 @@ function TvShowList() {
 
       <PageShell remeasureWhen={loading}>
         {/* Title, toolbar and active filters */}
-        <div className="flex shrink-0 flex-col gap-4 px-6 pt-4 pb-4 md:px-10 md:pt-7">
+        <div className="flex shrink-0 flex-col gap-4 px-4 pt-4 pb-4 md:px-20 md:pt-7">
           {/* Tablet up: on phones the top bar's tabs name the page, and the count is in the toolbar */}
           <PageHeader
             title="TV Shows"
@@ -228,7 +228,7 @@ function TvShowList() {
                 {plural(filteredShows.length, "show")}
               </p>
               <div className="ml-auto flex items-center gap-2">
-                <ViewModeToggle value={viewMode} onChange={setViewMode} showLabels />
+                {/* Columns (table view only) sits left of the view toggle, so the toggle stays put */}
                 {viewMode === "table" && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -252,6 +252,7 @@ function TvShowList() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
+                <ViewModeToggle value={viewMode} onChange={setViewMode} showLabels />
               </div>
             </div>
           )}
@@ -265,7 +266,7 @@ function TvShowList() {
         </div>
 
         {/* The list fills the rest of the height and scrolls on its own */}
-        <div className="min-h-0 flex-1 px-6 pb-3 md:px-10">
+        <div className="min-h-0 flex-1 px-4 pb-3 md:px-20">
           {loadError ? (
             <EmptyState message={loadError} />
           ) : shows.length === 0 ? (

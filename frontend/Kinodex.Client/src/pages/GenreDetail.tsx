@@ -44,11 +44,11 @@ function GenreDetail() {
           subtitleBeside
           subtitle={`${movies.length} ${movies.length === 1 ? "movie" : "movies"}`}
           actions={<ViewModeToggle value={viewMode} onChange={setViewMode} showLabels />}
-          className="shrink-0 px-6 pt-4 pb-4 md:px-10 md:pt-7"
+          className="shrink-0 px-4 pt-4 pb-4 md:px-20 md:pt-7"
         />
 
         {/* Scrolls on its own; the small top inset keeps the hover ring and lift inside it */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-2 pb-8 md:px-10">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-8 md:px-20">
           {movies.length === 0 ? (
             <EmptyState message="No movies in this genre yet." />
           ) : viewMode === "poster" ? (
