@@ -5,6 +5,7 @@ import { useImagePicker } from "./useImagePicker";
 import TvShowDetailsTab from "../features/tvShows/form/TvShowDetailsTab";
 import TvShowPurchasesTab from "../features/tvShows/form/TvShowPurchasesTab";
 import TvShowImagesTab from "../features/tvShows/form/TvShowImagesTab";
+import TvShowReviewTab from "../features/tvShows/form/TvShowReviewTab";
 
 const MAX_SEASONS = 100;
 
@@ -16,12 +17,13 @@ interface TvShowFormProps {
   onScanClick?: (purchaseIndex: number) => void;
 }
 
-type Tab = "details" | "purchases" | "poster";
+type Tab = "details" | "purchases" | "poster" | "review";
 
 const tabs: { id: Tab; label: string }[] = [
   { id: "details", label: "Details" },
   { id: "purchases", label: "Purchases" },
   { id: "poster", label: "Images" },
+  { id: "review", label: "Review" },
 ];
 
 
@@ -204,6 +206,8 @@ function TvShowForm({
             backdropPicker={backdropPicker}
           />
         )}
+
+        {activeTab === "review" && <TvShowReviewTab formData={formData} setFormData={setFormData} />}
       </div>
       </Tabs>
     </form>
