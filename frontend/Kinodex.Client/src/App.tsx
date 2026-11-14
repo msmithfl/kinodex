@@ -20,6 +20,7 @@ const Stats = lazy(() => import("./pages/Stats"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const Settings = lazy(() => import("./pages/Settings"));
 const CsvExport = lazy(() => import("./pages/CsvExport"));
+const JellyfinPage = lazy(() => import("./pages/JellyfinPage"));
 
 // Collections open in a drawer on the Collections page now; old /collections/:name links land there
 function CollectionRedirect() {
@@ -76,6 +77,7 @@ function App() {
                       <Route path="/stats" element={<Stats />} />
                       <Route path="/export" element={<CsvExport />} />
                       <Route path="/settings" element={<Settings />} />
+                      <Route path="/jellyfin" element={<JellyfinPage />} />
                       {/* Anything else, including the removed shelf, lending and match pages */}
                       <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>

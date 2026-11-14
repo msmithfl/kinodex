@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Kinodex.Api.Data;
@@ -19,6 +20,15 @@ builder.Services.AddOpenApi(options => options.AddSchemaTransformer<StrictSchema
 // Add HttpClient for TMDB service
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<TmdbMatchingService>();
+
+// Jellyfin (docs/design/jellyfin-compare.md): the user's server is a user-typed address, so its
+// connections only go to public addresses, except in local development (a Jellyfin on the home
+// network). Data Protection encrypts the saved API keys, its own keys kept in the database.
+builder.Services.AddHttpClient<JellyfinClient>(client => client.Timeout = TimeSpan.FromSeconds(30))
+    .ConfigurePrimaryHttpMessageHandler(() => PublicAddress.Handler(allowPrivate: builder.Environment.IsDevelopment()));
+builder.Services.AddDataProtection()
+    .SetApplicationName("Kinodex")
+    .PersistKeysToDbContext<MovieDbContext>();
 
 // Configure JSON serialization to use camelCase and handle circular references
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -153,6 +163,7 @@ app.MapShelfSectionEndpoints();
 app.MapUpcEndpoints();
 app.MapTmdbEndpoints();
 app.MapCollectionListItemEndpoints();
+app.MapJellyfinEndpoints();
 
 app.Run();
 

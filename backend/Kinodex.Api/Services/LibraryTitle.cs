@@ -20,6 +20,13 @@ public static partial class LibraryTitle
         return match.Success ? $"{match.Groups["rest"].Value}, {match.Groups["article"].Value}" : title;
     }
 
+    // The title without its leading article ("The Thing" → "Thing"), for sorting and matching
+    public static string WithoutArticle(string title)
+    {
+        var match = LeadingArticle().Match(title.Trim());
+        return match.Success ? match.Groups["rest"].Value : title.Trim();
+    }
+
     public static string FromLibrary(string title)
     {
         var match = TrailingArticle().Match(title.Trim());

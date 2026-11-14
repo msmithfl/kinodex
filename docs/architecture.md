@@ -51,6 +51,7 @@ Kinodex/
         tvShows/          TvShowDetail (drawer), TvShowDrawerDetails, TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images, Review tabs)
         collections/      CollectionDetail (drawer), CollectionChecklist
         shelfSections/    (hooks only)
+        jellyfin/         (hooks only) the Jellyfin connection and comparison
       types/index.ts    shared TypeScript types, derived from the generated ones
       types/api.generated.ts  generated from the API's OpenAPI description (npm run gen:api); don't edit
       types/openapi.json      the description it was generated from (checked by a backend test)
@@ -97,6 +98,7 @@ the `useSettings()` hook (shared cache).
 | `/stats` | `Stats`: charts and breakdowns | Core |
 | `/settings` | `Settings`: collection completion rings; Add Movie presets (rename, delete; `features/movies/MoviePresetSettings.tsx`) | Core |
 | `/export` | `CsvExport`: CSV export/import, Letterboxd import | Core |
+| `/jellyfin` | `JellyfinPage`: connect a Jellyfin server (address + API key), then compare its movies and series with Kinodex (only on Jellyfin, only in Kinodex, in both). Reached from Settings for now (`docs/design/jellyfin-compare.md`) | New |
 | `/sign-in`, `/sign-up` | Clerk pages | Public |
 | anything else | Redirects to `/` (including the removed shelf, lending and Match Movies pages) | Redirect |
 
@@ -305,6 +307,7 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 | `/api/movie-presets` | list, create, update, delete (names unique per user; every Add Movie field TMDB does not fill in, purchase date optional) | Owned | `features/movies/presets.ts`; Add Movie modal picks and saves them |
 | `/api/upc/lookup/{upc}` | product title + images | Shared cache (`UpcLookups`), not per user | Product image picker |
 | `/api/tmdb/v3/{path}` | TMDB's reply for the app's TMDB requests (searches, a title's images, a TV show's details); others are refused | Signed in; not per user | `utils/tmdbApi.ts` (`useTmdb`) |
+| `/api/jellyfin` | get (never the key), connect (checks address + key against the server first), disconnect; `/compare` matches the server's movies and series with the user's by TMDB id, then title + year | Owned; the key is encrypted (Data Protection, keys in `DataProtectionKeys`); production only connects to public `https` addresses (`PublicAddress`) | `features/jellyfin/api.ts`, `/jellyfin` page |
 | `/api/webhooks/clerk` | user created/updated/deleted | **No sign-in**; verified by Svix signature | Clerk |
 
 ### Data model
@@ -314,7 +317,8 @@ User (Clerk id) ─── owns (by UserId string) ──┬─ Movie
                                                ├─ TvShow ── TvShowPurchase (seasons, price, date, gift, UPC, formats)
                                                ├─ Collection ── CollectionListItem (checklist)
                                                ├─ ShelfSection
-                                               └─ UserSettings
+                                               ├─ UserSettings
+                                               └─ JellyfinConnection (server address, encrypted API key)
 Shared (not per user): UpcLookup (UPC → product images)
 ```
 

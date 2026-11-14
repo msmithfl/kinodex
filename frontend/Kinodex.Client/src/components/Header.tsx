@@ -8,14 +8,19 @@ import { setTopBarSlot } from "../utils/topBar";
 const TITLE_CLASS = "text-2xl font-semibold tracking-tight";
 
 // Pages whose name follows the logo
-const BESIDE_LOGO_TITLES: Record<string, string> = { "/": "Dashboard", "/stats": "Stats", "/settings": "Settings" };
+const BESIDE_LOGO_TITLES: Record<string, string> = {
+  "/": "Dashboard",
+  "/stats": "Stats",
+  "/settings": "Settings",
+  "/jellyfin": "Jellyfin",
+};
 
 // Phones only: the bar across the top, showing what suits the page (from tablet up the sidebar
 // has the logo, the pages, Add and the account):
 // - Movies, TV Shows, Collections, Genres (and a genre): "Library" over the tabs between them
 // - Search: "Search" over the search box, which the Search page puts in the slot below
 // - Dashboard and Stats: the logo and the page's name, and Settings at the right
-// - Settings: the logo and "Settings"
+// - Settings and Jellyfin: the logo and the page's name
 // - anywhere else: the logo
 // Two heights: taller with a title over the tabs or search box, shorter with the logo row. The
 // library pages share one, so switching between their tabs moves nothing.

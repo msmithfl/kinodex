@@ -145,6 +145,7 @@ public static class WebhookEndpoints
                         // Deleting a show also deletes its purchases (cascade in the database)
                         await db.TvShows.Where(t => t.UserId == userId).ExecuteDeleteAsync();
                         await db.UserSettings.Where(s => s.UserId == userId).ExecuteDeleteAsync();
+                        await db.JellyfinConnections.Where(j => j.UserId == userId).ExecuteDeleteAsync();
 
                         db.Users.Remove(user);
                         await db.SaveChangesAsync();

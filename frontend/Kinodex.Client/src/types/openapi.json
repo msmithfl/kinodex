@@ -694,6 +694,81 @@
           }
         }
       }
+    },
+    "/api/jellyfin": {
+      "get": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JellyfinStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JellyfinConnectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JellyfinStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/jellyfin/compare": {
+      "get": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JellyfinComparison"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -789,6 +864,166 @@
                 "$ref": "#/components/schemas/Collection"
               }
             ]
+          }
+        }
+      },
+      "JellyfinComparison": {
+        "required": [
+          "movies",
+          "shows",
+          "comparedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "movies": {
+            "$ref": "#/components/schemas/LibraryComparison"
+          },
+          "shows": {
+            "$ref": "#/components/schemas/LibraryComparison"
+          },
+          "comparedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "JellyfinConnectRequest": {
+        "required": [
+          "serverUrl",
+          "apiKey"
+        ],
+        "type": "object",
+        "properties": {
+          "serverUrl": {
+            "type": "string"
+          },
+          "apiKey": {
+            "type": "string"
+          }
+        }
+      },
+      "JellyfinStatus": {
+        "required": [
+          "connected",
+          "serverUrl",
+          "serverName",
+          "serverVersion",
+          "connectedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          },
+          "serverUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serverName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serverVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "connectedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "JellyfinTitle": {
+        "required": [
+          "id",
+          "title",
+          "year",
+          "tmdbId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tmdbId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "KinodexTitle": {
+        "required": [
+          "id",
+          "title",
+          "year",
+          "tmdbId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tmdbId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "LibraryComparison": {
+        "required": [
+          "onlyOnJellyfin",
+          "onlyInKinodex",
+          "inBoth"
+        ],
+        "type": "object",
+        "properties": {
+          "onlyOnJellyfin": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JellyfinTitle"
+            }
+          },
+          "onlyInKinodex": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KinodexTitle"
+            }
+          },
+          "inBoth": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TitleMatch"
+            }
           }
         }
       },
@@ -1040,6 +1275,25 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "TitleMatch": {
+        "required": [
+          "kinodex",
+          "jellyfin",
+          "matchedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "kinodex": {
+            "$ref": "#/components/schemas/KinodexTitle"
+          },
+          "jellyfin": {
+            "$ref": "#/components/schemas/JellyfinTitle"
+          },
+          "matchedBy": {
+            "type": "string"
           }
         }
       },
