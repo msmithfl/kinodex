@@ -5,14 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Movie } from "../../../types";
 import { FormField, PillToggles, SwitchField } from "../../../components/FormFields";
 import { ignoreEnter } from "../../../utils/barcode";
+import { FORMATS } from "../../../utils/formats";
 
-const FORMAT_OPTIONS = [
-  { value: "4K" },
-  { value: "Blu-ray" },
-  { value: "DVD" },
-  { value: "VHS" },
-  { value: "Digital" },
-];
+const FORMAT_OPTIONS = FORMATS.map((value) => ({ value }));
 
 const CONDITIONS = ["Sealed", "Like New", "Good", "Poor", "Damaged"];
 

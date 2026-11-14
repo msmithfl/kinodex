@@ -8,8 +8,9 @@ import { FormField, PillToggles } from "./FormFields";
 import type { TvShowPurchase } from "../types";
 import { formatSeasons } from "../utils/formatSeasons";
 import { ignoreEnter } from "../utils/barcode";
+import { FORMATS } from "../utils/formats";
 
-const FORMAT_OPTIONS = ["4K", "Blu-ray", "DVD", "VHS", "Digital"].map((value) => ({ value }));
+const FORMAT_OPTIONS = FORMATS.map((value) => ({ value }));
 const CONDITIONS = ["Sealed", "Like New", "Good", "Poor", "Damaged"];
 
 interface TvShowPurchaseEditorProps {

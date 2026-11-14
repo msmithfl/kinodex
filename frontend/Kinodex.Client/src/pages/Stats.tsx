@@ -19,6 +19,7 @@ import type { Movie, TvShow } from "../types";
 import ChartBreakdown from "../components/ChartBreakdown";
 import { allFormats } from "../utils/tvShowPurchases";
 import { movieSpend, tvSpend } from "../utils/spending";
+import { FORMATS } from "../utils/formats";
 import {
   CATEGORICAL,
   CHART_ACCENT,
@@ -29,17 +30,17 @@ import {
 } from "../utils/chartColors";
 
 // Fixed orders, so a format or condition keeps its colour whatever else the collection holds
-const FORMAT_ORDER = ["4K", "Blu-ray", "DVD", "VHS", "Digital"];
+const FORMAT_ORDER = FORMATS;
 const CONDITION_ORDER = ["Sealed", "Like New", "Good", "Poor", "Damaged"];
 
 // Counted rows in a fixed order, with anything not in that order after them
-const inOrder = (rows: { name: string; value: number }[], order: string[]) => {
+const inOrder = (rows: { name: string; value: number }[], order: readonly string[]) => {
   const rank = (name: string) => (order.includes(name) ? order.indexOf(name) : order.length);
   return [...rows].sort((a, b) => rank(a.name) - rank(b.name));
 };
 
 // A row's colour from its place in the fixed order; anything unexpected is neutral
-const colorsInOrder = (rows: { name: string }[], order: string[], palette: string[], neutral: string) =>
+const colorsInOrder = (rows: { name: string }[], order: readonly string[], palette: string[], neutral: string) =>
   rows.map(({ name }) => (order.includes(name) ? palette[order.indexOf(name)] : neutral));
 
 // The breakdown's tooltip text; defined here so it's the same function every render, letting the

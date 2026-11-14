@@ -1,13 +1,14 @@
 import type { Movie } from '../types';
+import { FORMATS } from './formats';
 
 export interface FilterOption {
   label: string;
   value: string;
 }
 
-// How the filter panel shows a category: a row of pills (format), an Any / Yes / No switch
-// (options "true" and "false"), or a row that opens a checklist
-export type FilterKind = 'pills' | 'toggle' | 'list';
+// How the filter panel shows a category: an Any / Yes / No switch (options "true" and "false"),
+// or a row that opens a checklist
+export type FilterKind = 'toggle' | 'list';
 
 export interface FilterCategory {
   id: string;
@@ -25,13 +26,8 @@ export function buildFilterCategories(
     {
       id: 'format',
       label: 'Format',
-      kind: 'pills',
-      options: [
-        { label: '4K', value: '4K' },
-        { label: 'Blu-ray', value: 'Blu-ray' },
-        { label: 'DVD', value: 'DVD' },
-        { label: 'VHS', value: 'VHS' },
-      ],
+      kind: 'list',
+      options: FORMATS.map(format => ({ label: format, value: format })),
     },
     {
       // Every genre that appears in the collection

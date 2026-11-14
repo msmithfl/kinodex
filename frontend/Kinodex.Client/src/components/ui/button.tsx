@@ -12,8 +12,10 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
         destructive:
           "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/40",
+        // Purple while the menu or panel it opens is showing (Radix marks the button
+        // data-state="open"), like Save as preset in Add movie: the lists' Filter, Sort and Columns
         outline:
-          "border border-input bg-card shadow-xs hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-card shadow-xs hover:bg-accent hover:text-accent-foreground data-[state=open]:border-primary data-[state=open]:bg-primary-soft data-[state=open]:text-primary-text data-[state=open]:hover:bg-primary-soft data-[state=open]:hover:text-primary-text",
         secondary: "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         // Red text with a red tint on hover: delete and remove buttons that sit among others

@@ -24,8 +24,8 @@ function listSummary(category: FilterCategory, values: string[]) {
   return `${values.length} selected`;
 }
 
-// The Filter button and its panel. Format is a row of pills; yes/no filters are Any / Yes / No
-// switches; the longer lists (genre, collection, shelf, ...) open a checklist inside the panel.
+// The Filter button and its panel. Yes/no filters are Any / Yes / No switches; the rest (format,
+// genre, collection, shelf, ...) are rows that open a checklist inside the panel.
 // Filters apply as they're picked; the footer button just closes the panel.
 function FilterPanel({ categories, selectedFilters, onFilterChange, onReset, resultLabel }: FilterPanelProps) {
   const [open, setOpen] = useState(false);
@@ -39,7 +39,6 @@ function FilterPanel({ categories, selectedFilters, onFilterChange, onReset, res
     onFilterChange(id, values.includes(value) ? values.filter((v) => v !== value) : [...values, value]);
   };
 
-  const pills = categories.filter((c) => c.kind === "pills");
   const toggles = categories.filter((c) => c.kind === "toggle");
   const lists = categories.filter((c) => (c.kind ?? "list") === "list");
   const openList = lists.find((c) => c.id === listId);
@@ -106,33 +105,6 @@ function FilterPanel({ categories, selectedFilters, onFilterChange, onReset, res
                 Reset
               </Button>
             </div>
-
-            {pills.map((category) => (
-              <div key={category.id} className="flex flex-col gap-2 px-4 pt-1 pb-3">
-                <span className="text-xs font-medium text-muted-foreground">{category.label}</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {category.options.map((option) => {
-                    const on = selected(category.id).includes(option.value);
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => toggleValue(category.id, option.value)}
-                        className={cn(
-                          "h-7 cursor-pointer rounded-full border px-3 text-xs font-medium transition-colors",
-                          on
-                            ? "border-primary bg-primary-soft text-primary-text"
-                            : "border-border text-foreground/85 hover:bg-accent",
-                        )}
-                      >
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
 
             {toggles.map((category) => {
               const value = selected(category.id)[0] ?? "any";
