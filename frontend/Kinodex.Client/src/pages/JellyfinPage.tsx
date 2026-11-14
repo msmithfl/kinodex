@@ -4,6 +4,7 @@ import { ChevronRight, ExternalLink, RefreshCw } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +16,9 @@ import {
   useConnectJellyfin,
   useDisconnectJellyfin,
   useJellyfinComparison,
+  useJellyfinLibraries,
   useJellyfinStatus,
+  useSaveJellyfinLibraries,
 } from "../features/jellyfin/api";
 import type { JellyfinStatus, LibraryComparison } from "../types";
 
@@ -49,6 +52,7 @@ function JellyfinPage() {
               )}
             </section>
 
+            {status.connected && <Libraries />}
             {status.connected && <Comparison serverUrl={status.serverUrl ?? ""} />}
           </>
         )}
@@ -146,6 +150,66 @@ function ConnectForm({
         )}
       </div>
     </form>
+  );
+}
+
+// Jellyfin's library content types, as the page names them
+const LIBRARY_TYPES: Record<string, string> = {
+  movies: "Movies",
+  tvshows: "Shows",
+  homevideos: "Home videos",
+  musicvideos: "Music videos",
+  "": "Mixed",
+};
+
+// Which of the server's libraries are compared. Each tick saves straight away and compares again;
+// the last one ticked can't be unticked.
+function Libraries() {
+  const { data: libraries, error } = useJellyfinLibraries(true);
+  const save = useSaveJellyfinLibraries();
+  const chosen = libraries?.filter((l) => l.selected).map((l) => l.id) ?? [];
+
+  const toggle = (id: string, on: boolean) => {
+    const next = on ? [...chosen, id] : chosen.filter((c) => c !== id);
+    if (next.length > 0) save.mutate(next);
+  };
+
+  return (
+    <section className="mt-4 rounded-xl border border-border bg-card px-5 py-4">
+      <h2 className="text-base font-semibold">Libraries</h2>
+      <p className="pt-1 pb-3 text-sm text-muted-foreground">The Jellyfin libraries to compare with Kinodex.</p>
+      {error ? (
+        <Alert variant="destructive">{error.message}</Alert>
+      ) : !libraries ? (
+        <p className="py-2 text-sm text-muted-foreground">Reading the libraries…</p>
+      ) : (
+        <div className="flex flex-col">
+          {libraries.map((library) => {
+            const last = library.selected && chosen.length === 1;
+            return (
+              <label
+                key={library.id}
+                title={last ? "At least one library is compared" : undefined}
+                className="flex h-9 cursor-pointer items-center gap-2.5 rounded-md px-1 text-sm has-disabled:cursor-default"
+              >
+                <Checkbox
+                  checked={library.selected}
+                  disabled={last || save.isPending}
+                  onCheckedChange={(checked) => toggle(library.id, checked === true)}
+                />
+                <span className="min-w-0 flex-1 truncate">{library.name}</span>
+                <span className="text-xs text-muted-foreground">{LIBRARY_TYPES[library.type] ?? library.type}</span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+      {save.error && (
+        <Alert variant="destructive" className="mt-2">
+          {save.error.message}
+        </Alert>
+      )}
+    </section>
   );
 }
 

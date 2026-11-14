@@ -14,4 +14,6 @@ public class JellyfinConnection
     public string ServerName { get; set; } = string.Empty; // As Jellyfin reports it
     public string ServerVersion { get; set; } = string.Empty;
     public DateTime ConnectedAt { get; set; } = DateTime.UtcNow;
+    // The libraries to compare (Jellyfin's ids); empty means all of them
+    public List<string> LibraryIds { get; set; } = new();
 }

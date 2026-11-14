@@ -14,7 +14,15 @@ public class JellyfinClient(HttpClient http)
     // A movie or series from the libraries; TmdbId when Jellyfin has one for it
     public record LibraryItem(string Id, string Title, string Type, int Year, int? TmdbId);
 
+    // One of the server's libraries. Type is Jellyfin's content type: "movies", "tvshows",
+    // "homevideos", "musicvideos", or "" for mixed content.
+    public record Library(string Id, string Name, string Type);
+
     public class JellyfinException(string message) : Exception(message);
+
+    // Library types that can't hold movies or series, so there's nothing in them to compare
+    private static readonly HashSet<string> NotComparable =
+        new(StringComparer.OrdinalIgnoreCase) { "boxsets", "playlists", "music", "books", "photos", "livetv" };
 
     private static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true };
 
@@ -25,13 +33,23 @@ public class JellyfinClient(HttpClient http)
         return new ServerInfo(info.ServerName ?? "Jellyfin", info.Version ?? "");
     }
 
+    // The libraries that can hold movies or series, in the server's order
+    public async Task<List<Library>> GetLibrariesAsync(string serverUrl, string apiKey, CancellationToken ct = default)
+    {
+        var folders = await GetAsync<List<VirtualFolderDto>>(serverUrl, apiKey, "Library/VirtualFolders", ct);
+        return folders
+            .Where(f => !string.IsNullOrEmpty(f.ItemId) && !NotComparable.Contains(f.CollectionType ?? ""))
+            .Select(f => new Library(f.ItemId!, f.Name ?? "Library", f.CollectionType ?? ""))
+            .ToList();
+    }
+
     // How many items to ask for at a time. Asking for everything at once came back short on a real
     // server (1941 missing from a library of 1,536 movies), so the library is read in pages, in a
     // fixed order, until the server's own total is reached.
     private const int PageSize = 500;
 
-    // Every movie and series across the server's libraries
-    public async Task<List<LibraryItem>> GetLibraryAsync(string serverUrl, string apiKey, CancellationToken ct = default)
+    // Every movie and series across the server's libraries, or in one of them (libraryId)
+    public async Task<List<LibraryItem>> GetLibraryAsync(string serverUrl, string apiKey, string? libraryId = null, CancellationToken ct = default)
     {
         var items = new Dictionary<string, LibraryItem>(); // By id, in case a page boundary repeats one
         var start = 0;
@@ -44,6 +62,7 @@ public class JellyfinClient(HttpClient http)
             var query = "Items?Recursive=true&IncludeItemTypes=Movie,Series&CollapseBoxSetItems=false&Fields=ProviderIds" +
                         "&SortBy=SortName,ProductionYear,DateCreated&SortOrder=Ascending" +
                         $"&StartIndex={start}&Limit={PageSize}" +
+                        (libraryId is null ? "" : $"&ParentId={Uri.EscapeDataString(libraryId)}") +
                         "&EnableImages=false&EnableUserData=false&EnableTotalRecordCount=true";
             var result = await GetAsync<ItemsDto>(serverUrl, apiKey, query, ct);
             var batch = result.Items ?? [];
@@ -117,5 +136,6 @@ public class JellyfinClient(HttpClient http)
     // Jellyfin's replies, only the parts used
     private record SystemInfoDto(string? ServerName, string? Version);
     private record ItemsDto(List<ItemDto>? Items, int? TotalRecordCount);
+    private record VirtualFolderDto(string? Name, string? CollectionType, string? ItemId);
     private record ItemDto(string? Id, string? Name, string? Type, int? ProductionYear, Dictionary<string, string>? ProviderIds);
 }

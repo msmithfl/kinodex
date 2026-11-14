@@ -10,12 +10,15 @@ namespace Kinodex.Api.Tests.Infrastructure;
 // host of its own, so tests never see each other's.
 public static class FakeJellyfin
 {
-    // Collection: the box set it belongs to, if any
-    public record Item(string Id, string Name, string Type, int Year, int? TmdbId = null, string? Collection = null);
+    // Collection: the box set it belongs to, if any. Library: the id of the library it's in.
+    public record Item(string Id, string Name, string Type, int Year, int? TmdbId = null, string? Collection = null, string? Library = null);
+
+    // CollectionType as Jellyfin names it: "movies", "tvshows", "boxsets", "homevideos", null (mixed), ...
+    public record Library(string Id, string Name, string? CollectionType);
 
     // MaxPerResponse: send at most this many items per request whatever the request asks for, like
     // a server with a cap of its own
-    public record Server(string ApiKey, string Name, Item[] Items, int? MaxPerResponse = null);
+    public record Server(string ApiKey, string Name, Item[] Items, int? MaxPerResponse = null, Library[]? Libraries = null);
 
     private static readonly ConcurrentDictionary<string, Server> Servers = new();
 
@@ -38,12 +41,14 @@ public static class FakeJellyfin
 
     // Like Jellyfin asked without a user: the movies in a collection come back as the collection
     // (one BoxSet item) unless CollapseBoxSetItems=false
+    // (ParentId: only the items in that library)
     private static Item[] Listed(Server server, System.Collections.Specialized.NameValueCollection query)
     {
+        var items = query["ParentId"] is { } parentId ? server.Items.Where(i => i.Library == parentId).ToArray() : server.Items;
         if (string.Equals(query["CollapseBoxSetItems"], "false", StringComparison.OrdinalIgnoreCase))
-            return server.Items;
-        return server.Items.Where(i => i.Collection is null)
-            .Concat(server.Items.Where(i => i.Collection is not null).Select(i => i.Collection!).Distinct()
+            return items;
+        return items.Where(i => i.Collection is null)
+            .Concat(items.Where(i => i.Collection is not null).Select(i => i.Collection!).Distinct()
                 .Select(name => new Item($"boxset-{name}", name, "BoxSet", 0)))
             .ToArray();
     }
@@ -62,6 +67,9 @@ public static class FakeJellyfin
             object? body = request.RequestUri.AbsolutePath switch
             {
                 "/System/Info" => new { ServerName = server.Name, Version = "10.10.7", Id = "abc" },
+                "/Library/VirtualFolders" => (server.Libraries ?? [])
+                    .Select(l => new { l.Name, l.CollectionType, ItemId = l.Id, Locations = Array.Empty<string>() })
+                    .ToArray(),
                 "/Items" => new
                 {
                     Items = Page(server, request.RequestUri).Select(i => new

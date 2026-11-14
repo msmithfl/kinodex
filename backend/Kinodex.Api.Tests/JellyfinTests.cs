@@ -162,6 +162,63 @@ public class JellyfinTests(KinodexApiFactory api)
     }
 
     [Fact]
+    public async Task Only_the_chosen_libraries_are_compared()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        await AddMovieAsync(owner, "Jaws", 1975, tmdbId: 578);
+
+        var url = Add(new Server(Key, "Home Server",
+            [
+                new Item("j1", "Jaws", "Movie", 1975, 578, Library: "movies"),
+                new Item("j2", "Duel", "Movie", 1971, 839, Library: "movies"),
+                new Item("s1", "Lost", "Series", 2004, 4607, Library: "shows"),
+                new Item("k1", "Skate Video", "Movie", 2010, null, Library: "sk8"),
+            ],
+            Libraries:
+            [
+                new Library("movies", "Movies", "movies"),
+                new Library("shows", "TV Shows", "tvshows"),
+                new Library("sk8", "Sk8 Videos", "homevideos"),
+                new Library("sets", "Collections", "boxsets"), // Nothing to compare in it: not listed
+            ]));
+        (await ConnectAsync(owner, url)).EnsureSuccessStatusCode();
+
+        // Every library to start with
+        var libraries = await owner.GetJsonAsync("/api/jellyfin/libraries");
+        Assert.Equal(["Movies", "TV Shows", "Sk8 Videos"], libraries.EnumerateArray().Select(l => l.GetProperty("name").GetString()));
+        Assert.All(libraries.EnumerateArray(), l => Assert.True(l.GetProperty("selected").GetBoolean()));
+        Assert.Equal(3, (await owner.GetJsonAsync("/api/jellyfin/compare")).GetProperty("movies").GetProperty("jellyfinCount").GetInt32());
+
+        // Movies and TV Shows only
+        var chosen = await owner.PutAsJsonAsync("/api/jellyfin/libraries", new { libraryIds = new[] { "movies", "shows" } });
+        chosen.EnsureSuccessStatusCode();
+        Assert.Equal(["movies", "shows"], (await chosen.ReadJsonAsync()).EnumerateArray()
+            .Where(l => l.GetProperty("selected").GetBoolean()).Select(l => l.GetProperty("id").GetString()));
+
+        var compare = await owner.GetJsonAsync("/api/jellyfin/compare");
+        Assert.Equal(["Duel"], Titles(compare.GetProperty("movies").GetProperty("onlyOnJellyfin")));
+        Assert.Equal(["Lost"], Titles(compare.GetProperty("shows").GetProperty("onlyOnJellyfin")));
+
+        // None at all isn't a choice
+        var none = await owner.PutAsJsonAsync("/api/jellyfin/libraries", new { libraryIds = Array.Empty<string>() });
+        Assert.Equal(HttpStatusCode.BadRequest, none.StatusCode);
+    }
+
+    [Fact]
+    public async Task Connecting_to_a_different_server_starts_the_library_choice_over()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        Library[] libraries = [new Library("a", "Movies", "movies"), new Library("b", "Shows", "tvshows")];
+        (await ConnectAsync(owner, Add(new Server(Key, "First", [], Libraries: libraries)))).EnsureSuccessStatusCode();
+        (await owner.PutAsJsonAsync("/api/jellyfin/libraries", new { libraryIds = new[] { "a" } })).EnsureSuccessStatusCode();
+
+        (await ConnectAsync(owner, Add(new Server(Key, "Second", [], Libraries: libraries)))).EnsureSuccessStatusCode();
+
+        Assert.All((await owner.GetJsonAsync("/api/jellyfin/libraries")).EnumerateArray(),
+            l => Assert.True(l.GetProperty("selected").GetBoolean()));
+    }
+
+    [Fact]
     public async Task Disconnecting_forgets_the_server_and_compare_then_asks_to_connect()
     {
         var owner = api.ClientFor(KinodexApiFactory.NewUserId());
