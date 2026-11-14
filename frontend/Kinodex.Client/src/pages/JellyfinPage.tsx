@@ -202,6 +202,10 @@ function ComparisonLists({
 }) {
   return (
     <div className="flex flex-col gap-3">
+      {/* Every copy Jellyfin has, to check against the server's own count */}
+      <p className="text-sm text-muted-foreground tabular-nums">
+        {comparison.jellyfinCount.toLocaleString()} on Jellyfin · {comparison.kinodexCount.toLocaleString()} in Kinodex
+      </p>
       <Group title="On Jellyfin, not in Kinodex" count={comparison.onlyOnJellyfin.length} defaultOpen>
         {comparison.onlyOnJellyfin.map((title) => (
           <Row key={title.id} title={title.title} year={title.year} href={jellyfinLink(serverUrl, title.id)} />

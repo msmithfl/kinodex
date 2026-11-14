@@ -1114,6 +1114,10 @@ export interface components {
             onlyOnJellyfin: components["schemas"]["JellyfinTitle"][];
             onlyInKinodex: components["schemas"]["KinodexTitle"][];
             inBoth: components["schemas"]["TitleMatch"][];
+            /** Format: int32 */
+            jellyfinCount: number;
+            /** Format: int32 */
+            kinodexCount: number;
         };
         Movie: {
             /** Format: int32 */

@@ -117,6 +117,28 @@ public class JellyfinTests(KinodexApiFactory api)
     }
 
     [Fact]
+    public async Task Compare_reads_the_whole_library_even_when_the_server_sends_less_than_asked()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        await AddMovieAsync(owner, "1941", 1979, tmdbId: 11519);
+
+        // Seven movies from a server that sends three at a time; 1941 comes last
+        var movies = Enumerable.Range(1, 6)
+            .Select(n => new Item($"m{n}", $"Movie {n}", "Movie", 2000 + n, 1000 + n))
+            .Append(new Item("m7", "1941", "Movie", 1979, 11519))
+            .ToArray();
+        var url = Add(new Server(Key, "Home Server", movies, MaxPerResponse: 3));
+        (await ConnectAsync(owner, url)).EnsureSuccessStatusCode();
+
+        var compare = (await owner.GetJsonAsync("/api/jellyfin/compare")).GetProperty("movies");
+
+        Assert.Equal(7, compare.GetProperty("jellyfinCount").GetInt32());
+        Assert.Equal(1, compare.GetProperty("kinodexCount").GetInt32());
+        Assert.Empty(Titles(compare.GetProperty("onlyInKinodex")));
+        Assert.Equal(6, compare.GetProperty("onlyOnJellyfin").GetArrayLength());
+    }
+
+    [Fact]
     public async Task Disconnecting_forgets_the_server_and_compare_then_asks_to_connect()
     {
         var owner = api.ClientFor(KinodexApiFactory.NewUserId());

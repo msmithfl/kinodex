@@ -50,6 +50,12 @@ The comparison runs when the page opens (and on Refresh); nothing is stored or s
 - `GET /System/Info`: the server's name and version (checks the address and key on connect).
 - `GET /Items?Recursive=true&IncludeItemTypes=Movie,Series&Fields=ProviderIds`: every movie and
   series across the libraries, with their TMDB ids. No user id is needed with an API key.
+  - Read in pages (`StartIndex`/`Limit`, 500 at a time, sorted by name, year and date added) until
+    the server's `TotalRecordCount` is reached. Asking for everything in one response came back
+    short on a real server (a library of 1,536 movies, with 1941 missing), with no error.
+  - The page shows how many titles each side has, to check against Jellyfin's own counts.
+  - A server can hold a film more than once (a 4K and an HD library, alternate versions); every
+    copy of a film that's in Kinodex counts as in both, and one that isn't is listed once.
 
 ## Pieces
 

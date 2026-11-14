@@ -25,16 +25,34 @@ public class JellyfinClient(HttpClient http)
         return new ServerInfo(info.ServerName ?? "Jellyfin", info.Version ?? "");
     }
 
+    // How many items to ask for at a time. Asking for everything at once came back short on a real
+    // server (1941 missing from a library of 1,536 movies), so the library is read in pages, in a
+    // fixed order, until the server's own total is reached.
+    private const int PageSize = 500;
+
     // Every movie and series across the server's libraries
     public async Task<List<LibraryItem>> GetLibraryAsync(string serverUrl, string apiKey, CancellationToken ct = default)
     {
-        const string query = "Items?Recursive=true&IncludeItemTypes=Movie,Series&Fields=ProviderIds" +
-                             "&EnableImages=false&EnableUserData=false&EnableTotalRecordCount=false";
-        var result = await GetAsync<ItemsDto>(serverUrl, apiKey, query, ct);
-        return (result.Items ?? [])
-            .Where(i => !string.IsNullOrEmpty(i.Id) && !string.IsNullOrWhiteSpace(i.Name))
-            .Select(i => new LibraryItem(i.Id!, i.Name!.Trim(), i.Type ?? "", i.ProductionYear ?? 0, TmdbIdOf(i)))
-            .ToList();
+        var items = new Dictionary<string, LibraryItem>(); // By id, in case a page boundary repeats one
+        var start = 0;
+        for (var page = 0; page < 200; page++) // 100,000 items: a guard against a server that never ends
+        {
+            var query = "Items?Recursive=true&IncludeItemTypes=Movie,Series&Fields=ProviderIds" +
+                        "&SortBy=SortName,ProductionYear,DateCreated&SortOrder=Ascending" +
+                        $"&StartIndex={start}&Limit={PageSize}" +
+                        "&EnableImages=false&EnableUserData=false&EnableTotalRecordCount=true";
+            var result = await GetAsync<ItemsDto>(serverUrl, apiKey, query, ct);
+            var batch = result.Items ?? [];
+
+            foreach (var i in batch.Where(i => !string.IsNullOrEmpty(i.Id) && !string.IsNullOrWhiteSpace(i.Name)))
+                items[i.Id!] = new LibraryItem(i.Id!, i.Name!.Trim(), i.Type ?? "", i.ProductionYear ?? 0, TmdbIdOf(i));
+
+            // Moves on by what actually came back, so a server that sends fewer than asked for
+            // (a cap of its own) is still read to the end
+            start += batch.Count;
+            if (batch.Count == 0 || (result.TotalRecordCount is int total && start >= total)) break;
+        }
+        return items.Values.ToList();
     }
 
     private static int? TmdbIdOf(ItemDto item) =>
@@ -94,6 +112,6 @@ public class JellyfinClient(HttpClient http)
 
     // Jellyfin's replies, only the parts used
     private record SystemInfoDto(string? ServerName, string? Version);
-    private record ItemsDto(List<ItemDto>? Items);
+    private record ItemsDto(List<ItemDto>? Items, int? TotalRecordCount);
     private record ItemDto(string? Id, string? Name, string? Type, int? ProductionYear, Dictionary<string, string>? ProviderIds);
 }
