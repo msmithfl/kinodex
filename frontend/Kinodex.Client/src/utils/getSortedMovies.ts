@@ -1,4 +1,5 @@
 import type { Movie, SortOption } from '../types'
+import { compareTitles } from './titleSort'
 
 // The fields sorting reads, so TV shows can be sorted the same way as movies
 type Sortable = Pick<Movie, 'title' | 'year' | 'formats' | 'condition' | 'rating' | 'purchasePrice' | 'createdAt'>;
@@ -8,7 +9,8 @@ export const getSortedMovies = <T extends Sortable>(movies: T[], sortBy: SortOpt
     
     switch (sortBy) {
       case 'alphabetic':
-        sortedMovies.sort((a, b) => a.title.localeCompare(b.title));
+        // Ignoring a leading A, An or The (utils/titleSort)
+        sortedMovies.sort((a, b) => compareTitles(a.title, b.title));
         break;
       case 'year':
         sortedMovies.sort((a, b) => (a.year || 0) - (b.year || 0));

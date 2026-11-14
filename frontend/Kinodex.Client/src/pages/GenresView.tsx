@@ -5,6 +5,7 @@ import GenreCard, { GENRE_OVERLAYS } from "../components/GenreCard";
 import EmptyState from "../components/EmptyState";
 import { useMovies } from "../features/movies/api";
 import type { Movie } from "../types";
+import { compareTitles } from "../utils/titleSort";
 
 const GENRE_GRID = "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
@@ -28,7 +29,7 @@ function GenresView() {
   for (const genre of genres) {
     const candidates = movies
       .filter((m) => m.genres?.includes(genre) && imageOf(m))
-      .sort((a, b) => b.rating - a.rating || a.title.localeCompare(b.title));
+      .sort((a, b) => b.rating - a.rating || compareTitles(a.title, b.title));
     const pick = candidates.find((m) => !usedMovieIds.has(m.id)) ?? candidates[0];
     if (pick) {
       usedMovieIds.add(pick.id);

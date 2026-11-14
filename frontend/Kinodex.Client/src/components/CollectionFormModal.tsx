@@ -12,6 +12,7 @@ import { ApiError } from "../utils/api";
 import { searchScore } from "../utils/textSearch";
 import { useCreateCollection, useUpdateCollection } from "../features/collections/api";
 import type { Collection, Movie, TMDBMovie } from "../types";
+import { compareTitles } from "../utils/titleSort";
 
 interface CollectionFormModalProps {
   // The collection to edit; leave out to create a new one
@@ -112,7 +113,7 @@ function CollectionFormModal({
     return movies
       .map((m) => ({ m, score: m.posterPath ? searchScore([m.title, String(m.year || "")], q) : 0 }))
       .filter(({ score }) => score > 0)
-      .sort((a, b) => b.score - a.score || a.m.title.localeCompare(b.m.title))
+      .sort((a, b) => b.score - a.score || compareTitles(a.m.title, b.m.title))
       .map(({ m }) => m)
       .slice(0, MAX_POSTER_RESULTS);
   }, [movies, query, kind]);
