@@ -1,7 +1,5 @@
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { ChipSelect } from "../../../components/ChipSelect";
-import { StarRatingInput } from "../../../components/StarRating";
 import { FormField, SwitchField } from "../../../components/FormFields";
 import { TV_GENRE_MAP } from "../../../utils/tmdbApi";
 import type { TvShow } from "../../../types";
@@ -21,7 +19,8 @@ interface TvShowDetailsTabProps {
   onTmdbChange: (value: string) => void;
 }
 
-// The TV show form's first tab: title, year, TMDB id, genres, rating, watched, streaming, notes
+// The TV show form's first tab: title, year, TMDB id, genres, streaming (rating, watched and notes
+// are on the Review tab)
 function TvShowDetailsTab({
   formData,
   setFormData,
@@ -71,36 +70,12 @@ function TvShowDetailsTab({
         />
       </FormField>
 
-      <FormField label="Rating">
-        <StarRatingInput value={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} />
-      </FormField>
-
-      <div className="grid grid-cols-2 gap-4">
-        <FormField label="Watched">
-          <SwitchField
-            id="hasWatched"
-            label={formData.hasWatched ? "Watched" : "Not watched yet"}
-            checked={formData.hasWatched}
-            onCheckedChange={(hasWatched) => setFormData({ ...formData, hasWatched })}
-          />
-        </FormField>
-        <FormField label="Streaming">
-          <SwitchField
-            id="isStreaming"
-            label="Available to stream"
-            checked={formData.isStreaming}
-            onCheckedChange={(isStreaming) => setFormData({ ...formData, isStreaming })}
-          />
-        </FormField>
-      </div>
-
-      <FormField label="Review / notes" htmlFor="review">
-        <Textarea
-          id="review"
-          value={formData.review}
-          onChange={(e) => setFormData({ ...formData, review: e.target.value })}
-          rows={4}
-          className="min-h-24"
+      <FormField label="Streaming">
+        <SwitchField
+          id="isStreaming"
+          label="Available to stream"
+          checked={formData.isStreaming}
+          onCheckedChange={(isStreaming) => setFormData({ ...formData, isStreaming })}
         />
       </FormField>
     </div>

@@ -48,7 +48,7 @@ Kinodex/
       features/         per feature: data hooks (api.ts) and the feature's own components
         movies/           MovieDetail (drawer), MovieTable, MovieDrawerDetails, form/ (Details,
                           Physical, Location, Images, Review tabs)
-        tvShows/          TvShowDetail (drawer), TvShowDrawerDetails, TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images tabs)
+        tvShows/          TvShowDetail (drawer), TvShowDrawerDetails, TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images, Review tabs)
         collections/      CollectionDetail (drawer), CollectionChecklist
         shelfSections/    (hooks only)
       types/index.ts    shared TypeScript types, derived from the generated ones
