@@ -31,7 +31,9 @@ The comparison runs when the page opens (and on Refresh); nothing is stored or s
   from Railway, so a home-network-only Jellyfin only works with Kinodex running locally.
 - **An API key, for now.** One paste, simplest to build. It's an admin key (every library); signing
   in with a Jellyfin user instead (a token limited to that user's libraries, revocable from
-  Jellyfin's Devices page) can replace it later, and fits the self-hosting plan's Jellyfin sign-in.
+  Jellyfin's Devices page) is planned to replace it (see
+  [Planned: signing in with Jellyfin](#planned-signing-in-with-jellyfin-instead-of-an-api-key)), and
+  fits the self-hosting plan's Jellyfin sign-in.
 - **The key is encrypted at rest** with ASP.NET Data Protection, whose own keys are kept in the
   database (`DataProtectionKeys`) so they survive redeploys, **locked with a secret that isn't**:
   the `DATA_PROTECTION_SECRET` setting (`Services/DataProtectionSecret.cs`, AES-GCM). So the
@@ -84,10 +86,58 @@ The comparison runs when the page opens (and on Refresh); nothing is stored or s
 | `features/jellyfin/` | React Query hooks |
 | `pages/JellyfinPage.tsx` | The page |
 
+## Planned: signing in with Jellyfin instead of an API key
+
+Agreed as the next step for connecting (November 2026), not started. Replaces the API key.
+
+### Why
+
+- **Anyone with a Jellyfin account can use it.** Only Jellyfin admins can create API keys, so
+  today someone using a friend's server can't connect at all.
+- **The saved credential can be limited.** Kinodex keeps a token for one Jellyfin user, with that
+  user's rights only. Signed in as a dedicated non-admin user who can see just the Movies and TV
+  libraries, a stolen token reads those libraries and nothing else. Signed in as an admin, it's
+  admin again, so the page warns and suggests a separate user.
+- **No password is kept.** It's used once for the token. With Quick Connect it's never typed
+  into Kinodex at all.
+- **Visible and revocable.** The connection shows as "Kinodex" under Jellyfin's Devices and can
+  be signed out there.
+- **Familiar.** "Sign in with Jellyfin" is how every Jellyfin app works; pasting an admin key
+  into a website isn't.
+
+Unchanged: the token is stored encrypted like the key is now (Data Protection, locked with
+`DATA_PROTECTION_SECRET`), whoever runs Kinodex could still use it, and the server still needs a
+public `https` address.
+
+### Plan
+
+1. **Connect:** the server address, then **Quick Connect** (Kinodex shows a code, the user
+   approves it in their Jellyfin app) or username and password as the fallback (for servers with
+   Quick Connect turned off; an admin can turn it on).
+   - Quick Connect: `POST /QuickConnect/Initiate` (code and secret), poll
+     `GET /QuickConnect/Connect?secret=…` until approved, then
+     `POST /Users/AuthenticateWithQuickConnect`.
+   - Password: `POST /Users/AuthenticateByName` (`Username`, `Pw`).
+   - Every request names the client: `Authorization: MediaBrowser Client="Kinodex",
+     Device="Kinodex", DeviceId="<one per connection>", Version="…", Token="…"`.
+   - Saved: the access token (encrypted), the Jellyfin user's id and name, whether they're an
+     admin, the device id. The page shows who's signed in and warns for an admin.
+2. **Read as that user:** items with `userId` (only the libraries that user can see, parental
+   controls included), still with `CollapseBoxSetItems=false`; the library choice from the user's
+   own views (`/UserViews`) instead of the admin-only `/Library/VirtualFolders`.
+3. **Disconnect signs out in Jellyfin too** (`POST /Sessions/Logout`), so no orphaned device is
+   left behind.
+4. **API keys go.** Existing API-key connections are asked to connect again; keeping both ways
+   isn't worth it.
+5. **Tests:** the stand-in Jellyfin learns sign-in, Quick Connect and per-user libraries; a
+   non-admin user sees only their libraries, disconnect signs out, the admin warning shows.
+6. **Docs:** this section becomes the description of how connecting works.
+
+About the size of the first version of this feature.
+
 ## Later, if wanted
 
 - "Add to Kinodex" on Jellyfin-only items (opening Add movie already searched).
 - Comparing TV seasons owned with seasons on Jellyfin.
-- Signing in with a Jellyfin user instead of an API key.
 - Showing Jellyfin status elsewhere (e.g. a "on Jellyfin" mark in the drawer), once the design
   settles.
