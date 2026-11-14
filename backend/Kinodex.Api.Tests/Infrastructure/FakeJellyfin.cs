@@ -10,7 +10,8 @@ namespace Kinodex.Api.Tests.Infrastructure;
 // host of its own, so tests never see each other's.
 public static class FakeJellyfin
 {
-    public record Item(string Id, string Name, string Type, int Year, int? TmdbId = null);
+    // Collection: the box set it belongs to, if any
+    public record Item(string Id, string Name, string Type, int Year, int? TmdbId = null, string? Collection = null);
 
     // MaxPerResponse: send at most this many items per request whatever the request asks for, like
     // a server with a cap of its own
@@ -32,7 +33,19 @@ public static class FakeJellyfin
         var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
         var start = int.TryParse(query["StartIndex"], out var s) ? s : 0;
         var limit = int.TryParse(query["Limit"], out var l) ? l : int.MaxValue;
-        return server.Items.Skip(start).Take(Math.Min(limit, server.MaxPerResponse ?? int.MaxValue));
+        return Listed(server, query).Skip(start).Take(Math.Min(limit, server.MaxPerResponse ?? int.MaxValue));
+    }
+
+    // Like Jellyfin asked without a user: the movies in a collection come back as the collection
+    // (one BoxSet item) unless CollapseBoxSetItems=false
+    private static Item[] Listed(Server server, System.Collections.Specialized.NameValueCollection query)
+    {
+        if (string.Equals(query["CollapseBoxSetItems"], "false", StringComparison.OrdinalIgnoreCase))
+            return server.Items;
+        return server.Items.Where(i => i.Collection is null)
+            .Concat(server.Items.Where(i => i.Collection is not null).Select(i => i.Collection!).Distinct()
+                .Select(name => new Item($"boxset-{name}", name, "BoxSet", 0)))
+            .ToArray();
     }
 
     public class Handler : HttpMessageHandler
@@ -61,7 +74,7 @@ public static class FakeJellyfin
                             ? new Dictionary<string, string> { ["Tmdb"] = tmdb.ToString(), ["Imdb"] = "tt0000000" }
                             : new Dictionary<string, string>(),
                     }),
-                    TotalRecordCount = server.Items.Length,
+                    TotalRecordCount = Listed(server, System.Web.HttpUtility.ParseQueryString(request.RequestUri.Query)).Length,
                 },
                 _ => null,
             };
