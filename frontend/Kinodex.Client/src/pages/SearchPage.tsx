@@ -16,6 +16,7 @@ import { ownedSeasons } from "../utils/tvShowPurchases";
 import { searchScore, titleSearchScore } from "../utils/textSearch";
 import { useScanInput } from "../utils/useBarcodeScan";
 import { usePhoneTopBarSlot } from "../utils/topBar";
+import { compareTitles } from "../utils/titleSort";
 
 // A movie or TV show in the results, with everything a row shows and searches
 interface SearchItem {
@@ -152,7 +153,7 @@ function SearchPage() {
     ? items
         .map((item) => ({ item, score: titleSearchScore(item.title, item.year, item.upcs, query) }))
         .filter(({ score }) => score > 0)
-        .sort((a, b) => b.score - a.score || a.item.title.localeCompare(b.item.title))
+        .sort((a, b) => b.score - a.score || compareTitles(a.item.title, b.item.title))
         .map(({ item }) => item)
     : [];
 

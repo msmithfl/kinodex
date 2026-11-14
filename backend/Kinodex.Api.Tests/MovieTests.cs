@@ -161,4 +161,36 @@ public class MovieTests(KinodexApiFactory api)
         Assert.Contains("Alice Export Title", csv);
         Assert.DoesNotContain("Bob Export Title", csv);
     }
+
+    [Fact]
+    public async Task Csv_export_writes_titles_library_style_and_in_that_order()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        foreach (var title in new[] { "The Thing", "A Clockwork Orange", "Theater Camp", "Blade Runner", "An Education" })
+            await owner.CreateMovieAsync(title);
+
+        var csv = await (await owner.GetAsync("/api/movies/export/csv")).Content.ReadAsStringAsync();
+        var titles = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1)
+            .Select(line => line[1..line.IndexOf("\",", StringComparison.Ordinal)]);
+
+        // "Theater Camp" has no article of its own, so it stays as it is
+        Assert.Equal(["Blade Runner", "Clockwork Orange, A", "Education, An", "Theater Camp", "Thing, The"], titles);
+    }
+
+    [Fact]
+    public async Task Csv_import_turns_library_style_titles_back()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var csv =
+            "Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,Streaming,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added,Purchase Date,Gift\n" +
+            "\"Thing, The\",,1982,\"\",\"\",\"\",\"Good\",5,0,False,False,0,\"\",0,,\"\",\"\",\"\",2024-03-10,2024-03-10,False\n" +
+            "\"Paris, Texas\",,1984,\"\",\"\",\"\",\"Good\",5,0,False,False,0,\"\",0,,\"\",\"\",\"\",2024-03-10,2024-03-10,False\n";
+
+        using var form = new MultipartFormDataContent { { new StringContent(csv), "file", "movies.csv" } };
+        (await owner.PostAsync("/api/movies/import/csv", form)).EnsureSuccessStatusCode();
+
+        var titles = (await owner.GetJsonAsync("/api/movies")).EnumerateArray()
+            .Select(m => m.GetProperty("title").GetString()).Order();
+        Assert.Equal(["Paris, Texas", "The Thing"], titles);
+    }
 }

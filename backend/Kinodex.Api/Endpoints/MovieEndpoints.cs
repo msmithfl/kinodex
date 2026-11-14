@@ -101,24 +101,28 @@ public static class MovieEndpoints
             return Results.NoContent();
         });
 
-        // GET export movies as CSV
+        // GET export movies as CSV. Titles are written library style ("Thing, The") and in that
+        // order, so a leading A, An or The doesn't decide where a movie files (LibraryTitle)
         group.MapGet("/export/csv", async (ClaimsPrincipal user, MovieDbContext db) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            var movies = await db.Movies
+            var movies = (await db.Movies
                 .Where(m => m.UserId == userId)
-                .OrderBy(m => m.Title)
-                .ToListAsync();
+                .ToListAsync())
+                .Select(m => (Movie: m, Title: LibraryTitle.ToLibrary(m.Title)))
+                .OrderBy(m => m.Title, StringComparer.InvariantCultureIgnoreCase)
+                .ThenBy(m => m.Movie.Year)
+                .ToList();
 
             var csv = new StringBuilder();
             csv.AppendLine("Title,UPC,Year,Formats,Genres,Collections,Condition,Purchase Price,Rating,Watched,Streaming,Shelf Number,Shelf Section,HDD Number,TMDB ID,Poster Path,Backdrop Path,Product Poster Path,Date Added,Purchase Date,Gift");
 
-            foreach (var movie in movies)
+            foreach (var (movie, libraryTitle) in movies)
             {
                 var formats = string.Join("|", movie.Formats);
                 var genres = string.Join("|", movie.Genres);
                 var collections = string.Join("|", movie.Collections);
-                var title = movie.Title.Replace("\"", "\"\"");
+                var title = libraryTitle.Replace("\"", "\"\"");
                 csv.AppendLine($"\"{title}\",{movie.UpcNumber},{movie.Year},\"{formats}\",\"{genres}\",\"{collections}\",\"{movie.Condition}\",{movie.PurchasePrice},{movie.Rating},{movie.HasWatched},{movie.IsStreaming},{movie.ShelfNumber},\"{movie.ShelfSection}\",{movie.HDDriveNumber},{movie.TmdbId},\"{movie.PosterPath}\",\"{movie.BackdropPath}\",\"{movie.ProductPosterPath}\",{movie.CreatedAt:yyyy-MM-dd},{movie.PurchasedAt:yyyy-MM-dd},{movie.IsGift}");
             }
 
@@ -292,7 +296,8 @@ public static class MovieEndpoints
                     var movie = new Movie
                     {
                         UserId = userId,
-                        Title = fields[0],
+                        // Exports write "Thing, The"; back to "The Thing"
+                        Title = LibraryTitle.FromLibrary(fields[0]),
                         UpcNumber = fields[1],
                         Year = int.TryParse(fields[2], out var yr) ? yr : 0,
                         Formats = fields[3].Split('|', StringSplitOptions.RemoveEmptyEntries).ToList(),

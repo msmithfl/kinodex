@@ -16,6 +16,25 @@ describe("getSortedMovies", () => {
     expect(titles(getSortedMovies(movies, "alphabetic", "desc"))).toEqual(["Heat", "Clue", "alien"]);
   });
 
+  it("sorts titles without a leading A, An or The", () => {
+    const filed = [
+      makeMovie({ title: "The Thing" }),
+      makeMovie({ title: "An American Werewolf in London" }),
+      makeMovie({ title: "Blade Runner" }),
+      makeMovie({ title: "A Quiet Place" }),
+      makeMovie({ title: "Theater Camp" }), // "The" only counts as a word of its own
+      makeMovie({ title: "Thing" }),
+    ];
+    expect(titles(getSortedMovies(filed, "alphabetic", "asc"))).toEqual([
+      "An American Werewolf in London",
+      "Blade Runner",
+      "A Quiet Place",
+      "Theater Camp",
+      "The Thing",
+      "Thing",
+    ]);
+  });
+
   it("sorts by year, rating and price", () => {
     expect(titles(getSortedMovies(movies, "year", "asc"))).toEqual(["alien", "Clue", "Heat"]);
     expect(titles(getSortedMovies(movies, "rating", "desc"))).toEqual(["alien", "Heat", "Clue"]);
