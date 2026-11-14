@@ -37,7 +37,11 @@ public class JellyfinClient(HttpClient http)
         var start = 0;
         for (var page = 0; page < 200; page++) // 100,000 items: a guard against a server that never ends
         {
-            var query = "Items?Recursive=true&IncludeItemTypes=Movie,Series&Fields=ProviderIds" +
+            // CollapseBoxSetItems=false: asked without a user (as an API key asks), Jellyfin folds
+            // every movie in a collection into the collection itself, so those movies never came
+            // back (a third of a real library, 1941 among them; a search doesn't fold, so 1941 was
+            // there when searched for)
+            var query = "Items?Recursive=true&IncludeItemTypes=Movie,Series&CollapseBoxSetItems=false&Fields=ProviderIds" +
                         "&SortBy=SortName,ProductionYear,DateCreated&SortOrder=Ascending" +
                         $"&StartIndex={start}&Limit={PageSize}" +
                         "&EnableImages=false&EnableUserData=false&EnableTotalRecordCount=true";

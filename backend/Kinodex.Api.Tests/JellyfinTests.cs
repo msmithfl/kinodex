@@ -139,6 +139,29 @@ public class JellyfinTests(KinodexApiFactory api)
     }
 
     [Fact]
+    public async Task Movies_in_a_jellyfin_collection_are_still_compared()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        await AddMovieAsync(owner, "1941", 1979, tmdbId: 11519);
+        await AddMovieAsync(owner, "Jaws", 1975, tmdbId: 578);
+
+        var url = Add(new Server(Key, "Home Server",
+        [
+            new Item("j1", "1941", "Movie", 1979, 11519, Collection: "Steven Spielberg"),
+            new Item("j2", "Jaws", "Movie", 1975, 578, Collection: "Steven Spielberg"),
+            new Item("j3", "Duel", "Movie", 1971, 839),
+        ]));
+        (await ConnectAsync(owner, url)).EnsureSuccessStatusCode();
+
+        var movies = (await owner.GetJsonAsync("/api/jellyfin/compare")).GetProperty("movies");
+
+        Assert.Equal(3, movies.GetProperty("jellyfinCount").GetInt32());
+        Assert.Equal(2, movies.GetProperty("inBoth").GetArrayLength());
+        Assert.Empty(Titles(movies.GetProperty("onlyInKinodex")));
+        Assert.Equal(["Duel"], Titles(movies.GetProperty("onlyOnJellyfin")));
+    }
+
+    [Fact]
     public async Task Disconnecting_forgets_the_server_and_compare_then_asks_to_connect()
     {
         var owner = api.ClientFor(KinodexApiFactory.NewUserId());
