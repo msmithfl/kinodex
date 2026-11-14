@@ -60,7 +60,9 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps) {
   };
 
   return (
-    <div className="h-full overflow-y-auto overscroll-contain">
+    // From the home screen it doesn't rubber-band either (standalone:overscroll-none), which
+    // would pull the backdrop away from the top of the screen
+    <div className="h-full overflow-y-auto overscroll-contain standalone:overscroll-none">
       <DetailHeader
         title={movie.title}
         backdropPath={movie.backdropPath}
