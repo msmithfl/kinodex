@@ -23,6 +23,9 @@ public class KinodexApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     private readonly string _connectionString;
 
     // The secret the test server checks Clerk webhook signatures with (Svix format)
+    // The secret the test server locks its Data Protection keys with
+    public static readonly string DataProtectionSecretValue = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
+
     public static readonly string WebhookSecret = "whsec_" + Convert.ToBase64String(RandomNumberGenerator.GetBytes(24));
 
     public KinodexApiFactory()
@@ -43,6 +46,8 @@ public class KinodexApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         // "Testing" keeps appsettings.Development.json (and its database) out of the running API
         builder.UseEnvironment("Testing");
         builder.UseSetting("Clerk:WebhookSecret", WebhookSecret);
+        // Locks the Data Protection keys, as on the live site
+        builder.UseSetting(DataProtectionSecret.SettingName, DataProtectionSecretValue);
 
         builder.ConfigureTestServices(services =>
         {

@@ -46,6 +46,37 @@ public class JellyfinTests(KinodexApiFactory api)
     }
 
     [Fact]
+    public async Task The_keys_that_encrypt_api_keys_are_saved_locked_with_the_secret()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        (await ConnectAsync(owner, Add(new Server(Key, "Home Server", [])))).EnsureSuccessStatusCode();
+
+        var saved = await api.WithDbAsync(db => db.DataProtectionKeys.Select(k => k.Xml!).ToListAsync());
+        Assert.NotEmpty(saved);
+        Assert.All(saved, xml =>
+        {
+            Assert.Contains("encryptedSecret", xml);
+            Assert.DoesNotContain("<masterKey", xml); // The plain form
+        });
+
+        // And still readable: the comparison decrypts the API key with them
+        (await owner.GetAsync("/api/jellyfin/compare")).EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Without_the_secret_connecting_is_turned_off()
+    {
+        await using var noSecret = api.WithWebHostBuilder(b => b.UseSetting(Kinodex.Api.Services.DataProtectionSecret.SettingName, ""));
+        var client = noSecret.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserHeader, KinodexApiFactory.NewUserId());
+
+        var response = await ConnectAsync(client, Add(new Server(Key, "Home Server", [])));
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Contains("DATA_PROTECTION_SECRET", (await response.ReadJsonAsync()).GetProperty("error").GetString());
+    }
+
+    [Fact]
     public async Task A_bare_host_name_gets_https()
     {
         var owner = api.ClientFor(KinodexApiFactory.NewUserId());

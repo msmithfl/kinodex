@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Kinodex.Api.Data;
@@ -29,6 +30,20 @@ builder.Services.AddHttpClient<JellyfinClient>(client => client.Timeout = TimeSp
 builder.Services.AddDataProtection()
     .SetApplicationName("Kinodex")
     .PersistKeysToDbContext<MovieDbContext>();
+// ...and its keys are themselves encrypted with DATA_PROTECTION_SECRET, which isn't in the
+// database (Services/DataProtectionSecret.cs). Read when first needed, not here, so the tests'
+// settings apply.
+builder.Services.AddSingleton(services =>
+    new DataProtectionSecret(services.GetRequiredService<IConfiguration>()[DataProtectionSecret.SettingName]));
+builder.Services.AddOptions<KeyManagementOptions>().Configure<DataProtectionSecret, IHostEnvironment>((options, secret, environment) =>
+{
+    if (secret.Key is not null)
+        options.XmlEncryptor = new SecretXmlEncryptor(secret.Key);
+    // Without the secret (outside local development) no new keys at all: unable to read the locked
+    // ones, Data Protection would otherwise make a fresh key and save it unlocked
+    else if (!environment.IsDevelopment())
+        options.AutoGenerateKeys = false;
+});
 
 // Configure JSON serialization to use camelCase and handle circular references
 builder.Services.ConfigureHttpJsonOptions(options =>
