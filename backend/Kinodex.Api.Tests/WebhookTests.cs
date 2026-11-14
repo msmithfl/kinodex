@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Kinodex.Api.Tests.Infrastructure;
@@ -34,12 +35,35 @@ public class WebhookTests(KinodexApiFactory api)
         Assert.Equal(HttpStatusCode.OK, created.StatusCode);
         Assert.True(await api.WithDbAsync(db => db.Users.AnyAsync(u => u.Id == userId)));
 
-        await api.ClientFor(userId).CreateMovieAsync();
+        var client = api.ClientFor(userId);
+        await client.CreateMovieAsync();
+        (await client.PostAsJsonAsync("/api/movie-presets", new
+        {
+            name = "Bookstore",
+            upcNumber = "",
+            collections = Array.Empty<string>(),
+            formats = new[] { "DVD" },
+            condition = "Good",
+            purchasePrice = 1f,
+            purchasedAt = (string?)null,
+            rating = 0f,
+            review = "",
+            productPosterPath = "",
+            isGift = false,
+            hasWatched = false,
+            isStreaming = false,
+            shelfSection = "",
+            shelfNumber = 0,
+            hdDriveNumber = 0,
+        })).EnsureSuccessStatusCode();
+        Assert.True(await api.WithDbAsync(db => db.MoviePresets.AnyAsync(p => p.UserId == userId)));
+
         var deleted = await PostSignedAsync(UserEvent("user.deleted", userId));
 
         Assert.Equal(HttpStatusCode.OK, deleted.StatusCode);
         Assert.False(await api.WithDbAsync(db => db.Users.AnyAsync(u => u.Id == userId)));
         Assert.False(await api.WithDbAsync(db => db.Movies.AnyAsync(m => m.UserId == userId)));
+        Assert.False(await api.WithDbAsync(db => db.MoviePresets.AnyAsync(p => p.UserId == userId)));
     }
 
     private static string UserEvent(string type, string userId) => JsonSerializer.Serialize(new
