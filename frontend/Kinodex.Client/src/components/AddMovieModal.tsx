@@ -176,7 +176,8 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
     setShowForm(true);
   };
 
-  // Back to the search to pick a different TMDB match; the other fields are kept
+  // Back to the search to pick a different TMDB match (the Search step under the title); the other
+  // fields are kept
   const changeMovie = () => {
     setShowForm(false);
     setSearchKey((key) => key + 1);
@@ -334,8 +335,20 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
             <DialogTitle>Add movie</DialogTitle>
             <ol aria-label="Steps" className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <li className={cn("flex items-center gap-1", !showForm && "font-medium text-foreground")}>
-                {showForm && <Check className="size-3" aria-hidden="true" />}
-                Search
+                {showForm ? (
+                  // On Details, Search is the way back to pick a different movie (the padding
+                  // gives the small text a bigger tap area without moving it)
+                  <button
+                    type="button"
+                    onClick={changeMovie}
+                    className="-my-1 flex cursor-pointer items-center gap-1 rounded-sm py-1 underline-offset-2 outline-none hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  >
+                    <Check className="size-3" aria-hidden="true" />
+                    Search
+                  </button>
+                ) : (
+                  "Search"
+                )}
               </li>
               <ChevronRight className="size-3" aria-hidden="true" />
               <li className={cn(showForm && "font-medium text-foreground")}>Details</li>
@@ -374,6 +387,11 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
               onClick={() => setPresetName(presetName === null ? (preset?.name ?? "") : null)}
               aria-expanded={presetName !== null}
               aria-label="Save these values as a preset"
+              // Purple while its naming row is open, like the form's other toggles when on
+              className={cn(
+                presetName !== null &&
+                  "border-primary bg-primary-soft text-primary-text hover:bg-primary-soft hover:text-primary-text",
+              )}
             >
               <BookmarkPlus />
               <span className="hidden sm:inline">Save as preset</span>
@@ -423,7 +441,7 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
         {!showForm ? (
           <TmdbSearch
             key={searchKey}
-            // Only the first search starts with it, not ones after "Change" or "Save & add another"
+            // Only the first search starts with it, not ones after going back or "Save & add another"
             initialQuery={searchKey === 0 ? initialSearch : ""}
             search={searchTMDB}
             toOption={(movie: TMDBMovie) => ({
@@ -445,16 +463,11 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
                 <span className="text-base leading-tight font-semibold">{formData.title || "Untitled"}</span>
                 {meta && <span className="text-xs text-muted-foreground">{meta}</span>}
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {formData.tmdbId && (
-                  <Badge variant="outline" className="font-mono font-normal text-muted-foreground">
-                    TMDB {formData.tmdbId}
-                  </Badge>
-                )}
-                <Button variant="link" size="sm" className="h-auto px-0 text-xs" onClick={changeMovie}>
-                  {formData.tmdbId ? "Change movie" : "Search TMDB"}
-                </Button>
-              </div>
+              {formData.tmdbId && (
+                <Badge variant="outline" className="font-mono font-normal text-muted-foreground">
+                  TMDB {formData.tmdbId}
+                </Badge>
+              )}
             </aside>
 
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -465,9 +478,6 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
                   <span className="truncate text-sm font-semibold">{formData.title || "Untitled"}</span>
                   {meta && <span className="truncate text-xs text-muted-foreground">{meta}</span>}
                 </div>
-                <Button variant="link" size="sm" className="px-0 text-xs" onClick={changeMovie}>
-                  Change
-                </Button>
               </div>
               {preset && (
                 <div className="mb-3 flex shrink-0 items-center gap-2 rounded-md bg-primary-soft px-3 py-2 text-xs text-primary-text">

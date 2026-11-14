@@ -1,11 +1,9 @@
 import { Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { ChipSelect } from "../../../components/ChipSelect";
-import { StarRatingInput } from "../../../components/StarRating";
 import { Genres, type Movie } from "../../../types";
-import { FormField, SwitchField } from "../../../components/FormFields";
+import { FormField } from "../../../components/FormFields";
 
 const GENRE_OPTIONS = Object.values(Genres).map((genre) => ({ value: genre }));
 
@@ -25,7 +23,8 @@ interface MovieDetailsTabProps {
   addCollection: () => Promise<void>;
 }
 
-// The movie form's first tab: title, year, TMDB id, genres, collections, rating, watched, notes
+// The movie form's first tab: title, year, TMDB id, genres, collections (rating, watched and notes
+// are on the Review tab)
 function MovieDetailsTab({
   formData,
   setFormData,
@@ -116,30 +115,6 @@ function MovieDetailsTab({
             </div>
           )}
         </div>
-      </FormField>
-
-      <div className="grid grid-cols-2 gap-4">
-        <FormField label="Rating">
-          <StarRatingInput value={formData.rating} onChange={(rating) => setFormData({ ...formData, rating })} />
-        </FormField>
-        <FormField label="Watched">
-          <SwitchField
-            id="hasWatched"
-            label={formData.hasWatched ? "Watched" : "Not watched yet"}
-            checked={formData.hasWatched}
-            onCheckedChange={(hasWatched) => setFormData({ ...formData, hasWatched })}
-          />
-        </FormField>
-      </div>
-
-      <FormField label="Review / notes" htmlFor="review">
-        <Textarea
-          id="review"
-          value={formData.review}
-          onChange={(e) => setFormData({ ...formData, review: e.target.value })}
-          rows={4}
-          className="min-h-24"
-        />
       </FormField>
     </div>
   );
