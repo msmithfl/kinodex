@@ -10,6 +10,8 @@
    per the choice in Settings. Clerk's sign-in screens read these values too (utils/clerkAppearance.ts).
    --------------------------------------------------------------------------------------------- */
 @custom-variant dark (&:is(.dark *));
+/* standalone: only when opened from the home screen (docs/design/home-screen-app.md) */
+@custom-variant standalone (@media (display-mode: standalone));
 
 /* Light: an off-white page with white cards, the same indigo accent, faint dark borders */
 :root {

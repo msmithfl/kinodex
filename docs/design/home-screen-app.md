@@ -34,6 +34,8 @@ rewrite) come later, if at all; the API, database and Clerk don't change for any
    - Everywhere: no double-tap zoom, so taps respond at once (pinch zoom still works).
    - Opened from the home screen only, so the website stays normal in a browser:
      - no rubber-banding of the whole screen, and no pull-to-refresh
+     - no rubber-banding of a movie's or show's drawer, which pulled its backdrop away from the
+       top (the `standalone:` variant)
      - no long-press menu on images and links
      - no text selection when holding buttons, tabs or bars
 
