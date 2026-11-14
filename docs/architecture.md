@@ -226,8 +226,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   `POSTER_GRID_CAPTIONED` for captioned grids, `POSTER_GRID_DRAWER`), `ui/alert.tsx` (message
   banners), and `utils/useStoredState.ts` (`useStoredState` / `useStoredChoice`: state remembered
   in localStorage; every remembered choice uses it). New pages should start from these.
-- **Redesigned building blocks:** `FilterPanel` (Filter button + popover: format pills, Any/Yes/No
-  switches, checklists for the long lists; drawn from each category's `kind` in
+- **Redesigned building blocks:** `FilterPanel` (Filter button + popover: Any/Yes/No switches,
+  then rows that open a checklist, format included; drawn from each category's `kind` in
   `utils/filterCategories.ts`), `FilterChips` (active filters as removable chips), `SortMenu`
   (sort-by and direction dropdown), `PosterCard` (poster grid card with hover lift, formats and
   rating), `SortHeader` (a table's sortable column header), `ListSkeleton` (loading placeholder for

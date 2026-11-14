@@ -1,6 +1,7 @@
 import type { TvShow } from "../../types";
 import type { FilterCategory } from "../../utils/filterCategories";
 import { ownsEverySeason } from "../../utils/tvShowPurchases";
+import { FORMATS } from "../../utils/formats";
 
 // The TV list's filter menu, like the movie list's. Format, condition and gift are per purchase,
 // so a show matches when any of its purchases does.
@@ -13,13 +14,8 @@ export function buildTvShowFilterCategories(shows: TvShow[]): FilterCategory[] {
     {
       id: "format",
       label: "Format",
-      kind: "pills",
-      options: [
-        { label: "4K", value: "4K" },
-        { label: "Blu-ray", value: "Blu-ray" },
-        { label: "DVD", value: "DVD" },
-        { label: "VHS", value: "VHS" },
-      ],
+      kind: "list",
+      options: FORMATS.map((format) => ({ label: format, value: format })),
     },
     {
       // Every genre that appears in the collection

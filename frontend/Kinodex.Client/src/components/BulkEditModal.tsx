@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormField } from "./FormFields";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
+import { FORMATS } from "../utils/formats";
 
 interface BulkEditData {
   shelfNumber: string;
@@ -36,7 +37,7 @@ const YES_NO = [
   { value: "true", label: "Yes" },
   { value: "false", label: "No" },
 ];
-const FORMATS = ["4K", "Blu-ray", "DVD", "Digital", "VHS"].map((value) => ({ value }));
+const FORMAT_OPTIONS = FORMATS.map((value) => ({ value }));
 const CONDITIONS = ["Sealed", "Like New", "Good", "Poor", "Damaged"].map((value) => ({ value }));
 
 function BulkSelect({
@@ -103,7 +104,7 @@ export function BulkEditModal({
         </div>
 
         <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-4 overflow-y-auto px-5 py-4 md:px-6">
-          <BulkSelect label="Format" value={bulkEditData.formats} options={FORMATS} onChange={set("formats")} />
+          <BulkSelect label="Format" value={bulkEditData.formats} options={FORMAT_OPTIONS} onChange={set("formats")} />
           <BulkSelect
             label="Condition"
             value={bulkEditData.condition}
