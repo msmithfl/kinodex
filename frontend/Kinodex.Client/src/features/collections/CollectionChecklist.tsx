@@ -3,6 +3,7 @@ import { Circle, CircleCheck, Loader2, Search, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { useTmdb } from "../../utils/tmdbApi";
 import { isChecklistItemOwned } from "../../utils/checklist";
 import { useAddChecklistItem, useChecklistItems, useRemoveChecklistItem } from "./api";
@@ -28,6 +29,8 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
   const [searchResults, setSearchResults] = useState<TMDBMovie[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<number | null>(null);
+  // The search boxes, which the results float under
+  const searchRowRef = useRef<HTMLDivElement>(null);
 
   // Searches TMDB 300ms after the user stops typing
   const scheduleSearch = (query: string, year: string) => {
@@ -92,72 +95,82 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
   return (
     <section aria-label="Collection checklist" className="rounded-xl border border-border bg-card p-4">
         <div className="flex flex-col gap-4">
-          {/* Search to add movies */}
-          <div className="relative">
-            <div className="flex flex-col gap-2 md:flex-row">
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          {/* Search to add movies, with the results floating under the boxes */}
+          <Popover open={searchResults.length > 0} onOpenChange={(open) => !open && setSearchResults([])}>
+            <PopoverAnchor asChild>
+              <div ref={searchRowRef} className="flex flex-col gap-2 md:flex-row">
+                <div className="relative flex-1">
+                  <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    placeholder="Search TMDB to add movies"
+                    aria-label="Search TMDB to add movies"
+                    className="pr-9 pl-9"
+                  />
+                  {isSearching && (
+                    <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                  )}
+                </div>
                 <Input
                   type="text"
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  placeholder="Search TMDB to add movies"
-                  aria-label="Search TMDB to add movies"
-                  className="pr-9 pl-9"
+                  inputMode="numeric"
+                  value={searchYear}
+                  onChange={(e) => handleYearChange(e.target.value)}
+                  placeholder="Year (optional)"
+                  aria-label="Year (optional)"
+                  className="md:w-36"
+                  maxLength={4}
                 />
-                {isSearching && (
-                  <Loader2 className="absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-                )}
               </div>
-              <Input
-                type="text"
-                inputMode="numeric"
-                value={searchYear}
-                onChange={(e) => handleYearChange(e.target.value)}
-                placeholder="Year (optional)"
-                aria-label="Year (optional)"
-                className="md:w-36"
-                maxLength={4}
-              />
-            </div>
+            </PopoverAnchor>
 
-            {/* Search results, in a dropdown over the list */}
-            {searchResults.length > 0 && (
-              <div className="absolute top-full z-10 mt-1 max-h-96 w-full overflow-y-auto rounded-lg border border-border bg-popover p-1 shadow-lg">
-                {searchResults.map((movie) => {
-                  const year = movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A";
-                  const alreadyInList = listItems.some((item) => item.tmdbId === movie.id);
+            {/* The results float over the page, so the drawer's scroll area doesn't cut them off,
+                and open upward when there's no room below. Clicking outside or Escape clears them;
+                typing in either box keeps them. */}
+            <PopoverContent
+              align="start"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              onInteractOutside={(e) => {
+                if (searchRowRef.current?.contains(e.target as Node)) e.preventDefault();
+              }}
+              className="max-h-[min(24rem,var(--radix-popover-content-available-height))] w-(--radix-popover-trigger-width) overflow-y-auto rounded-lg p-1"
+            >
+              {searchResults.map((movie) => {
+                const year = movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A";
+                const alreadyInList = listItems.some((item) => item.tmdbId === movie.id);
 
-                  return (
-                    <button
-                      key={movie.id}
-                      type="button"
-                      onClick={() => !alreadyInList && handleAddToList(movie)}
-                      disabled={alreadyInList || addItem.isPending}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors",
-                        alreadyInList ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-accent",
-                      )}
-                    >
-                      {movie.poster_path ? (
-                        <img
-                          src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
-                          alt=""
-                          className="h-12 w-8 shrink-0 rounded-sm bg-muted object-cover"
-                        />
-                      ) : (
-                        <span className="h-12 w-8 shrink-0 rounded-sm bg-muted" />
-                      )}
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-medium">{movie.title}</span>
-                        <span className="block text-xs text-muted-foreground">{year}</span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                return (
+                  <button
+                    key={movie.id}
+                    type="button"
+                    onClick={() => !alreadyInList && handleAddToList(movie)}
+                    disabled={alreadyInList || addItem.isPending}
+                    className={cn(
+                      "flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors",
+                      alreadyInList ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-accent",
+                    )}
+                  >
+                    {movie.poster_path ? (
+                      <img
+                        src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                        alt=""
+                        className="h-12 w-8 shrink-0 rounded-sm bg-muted object-cover"
+                      />
+                    ) : (
+                      <span className="h-12 w-8 shrink-0 rounded-sm bg-muted" />
+                    )}
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-medium">{movie.title}</span>
+                      <span className="block text-xs text-muted-foreground">{year}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </PopoverContent>
+          </Popover>
 
           {/* List items */}
           {listItems.length > 0 ? (

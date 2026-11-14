@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { PickerButton } from "./PickerButton";
 import { useTmdb } from "../utils/tmdbApi";
 
 const TMDB_IMAGE = "https://image.tmdb.org/t/p";
@@ -84,18 +84,15 @@ export function useImagePicker({
     if (images === null && tmdbId) await loadImages(tmdbId);
   };
 
-  const button = !tmdbId ? (
-    <p className="text-xs text-muted-foreground">
-      Add a TMDB ID on the details tab to choose from TMDB's {type.noun}s.
-    </p>
-  ) : (
-    <Button type="button" variant="outline" size="sm" onClick={toggle} disabled={loading} aria-expanded={open}>
+  // Without a TMDB ID there's nothing to choose from; pressing it then says so
+  const button = (
+    <PickerButton missing={tmdbId ? null : "Requires TMDB ID"} onClick={toggle} busy={loading} expanded={open}>
       {loading
         ? `Loading ${type.noun}s…`
         : open
           ? `Close ${type.noun} selection`
           : `Choose a different ${type.noun}`}
-    </Button>
+    </PickerButton>
   );
 
   const grid = !open ? null : (
