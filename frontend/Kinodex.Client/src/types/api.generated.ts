@@ -935,6 +935,116 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jellyfin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JellyfinStatus"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["JellyfinConnectRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JellyfinStatus"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jellyfin/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JellyfinComparison"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -964,6 +1074,46 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             collection: null | components["schemas"]["Collection"];
+        };
+        JellyfinComparison: {
+            movies: components["schemas"]["LibraryComparison"];
+            shows: components["schemas"]["LibraryComparison"];
+            /** Format: date-time */
+            comparedAt: string;
+        };
+        JellyfinConnectRequest: {
+            serverUrl: string;
+            apiKey: string;
+        };
+        JellyfinStatus: {
+            connected: boolean;
+            serverUrl: null | string;
+            serverName: null | string;
+            serverVersion: null | string;
+            /** Format: date-time */
+            connectedAt: null | string;
+        };
+        JellyfinTitle: {
+            id: string;
+            title: string;
+            /** Format: int32 */
+            year: number;
+            /** Format: int32 */
+            tmdbId: null | number;
+        };
+        KinodexTitle: {
+            /** Format: int32 */
+            id: number;
+            title: string;
+            /** Format: int32 */
+            year: number;
+            /** Format: int32 */
+            tmdbId: null | number;
+        };
+        LibraryComparison: {
+            onlyOnJellyfin: components["schemas"]["JellyfinTitle"][];
+            onlyInKinodex: components["schemas"]["KinodexTitle"][];
+            inBoth: components["schemas"]["TitleMatch"][];
         };
         Movie: {
             /** Format: int32 */
@@ -1037,6 +1187,11 @@ export interface components {
             sortOrder: number;
             /** Format: date-time */
             createdAt: string;
+        };
+        TitleMatch: {
+            kinodex: components["schemas"]["KinodexTitle"];
+            jellyfin: components["schemas"]["JellyfinTitle"];
+            matchedBy: string;
         };
         TvShow: {
             /** Format: int32 */

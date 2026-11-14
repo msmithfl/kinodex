@@ -37,6 +37,11 @@ export type ShelfSection = Loosen<Schemas["ShelfSection"], "userId">;
 // HDD) for adding batches of similar movies
 export type MoviePreset = Loosen<Schemas["MoviePreset"], ServerSet>;
 
+// The Jellyfin connection (never its key) and the library comparison (docs/design/jellyfin-compare.md)
+export type JellyfinStatus = Schemas["JellyfinStatus"];
+export type JellyfinComparison = Schemas["JellyfinComparison"];
+export type LibraryComparison = Schemas["LibraryComparison"];
+
 export interface TMDBMovie {
   id: number;
   title: string;

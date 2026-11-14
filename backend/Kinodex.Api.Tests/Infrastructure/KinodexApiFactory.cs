@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.Json;
 using Kinodex.Api.Data;
+using Kinodex.Api.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -53,6 +54,10 @@ public class KinodexApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
                 options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
                 options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
             });
+
+            // Jellyfin servers are the tests' stand-ins, never the network
+            services.AddHttpClient<JellyfinClient>()
+                .ConfigurePrimaryHttpMessageHandler(() => new FakeJellyfin.Handler());
         });
     }
 

@@ -6,6 +6,10 @@ namespace Kinodex.Api.Tests;
 // The frontend's TypeScript types are generated from the API's OpenAPI description, and the
 // generator keeps a copy of the description it used (frontend/.../src/types/openapi.json). If a
 // backend model changes without regenerating, the frontend's types are out of date: this fails.
+//
+// To update the copy without running the API (say, while another copy of it is running), set
+// KINODEX_UPDATE_OPENAPI=1 and run this test: it writes the current description instead. Then
+// `KINODEX_OPENAPI=src/types/openapi.json npm run gen:api` in frontend/Kinodex.Client.
 [Collection(ApiCollection.Name)]
 public class GeneratedTypesTests(KinodexApiFactory api)
 {
@@ -17,11 +21,19 @@ public class GeneratedTypesTests(KinodexApiFactory api)
         current.Remove("servers"); // The address the API runs on; the generator drops it too
 
         var snapshotPath = FindSnapshot();
+        if (Environment.GetEnvironmentVariable("KINODEX_UPDATE_OPENAPI") == "1")
+        {
+            await File.WriteAllTextAsync(snapshotPath,
+                current.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }) + "\n");
+            return;
+        }
+
         var snapshot = JsonNode.Parse(await File.ReadAllTextAsync(snapshotPath));
 
         Assert.True(JsonNode.DeepEquals(current, snapshot),
             "The API's OpenAPI description has changed since the frontend's types were generated. " +
-            "Run the API, then `npm run gen:api` in frontend/Kinodex.Client, and commit the result.");
+            "Run the API, then `npm run gen:api` in frontend/Kinodex.Client, and commit the result " +
+            "(or see the note at the top of this test for updating it without running the API).");
     }
 
     // Walk up from the test output folder to the repository root

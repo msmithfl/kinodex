@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Monitor, Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { setThemeChoice, useThemeChoice, type ThemeChoice } from "../utils/theme";
@@ -101,6 +103,21 @@ function Settings() {
         <section className="mt-4 rounded-xl border border-border bg-card px-5 py-2">
           <h2 className="pt-3 pb-1 text-base font-semibold">Add movie presets</h2>
           <MoviePresetSettings onError={setSaveError} />
+        </section>
+
+        <section className="mt-4 rounded-xl border border-border bg-card px-5 py-2">
+          <h2 className="pt-3 pb-1 text-base font-semibold">Jellyfin</h2>
+          <div className="flex items-center justify-between gap-4 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Compare with your Jellyfin server</p>
+              <p className="text-sm text-muted-foreground">
+                See what's on Jellyfin but not in Kinodex, and the other way round.
+              </p>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link to="/jellyfin">Open</Link>
+            </Button>
+          </div>
         </section>
       </div>
     </PageShell>
