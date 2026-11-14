@@ -1,5 +1,6 @@
 import type { TvShow, TvShowPurchase } from "../types";
 import { todayDate } from "./dateUtils";
+import { formatSeasons } from "./formatSeasons";
 
 export const newPurchase = (
   seasons: number[] = [],
@@ -13,6 +14,7 @@ export const newPurchase = (
   condition: "Like New",
   purchasedAt: todayDate(),
   isGift: false,
+  productPosterPath: "",
   ...base,
 });
 
@@ -24,6 +26,11 @@ export const withClientKeys = (show: TvShow): TvShow => ({
     clientKey: p.clientKey ?? crypto.randomUUID(),
   })),
 });
+
+// A purchase's name in the drawer and the form: "Complete set" when it covers every season, else
+// its seasons ("S1–3, S5")
+export const purchaseTitle = (purchase: TvShowPurchase, totalSeasons: number) =>
+  formatSeasons(purchase.seasons, totalSeasons) === "Complete" ? "Complete set" : formatSeasons(purchase.seasons, 0);
 
 export const purchaseKey = (purchase: TvShowPurchase, index: number) =>
   purchase.clientKey ?? String(purchase.id ?? index);

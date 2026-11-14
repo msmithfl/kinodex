@@ -12,7 +12,6 @@ public class TvShow
     public List<string> Genres { get; set; } = new List<string>();
     public string PosterPath { get; set; } = string.Empty;
     public string BackdropPath { get; set; } = string.Empty;
-    public string ProductPosterPath { get; set; } = string.Empty;
     public int? TmdbId { get; set; }
     public int TotalSeasons { get; set; } // Season count from TMDB, 0 when unknown
     public bool IsStreaming { get; set; } = false;

@@ -3,16 +3,22 @@ import { Barcode, Check, Copy, ExternalLink, Gift } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DetailField, { NotSet, YesNo } from "../../components/DetailField";
-import { formatSeasons } from "../../utils/formatSeasons";
-import { purchaseKey, totalPaid } from "../../utils/tvShowPurchases";
+import { purchaseKey, purchaseTitle, totalPaid } from "../../utils/tvShowPurchases";
 import { formatPurchaseDate } from "../../utils/dateUtils";
 import { openEbaySoldListings } from "../../utils/upc";
 import type { TvShow } from "../../types";
 
 // The show's purchases, one card each, laid out like the movie drawer's details: which seasons,
-// then Format | Condition, Paid | Purchased | Gift, and the UPC (click to copy) with an eBay
-// sold-listings search. The total paid sits in the header.
-function TvShowPurchaseList({ show }: { show: TvShow }) {
+// then Format | Condition, Paid | Purchased | Gift, and the disc: its product image (click to
+// enlarge), the UPC (click to copy) and an eBay sold-listings search. The total paid sits in the
+// header.
+function TvShowPurchaseList({
+  show,
+  onEnlargeProductImage,
+}: {
+  show: TvShow;
+  onEnlargeProductImage: (src: string) => void;
+}) {
   // Which purchase's UPC was just copied, for the tick
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -41,11 +47,7 @@ function TvShowPurchaseList({ show }: { show: TvShow }) {
             const key = purchaseKey(purchase, idx);
             return (
               <div key={key} className="rounded-xl border border-border bg-card">
-                <p className="px-4 pt-3 text-sm font-medium">
-                  {formatSeasons(purchase.seasons, show.totalSeasons) === "Complete"
-                    ? "Complete set"
-                    : formatSeasons(purchase.seasons, 0)}
-                </p>
+                <p className="px-4 pt-3 text-sm font-medium">{purchaseTitle(purchase, show.totalSeasons)}</p>
 
                 <dl className="grid grid-cols-3 gap-x-4 gap-y-4 px-4 pt-3 pb-4">
                   <DetailField label="Format">
@@ -78,8 +80,26 @@ function TvShowPurchaseList({ show }: { show: TvShow }) {
                   </DetailField>
                 </dl>
 
-                {/* The disc: barcode (click to copy) and an eBay sold-listings search */}
+                {/* The disc: product image (click to enlarge), barcode (click to copy) and an eBay
+                    sold-listings search */}
                 <div className="flex items-center gap-3 border-t border-border px-3 py-2.5">
+                  {purchase.productPosterPath && (
+                    <button
+                      type="button"
+                      onClick={() => onEnlargeProductImage(purchase.productPosterPath)}
+                      className="shrink-0 cursor-zoom-in"
+                      aria-label={`Enlarge the ${purchaseTitle(purchase, show.totalSeasons)} product image`}
+                    >
+                      <img
+                        src={purchase.productPosterPath}
+                        alt=""
+                        className="h-10 w-auto rounded-sm bg-white object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    </button>
+                  )}
                   {purchase.upcNumber ? (
                     <button
                       type="button"

@@ -15,4 +15,5 @@ public class TvShowPurchase
     public string Condition { get; set; } = string.Empty;
     public DateOnly PurchasedAt { get; set; }
     public bool IsGift { get; set; } = false; // Received as a gift rather than bought (e.g. one season)
+    public string ProductPosterPath { get; set; } = string.Empty; // This purchase's box art (found by its UPC)
 }

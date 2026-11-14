@@ -26,7 +26,8 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPosterLightbox, setShowPosterLightbox] = useState(false);
-  const [showProductLightbox, setShowProductLightbox] = useState(false);
+  // The product image being shown large (each purchase has its own)
+  const [productLightboxSrc, setProductLightboxSrc] = useState<string | null>(null);
 
   if (loading) {
     return <DetailSkeleton label="Loading TV show" />;
@@ -87,13 +88,13 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps) {
         onDelete={() => setShowDeleteConfirm(true)}
       />
 
-      <TvShowDrawerDetails show={show} onEnlargeProductImage={() => setShowProductLightbox(true)} />
+      <TvShowDrawerDetails show={show} onEnlargeProductImage={setProductLightboxSrc} />
 
-      {showProductLightbox && show.productPosterPath && (
+      {productLightboxSrc && (
         <ImageLightbox
-          src={show.productPosterPath}
+          src={productLightboxSrc}
           alt={`${show.title} product`}
-          onClose={() => setShowProductLightbox(false)}
+          onClose={() => setProductLightboxSrc(null)}
         />
       )}
 

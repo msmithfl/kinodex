@@ -38,6 +38,7 @@ export const makePurchase = (overrides: Partial<TvShowPurchase> = {}): TvShowPur
   condition: "Like New",
   purchasedAt: "2026-01-15",
   isGift: false,
+  productPosterPath: "",
   ...overrides,
 });
 
@@ -52,7 +53,6 @@ export const makeShow = (overrides: Partial<TvShow> = {}): TvShow => ({
   genres: [],
   posterPath: "",
   backdropPath: "",
-  productPosterPath: "",
   tmdbId: null,
   totalSeasons: 5,
   isStreaming: false,

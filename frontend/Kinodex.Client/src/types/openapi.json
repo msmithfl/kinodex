@@ -1055,7 +1055,6 @@
           "genres",
           "posterPath",
           "backdropPath",
-          "productPosterPath",
           "totalSeasons",
           "isStreaming",
           "createdAt",
@@ -1099,9 +1098,6 @@
           "backdropPath": {
             "type": "string"
           },
-          "productPosterPath": {
-            "type": "string"
-          },
           "tmdbId": {
             "type": [
               "null",
@@ -1138,7 +1134,8 @@
           "formats",
           "condition",
           "purchasedAt",
-          "isGift"
+          "isGift",
+          "productPosterPath"
         ],
         "type": "object",
         "properties": {
@@ -1179,6 +1176,9 @@
           },
           "isGift": {
             "type": "boolean"
+          },
+          "productPosterPath": {
+            "type": "string"
           }
         }
       },
