@@ -158,6 +158,16 @@
     /* No double-tap zoom, so taps respond at once; pinch zoom still works */
     touch-action: manipulation;
   }
+  /* iPhone and iPad only (the only browsers with -webkit-touch-callout): date fields without iOS's
+     own look. With it, iOS overrides the field's sizing (its own width, and the padding added on
+     top of the height), so the date came out taller than the fields beside it. Tapping still opens
+     the iOS date picker. Browsers' phone views don't show this; only a real iPhone does. */
+  @supports (-webkit-touch-callout: none) {
+    input[type="date"] {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+  }
 
   /* Opened from the home screen, behave like an app (docs/design/home-screen-app.md). Only there,
      so the website behaves normally in a browser. */
