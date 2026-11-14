@@ -58,6 +58,37 @@ public class JellyfinCompareTests
     }
 
     [Fact]
+    public void Every_jellyfin_copy_of_a_film_in_kinodex_counts_as_in_kinodex()
+    {
+        // The same film twice on the server (a 4K and an HD library), once by TMDB id and once
+        // only by title
+        var result = Compare(
+            [new KinodexTitle(1, "1941", 1979, 11519)],
+            [
+                new JellyfinTitle("4k", "1941", 1979, 11519),
+                new JellyfinTitle("hd", "1941", 1979, 11519),
+                new JellyfinTitle("old", "1941", 1979, null),
+            ]);
+
+        Assert.Empty(result.OnlyOnJellyfin);
+        Assert.Single(result.InBoth);
+    }
+
+    [Fact]
+    public void A_film_missing_from_kinodex_is_listed_once_however_many_copies_jellyfin_has()
+    {
+        var result = Compare([],
+        [
+            new JellyfinTitle("4k", "Jaws", 1975, 578),
+            new JellyfinTitle("hd", "Jaws", 1975, 578),
+            new JellyfinTitle("a", "Duel", 1971, null),
+            new JellyfinTitle("b", "Duel", 1971, null),
+        ]);
+
+        Assert.Equal(["Duel", "Jaws"], result.OnlyOnJellyfin.Select(j => j.Title));
+    }
+
+    [Fact]
     public void Lists_come_back_in_title_order_ignoring_articles()
     {
         var result = Compare([],

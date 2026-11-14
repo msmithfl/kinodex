@@ -12,7 +12,9 @@ public static class FakeJellyfin
 {
     public record Item(string Id, string Name, string Type, int Year, int? TmdbId = null);
 
-    public record Server(string ApiKey, string Name, Item[] Items);
+    // MaxPerResponse: send at most this many items per request whatever the request asks for, like
+    // a server with a cap of its own
+    public record Server(string ApiKey, string Name, Item[] Items, int? MaxPerResponse = null);
 
     private static readonly ConcurrentDictionary<string, Server> Servers = new();
 
@@ -22,6 +24,15 @@ public static class FakeJellyfin
         var host = $"jf{Guid.NewGuid():N}.example.test";
         Servers[host] = server;
         return $"https://{host}";
+    }
+
+    // The slice of the server's items a request asks for (StartIndex, Limit), within its cap
+    private static IEnumerable<Item> Page(Server server, Uri uri)
+    {
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var start = int.TryParse(query["StartIndex"], out var s) ? s : 0;
+        var limit = int.TryParse(query["Limit"], out var l) ? l : int.MaxValue;
+        return server.Items.Skip(start).Take(Math.Min(limit, server.MaxPerResponse ?? int.MaxValue));
     }
 
     public class Handler : HttpMessageHandler
@@ -40,7 +51,7 @@ public static class FakeJellyfin
                 "/System/Info" => new { ServerName = server.Name, Version = "10.10.7", Id = "abc" },
                 "/Items" => new
                 {
-                    Items = server.Items.Select(i => new
+                    Items = Page(server, request.RequestUri).Select(i => new
                     {
                         i.Id,
                         i.Name,
@@ -50,6 +61,7 @@ public static class FakeJellyfin
                             ? new Dictionary<string, string> { ["Tmdb"] = tmdb.ToString(), ["Imdb"] = "tt0000000" }
                             : new Dictionary<string, string>(),
                     }),
+                    TotalRecordCount = server.Items.Length,
                 },
                 _ => null,
             };

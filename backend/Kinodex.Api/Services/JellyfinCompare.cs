@@ -13,10 +13,14 @@ public static class JellyfinCompare
     // MatchedBy: "tmdb" (the same TMDB id) or "title" (the same title and year)
     public record TitleMatch(KinodexTitle Kinodex, JellyfinTitle Jellyfin, string MatchedBy);
 
+    // JellyfinCount and KinodexCount: how many titles each side has (Jellyfin's every copy), to
+    // check against the server's own counts
     public record LibraryComparison(
         List<JellyfinTitle> OnlyOnJellyfin,
         List<KinodexTitle> OnlyInKinodex,
-        List<TitleMatch> InBoth);
+        List<TitleMatch> InBoth,
+        int JellyfinCount,
+        int KinodexCount);
 
     public static LibraryComparison Compare(IReadOnlyList<KinodexTitle> kinodex, IReadOnlyList<JellyfinTitle> jellyfin)
     {
@@ -25,7 +29,6 @@ public static class JellyfinCompare
 
         var inBoth = new List<TitleMatch>();
         var onlyInKinodex = new List<KinodexTitle>();
-        var matchedJellyfinIds = new HashSet<string>();
 
         foreach (var title in kinodex)
         {
@@ -45,16 +48,30 @@ public static class JellyfinCompare
             {
                 // Two copies of a movie in Kinodex (say, two editions) both match the one file
                 inBoth.Add(new TitleMatch(title, match, matchedBy));
-                matchedJellyfinIds.Add(match.Id);
             }
         }
 
-        var onlyOnJellyfin = jellyfin.Where(j => !matchedJellyfinIds.Contains(j.Id)).ToList();
+        // The other way round, by the same rules: a Jellyfin item is in Kinodex if any Kinodex title
+        // matches it. Every copy counts, not just the one a Kinodex title happened to pair with, since
+        // a server can hold a film more than once (a 4K and an HD library, alternate versions).
+        var kinodexByTmdbId = kinodex.Where(k => k.TmdbId is not null).ToLookup(k => k.TmdbId!.Value);
+        var kinodexByTitle = kinodex.ToLookup(k => TitleKey(k.Title));
+        bool InKinodex(JellyfinTitle j) =>
+            (j.TmdbId is int tmdbId && kinodexByTmdbId[tmdbId].Any()) ||
+            kinodexByTitle[TitleKey(j.Title)].Any(k => SameYear(k.Year, j.Year) && !DifferentTmdbIds(k, j));
+
+        // A film missing from Kinodex is listed once, however many copies the server has
+        var onlyOnJellyfin = jellyfin
+            .Where(j => !InKinodex(j))
+            .DistinctBy(j => j.TmdbId?.ToString() ?? $"{TitleKey(j.Title)}|{j.Year}")
+            .ToList();
 
         return new LibraryComparison(
             onlyOnJellyfin.OrderBy(j => SortKey(j.Title), StringComparer.InvariantCultureIgnoreCase).ThenBy(j => j.Year).ToList(),
             onlyInKinodex.OrderBy(k => SortKey(k.Title), StringComparer.InvariantCultureIgnoreCase).ThenBy(k => k.Year).ToList(),
-            inBoth.OrderBy(m => SortKey(m.Kinodex.Title), StringComparer.InvariantCultureIgnoreCase).ThenBy(m => m.Kinodex.Year).ToList());
+            inBoth.OrderBy(m => SortKey(m.Kinodex.Title), StringComparer.InvariantCultureIgnoreCase).ThenBy(m => m.Kinodex.Year).ToList(),
+            jellyfin.Count,
+            kinodex.Count);
     }
 
     // Release years can differ by one between sources (a festival premiere, a time zone), and an

@@ -1003,7 +1003,9 @@
         "required": [
           "onlyOnJellyfin",
           "onlyInKinodex",
-          "inBoth"
+          "inBoth",
+          "jellyfinCount",
+          "kinodexCount"
         ],
         "type": "object",
         "properties": {
@@ -1024,6 +1026,14 @@
             "items": {
               "$ref": "#/components/schemas/TitleMatch"
             }
+          },
+          "jellyfinCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "kinodexCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
