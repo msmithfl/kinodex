@@ -50,8 +50,16 @@ public static class JellyfinEndpoints
             MovieDbContext db,
             JellyfinClient jellyfin,
             IDataProtectionProvider protection,
+            DataProtectionSecret secret,
             IHostEnvironment environment) =>
         {
+            // Keys are only saved once the key ring is locked with a secret outside the database
+            // (local development excepted)
+            if (!secret.IsSet && !environment.IsDevelopment())
+                return Results.Json(
+                    new { error = $"Jellyfin connections aren't set up on this server ({DataProtectionSecret.SettingName}, {DataProtectionSecret.MinimumLength}+ characters)." },
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+
             var allowPrivate = environment.IsDevelopment();
             if (!TryNormalizeUrl(request.ServerUrl, allowPrivate, out var serverUrl, out var urlError))
                 return Results.BadRequest(new { error = urlError });

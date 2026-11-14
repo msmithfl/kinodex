@@ -33,8 +33,15 @@ The comparison runs when the page opens (and on Refresh); nothing is stored or s
   in with a Jellyfin user instead (a token limited to that user's libraries, revocable from
   Jellyfin's Devices page) can replace it later, and fits the self-hosting plan's Jellyfin sign-in.
 - **The key is encrypted at rest** with ASP.NET Data Protection, whose own keys are kept in the
-  database (`DataProtectionKeys`) so they survive redeploys. This keeps the key out of plain sight
-  (a stray query, a table dump), not safe from someone with the whole database.
+  database (`DataProtectionKeys`) so they survive redeploys, **locked with a secret that isn't**:
+  the `DATA_PROTECTION_SECRET` setting (`Services/DataProtectionSecret.cs`, AES-GCM). So the
+  whole database on its own can't decrypt the API keys. Without the secret, connecting is turned
+  off (local development excepted) and no new keys are made (one made then would be saved plain).
+  Changing or losing the secret means users connect again. The keys saved before the secret
+  existed were plain, so a migration cleared them and the connections they protected.
+  - Still true: Jellyfin API keys are admin keys, and whoever runs the server (with both the
+    database and the secret) could decrypt them. Signing in with a Jellyfin user instead (below)
+    is what would narrow that.
 - **Only public addresses in production.** The server fetches a URL the user typed, so without a
   check anyone signed in could make Kinodex's server probe Railway's internal network. Every
   connection checks the address it's actually connecting to (after DNS, so a hostname can't point

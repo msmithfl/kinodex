@@ -64,10 +64,38 @@ public class MigrationTests
                 VALUES ('user', 'https://jellyfin.example.com', 'protected', 'Home', '10.10.7', now());
                 """);
 
-            await migrator.MigrateAsync();
+            await migrator.MigrateAsync("20261114200607_AddJellyfinLibraryChoice");
 
             var connection = await db.JellyfinConnections.SingleAsync();
             Assert.Empty(connection.LibraryIds); // Every library
+        }
+        finally
+        {
+            await db.Database.EnsureDeletedAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Plain_data_protection_keys_and_the_connections_they_protected_are_cleared()
+    {
+        await using var db = NewDatabase();
+        try
+        {
+            var migrator = db.GetService<IMigrator>();
+            await migrator.MigrateAsync("20261114200607_AddJellyfinLibraryChoice");
+
+            await db.Database.ExecuteSqlRawAsync("""
+                INSERT INTO "JellyfinConnections" ("UserId", "ServerUrl", "ProtectedApiKey", "ServerName", "ServerVersion", "ConnectedAt", "LibraryIds")
+                VALUES ('user', 'https://jellyfin.example.com', 'protected', 'Home', '10.10.7', now(), ARRAY[]::text[]);
+                INSERT INTO "DataProtectionKeys" ("FriendlyName", "Xml")
+                VALUES ('plain', '<key><descriptor><masterKey><value>abc</value></masterKey></descriptor></key>'),
+                       ('locked', '<key><descriptor><encryptedSecret decryptorType="x"><encryptedKey /></encryptedSecret></descriptor></key>');
+                """);
+
+            await migrator.MigrateAsync();
+
+            Assert.Empty(await db.JellyfinConnections.ToListAsync());
+            Assert.Equal(["locked"], await db.DataProtectionKeys.Select(k => k.FriendlyName).ToListAsync());
         }
         finally
         {

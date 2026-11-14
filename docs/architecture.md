@@ -344,6 +344,7 @@ HDD number. A TV show's UPC, product image, condition and price are per purchase
 | `DATABASE_URL` / `ConnectionStrings:DefaultConnection` | API | Postgres |
 | `CORS_ORIGINS` | API | Allowed frontend origins |
 | `Clerk:Domain`, `Clerk:WebhookSecret` | API | Token validation; webhook signatures |
+| `DATA_PROTECTION_SECRET` | API | Locks the Data Protection keys (which encrypt saved Jellyfin API keys) before they're stored in the database; 32+ characters, any long random value. Without it Jellyfin connections are turned off (except in local development); changing it means users reconnect Jellyfin (`Services/DataProtectionSecret.cs`) |
 | `TMDB_API_KEY` | API | TMDB, for everyone using this server (`/api/tmdb/v3`, `TmdbMatchingService`): a read access token or an API key |
 
 ---
