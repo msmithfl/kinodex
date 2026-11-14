@@ -25,7 +25,6 @@ interface ChipSelectProps {
   values: string[];
   options: ChipOption[]; // Every choice; ones already picked are left out of the list
   onChange: (values: string[]) => void;
-  listHeight?: string; // Tailwind max-height class for the list
   className?: string; // Extra classes for the field (e.g. flex-1 beside a button)
   placeholder?: string; // Shown when nothing is picked
 }
@@ -36,7 +35,6 @@ export function ChipSelect({
   values,
   options,
   onChange,
-  listHeight = "max-h-30",
   className = "",
   placeholder,
 }: ChipSelectProps) {
@@ -74,10 +72,9 @@ export function ChipSelect({
         ))}
       </div>
 
+      {/* About six rows tall, then it scrolls */}
       {open && (
-        <ul
-          className={`absolute top-full left-0 z-50 mt-1 w-full overflow-y-auto rounded-lg border border-border bg-popover p-1 shadow-lg ${listHeight}`}
-        >
+        <ul className="absolute top-full left-0 z-50 mt-1 max-h-50 w-full overflow-y-auto rounded-lg border border-border bg-popover p-1 shadow-lg">
           {remaining.map((option) => (
             <li
               key={option.value}

@@ -68,7 +68,6 @@ function TvShowDetailsTab({
           values={formData.genres}
           options={GENRE_OPTIONS}
           onChange={(genres) => setFormData({ ...formData, genres })}
-          listHeight="max-h-50"
         />
       </FormField>
 
