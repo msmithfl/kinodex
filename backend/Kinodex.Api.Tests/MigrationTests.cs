@@ -50,6 +50,31 @@ public class MigrationTests
         }
     }
 
+    [Fact]
+    public async Task A_saved_jellyfin_connection_compares_every_library_after_the_library_choice_arrives()
+    {
+        await using var db = NewDatabase();
+        try
+        {
+            var migrator = db.GetService<IMigrator>();
+            await migrator.MigrateAsync("20261114190143_AddJellyfinConnection");
+
+            await db.Database.ExecuteSqlRawAsync("""
+                INSERT INTO "JellyfinConnections" ("UserId", "ServerUrl", "ProtectedApiKey", "ServerName", "ServerVersion", "ConnectedAt")
+                VALUES ('user', 'https://jellyfin.example.com', 'protected', 'Home', '10.10.7', now());
+                """);
+
+            await migrator.MigrateAsync();
+
+            var connection = await db.JellyfinConnections.SingleAsync();
+            Assert.Empty(connection.LibraryIds); // Every library
+        }
+        finally
+        {
+            await db.Database.EnsureDeletedAsync();
+        }
+    }
+
     private class PurchaseImage
     {
         public int Id { get; set; }

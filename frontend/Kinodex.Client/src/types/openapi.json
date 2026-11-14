@@ -751,6 +751,58 @@
         }
       }
     },
+    "/api/jellyfin/libraries": {
+      "get": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JellyfinLibrary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JellyfinLibrarySelection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JellyfinLibrary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/jellyfin/compare": {
       "get": {
         "tags": [
@@ -899,6 +951,43 @@
           },
           "apiKey": {
             "type": "string"
+          }
+        }
+      },
+      "JellyfinLibrary": {
+        "required": [
+          "id",
+          "name",
+          "type",
+          "selected"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "selected": {
+            "type": "boolean"
+          }
+        }
+      },
+      "JellyfinLibrarySelection": {
+        "required": [
+          "libraryIds"
+        ],
+        "type": "object",
+        "properties": {
+          "libraryIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

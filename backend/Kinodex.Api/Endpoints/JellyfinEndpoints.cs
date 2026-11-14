@@ -24,6 +24,12 @@ public static class JellyfinEndpoints
 
     public record JellyfinComparison(LibraryComparison Movies, LibraryComparison Shows, DateTime ComparedAt);
 
+    // One of the server's libraries, and whether it's compared. Type is Jellyfin's content type
+    // ("movies", "tvshows", "homevideos", "musicvideos", or "" for mixed).
+    public record JellyfinLibrary(string Id, string Name, string Type, bool Selected);
+
+    public record JellyfinLibrarySelection(List<string> LibraryIds);
+
     private const string KeyPurpose = "Kinodex.Jellyfin.ApiKey";
 
     public static void MapJellyfinEndpoints(this IEndpointRouteBuilder app)
@@ -70,6 +76,8 @@ public static class JellyfinEndpoints
                 connection = new JellyfinConnection { UserId = userId };
                 db.JellyfinConnections.Add(connection);
             }
+            // A different server has different libraries, so the choice of them starts over
+            if (connection.ServerUrl != serverUrl) connection.LibraryIds = [];
             connection.ServerUrl = serverUrl;
             connection.ProtectedApiKey = protection.CreateProtector(KeyPurpose).Protect(apiKey);
             connection.ServerName = info.Name;
@@ -92,6 +100,59 @@ public static class JellyfinEndpoints
             return Results.NoContent();
         });
 
+        // GET the server's libraries that can hold movies or series, and which are compared
+        group.MapGet("/libraries", async (
+            ClaimsPrincipal user,
+            MovieDbContext db,
+            JellyfinClient jellyfin,
+            IDataProtectionProvider protection) =>
+        {
+            var (connection, apiKey, problem) = await OpenAsync(UserId(user), db, protection);
+            if (problem is not null) return problem;
+
+            try
+            {
+                var libraries = await jellyfin.GetLibrariesAsync(connection!.ServerUrl, apiKey!);
+                return Results.Ok(Describe(libraries, connection.LibraryIds));
+            }
+            catch (JellyfinClient.JellyfinException ex)
+            {
+                return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status502BadGateway);
+            }
+        }).Produces<List<JellyfinLibrary>>();
+
+        // PUT which libraries to compare (at least one)
+        group.MapPut("/libraries", async (
+            JellyfinLibrarySelection selection,
+            ClaimsPrincipal user,
+            MovieDbContext db,
+            JellyfinClient jellyfin,
+            IDataProtectionProvider protection) =>
+        {
+            var (connection, apiKey, problem) = await OpenAsync(UserId(user), db, protection);
+            if (problem is not null) return problem;
+
+            List<JellyfinClient.Library> libraries;
+            try
+            {
+                libraries = await jellyfin.GetLibrariesAsync(connection!.ServerUrl, apiKey!);
+            }
+            catch (JellyfinClient.JellyfinException ex)
+            {
+                return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status502BadGateway);
+            }
+
+            // Only the server's own libraries, in its order
+            var chosen = libraries.Select(l => l.Id).Where(selection.LibraryIds.Contains).ToList();
+            if (chosen.Count == 0)
+                return Results.BadRequest(new { error = "Choose at least one library to compare." });
+
+            // Every library chosen is the same as none chosen: all of them, new ones included
+            connection.LibraryIds = chosen.Count == libraries.Count ? [] : chosen;
+            await db.SaveChangesAsync();
+            return Results.Ok(Describe(libraries, connection.LibraryIds));
+        }).Produces<List<JellyfinLibrary>>();
+
         // GET compare: the Jellyfin libraries against the user's movies and TV shows
         group.MapGet("/compare", async (
             ClaimsPrincipal user,
@@ -100,24 +161,13 @@ public static class JellyfinEndpoints
             IDataProtectionProvider protection) =>
         {
             var userId = UserId(user);
-            var connection = await db.JellyfinConnections.FindAsync(userId);
-            if (connection is null)
-                return Results.Conflict(new { error = "Connect a Jellyfin server first." });
-
-            string apiKey;
-            try
-            {
-                apiKey = protection.CreateProtector(KeyPurpose).Unprotect(connection.ProtectedApiKey);
-            }
-            catch (CryptographicException)
-            {
-                return Results.Conflict(new { error = "The saved API key can't be read any more. Connect again." });
-            }
+            var (connection, apiKey, problem) = await OpenAsync(userId, db, protection);
+            if (problem is not null) return problem;
 
             List<JellyfinClient.LibraryItem> items;
             try
             {
-                items = await jellyfin.GetLibraryAsync(connection.ServerUrl, apiKey);
+                items = await ReadChosenLibrariesAsync(jellyfin, connection!, apiKey!);
             }
             catch (JellyfinClient.JellyfinException ex)
             {
@@ -144,6 +194,40 @@ public static class JellyfinEndpoints
                 DateTime.UtcNow));
         }).Produces<JellyfinComparison>();
     }
+
+    // The user's connection and its key, or the response to send when there's no usable one
+    private static async Task<(JellyfinConnection? Connection, string? ApiKey, IResult? Problem)> OpenAsync(
+        string userId, MovieDbContext db, IDataProtectionProvider protection)
+    {
+        var connection = await db.JellyfinConnections.FindAsync(userId);
+        if (connection is null)
+            return (null, null, Results.Conflict(new { error = "Connect a Jellyfin server first." }));
+        try
+        {
+            return (connection, protection.CreateProtector(KeyPurpose).Unprotect(connection.ProtectedApiKey), null);
+        }
+        catch (CryptographicException)
+        {
+            return (null, null, Results.Conflict(new { error = "The saved API key can't be read any more. Connect again." }));
+        }
+    }
+
+    // Every library, or only the chosen ones (those still on the server)
+    private static async Task<List<JellyfinClient.LibraryItem>> ReadChosenLibrariesAsync(
+        JellyfinClient jellyfin, JellyfinConnection connection, string apiKey)
+    {
+        if (connection.LibraryIds.Count == 0)
+            return await jellyfin.GetLibraryAsync(connection.ServerUrl, apiKey);
+
+        var onServer = (await jellyfin.GetLibrariesAsync(connection.ServerUrl, apiKey)).Select(l => l.Id).ToHashSet();
+        var items = new List<JellyfinClient.LibraryItem>();
+        foreach (var libraryId in connection.LibraryIds.Where(onServer.Contains))
+            items.AddRange(await jellyfin.GetLibraryAsync(connection.ServerUrl, apiKey, libraryId));
+        return items.DistinctBy(i => i.Id).ToList();
+    }
+
+    private static List<JellyfinLibrary> Describe(List<JellyfinClient.Library> libraries, List<string> chosen) =>
+        libraries.Select(l => new JellyfinLibrary(l.Id, l.Name, l.Type, chosen.Count == 0 || chosen.Contains(l.Id))).ToList();
 
     private static string UserId(ClaimsPrincipal user) =>
         user.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Signed in without a user id.");

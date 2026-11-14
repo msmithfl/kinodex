@@ -41,6 +41,7 @@ export type MoviePreset = Loosen<Schemas["MoviePreset"], ServerSet>;
 export type JellyfinStatus = Schemas["JellyfinStatus"];
 export type JellyfinComparison = Schemas["JellyfinComparison"];
 export type LibraryComparison = Schemas["LibraryComparison"];
+export type JellyfinLibrary = Schemas["JellyfinLibrary"];
 
 export interface TMDBMovie {
   id: number;

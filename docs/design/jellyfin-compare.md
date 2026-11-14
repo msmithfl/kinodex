@@ -14,6 +14,9 @@ with the hosted site, as long as the Jellyfin server has a public `https` addres
 - **Connection:** the server address and a Jellyfin API key (Jellyfin: Dashboard → API Keys → +).
   Connecting checks both against the server first, then shows the server's name. Disconnect
   forgets them.
+- **Libraries:** which of the server's libraries to compare (those that can hold movies or
+  series; Collections, music, books, photos and playlists aren't listed). Every library to start
+  with; a choice is saved with the connection, and connecting to a different server starts it over.
 - **Comparison:** Movies and TV shows, each with three lists:
   - On Jellyfin, not in Kinodex
   - In Kinodex, not on Jellyfin
@@ -48,6 +51,8 @@ The comparison runs when the page opens (and on Refresh); nothing is stored or s
 
 - Auth header: `Authorization: MediaBrowser Token="<api key>"`.
 - `GET /System/Info`: the server's name and version (checks the address and key on connect).
+- `GET /Library/VirtualFolders`: the libraries (name, content type, id), for choosing which to
+  compare; a chosen library is read with `ParentId=<its id>`.
 - `GET /Items?Recursive=true&IncludeItemTypes=Movie,Series&Fields=ProviderIds`: every movie and
   series across the libraries, with their TMDB ids. No user id is needed with an API key.
   - Read in pages (`StartIndex`/`Limit`, 500 at a time, sorted by name, year and date added) until
@@ -68,7 +73,7 @@ The comparison runs when the page opens (and on Refresh); nothing is stored or s
 | `Services/JellyfinClient.cs` | The two Jellyfin calls, with plain error messages |
 | `Services/PublicAddress.cs` | The public-address check, applied at connection time |
 | `Services/JellyfinCompare.cs` | The matching (no I/O, unit tested) |
-| `Endpoints/JellyfinEndpoints.cs` | `GET/PUT/DELETE /api/jellyfin` (status, connect, disconnect), `GET /api/jellyfin/compare` |
+| `Endpoints/JellyfinEndpoints.cs` | `GET/PUT/DELETE /api/jellyfin` (status, connect, disconnect), `GET/PUT /api/jellyfin/libraries` (which to compare), `GET /api/jellyfin/compare` |
 | `features/jellyfin/` | React Query hooks |
 | `pages/JellyfinPage.tsx` | The page |
 

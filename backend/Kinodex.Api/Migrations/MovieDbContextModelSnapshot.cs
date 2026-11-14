@@ -99,6 +99,10 @@ namespace Kinodex.Api.Migrations
                     b.Property<DateTime>("ConnectedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.PrimitiveCollection<List<string>>("LibraryIds")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<string>("ProtectedApiKey")
                         .IsRequired()
                         .HasColumnType("text");
