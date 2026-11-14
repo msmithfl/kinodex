@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { PickerButton } from "./PickerButton";
 
 interface ProductImagePickerOptions {
   upc: string; // The barcode to look up
@@ -78,14 +78,11 @@ export function useProductImagePicker({ upc, selected, onSelect }: ProductImageP
     if (result === null) await lookUp();
   };
 
-  const button = !validUpc ? (
-    <p className="text-xs text-muted-foreground">
-      Add a UPC on the details tab to find product images for it.
-    </p>
-  ) : (
-    <Button type="button" variant="outline" size="sm" onClick={toggle} disabled={loading} aria-expanded={open}>
+  // Without a UPC there's nothing to look up; pressing it then says so
+  const button = (
+    <PickerButton missing={validUpc ? null : "Requires UPC"} onClick={toggle} busy={loading} expanded={open}>
       {loading ? "Looking up UPC…" : open ? "Close product images" : "Find product images"}
-    </Button>
+    </PickerButton>
   );
 
   const images = result?.images ?? [];
