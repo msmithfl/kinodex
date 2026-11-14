@@ -47,7 +47,7 @@ Kinodex/
       settings/         useSettings() hook (shared cache) and the settings type/defaults
       features/         per feature: data hooks (api.ts) and the feature's own components
         movies/           MovieDetail (drawer), MovieTable, MovieDrawerDetails, form/ (Details,
-                          Physical, Location, Images tabs)
+                          Physical, Location, Images, Review tabs)
         tvShows/          TvShowDetail (drawer), TvShowDrawerDetails, TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images tabs)
         collections/      CollectionDetail (drawer), CollectionChecklist
         shelfSections/    (hooks only)

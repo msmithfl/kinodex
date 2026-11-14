@@ -7,14 +7,16 @@ import MovieDetailsTab from "../features/movies/form/MovieDetailsTab";
 import MoviePhysicalTab from "../features/movies/form/MoviePhysicalTab";
 import MovieLocationTab from "../features/movies/form/MovieLocationTab";
 import MovieImagesTab from "../features/movies/form/MovieImagesTab";
+import MovieReviewTab from "../features/movies/form/MovieReviewTab";
 
-type Tab = "details" | "physical" | "location" | "poster";
+type Tab = "details" | "physical" | "location" | "poster" | "review";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "details", label: "Details" },
   { id: "physical", label: "Physical" },
   { id: "location", label: "Location" },
   { id: "poster", label: "Images" },
+  { id: "review", label: "Review" },
 ];
 
 interface MovieFormProps {
@@ -186,7 +188,8 @@ function MovieForm({
   return (
     <form id={id} onSubmit={handleSubmit} className="flex min-h-0 w-full flex-1 flex-col">
       <Tabs value={activeTab} onValueChange={(tab) => setActiveTab(tab as Tab)} className="flex min-h-0 flex-1 flex-col gap-0">
-        <TabsList className="shrink-0">
+        {/* A little closer together on phones, so all five fit across the smallest ones */}
+        <TabsList className="shrink-0 gap-4 sm:gap-5">
           {TABS.map((tab) => (
             <TabsTrigger key={tab.id} value={tab.id}>
               {tab.label}
@@ -256,6 +259,8 @@ function MovieForm({
             productPicker={productPicker}
           />
         )}
+
+        {activeTab === "review" && <MovieReviewTab formData={formData} setFormData={setFormData} />}
         </div>
       </Tabs>
     </form>
