@@ -341,40 +341,44 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
               <li className={cn(showForm && "font-medium text-foreground")}>Details</li>
             </ol>
           </div>
-          {/* Preset: fills the repeating fields for a batch of similar movies */}
-          {presets.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span id="preset-label" className="text-sm text-muted-foreground">
-                Preset
-              </span>
-              <Select
-                value={preset?.id ? String(preset.id) : DEFAULT_PRESET}
-                onValueChange={(value) => choosePreset(value === DEFAULT_PRESET ? null : Number(value))}
-              >
-                <SelectTrigger size="sm" aria-labelledby="preset-label" className="w-36 sm:w-44">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent align="end">
-                  <SelectItem value={DEFAULT_PRESET}>Default</SelectItem>
-                  {presets.map((p) => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPresetName(presetName === null ? (preset?.name ?? "") : null)}
-            aria-expanded={presetName !== null}
-            aria-label="Save these values as a preset"
-          >
-            <BookmarkPlus />
-            <span className="hidden sm:inline">Save as preset</span>
-          </Button>
+          {/* Preset: fills the repeating fields for a batch of similar movies. The picker and the
+              save button stay together at the right, even if they ever wrap under the title. The
+              picker is narrower on phones so both fit beside the title. */}
+          <div className="ml-auto flex items-center gap-2">
+            {presets.length > 0 && (
+              <>
+                <span id="preset-label" className="text-sm text-muted-foreground">
+                  Preset
+                </span>
+                <Select
+                  value={preset?.id ? String(preset.id) : DEFAULT_PRESET}
+                  onValueChange={(value) => choosePreset(value === DEFAULT_PRESET ? null : Number(value))}
+                >
+                  <SelectTrigger size="sm" aria-labelledby="preset-label" className="w-28 sm:w-44">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    <SelectItem value={DEFAULT_PRESET}>Default</SelectItem>
+                    {presets.map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPresetName(presetName === null ? (preset?.name ?? "") : null)}
+              aria-expanded={presetName !== null}
+              aria-label="Save these values as a preset"
+            >
+              <BookmarkPlus />
+              <span className="hidden sm:inline">Save as preset</span>
+            </Button>
+          </div>
         </div>
 
         {/* Naming a preset: saves the form's current values (blank fields included) */}
