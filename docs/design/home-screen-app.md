@@ -26,7 +26,8 @@ rewrite) come later, if at all; the API, database and Clerk don't change for any
    status bar, notch and home indicator (`env(safe-area-inset-*)`):
    - the top bar (`Header`) and the bottom bar (`BottomNav`, which also stops lifting its icons by
      a fixed 40px and uses the real home indicator space instead)
-   - the drawer on phones (its content and close button)
+   - the drawer on phones: its backdrop runs up behind the status bar, like the top bar, and the
+     buttons over it sit below the clock
    - the add/edit sheets' Save buttons
    - the sides in landscape
 5. **App-like touch behaviour** (`index.css`):
