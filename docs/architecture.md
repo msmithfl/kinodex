@@ -124,8 +124,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   Skeleton while loading.
 - **TV drawer (redesigned):** the same `DetailHeader` (shared backdrop/poster/title/actions header,
   plus `DetailSkeleton`), then `TvShowDrawerDetails`: season tiles, one card per purchase (Format |
-  Condition, Paid | Purchased | Gift, UPC copy + eBay sold), product shot, Watched | Streaming,
-  notes. Both drawers' fields use `DetailField` / `YesNo` / `NotSet`.
+  Condition, Paid | Purchased | Gift, the purchase's product shot + UPC copy + eBay sold), Watched |
+  Streaming, notes. Both drawers' fields use `DetailField` / `YesNo` / `NotSet`.
 - **Collection drawer (redesigned):** the shared `DetailBackdrop` and `DetailActions` (also parts of
   `DetailHeader`), the name and movie count, then Movies and Checklist tabs. Movies has a
   table/poster switch (`SimpleMovieTable` or `PosterCard`); Checklist is `CollectionChecklist`.
@@ -140,7 +140,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 |---|---|
 | `AddItemModal` | Chooser: add movie or TV show |
 | `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; each tab is a component in `features/movies/form/` (Details; Physical: UPC, formats, price, purchase date, condition, gift; Location: shelf, HDD, streaming; Images: TMDB poster/backdrop pickers, product image lookup). `AddMovieModal` also has a preset picker (last choice remembered per device), Save as preset, and Save & add another |
-| `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit, in the same redesigned window as movies (Add: Search › Details, preview beside the form, toast; Edit: Delete in the footer). Tabs in `features/tvShows/form/` (Details, Purchases using `TvShowPurchaseEditor` cards with season tiles, Images) |
+| `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit, in the same redesigned window as movies (Add: Search › Details, preview beside the form, toast; Edit: Delete in the footer). Tabs in `features/tvShows/form/` (Details, Purchases using `TvShowPurchaseEditor` cards with season tiles, Images: TMDB poster/backdrop pickers and each purchase's product image looked up by its own UPC, Review) |
 | `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop); saves via the collections hooks |
 | `BulkEditModal` | Bulk edit from the movie table |
 | `ImageLightbox`, `BarcodeScanner` | Shared helpers |
@@ -326,9 +326,10 @@ Shared (not per user): UpcLookup (UPC → product images)
   (the endpoints do this), and "genres" exist only as values found on movies.
 - List fields (`Formats`, `Collections`, `Genres`, `Seasons`, `Images`) are Postgres arrays.
 
-Notable fields: movies and TV shows carry TMDB id, poster/backdrop/product image URLs, rating,
-review, watched, `IsStreaming`; movies also have UPC, condition, price, shelf number,
-HDD number. Collections have `IsDirectorCollection`, `ImageUrl` (cover), `BackdropUrl`.
+Notable fields: movies and TV shows carry TMDB id, poster/backdrop image URLs, rating, review,
+watched, `IsStreaming`; movies also have UPC, product image, condition, price, shelf number,
+HDD number. A TV show's UPC, product image, condition and price are per purchase
+(`TvShowPurchase`), since each purchase is its own disc or set. Collections have `IsDirectorCollection`, `ImageUrl` (cover), `BackdropUrl`.
 
 ### Configuration
 

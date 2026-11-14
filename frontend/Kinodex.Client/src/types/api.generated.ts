@@ -1052,7 +1052,6 @@ export interface components {
             genres: string[];
             posterPath: string;
             backdropPath: string;
-            productPosterPath: string;
             /** Format: int32 */
             tmdbId?: null | number;
             /** Format: int32 */
@@ -1076,6 +1075,7 @@ export interface components {
             /** Format: date */
             purchasedAt: string;
             isGift: boolean;
+            productPosterPath: string;
         };
         UpdateCollectionRequest: {
             name: string;

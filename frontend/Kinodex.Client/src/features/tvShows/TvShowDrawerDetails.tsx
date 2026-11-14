@@ -6,39 +6,17 @@ import type { TvShow } from "../../types";
 
 interface TvShowDrawerDetailsProps {
   show: TvShow;
-  onEnlargeProductImage: () => void;
+  onEnlargeProductImage: (src: string) => void; // A purchase's product image
 }
 
 // The TV show drawer's details, laid out like the movie drawer's: seasons owned, each purchase
-// (format, condition, price, date, gift, barcode), the product image, watched and streaming,
-// then notes
+// (format, condition, price, date, gift, product image, barcode), watched and streaming, then
+// notes
 function TvShowDrawerDetails({ show, onEnlargeProductImage }: TvShowDrawerDetailsProps) {
   return (
     <div className="flex flex-col gap-5 px-5 pt-6 pb-8 md:px-8">
       <TvShowSeasons show={show} />
-      <TvShowPurchaseList show={show} />
-
-      {/* The product shot (box art), click to enlarge */}
-      {show.productPosterPath && (
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">
-          <button
-            type="button"
-            onClick={onEnlargeProductImage}
-            className="shrink-0 cursor-zoom-in"
-            aria-label={`Enlarge the ${show.title} product image`}
-          >
-            <img
-              src={show.productPosterPath}
-              alt={`${show.title} product`}
-              className="h-14 w-auto rounded-md bg-white object-cover"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
-            />
-          </button>
-          <span className="text-xs text-muted-foreground">Product</span>
-        </div>
-      )}
+      <TvShowPurchaseList show={show} onEnlargeProductImage={onEnlargeProductImage} />
 
       <dl className="grid grid-cols-3 gap-x-4 gap-y-4 rounded-xl border border-border bg-card p-4">
         <DetailField label="Watched">

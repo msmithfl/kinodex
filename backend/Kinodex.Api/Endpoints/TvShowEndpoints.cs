@@ -72,7 +72,6 @@ public static class TvShowEndpoints
             show.Genres = updatedShow.Genres;
             show.PosterPath = updatedShow.PosterPath;
             show.BackdropPath = updatedShow.BackdropPath;
-            show.ProductPosterPath = updatedShow.ProductPosterPath;
             show.TmdbId = updatedShow.TmdbId;
             show.TotalSeasons = updatedShow.TotalSeasons;
             show.IsStreaming = updatedShow.IsStreaming;
@@ -132,5 +131,6 @@ public static class TvShowEndpoints
                 ? DateOnly.FromDateTime(DateTime.UtcNow)
                 : p.PurchasedAt,
             IsGift = p.IsGift,
+            ProductPosterPath = p.ProductPosterPath,
         }).ToList();
 }

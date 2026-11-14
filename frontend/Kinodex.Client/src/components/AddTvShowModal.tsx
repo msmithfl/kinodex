@@ -28,7 +28,6 @@ const emptyTvShow = (): TvShow => ({
   genres: [],
   posterPath: "",
   backdropPath: "",
-  productPosterPath: "",
   tmdbId: undefined,
   totalSeasons: 0,
   isStreaming: false,

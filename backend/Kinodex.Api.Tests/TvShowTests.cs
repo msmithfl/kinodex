@@ -65,6 +65,31 @@ public class TvShowTests(KinodexApiFactory api)
     }
 
     [Fact]
+    public async Task Each_purchase_keeps_its_own_product_image()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var id = await CreateShowAsync(owner);
+
+        // Season 1 on its own with its box art, then a later box set without one
+        var update = await owner.PutAsJsonAsync($"/api/tvshows/{id}", new
+        {
+            title = "The Wire",
+            year = 2002,
+            purchases = new[]
+            {
+                new { seasons = new[] { 1 }, price = 9.99m, purchasedAt = "2026-01-15", upcNumber = "012345678905", productPosterPath = "https://example.com/season-1.jpg" },
+                new { seasons = new[] { 2, 3 }, price = 24.99m, purchasedAt = "2026-02-01", upcNumber = "", productPosterPath = "" },
+            },
+        });
+        update.EnsureSuccessStatusCode();
+
+        var images = (await owner.GetJsonAsync($"/api/tvshows/{id}")).GetProperty("purchases").EnumerateArray()
+            .ToDictionary(p => p.GetProperty("seasons")[0].GetInt32(), p => p.GetProperty("productPosterPath").GetString());
+        Assert.Equal("https://example.com/season-1.jpg", images[1]);
+        Assert.Equal("", images[2]);
+    }
+
+    [Fact]
     public async Task A_title_is_required()
     {
         var owner = api.ClientFor(KinodexApiFactory.NewUserId());

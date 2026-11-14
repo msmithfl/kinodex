@@ -320,10 +320,6 @@ namespace Kinodex.Api.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("ProductPosterPath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<float>("Rating")
                         .HasColumnType("real");
 
@@ -375,6 +371,10 @@ namespace Kinodex.Api.Migrations
                     b.Property<decimal>("Price")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("ProductPosterPath")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateOnly>("PurchasedAt")
                         .HasColumnType("date");

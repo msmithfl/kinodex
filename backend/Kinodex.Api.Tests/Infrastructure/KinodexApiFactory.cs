@@ -89,7 +89,7 @@ public class KinodexApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         await base.DisposeAsync();
     }
 
-    private static string FindServerConnectionString()
+    internal static string FindServerConnectionString()
     {
         var fromEnvironment = Environment.GetEnvironmentVariable("KINODEX_TEST_POSTGRES");
         if (!string.IsNullOrWhiteSpace(fromEnvironment)) return fromEnvironment;
