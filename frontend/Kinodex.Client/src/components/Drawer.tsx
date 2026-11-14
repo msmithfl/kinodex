@@ -135,7 +135,10 @@ function Drawer({ label, onClose, children }: DrawerProps) {
         className={cn(
           closing ? "animate-drawer-out" : "animate-drawer-in",
           "touch-pan-y absolute inset-y-0 right-0 w-full md:w-[42rem] lg:w-[48rem] shadow-2xl border-l bg-background border-border",
-          "pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)]",
+          // No top padding: the content's backdrop runs up behind the status bar in the home screen
+          // app (DetailBackdrop is taller by the status bar's height, and the buttons over it sit
+          // below the clock)
+          "pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)]",
         )}
         style={panelStyle}
         onTouchStart={handleTouchStart}

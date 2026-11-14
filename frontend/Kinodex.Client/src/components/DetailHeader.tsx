@@ -60,7 +60,7 @@ export function DetailActions({ kind, onEdit, onDelete }: Pick<DetailHeaderProps
           </div>,
           actionsSlot,
         )}
-      <div className="absolute top-3 left-3 flex gap-0.5 rounded-full border border-border bg-background/70 p-0.5 backdrop-blur-sm md:hidden">
+      <div className="absolute top-[calc(env(safe-area-inset-top)+0.75rem)] left-3 flex gap-0.5 rounded-full border border-border bg-background/70 p-0.5 backdrop-blur-sm md:hidden">
         {editButton}
         {deleteButton}
       </div>
@@ -69,10 +69,20 @@ export function DetailActions({ kind, onEdit, onDelete }: Pick<DetailHeaderProps
 }
 
 // The band across the top of a detail drawer: the backdrop fading into the panel, or a plain band
-// when there isn't one
+// when there isn't one. Taller by the status bar's height (0 outside the home screen app), which it
+// runs up behind.
+export const DETAIL_BACKDROP_HEIGHT =
+  "h-[calc(13rem+env(safe-area-inset-top))] md:h-[calc(16rem+env(safe-area-inset-top))]";
 export function DetailBackdrop({ backdropPath, children }: { backdropPath?: string | null; children?: ReactNode }) {
   return (
-    <div className={cn("relative", backdropPath ? "h-52 md:h-64" : "h-40 bg-card md:h-32")}>
+    <div
+      className={cn(
+        "relative",
+        backdropPath
+          ? DETAIL_BACKDROP_HEIGHT
+          : "h-[calc(10rem+env(safe-area-inset-top))] bg-card md:h-[calc(8rem+env(safe-area-inset-top))]",
+      )}
+    >
       {backdropPath && <img src={backdropPath} alt="" className="absolute inset-0 h-full w-full object-cover" />}
       <div className="absolute inset-0 bg-linear-to-b from-background/10 via-background/45 to-background" />
       {children}
@@ -140,7 +150,7 @@ function DetailHeader({
 export function DetailSkeleton({ label }: { label: string }) {
   return (
     <div className="flex flex-col" aria-busy="true" aria-label={label}>
-      <Skeleton className="h-52 rounded-none md:h-64" />
+      <Skeleton className={cn("rounded-none", DETAIL_BACKDROP_HEIGHT)} />
       <div className="-mt-24 flex items-end gap-4 px-5 md:-mt-28 md:gap-6 md:px-8">
         <Skeleton className="aspect-2/3 w-28 rounded-lg md:w-36" />
         <div className="flex flex-1 flex-col gap-2 pb-1">
