@@ -8,8 +8,6 @@ import { formatPurchaseDate } from "../../utils/dateUtils";
 import Fact, { NotSet, YesNo } from "../../components/DetailField";
 import type { Movie } from "../../types";
 import { handOverDrawer } from "../../utils/windowHandoff";
-import JellyfinPlayField from "../jellyfin/JellyfinPlayField";
-
 interface MovieDrawerDetailsProps {
   movie: Movie;
   onEnlargeProductImage: () => void;
@@ -122,7 +120,6 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
         <Fact label="Streaming">
           <YesNo yes={movie.isStreaming} on={<MonitorPlay />} off={<MonitorOff />} />
         </Fact>
-        <JellyfinPlayField itemId={movie.jellyfinItemId} />
       </dl>
 
       {/* Collections, as links that open each one's drawer */}

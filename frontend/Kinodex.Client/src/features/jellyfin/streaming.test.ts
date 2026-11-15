@@ -52,7 +52,7 @@ describe("Update Streaming", () => {
     expect(names(plan.turnOff)).toEqual(["Ran"]);
   });
 
-  it("fixes the Play link without listing titles whose Streaming is already right", () => {
+  it("fixes the Jellyfin link without listing titles whose Streaming is already right", () => {
     expect(names(plan.relink)).toEqual(["Heat", "Tron"]);
   });
 

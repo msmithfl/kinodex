@@ -6,6 +6,7 @@ import { useDeleteMovie, useMovie } from "./api";
 import DetailHeader, { DetailSkeleton } from "../../components/DetailHeader";
 import DeleteConfirm from "../../components/DeleteConfirm";
 import TmdbLink from "../../components/TmdbLink";
+import JellyfinLink from "../jellyfin/JellyfinLink";
 import ImageLightbox from "../../components/ImageLightbox";
 import { EditMovieModal } from "../../components/EditMovieModal";
 import MovieDrawerDetails from "./MovieDrawerDetails";
@@ -82,7 +83,12 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps) {
           </>
         }
         rating={movie.rating}
-        tmdb={<TmdbLink kind="movie" tmdbId={movie.tmdbId} />}
+        links={
+          <>
+            <TmdbLink kind="movie" tmdbId={movie.tmdbId} />
+            <JellyfinLink itemId={movie.jellyfinItemId} />
+          </>
+        }
         kind="movie"
         onEdit={() => setShowModal(true)}
         onDelete={() => setShowDeleteConfirm(true)}

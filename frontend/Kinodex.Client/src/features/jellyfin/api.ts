@@ -11,7 +11,7 @@ import { movieKeys } from "../movies/api";
 import { tvShowKeys } from "../tvShows/api";
 import { withUpdate } from "./streaming";
 
-// Movies and shows carry their Jellyfin items (the Play link), which connecting to another server,
+// Movies and shows carry their Jellyfin items (the drawer's Jellyfin link), which connecting to another server,
 // disconnecting and Update Streaming all change
 const refreshTitles = (queryClient: QueryClient) => {
   queryClient.invalidateQueries({ queryKey: movieKeys.all });

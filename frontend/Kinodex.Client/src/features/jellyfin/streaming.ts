@@ -1,7 +1,7 @@
 import type { JellyfinComparison, JellyfinStreamingUpdate, KinodexTitle, LibraryComparison } from "../../types";
 
 // Update Streaming (docs/design/jellyfin-compare.md): Streaming set from the comparison. A title on
-// Jellyfin is streaming and linked to its Jellyfin item (the drawer's Play link); one that isn't,
+// Jellyfin is streaming and linked to its Jellyfin item (the Jellyfin logo in its drawer); one that isn't,
 // isn't. The page previews the changes and the user can leave titles out.
 
 export type TitleKind = "movie" | "show";
@@ -16,7 +16,7 @@ export interface StreamingTitle {
 export interface StreamingPlan {
   turnOn: StreamingTitle[]; // On Jellyfin, not marked streaming
   turnOff: StreamingTitle[]; // Marked streaming, not on Jellyfin
-  relink: StreamingTitle[]; // Streaming already right, only the Play link changes (not listed)
+  relink: StreamingTitle[]; // Streaming already right, only the Jellyfin link changes (not listed)
 }
 
 const libraries = (comparison: JellyfinComparison) =>
