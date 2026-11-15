@@ -7,7 +7,8 @@ namespace Kinodex.Api.Services;
 // by title and year for anything left. No I/O, so it's tested on its own.
 public static class JellyfinCompare
 {
-    public record KinodexTitle(int Id, string Title, int Year, int? TmdbId);
+    // IsStreaming and JellyfinItemId: as saved, so the page can show what Update Streaming would change
+    public record KinodexTitle(int Id, string Title, int Year, int? TmdbId, bool IsStreaming = false, string? JellyfinItemId = null);
     public record JellyfinTitle(string Id, string Title, int Year, int? TmdbId);
 
     // MatchedBy: "tmdb" (the same TMDB id) or "title" (the same title and year)

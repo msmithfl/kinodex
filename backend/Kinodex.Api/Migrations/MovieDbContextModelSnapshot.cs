@@ -167,6 +167,9 @@ namespace Kinodex.Api.Migrations
                     b.Property<bool>("IsStreaming")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("JellyfinItemId")
+                        .HasColumnType("text");
+
                     b.Property<string>("PosterPath")
                         .IsRequired()
                         .HasColumnType("text");
@@ -348,6 +351,9 @@ namespace Kinodex.Api.Migrations
 
                     b.Property<bool>("IsStreaming")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("JellyfinItemId")
+                        .HasColumnType("text");
 
                     b.Property<string>("PosterPath")
                         .IsRequired()

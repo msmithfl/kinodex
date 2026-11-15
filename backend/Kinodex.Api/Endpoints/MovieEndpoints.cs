@@ -41,6 +41,7 @@ public static class MovieEndpoints
             {
                 movie.Id = 0;
                 movie.UserId = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+                movie.JellyfinItemId = null; // Linked only by Update Streaming
                 if (movie.PurchasedAt == default) movie.PurchasedAt = DateOnly.FromDateTime(DateTime.UtcNow);
                 db.Movies.Add(movie);
                 await db.SaveChangesAsync();

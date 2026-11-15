@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronRight, ExternalLink, RefreshCw } from "lucide-react";
+import { ChevronRight, ExternalLink, MonitorPlay, RefreshCw } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,8 @@ import {
   useJellyfinStatus,
   useSaveJellyfinLibraries,
 } from "../features/jellyfin/api";
+import UpdateStreamingDialog from "../features/jellyfin/UpdateStreamingDialog";
+import { jellyfinItemUrl } from "../features/jellyfin/urls";
 import type { JellyfinStatus, LibraryComparison } from "../types";
 
 // Jellyfin: connect a server, then compare its libraries with Kinodex (docs/design/jellyfin-compare.md).
@@ -215,16 +217,26 @@ function Libraries() {
 
 function Comparison({ serverUrl }: { serverUrl: string }) {
   const { data, error, isFetching, refetch } = useJellyfinComparison(true);
+  // Update Streaming's preview, open
+  const [updating, setUpdating] = useState(false);
 
   return (
     <section className="mt-4 rounded-xl border border-border bg-card px-5 py-4">
-      <div className="flex items-center justify-between gap-3 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3">
         <h2 className="text-base font-semibold">Compare libraries</h2>
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={cn(isFetching && "animate-spin")} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          {/* Sets each title's Streaming from the comparison, after a preview */}
+          <Button variant="outline" size="sm" onClick={() => setUpdating(true)} disabled={!data || isFetching}>
+            <MonitorPlay />
+            Update Streaming
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={cn(isFetching && "animate-spin")} />
+            Refresh
+          </Button>
+        </div>
       </div>
+      {updating && data && <UpdateStreamingDialog comparison={data} onClose={() => setUpdating(false)} />}
 
       {error ? (
         <Alert variant="destructive">{error.message}</Alert>
@@ -252,9 +264,6 @@ function Comparison({ serverUrl }: { serverUrl: string }) {
 const kinodexLink = (kind: "movie" | "show", id: number) =>
   kind === "movie" ? `/library?movie=${id}` : `/tv-shows?show=${id}`;
 
-// Where a Jellyfin title opens: its page in Jellyfin's web app
-const jellyfinLink = (serverUrl: string, id: string) => `${serverUrl}/web/#/details?id=${id}`;
-
 function ComparisonLists({
   comparison,
   serverUrl,
@@ -272,7 +281,7 @@ function ComparisonLists({
       </p>
       <Group title="On Jellyfin, not in Kinodex" count={comparison.onlyOnJellyfin.length} defaultOpen>
         {comparison.onlyOnJellyfin.map((title) => (
-          <Row key={title.id} title={title.title} year={title.year} href={jellyfinLink(serverUrl, title.id)} />
+          <Row key={title.id} title={title.title} year={title.year} href={jellyfinItemUrl(serverUrl, title.id)} />
         ))}
       </Group>
       <Group title="In Kinodex, not on Jellyfin" count={comparison.onlyInKinodex.length} defaultOpen>

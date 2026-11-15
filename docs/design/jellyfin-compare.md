@@ -21,8 +21,16 @@ with the hosted site, as long as the Jellyfin server has a public `https` addres
   - On Jellyfin, not in Kinodex
   - In Kinodex, not on Jellyfin
   - In both (marked when matched by title rather than TMDB id)
+- **Update Streaming** (a button beside Refresh): sets each title's Streaming from the comparison:
+  on for titles on Jellyfin, off for those that aren't. A preview lists what would be turned on and
+  off, every title ticked; untick any to leave them as they are (say, a film streamed from
+  somewhere else, or one in a library that isn't compared). Nothing changes until Apply.
+- **Play link:** Update Streaming also saves which Jellyfin item each title is, so its drawer
+  shows Play (beside Streaming), opening the title in Jellyfin's web app. Jellyfin's web app has
+  no link that starts playing straight away, so it's the title's page, one click from playing.
 
-The comparison runs when the page opens (and on Refresh); nothing is stored or synced.
+The comparison runs when the page opens (and on Refresh) and changes nothing by itself; only
+Update Streaming saves anything, and only when the user presses it.
 
 ## Decisions
 
@@ -55,6 +63,20 @@ The comparison runs when the page opens (and on Refresh); nothing is stored or s
   punctuation or a leading A / An / The, the years within one of each other (or either unknown),
   and never two items whose TMDB ids are both set and differ.
 - **TV is compared by show**, not season, for now.
+- **Streaming is the existing flag, set from Jellyfin**, not replaced by a live Jellyfin check. The
+  flag ("Available to stream", beside the HDD number) already meant "ripped", so everything using
+  it (the drawer, the Streaming filter, Stats, bulk edit, CSV) keeps working unchanged, the
+  library never waits on Jellyfin, and nothing breaks when the server's offline or for people
+  without Jellyfin. The cost: it's only as fresh as the last Update Streaming.
+  - **A button with a preview**, not automatic: turning Streaming off can be wrong (a title streamed
+    from elsewhere, a library left out of the comparison), so the user sees those first.
+  - **The page works out the changes** from the comparison it already has (each Kinodex title
+    comes with its Streaming and saved Jellyfin item), and sends only those it confirmed:
+    `POST /api/jellyfin/streaming`, each title with its Jellyfin item id or null. The server
+    applies them to the user's own titles only and takes nothing but a GUID as an item id (it
+    goes into a link). No second read of Jellyfin, and what's saved is exactly what was shown.
+  - **The Jellyfin item ids belong to the server**, so connecting to a different one, or
+    disconnecting, forgets them (Streaming itself stays as it was).
 
 ## Jellyfin API used
 
@@ -82,8 +104,12 @@ The comparison runs when the page opens (and on Refresh); nothing is stored or s
 | `Services/JellyfinClient.cs` | The two Jellyfin calls, with plain error messages |
 | `Services/PublicAddress.cs` | The public-address check, applied at connection time |
 | `Services/JellyfinCompare.cs` | The matching (no I/O, unit tested) |
-| `Endpoints/JellyfinEndpoints.cs` | `GET/PUT/DELETE /api/jellyfin` (status, connect, disconnect), `GET/PUT /api/jellyfin/libraries` (which to compare), `GET /api/jellyfin/compare` |
-| `features/jellyfin/` | React Query hooks |
+| `Endpoints/JellyfinEndpoints.cs` | `GET/PUT/DELETE /api/jellyfin` (status, connect, disconnect), `GET/PUT /api/jellyfin/libraries` (which to compare), `GET /api/jellyfin/compare`, `POST /api/jellyfin/streaming` (Update Streaming) |
+| `Movie.JellyfinItemId`, `TvShow.JellyfinItemId` | The title's Jellyfin item, for the Play link; null when not linked |
+| `features/jellyfin/api.ts` | React Query hooks |
+| `features/jellyfin/streaming.ts` | Update Streaming's plan and request, worked out from the comparison (no I/O, unit tested) |
+| `features/jellyfin/UpdateStreamingDialog.tsx` | The preview |
+| `features/jellyfin/JellyfinPlayField.tsx` | The drawers' Play link |
 | `pages/JellyfinPage.tsx` | The page |
 
 ## Planned: signing in with Jellyfin instead of an API key
@@ -139,5 +165,5 @@ About the size of the first version of this feature.
 
 - "Add to Kinodex" on Jellyfin-only items (opening Add movie already searched).
 - Comparing TV seasons owned with seasons on Jellyfin.
-- Showing Jellyfin status elsewhere (e.g. a "on Jellyfin" mark in the drawer), once the design
-  settles.
+- Keeping Streaming fresh without the button: set it when a title is added (if it's already on
+  Jellyfin), or turn titles on (never off) automatically when the page compares.
