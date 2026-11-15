@@ -30,6 +30,12 @@ public static class JellyfinEndpoints
 
     public record JellyfinLibrarySelection(List<string> LibraryIds);
 
+    // Update Streaming: for each title, the Jellyfin item it's on (Streaming on, linked) or null
+    // (not on Jellyfin: Streaming off, unlinked). Titles left out are left as they are.
+    public record StreamingChange(int Id, string? JellyfinItemId);
+    public record JellyfinStreamingUpdate(List<StreamingChange> Movies, List<StreamingChange> Shows);
+    public record JellyfinStreamingResult(int TurnedOn, int TurnedOff);
+
     private const string KeyPurpose = "Kinodex.Jellyfin.ApiKey";
 
     public static void MapJellyfinEndpoints(this IEndpointRouteBuilder app)
@@ -84,8 +90,13 @@ public static class JellyfinEndpoints
                 connection = new JellyfinConnection { UserId = userId };
                 db.JellyfinConnections.Add(connection);
             }
-            // A different server has different libraries, so the choice of them starts over
-            if (connection.ServerUrl != serverUrl) connection.LibraryIds = [];
+            // A different server has different libraries and items, so the choice of libraries
+            // starts over and the titles' Play links (to the old server's items) are forgotten
+            if (connection.ServerUrl != serverUrl)
+            {
+                connection.LibraryIds = [];
+                await ForgetLinksAsync(db, userId);
+            }
             connection.ServerUrl = serverUrl;
             connection.ProtectedApiKey = protection.CreateProtector(KeyPurpose).Protect(apiKey);
             connection.ServerName = info.Name;
@@ -96,14 +107,17 @@ public static class JellyfinEndpoints
             return Results.Ok(StatusOf(connection));
         }).Produces<JellyfinStatus>();
 
-        // DELETE disconnect: forgets the address and key
+        // DELETE disconnect: forgets the address and key, and the titles' Play links (Streaming
+        // itself is left as it is)
         group.MapDelete("/", async (ClaimsPrincipal user, MovieDbContext db) =>
         {
-            var connection = await db.JellyfinConnections.FindAsync(UserId(user));
+            var userId = UserId(user);
+            var connection = await db.JellyfinConnections.FindAsync(userId);
             if (connection is not null)
             {
                 db.JellyfinConnections.Remove(connection);
                 await db.SaveChangesAsync();
+                await ForgetLinksAsync(db, userId);
             }
             return Results.NoContent();
         });
@@ -184,11 +198,11 @@ public static class JellyfinEndpoints
 
             var movies = await db.Movies
                 .Where(m => m.UserId == userId)
-                .Select(m => new KinodexTitle(m.Id, m.Title, m.Year, m.TmdbId))
+                .Select(m => new KinodexTitle(m.Id, m.Title, m.Year, m.TmdbId, m.IsStreaming, m.JellyfinItemId))
                 .ToListAsync();
             var shows = await db.TvShows
                 .Where(s => s.UserId == userId)
-                .Select(s => new KinodexTitle(s.Id, s.Title, s.Year, s.TmdbId))
+                .Select(s => new KinodexTitle(s.Id, s.Title, s.Year, s.TmdbId, s.IsStreaming, s.JellyfinItemId))
                 .ToListAsync();
 
             JellyfinTitle[] OfType(string type) => items
@@ -201,6 +215,59 @@ public static class JellyfinEndpoints
                 Compare(shows, OfType("Series")),
                 DateTime.UtcNow));
         }).Produces<JellyfinComparison>();
+
+        // POST Update Streaming: the changes the user confirmed on the page, worked out there from
+        // the comparison. Only the user's own titles change; unknown ids are ignored.
+        group.MapPost("/streaming", async (JellyfinStreamingUpdate update, ClaimsPrincipal user, MovieDbContext db) =>
+        {
+            var userId = UserId(user);
+            if (await db.JellyfinConnections.FindAsync(userId) is null)
+                return Results.Conflict(new { error = "Connect a Jellyfin server first." });
+            if (update.Movies.Concat(update.Shows).Any(c => c.JellyfinItemId is { } id && !IsItemId(id)))
+                return Results.BadRequest(new { error = "That isn't a Jellyfin item id." });
+
+            var movieChanges = update.Movies.DistinctBy(c => c.Id).ToDictionary(c => c.Id, c => c.JellyfinItemId);
+            var showChanges = update.Shows.DistinctBy(c => c.Id).ToDictionary(c => c.Id, c => c.JellyfinItemId);
+            var movies = await db.Movies.Where(m => m.UserId == userId && movieChanges.Keys.Contains(m.Id)).ToListAsync();
+            var shows = await db.TvShows.Where(s => s.UserId == userId && showChanges.Keys.Contains(s.Id)).ToListAsync();
+
+            int turnedOn = 0, turnedOff = 0;
+            void Count(bool was, bool now)
+            {
+                if (now && !was) turnedOn++;
+                else if (!now && was) turnedOff++;
+            }
+            foreach (var movie in movies)
+            {
+                var itemId = movieChanges[movie.Id];
+                Count(movie.IsStreaming, itemId is not null);
+                movie.IsStreaming = itemId is not null;
+                movie.JellyfinItemId = itemId;
+            }
+            foreach (var show in shows)
+            {
+                var itemId = showChanges[show.Id];
+                Count(show.IsStreaming, itemId is not null);
+                show.IsStreaming = itemId is not null;
+                show.JellyfinItemId = itemId;
+            }
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new JellyfinStreamingResult(turnedOn, turnedOff));
+        }).Produces<JellyfinStreamingResult>();
+    }
+
+    // Jellyfin's item ids are GUIDs (32 hex digits, or with dashes); they go into a link to the
+    // server, so nothing else is taken
+    private static bool IsItemId(string id) => Guid.TryParseExact(id, "N", out _) || Guid.TryParseExact(id, "D", out _);
+
+    // Removes every Play link: they point at items on a server that's no longer the connected one
+    private static async Task ForgetLinksAsync(MovieDbContext db, string userId)
+    {
+        await db.Movies.Where(m => m.UserId == userId && m.JellyfinItemId != null)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.JellyfinItemId, (string?)null));
+        await db.TvShows.Where(s => s.UserId == userId && s.JellyfinItemId != null)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.JellyfinItemId, (string?)null));
     }
 
     // The user's connection and its key, or the response to send when there's no usable one

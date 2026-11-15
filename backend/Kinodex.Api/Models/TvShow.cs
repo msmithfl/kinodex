@@ -15,6 +15,8 @@ public class TvShow
     public int? TmdbId { get; set; }
     public int TotalSeasons { get; set; } // Season count from TMDB, 0 when unknown
     public bool IsStreaming { get; set; } = false;
+    // The matching series on the user's Jellyfin server, as for movies (Movie.JellyfinItemId)
+    public string? JellyfinItemId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Owned seasons, total paid and "complete" are all derived from these

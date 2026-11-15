@@ -821,6 +821,35 @@
           }
         }
       }
+    },
+    "/api/jellyfin/streaming": {
+      "post": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JellyfinStreamingUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JellyfinStreamingResult"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1031,6 +1060,44 @@
           }
         }
       },
+      "JellyfinStreamingResult": {
+        "required": [
+          "turnedOn",
+          "turnedOff"
+        ],
+        "type": "object",
+        "properties": {
+          "turnedOn": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "turnedOff": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "JellyfinStreamingUpdate": {
+        "required": [
+          "movies",
+          "shows"
+        ],
+        "type": "object",
+        "properties": {
+          "movies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StreamingChange"
+            }
+          },
+          "shows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StreamingChange"
+            }
+          }
+        }
+      },
       "JellyfinTitle": {
         "required": [
           "id",
@@ -1064,7 +1131,8 @@
           "id",
           "title",
           "year",
-          "tmdbId"
+          "tmdbId",
+          "isStreaming"
         ],
         "type": "object",
         "properties": {
@@ -1085,6 +1153,16 @@
               "integer"
             ],
             "format": "int32"
+          },
+          "isStreaming": {
+            "type": "boolean",
+            "default": false
+          },
+          "jellyfinItemId": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -1240,6 +1318,12 @@
           "isStreaming": {
             "type": "boolean"
           },
+          "jellyfinItemId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "isGift": {
             "type": "boolean"
           },
@@ -1377,6 +1461,25 @@
           }
         }
       },
+      "StreamingChange": {
+        "required": [
+          "id",
+          "jellyfinItemId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "jellyfinItemId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "TitleMatch": {
         "required": [
           "kinodex",
@@ -1464,6 +1567,12 @@
           },
           "isStreaming": {
             "type": "boolean"
+          },
+          "jellyfinItemId": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "createdAt": {
             "type": "string",

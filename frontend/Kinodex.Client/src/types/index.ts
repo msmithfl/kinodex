@@ -42,6 +42,10 @@ export type JellyfinStatus = Schemas["JellyfinStatus"];
 export type JellyfinComparison = Schemas["JellyfinComparison"];
 export type LibraryComparison = Schemas["LibraryComparison"];
 export type JellyfinLibrary = Schemas["JellyfinLibrary"];
+export type KinodexTitle = Schemas["KinodexTitle"];
+// Update Streaming (features/jellyfin/streaming.ts)
+export type JellyfinStreamingUpdate = Schemas["JellyfinStreamingUpdate"];
+export type JellyfinStreamingResult = Schemas["JellyfinStreamingResult"];
 
 export interface TMDBMovie {
   id: number;

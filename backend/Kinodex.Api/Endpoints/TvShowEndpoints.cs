@@ -44,6 +44,7 @@ public static class TvShowEndpoints
 
             show.Id = 0;
             show.UserId = userId;
+            show.JellyfinItemId = null; // Linked only by Update Streaming
             show.CreatedAt = DateTime.UtcNow;
             show.Purchases = PreparePurchases(show.Purchases);
 

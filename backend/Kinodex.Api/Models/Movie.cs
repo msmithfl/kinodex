@@ -26,6 +26,9 @@ public class Movie
     public int ShelfNumber { get; set; }
     public string ShelfSection { get; set; } = string.Empty;
     public bool IsStreaming { get; set; } = false;
+    // The matching item on the user's Jellyfin server, saved by Update Streaming (for the drawer's
+    // Play link); null when not linked. Cleared when Jellyfin is disconnected or the server changes.
+    public string? JellyfinItemId { get; set; }
     public bool IsGift { get; set; } = false; // Received as a gift rather than bought
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     

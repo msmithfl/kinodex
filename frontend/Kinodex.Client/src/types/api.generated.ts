@@ -1103,6 +1103,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jellyfin/streaming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["JellyfinStreamingUpdate"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["JellyfinStreamingResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1160,6 +1199,16 @@ export interface components {
             /** Format: date-time */
             connectedAt: null | string;
         };
+        JellyfinStreamingResult: {
+            /** Format: int32 */
+            turnedOn: number;
+            /** Format: int32 */
+            turnedOff: number;
+        };
+        JellyfinStreamingUpdate: {
+            movies: components["schemas"]["StreamingChange"][];
+            shows: components["schemas"]["StreamingChange"][];
+        };
         JellyfinTitle: {
             id: string;
             title: string;
@@ -1176,6 +1225,9 @@ export interface components {
             year: number;
             /** Format: int32 */
             tmdbId: null | number;
+            /** @default false */
+            isStreaming: boolean;
+            jellyfinItemId?: null | string;
         };
         LibraryComparison: {
             onlyOnJellyfin: components["schemas"]["JellyfinTitle"][];
@@ -1217,6 +1269,7 @@ export interface components {
             shelfNumber: number;
             shelfSection: string;
             isStreaming: boolean;
+            jellyfinItemId?: null | string;
             isGift: boolean;
             /** Format: date-time */
             createdAt: string;
@@ -1259,6 +1312,11 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        StreamingChange: {
+            /** Format: int32 */
+            id: number;
+            jellyfinItemId: null | string;
+        };
         TitleMatch: {
             kinodex: components["schemas"]["KinodexTitle"];
             jellyfin: components["schemas"]["JellyfinTitle"];
@@ -1283,6 +1341,7 @@ export interface components {
             /** Format: int32 */
             totalSeasons: number;
             isStreaming: boolean;
+            jellyfinItemId?: null | string;
             /** Format: date-time */
             createdAt: string;
             purchases: components["schemas"]["TvShowPurchase"][];

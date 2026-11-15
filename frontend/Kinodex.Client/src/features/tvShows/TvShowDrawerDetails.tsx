@@ -2,6 +2,7 @@ import { Eye, EyeOff, MonitorOff, MonitorPlay } from "lucide-react";
 import DetailField, { YesNo } from "../../components/DetailField";
 import TvShowSeasons from "./TvShowSeasons";
 import TvShowPurchaseList from "./TvShowPurchaseList";
+import JellyfinPlayField from "../jellyfin/JellyfinPlayField";
 import type { TvShow } from "../../types";
 
 interface TvShowDrawerDetailsProps {
@@ -25,6 +26,7 @@ function TvShowDrawerDetails({ show, onEnlargeProductImage }: TvShowDrawerDetail
         <DetailField label="Streaming">
           <YesNo yes={show.isStreaming} on={<MonitorPlay />} off={<MonitorOff />} />
         </DetailField>
+        <JellyfinPlayField itemId={show.jellyfinItemId} />
       </dl>
 
       {/* Review / notes */}

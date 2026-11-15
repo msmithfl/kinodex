@@ -267,18 +267,154 @@ public class JellyfinTests(KinodexApiFactory api)
         Assert.Equal(HttpStatusCode.Unauthorized, (await api.ClientFor(null).GetAsync("/api/jellyfin")).StatusCode);
     }
 
+    // Jellyfin's item ids are GUIDs, which Update Streaming checks for
+    private const string AlienItem = "0a1b2c3d4e5f60718293a4b5c6d7e8f9";
+    private const string WireItem = "1a1b2c3d4e5f60718293a4b5c6d7e8f9";
+
+    [Fact]
+    public async Task Update_streaming_turns_titles_on_and_off_and_saves_their_jellyfin_items()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var alien = await AddMovieAsync(owner, "Alien", 1979, tmdbId: 348);
+        var clue = await AddMovieAsync(owner, "Clue", 1985, tmdbId: 15196, streaming: true);
+        var thing = await AddMovieAsync(owner, "The Thing", 1982, tmdbId: 1091, streaming: true);
+        var wire = await AddShowAsync(owner, "The Wire", 2002, tmdbId: 1438);
+        var strangers = await AddMovieAsync(api.ClientFor(KinodexApiFactory.NewUserId()), "Alien", 1979, tmdbId: 348);
+        (await ConnectAsync(owner, Add(new Server(Key, "Home Server", [])))).EnsureSuccessStatusCode();
+
+        // Alien on Jellyfin, Clue not; The Thing (unticked on the page) left out
+        var response = await owner.PostAsJsonAsync("/api/jellyfin/streaming", new
+        {
+            movies = new object[]
+            {
+                new { id = alien, jellyfinItemId = AlienItem },
+                new { id = clue, jellyfinItemId = (string?)null },
+                new { id = strangers, jellyfinItemId = AlienItem }, // Not theirs: ignored
+            },
+            shows = new[] { new { id = wire, jellyfinItemId = WireItem } },
+        });
+        response.EnsureSuccessStatusCode();
+        var result = await response.ReadJsonAsync();
+        Assert.Equal(2, result.GetProperty("turnedOn").GetInt32()); // Alien and The Wire
+        Assert.Equal(1, result.GetProperty("turnedOff").GetInt32()); // Clue
+
+        var movies = await api.WithDbAsync(db => db.Movies.Where(m => new[] { alien, clue, thing, strangers }.Contains(m.Id))
+            .ToDictionaryAsync(m => m.Id, m => (m.IsStreaming, m.JellyfinItemId)));
+        Assert.Equal((true, AlienItem), movies[alien]);
+        Assert.Equal((false, null), movies[clue]);
+        Assert.Equal((true, null), movies[thing]);
+        Assert.Equal((false, null), movies[strangers]);
+        var show = await owner.GetJsonAsync($"/api/tvshows/{wire}");
+        Assert.True(show.GetProperty("isStreaming").GetBoolean());
+        Assert.Equal(WireItem, show.GetProperty("jellyfinItemId").GetString());
+    }
+
+    [Fact]
+    public async Task The_comparison_shows_each_titles_streaming_and_jellyfin_item()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var alien = await AddMovieAsync(owner, "Alien", 1979, tmdbId: 348);
+        (await ConnectAsync(owner, Add(new Server(Key, "Home Server", [new Item(AlienItem, "Alien", "Movie", 1979, 348)]))))
+            .EnsureSuccessStatusCode();
+        (await owner.PostAsJsonAsync("/api/jellyfin/streaming",
+            new { movies = new[] { new { id = alien, jellyfinItemId = AlienItem } }, shows = Array.Empty<object>() }))
+            .EnsureSuccessStatusCode();
+
+        var match = Assert.Single((await owner.GetJsonAsync("/api/jellyfin/compare")).GetProperty("movies").GetProperty("inBoth").EnumerateArray());
+        Assert.True(match.GetProperty("kinodex").GetProperty("isStreaming").GetBoolean());
+        Assert.Equal(AlienItem, match.GetProperty("kinodex").GetProperty("jellyfinItemId").GetString());
+    }
+
+    [Theory]
+    [InlineData("javascript:alert(1)")]
+    [InlineData("{0a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9}")]
+    public async Task Update_streaming_refuses_anything_but_a_jellyfin_item_id(string itemId)
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var alien = await AddMovieAsync(owner, "Alien", 1979, tmdbId: 348);
+        (await ConnectAsync(owner, Add(new Server(Key, "Home Server", [])))).EnsureSuccessStatusCode();
+
+        var response = await owner.PostAsJsonAsync("/api/jellyfin/streaming",
+            new { movies = new[] { new { id = alien, jellyfinItemId = itemId } }, shows = Array.Empty<object>() });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.False((await owner.GetJsonAsync($"/api/movies/{alien}")).GetProperty("isStreaming").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Update_streaming_needs_a_connected_server()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var alien = await AddMovieAsync(owner, "Alien", 1979, tmdbId: 348);
+
+        var response = await owner.PostAsJsonAsync("/api/jellyfin/streaming",
+            new { movies = new[] { new { id = alien, jellyfinItemId = AlienItem } }, shows = Array.Empty<object>() });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Changing_server_or_disconnecting_forgets_the_jellyfin_items_but_keeps_streaming()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var alien = await AddMovieAsync(owner, "Alien", 1979, tmdbId: 348);
+        var wire = await AddShowAsync(owner, "The Wire", 2002, tmdbId: 1438);
+        var link = new { movies = new[] { new { id = alien, jellyfinItemId = AlienItem } }, shows = new[] { new { id = wire, jellyfinItemId = WireItem } } };
+        async Task<(JsonElement Movie, JsonElement Show)> ReadAsync() =>
+            (await owner.GetJsonAsync($"/api/movies/{alien}"), await owner.GetJsonAsync($"/api/tvshows/{wire}"));
+
+        var first = Add(new Server(Key, "First", []));
+        (await ConnectAsync(owner, first)).EnsureSuccessStatusCode();
+        (await owner.PostAsJsonAsync("/api/jellyfin/streaming", link)).EnsureSuccessStatusCode();
+
+        // Connecting again to the same server (a new key) keeps them
+        (await ConnectAsync(owner, first)).EnsureSuccessStatusCode();
+        Assert.Equal(AlienItem, (await ReadAsync()).Movie.GetProperty("jellyfinItemId").GetString());
+
+        (await ConnectAsync(owner, Add(new Server(Key, "Second", [])))).EnsureSuccessStatusCode();
+        var (movie, show) = await ReadAsync();
+        Assert.Equal(JsonValueKind.Null, movie.GetProperty("jellyfinItemId").ValueKind);
+        Assert.Equal(JsonValueKind.Null, show.GetProperty("jellyfinItemId").ValueKind);
+        Assert.True(movie.GetProperty("isStreaming").GetBoolean());
+
+        (await owner.PostAsJsonAsync("/api/jellyfin/streaming", link)).EnsureSuccessStatusCode();
+        (await owner.DeleteAsync("/api/jellyfin")).EnsureSuccessStatusCode();
+        (movie, show) = await ReadAsync();
+        Assert.Equal(JsonValueKind.Null, movie.GetProperty("jellyfinItemId").ValueKind);
+        Assert.Equal(JsonValueKind.Null, show.GetProperty("jellyfinItemId").ValueKind);
+        Assert.True(show.GetProperty("isStreaming").GetBoolean());
+    }
+
+    [Fact]
+    public async Task A_new_title_is_never_linked_by_the_request_that_adds_it()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var body = (Dictionary<string, object>)TestData.Movie("Alien");
+        body["jellyfinItemId"] = AlienItem;
+
+        var created = await (await owner.PostAsJsonAsync("/api/movies", body)).ReadJsonAsync();
+
+        Assert.Equal(JsonValueKind.Null, created.GetProperty("jellyfinItemId").ValueKind);
+    }
+
     private static IEnumerable<string> Titles(JsonElement list) =>
         list.EnumerateArray().Select(t => t.GetProperty("title").GetString()!);
 
-    private static async Task AddMovieAsync(HttpClient client, string title, int year, int? tmdbId)
+    private static async Task<int> AddMovieAsync(HttpClient client, string title, int year, int? tmdbId, bool streaming = false)
     {
         var body = (Dictionary<string, object>)TestData.Movie(title);
         body["year"] = year;
+        body["isStreaming"] = streaming;
         if (tmdbId is not null) body["tmdbId"] = tmdbId;
-        (await client.PostAsJsonAsync("/api/movies", body)).EnsureSuccessStatusCode();
+        var response = await client.PostAsJsonAsync("/api/movies", body);
+        response.EnsureSuccessStatusCode();
+        return (await response.ReadJsonAsync()).GetProperty("id").GetInt32();
     }
 
-    private static async Task AddShowAsync(HttpClient client, string title, int year, int tmdbId) =>
-        (await client.PostAsJsonAsync("/api/tvshows", new { title, year, tmdbId, purchases = Array.Empty<object>() }))
-            .EnsureSuccessStatusCode();
+    private static async Task<int> AddShowAsync(HttpClient client, string title, int year, int tmdbId)
+    {
+        var response = await client.PostAsJsonAsync("/api/tvshows", new { title, year, tmdbId, purchases = Array.Empty<object>() });
+        response.EnsureSuccessStatusCode();
+        return (await response.ReadJsonAsync()).GetProperty("id").GetInt32();
+    }
 }

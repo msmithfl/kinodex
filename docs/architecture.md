@@ -51,7 +51,7 @@ Kinodex/
         tvShows/          TvShowDetail (drawer), TvShowDrawerDetails, TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images, Review tabs)
         collections/      CollectionDetail (drawer), CollectionChecklist
         shelfSections/    (hooks only)
-        jellyfin/         (hooks only) the Jellyfin connection and comparison
+        jellyfin/         the Jellyfin connection and comparison hooks, Update Streaming (streaming.ts, UpdateStreamingDialog), the drawers' Play link (JellyfinPlayField)
       types/index.ts    shared TypeScript types, derived from the generated ones
       types/api.generated.ts  generated from the API's OpenAPI description (npm run gen:api); don't edit
       types/openapi.json      the description it was generated from (checked by a backend test)
@@ -98,7 +98,7 @@ the `useSettings()` hook (shared cache).
 | `/stats` | `Stats`: charts and breakdowns | Core |
 | `/settings` | `Settings`: collection completion rings; Add Movie presets (rename, delete; `features/movies/MoviePresetSettings.tsx`) | Core |
 | `/export` | `CsvExport`: CSV export/import, Letterboxd import | Core |
-| `/jellyfin` | `JellyfinPage`: connect a Jellyfin server (address + API key), then compare its movies and series with Kinodex (only on Jellyfin, only in Kinodex, in both). Reached from Settings for now (`docs/design/jellyfin-compare.md`) | New |
+| `/jellyfin` | `JellyfinPage`: connect a Jellyfin server (address + API key), then compare its movies and series with Kinodex (only on Jellyfin, only in Kinodex, in both). Update Streaming sets each title's Streaming from the comparison, after a preview, and links titles to their Jellyfin items (a Play link in the drawers). Reached from Settings for now (`docs/design/jellyfin-compare.md`) | New |
 | `/sign-in`, `/sign-up` | Clerk pages | Public |
 | anything else | Redirects to `/` (including the removed shelf, lending and Match Movies pages) | Redirect |
 
@@ -307,7 +307,7 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 | `/api/movie-presets` | list, create, update, delete (names unique per user; every Add Movie field TMDB does not fill in, purchase date optional) | Owned | `features/movies/presets.ts`; Add Movie modal picks and saves them |
 | `/api/upc/lookup/{upc}` | product title + images | Shared cache (`UpcLookups`), not per user | Product image picker |
 | `/api/tmdb/v3/{path}` | TMDB's reply for the app's TMDB requests (searches, a title's images, a TV show's details); others are refused | Signed in; not per user | `utils/tmdbApi.ts` (`useTmdb`) |
-| `/api/jellyfin` | get (never the key), connect (checks address + key against the server first), disconnect; `/libraries` lists the server's libraries and saves which to compare (all by default); `/compare` matches the server's movies and series with the user's by TMDB id, then title + year | Owned; the key is encrypted (Data Protection, keys in `DataProtectionKeys`); production only connects to public `https` addresses (`PublicAddress`) | `features/jellyfin/api.ts`, `/jellyfin` page |
+| `/api/jellyfin` | get (never the key), connect (checks address + key against the server first), disconnect; `/libraries` lists the server's libraries and saves which to compare (all by default); `/compare` matches the server's movies and series with the user's by TMDB id, then title + year; `/streaming` saves Update Streaming's changes (Streaming and the Jellyfin item, per title). Changing server or disconnecting forgets the titles' Jellyfin items | Owned; the key is encrypted (Data Protection, keys in `DataProtectionKeys`); production only connects to public `https` addresses (`PublicAddress`) | `features/jellyfin/api.ts`, `/jellyfin` page |
 | `/api/webhooks/clerk` | user created/updated/deleted | **No sign-in**; verified by Svix signature | Clerk |
 
 ### Data model
@@ -331,7 +331,8 @@ Shared (not per user): UpcLookup (UPC → product images)
 - List fields (`Formats`, `Collections`, `Genres`, `Seasons`, `Images`) are Postgres arrays.
 
 Notable fields: movies and TV shows carry TMDB id, poster/backdrop image URLs, rating, review,
-watched, `IsStreaming`; movies also have UPC, product image, condition, price, shelf number,
+watched, `IsStreaming`, `JellyfinItemId` (the title on the user's Jellyfin server, set by Update
+Streaming; null when not linked); movies also have UPC, product image, condition, price, shelf number,
 HDD number. A TV show's UPC, product image, condition and price are per purchase
 (`TvShowPurchase`), since each purchase is its own disc or set. Collections have `IsDirectorCollection`, `ImageUrl` (cover), `BackdropUrl`.
 
