@@ -8,10 +8,13 @@ function TmdbLink({ kind, tmdbId }: { kind: "movie" | "tv"; tmdbId?: number | nu
       className="shrink-0"
       title={tmdbId ? "View on TMDB" : "Search on TMDB"}
     >
+      {/* The image has a transparent margin round its tile (a tenth each side), so it's scaled up
+          to make the tile as big as the Jellyfin logo beside it; scaling leaves the space it
+          takes up alone, so nothing else moves */}
       <img
         src="/tmdb-icon.png"
         alt="TMDB"
-        className="w-8 h-8 hover:opacity-80 transition-opacity"
+        className="w-8 h-8 scale-125 hover:opacity-80 transition-opacity"
       />
     </a>
   );
