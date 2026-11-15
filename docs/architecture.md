@@ -51,7 +51,7 @@ Kinodex/
         tvShows/          TvShowDetail (drawer), TvShowDrawerDetails, TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images, Review tabs)
         collections/      CollectionDetail (drawer), CollectionChecklist
         shelfSections/    (hooks only)
-        jellyfin/         the Jellyfin connection and comparison hooks, Update Streaming (streaming.ts, UpdateStreamingDialog), the drawers' Play link (JellyfinPlayField)
+        jellyfin/         the Jellyfin connection and comparison hooks, Update Streaming (streaming.ts, UpdateStreamingDialog), the drawers' Jellyfin link (JellyfinLink)
       types/index.ts    shared TypeScript types, derived from the generated ones
       types/api.generated.ts  generated from the API's OpenAPI description (npm run gen:api); don't edit
       types/openapi.json      the description it was generated from (checked by a backend test)
@@ -98,7 +98,7 @@ the `useSettings()` hook (shared cache).
 | `/stats` | `Stats`: charts and breakdowns | Core |
 | `/settings` | `Settings`: collection completion rings; Add Movie presets (rename, delete; `features/movies/MoviePresetSettings.tsx`) | Core |
 | `/export` | `CsvExport`: CSV export/import, Letterboxd import | Core |
-| `/jellyfin` | `JellyfinPage`: connect a Jellyfin server (address + API key), then compare its movies and series with Kinodex (only on Jellyfin, only in Kinodex, in both). Update Streaming sets each title's Streaming from the comparison, after a preview, and links titles to their Jellyfin items (a Play link in the drawers). Reached from Settings for now (`docs/design/jellyfin-compare.md`) | New |
+| `/jellyfin` | `JellyfinPage`: connect a Jellyfin server (address + API key), then compare its movies and series with Kinodex (only on Jellyfin, only in Kinodex, in both). Update Streaming sets each title's Streaming from the comparison, after a preview, and links titles to their Jellyfin items (the Jellyfin logo beside TMDB's in the drawers). Reached from Settings for now (`docs/design/jellyfin-compare.md`) | New |
 | `/sign-in`, `/sign-up` | Clerk pages | Public |
 | anything else | Redirects to `/` (including the removed shelf, lending and Match Movies pages) | Redirect |
 

@@ -48,7 +48,7 @@ function UpdateStreamingDialog({ comparison, onClose }: { comparison: JellyfinCo
           turnedOn > 0 && `on for ${plural(turnedOn, "title")}`,
           turnedOff > 0 && `off for ${plural(turnedOff, "title")}`,
         ].filter(Boolean);
-        toast.success(parts.length > 0 ? `Streaming turned ${parts.join(" and ")}` : "Play links saved");
+        toast.success(parts.length > 0 ? `Streaming turned ${parts.join(" and ")}` : "Jellyfin links saved");
         onClose();
       },
     });
@@ -60,14 +60,14 @@ function UpdateStreamingDialog({ comparison, onClose }: { comparison: JellyfinCo
           <DialogTitle>Update Streaming</DialogTitle>
           <DialogDescription>
             Turns Streaming on for titles on Jellyfin and off for those that aren't. Untick any to leave them as they
-            are. Titles on Jellyfin also get a Play link in their details.
+            are. Titles on Jellyfin also get a Jellyfin link in their details.
           </DialogDescription>
         </DialogHeader>
 
         {listed === 0 ? (
           <p className="text-sm">
             Streaming already matches Jellyfin.
-            {plan.relink.length > 0 && ` Apply to save the Play links for ${plural(plan.relink.length, "title")}.`}
+            {plan.relink.length > 0 && ` Apply to save the Jellyfin links for ${plural(plan.relink.length, "title")}.`}
           </p>
         ) : (
           <div className="-mx-6 flex min-h-0 flex-col gap-3 overflow-y-auto px-6">

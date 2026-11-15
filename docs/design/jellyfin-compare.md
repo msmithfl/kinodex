@@ -25,9 +25,10 @@ with the hosted site, as long as the Jellyfin server has a public `https` addres
   on for titles on Jellyfin, off for those that aren't. A preview lists what would be turned on and
   off, every title ticked; untick any to leave them as they are (say, a film streamed from
   somewhere else, or one in a library that isn't compared). Nothing changes until Apply.
-- **Play link:** Update Streaming also saves which Jellyfin item each title is, so its drawer
-  shows Play (beside Streaming), opening the title in Jellyfin's web app. Jellyfin's web app has
-  no link that starts playing straight away, so it's the title's page, one click from playing.
+- **Jellyfin link:** Update Streaming also saves which Jellyfin item each title is, so its drawer
+  shows the Jellyfin logo beside TMDB's, opening the title in Jellyfin's web app. Jellyfin's web
+  app has no link that starts playing straight away, so it's the title's page, one click from
+  playing.
 
 The comparison runs when the page opens (and on Refresh) and changes nothing by itself; only
 Update Streaming saves anything, and only when the user presses it.
@@ -105,11 +106,11 @@ Update Streaming saves anything, and only when the user presses it.
 | `Services/PublicAddress.cs` | The public-address check, applied at connection time |
 | `Services/JellyfinCompare.cs` | The matching (no I/O, unit tested) |
 | `Endpoints/JellyfinEndpoints.cs` | `GET/PUT/DELETE /api/jellyfin` (status, connect, disconnect), `GET/PUT /api/jellyfin/libraries` (which to compare), `GET /api/jellyfin/compare`, `POST /api/jellyfin/streaming` (Update Streaming) |
-| `Movie.JellyfinItemId`, `TvShow.JellyfinItemId` | The title's Jellyfin item, for the Play link; null when not linked |
+| `Movie.JellyfinItemId`, `TvShow.JellyfinItemId` | The title's Jellyfin item, for the drawer's Jellyfin link; null when not linked |
 | `features/jellyfin/api.ts` | React Query hooks |
 | `features/jellyfin/streaming.ts` | Update Streaming's plan and request, worked out from the comparison (no I/O, unit tested) |
 | `features/jellyfin/UpdateStreamingDialog.tsx` | The preview |
-| `features/jellyfin/JellyfinPlayField.tsx` | The drawers' Play link |
+| `features/jellyfin/JellyfinLink.tsx` | The Jellyfin logo beside TMDB's in the drawers |
 | `pages/JellyfinPage.tsx` | The page |
 
 ## Planned: signing in with Jellyfin instead of an API key

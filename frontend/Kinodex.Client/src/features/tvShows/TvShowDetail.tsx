@@ -5,6 +5,7 @@ import { useDeleteTvShow, useTvShow } from "./api";
 import DetailHeader, { DetailSkeleton } from "../../components/DetailHeader";
 import DeleteConfirm from "../../components/DeleteConfirm";
 import TmdbLink from "../../components/TmdbLink";
+import JellyfinLink from "../jellyfin/JellyfinLink";
 import ImageLightbox from "../../components/ImageLightbox";
 import { EditTvShowModal } from "../../components/EditTvShowModal";
 import TvShowDrawerDetails from "./TvShowDrawerDetails";
@@ -82,7 +83,12 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps) {
           </>
         }
         rating={show.rating}
-        tmdb={<TmdbLink kind="tv" tmdbId={show.tmdbId} />}
+        links={
+          <>
+            <TmdbLink kind="tv" tmdbId={show.tmdbId} />
+            <JellyfinLink itemId={show.jellyfinItemId} />
+          </>
+        }
         kind="TV show"
         onEdit={() => setShowEditModal(true)}
         onDelete={() => setShowDeleteConfirm(true)}

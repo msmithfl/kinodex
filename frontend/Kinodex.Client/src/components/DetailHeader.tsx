@@ -15,7 +15,7 @@ interface DetailHeaderProps {
   onEnlargePoster: () => void;
   meta: ReactNode; // The line under the title: year · genres
   rating: number;
-  tmdb: ReactNode; // The TMDB logo link
+  links: ReactNode; // The TMDB logo link, and Jellyfin's when the title is on Jellyfin
   kind: string; // "movie", "TV show": for the buttons' screen reader names
   onEdit: () => void;
   onDelete: () => void;
@@ -99,7 +99,7 @@ function DetailHeader({
   onEnlargePoster,
   meta,
   rating,
-  tmdb,
+  links,
   kind,
   onEdit,
   onDelete,
@@ -138,7 +138,7 @@ function DetailHeader({
             <span className="flex [&_svg]:size-5" role="img" aria-label={rating ? `${rating} of 5 stars` : "Not rated"}>
               <Stars rating={rating} />
             </span>
-            <span className="[&_img]:size-6">{tmdb}</span>
+            <span className="flex items-center gap-2 [&_img]:size-6">{links}</span>
           </div>
         </div>
       </header>
