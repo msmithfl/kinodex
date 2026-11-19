@@ -29,9 +29,12 @@ with the hosted site, as long as the Jellyfin server has a public `https` addres
   shows the Jellyfin logo beside TMDB's, opening the title in Jellyfin's web app. Jellyfin's web
   app has no link that starts playing straight away, so it's the title's page, one click from
   playing.
+- **Adding a title** (Add movie, Add TV show) looks for it on Jellyfin straight after, in the
+  background: when it's there (say, ripped before the disc was scanned in), it's linked and
+  Streaming is turned on. When it isn't, nothing changes.
 
-The comparison runs when the page opens (and on Refresh) and changes nothing by itself; only
-Update Streaming saves anything, and only when the user presses it.
+The comparison runs when the page opens (and on Refresh) and changes nothing by itself. Only
+Update Streaming (when the user presses it) and adding a title change Streaming.
 
 ## Decisions
 
@@ -78,6 +81,15 @@ Update Streaming saves anything, and only when the user presses it.
     goes into a link). No second read of Jellyfin, and what's saved is exactly what was shown.
   - **The Jellyfin item ids belong to the server**, so connecting to a different one, or
     disconnecting, forgets them (Streaming itself stays as it was).
+  - **Adding a title links it if it can, but never turns Streaming off** (the same reasons as the
+    preview: it may be streamed from elsewhere). The page asks once the title is saved
+    (`POST /api/jellyfin/movies/{id}/link`, `/shows/{id}/link`) and doesn't wait: the add is
+    never held up by Jellyfin, and a failure just leaves the title unlinked for Update Streaming.
+    The server looks only at what could be that title, not the whole library: that year's
+    movies or series, a year either side (`Years=`), and those whose name contains the title
+    (`SearchTerm=`, for a missing or wrong year), in the compared libraries; then the
+    comparison's matching picks it out, so a title is linked on add exactly when the page
+    would find it in both.
 
 ## Jellyfin API used
 
@@ -94,6 +106,8 @@ Update Streaming saves anything, and only when the user presses it.
     movies in a collection into the collection's own item, which isn't a movie, so a third of a
     real library went missing (1,016 of 1,536 movies). Searches never fold, which hid it.
   - The page shows how many titles each side has, to check against Jellyfin's own counts.
+  - Linking a title just added asks for the same with `Years=<year-1>,<year>,<year+1>`, then
+    with `SearchTerm=<title>`, instead of the whole library.
   - A server can hold a film more than once (a 4K and an HD library, alternate versions); every
     copy of a film that's in Kinodex counts as in both, and one that isn't is listed once.
 
@@ -105,7 +119,7 @@ Update Streaming saves anything, and only when the user presses it.
 | `Services/JellyfinClient.cs` | The two Jellyfin calls, with plain error messages |
 | `Services/PublicAddress.cs` | The public-address check, applied at connection time |
 | `Services/JellyfinCompare.cs` | The matching (no I/O, unit tested) |
-| `Endpoints/JellyfinEndpoints.cs` | `GET/PUT/DELETE /api/jellyfin` (status, connect, disconnect), `GET/PUT /api/jellyfin/libraries` (which to compare), `GET /api/jellyfin/compare`, `POST /api/jellyfin/streaming` (Update Streaming) |
+| `Endpoints/JellyfinEndpoints.cs` | `GET/PUT/DELETE /api/jellyfin` (status, connect, disconnect), `GET/PUT /api/jellyfin/libraries` (which to compare), `GET /api/jellyfin/compare`, `POST /api/jellyfin/streaming` (Update Streaming), `POST /api/jellyfin/movies/{id}/link` and `/shows/{id}/link` (a title just added) |
 | `Movie.JellyfinItemId`, `TvShow.JellyfinItemId` | The title's Jellyfin item, for the drawer's Jellyfin link; null when not linked |
 | `features/jellyfin/api.ts` | React Query hooks |
 | `features/jellyfin/streaming.ts` | Update Streaming's plan and request, worked out from the comparison (no I/O, unit tested) |
@@ -164,7 +178,5 @@ About the size of the first version of this feature.
 
 ## Later, if wanted
 
-- "Add to Kinodex" on Jellyfin-only items (opening Add movie already searched).
-- Comparing TV seasons owned with seasons on Jellyfin.
-- Keeping Streaming fresh without the button: set it when a title is added (if it's already on
-  Jellyfin), or turn titles on (never off) automatically when the page compares.
+The ideas for more Jellyfin features (a rip backlog, an upgrade check, watched sync and others)
+are listed in the [roadmap](../roadmap.md#jellyfin).

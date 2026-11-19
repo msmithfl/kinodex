@@ -20,6 +20,7 @@ import { useCreateMovie, useMovies } from "../features/movies/api";
 import { ApiError } from "../utils/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";
 import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
+import { useLinkToJellyfin } from "../features/jellyfin/api";
 import { todayDate } from "../utils/dateUtils";
 import { isMobile } from "../utils/isMobile";
 import {
@@ -109,6 +110,7 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
   const { data: collectionList = [] } = useCollections();
   const { data: shelfSectionList = [] } = useShelfSections();
   const createMovie = useCreateMovie();
+  const linkToJellyfin = useLinkToJellyfin();
   const createCollection = useCreateCollection();
   const createShelfSection = useCreateShelfSection();
   const [showForm, setShowForm] = useState(false);
@@ -270,6 +272,8 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
     try {
       // The server makes it the signed-in user's movie; every movie list refreshes itself
       const created = await createMovie.mutateAsync(formData);
+      // If it's already on Jellyfin, link it (in the background)
+      void linkToJellyfin("movie", created.id!);
       const openIt = () => navigate(`/library?movie=${created.id}`);
       if (addAnother) {
         toast.success(`Added ${created.title}`, {

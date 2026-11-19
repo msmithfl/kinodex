@@ -21,14 +21,19 @@ public static class FakeJellyfin
     public record Server(string ApiKey, string Name, Item[] Items, int? MaxPerResponse = null, Library[]? Libraries = null);
 
     private static readonly ConcurrentDictionary<string, Server> Servers = new();
+    private static readonly ConcurrentDictionary<string, ConcurrentQueue<string>> Requests = new();
 
     // Adds a server and returns its address
     public static string Add(Server server)
     {
         var host = $"jf{Guid.NewGuid():N}.example.test";
         Servers[host] = server;
+        Requests[host] = new ConcurrentQueue<string>();
         return $"https://{host}";
     }
+
+    // The path and query of every request the server at this address has had, in order
+    public static IReadOnlyList<string> RequestsTo(string url) => Requests[new Uri(url).Host].ToList();
 
     // The slice of the server's items a request asks for (StartIndex, Limit), within its cap
     private static IEnumerable<Item> Page(Server server, Uri uri)
@@ -41,10 +46,18 @@ public static class FakeJellyfin
 
     // Like Jellyfin asked without a user: the movies in a collection come back as the collection
     // (one BoxSet item) unless CollapseBoxSetItems=false
-    // (ParentId: only the items in that library)
+    // (ParentId: only the items in that library; Years: only those from these years; SearchTerm:
+    // only those whose name contains it)
     private static Item[] Listed(Server server, System.Collections.Specialized.NameValueCollection query)
     {
         var items = query["ParentId"] is { } parentId ? server.Items.Where(i => i.Library == parentId).ToArray() : server.Items;
+        if (query["Years"] is { } years)
+        {
+            var wanted = years.Split(',').Select(int.Parse).ToHashSet();
+            items = items.Where(i => wanted.Contains(i.Year)).ToArray();
+        }
+        if (query["SearchTerm"] is { } term)
+            items = items.Where(i => i.Name.Contains(term, StringComparison.OrdinalIgnoreCase)).ToArray();
         if (string.Equals(query["CollapseBoxSetItems"], "false", StringComparison.OrdinalIgnoreCase))
             return items;
         return items.Where(i => i.Collection is null)
@@ -59,6 +72,7 @@ public static class FakeJellyfin
         {
             if (!Servers.TryGetValue(request.RequestUri!.Host, out var server))
                 throw new HttpRequestException("No such host");
+            Requests[request.RequestUri.Host].Enqueue(request.RequestUri.PathAndQuery);
 
             var auth = request.Headers.TryGetValues("Authorization", out var values) ? values.First() : "";
             if (auth != $"MediaBrowser Token=\"{server.ApiKey}\"")

@@ -397,6 +397,108 @@ public class JellyfinTests(KinodexApiFactory api)
         Assert.Equal(JsonValueKind.Null, created.GetProperty("jellyfinItemId").ValueKind);
     }
 
+    // Linking a title just added (the page asks after every add)
+
+    private const string FellowshipItem = "2a1b2c3d4e5f60718293a4b5c6d7e8f9";
+    private const string ClueItem = "3a1b2c3d4e5f60718293a4b5c6d7e8f9";
+
+    private static Item[] Shelf(params Item[] items) =>
+    [
+        .. items,
+        new Item("4a1b2c3d4e5f60718293a4b5c6d7e8f9", "Shrek", "Movie", 2001, 808),
+        new Item("5a1b2c3d4e5f60718293a4b5c6d7e8f9", "Heat", "Movie", 1995, 949),
+        new Item("6a1b2c3d4e5f60718293a4b5c6d7e8f9", "The Wire", "Movie", 2002), // A film, not the series
+    ];
+
+    private static async Task<JsonElement> LinkAsync(HttpClient client, string kind, int id)
+    {
+        var response = await client.PostAsync($"/api/jellyfin/{kind}/{id}/link", null);
+        response.EnsureSuccessStatusCode();
+        return await response.ReadJsonAsync();
+    }
+
+    [Fact]
+    public async Task A_new_movie_on_jellyfin_is_linked_and_streaming_without_reading_the_whole_library()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        // Named differently on each side, so it's found among that year's films, by its TMDB id
+        var fellowship = await AddMovieAsync(owner, "Lord of the Rings: The Fellowship of the Ring", 2001, tmdbId: 120);
+        var url = Add(new Server(Key, "Home Server",
+            Shelf(new Item(FellowshipItem, "The Lord of the Rings - The Fellowship of the Ring", "Movie", 2001, 120))));
+        (await ConnectAsync(owner, url)).EnsureSuccessStatusCode();
+
+        var result = await LinkAsync(owner, "movies", fellowship);
+
+        Assert.Equal(FellowshipItem, result.GetProperty("jellyfinItemId").GetString());
+        var movie = await owner.GetJsonAsync($"/api/movies/{fellowship}");
+        Assert.Equal(FellowshipItem, movie.GetProperty("jellyfinItemId").GetString());
+        Assert.True(movie.GetProperty("isStreaming").GetBoolean());
+        // Only that year's films and a search, never the whole library
+        Assert.All(RequestsTo(url).Where(r => r.StartsWith("/Items")), r => Assert.Matches("Years=|SearchTerm=", r));
+    }
+
+    [Fact]
+    public async Task A_new_movie_without_a_year_is_found_by_its_title()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var clue = await AddMovieAsync(owner, "Clue", 0, tmdbId: null);
+        (await ConnectAsync(owner, Add(new Server(Key, "Home Server", Shelf(new Item(ClueItem, "Clue", "Movie", 1985, 15196))))))
+            .EnsureSuccessStatusCode();
+
+        Assert.Equal(ClueItem, (await LinkAsync(owner, "movies", clue)).GetProperty("jellyfinItemId").GetString());
+    }
+
+    [Fact]
+    public async Task A_new_show_is_linked_to_the_series_not_a_film_of_the_same_name()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var wire = await AddShowAsync(owner, "The Wire", 2002, tmdbId: 1438);
+        (await ConnectAsync(owner, Add(new Server(Key, "Home Server", Shelf(new Item(WireItem, "The Wire", "Series", 2002, 1438))))))
+            .EnsureSuccessStatusCode();
+
+        Assert.Equal(WireItem, (await LinkAsync(owner, "shows", wire)).GetProperty("jellyfinItemId").GetString());
+        Assert.True((await owner.GetJsonAsync($"/api/tvshows/{wire}")).GetProperty("isStreaming").GetBoolean());
+    }
+
+    [Fact]
+    public async Task A_new_title_not_on_jellyfin_is_left_as_it_is()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var alien = await AddMovieAsync(owner, "Alien", 1979, tmdbId: 348, streaming: true);
+        (await ConnectAsync(owner, Add(new Server(Key, "Home Server", Shelf())))).EnsureSuccessStatusCode();
+
+        Assert.Equal(JsonValueKind.Null, (await LinkAsync(owner, "movies", alien)).GetProperty("jellyfinItemId").ValueKind);
+        // Never turned off here: it may be streamed from somewhere else
+        Assert.True((await owner.GetJsonAsync($"/api/movies/{alien}")).GetProperty("isStreaming").GetBoolean());
+    }
+
+    [Fact]
+    public async Task A_new_title_is_only_looked_for_in_the_compared_libraries()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var alien = await AddMovieAsync(owner, "Alien", 1979, tmdbId: 348);
+        Library[] libraries = [new Library("films", "Movies", "movies"), new Library("home", "Home videos", "homevideos")];
+        (await ConnectAsync(owner, Add(new Server(Key, "Home Server",
+            [new Item(AlienItem, "Alien", "Movie", 1979, 348, Library: "home")], Libraries: libraries)))).EnsureSuccessStatusCode();
+        (await owner.PutAsJsonAsync("/api/jellyfin/libraries", new { libraryIds = new[] { "films" } })).EnsureSuccessStatusCode();
+
+        Assert.Equal(JsonValueKind.Null, (await LinkAsync(owner, "movies", alien)).GetProperty("jellyfinItemId").ValueKind);
+    }
+
+    [Fact]
+    public async Task Linking_needs_a_connected_server_and_the_users_own_title()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var alien = await AddMovieAsync(owner, "Alien", 1979, tmdbId: 348);
+
+        Assert.Equal(HttpStatusCode.Conflict, (await owner.PostAsync($"/api/jellyfin/movies/{alien}/link", null)).StatusCode);
+
+        var stranger = api.ClientFor(KinodexApiFactory.NewUserId());
+        (await ConnectAsync(stranger, Add(new Server(Key, "Home Server", [new Item(AlienItem, "Alien", "Movie", 1979, 348)]))))
+            .EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.PostAsync($"/api/jellyfin/movies/{alien}/link", null)).StatusCode);
+    }
+
     private static IEnumerable<string> Titles(JsonElement list) =>
         list.EnumerateArray().Select(t => t.GetProperty("title").GetString()!);
 
