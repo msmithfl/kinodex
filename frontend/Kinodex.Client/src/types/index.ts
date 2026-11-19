@@ -46,6 +46,7 @@ export type KinodexTitle = Schemas["KinodexTitle"];
 // Update Streaming (features/jellyfin/streaming.ts)
 export type JellyfinStreamingUpdate = Schemas["JellyfinStreamingUpdate"];
 export type JellyfinStreamingResult = Schemas["JellyfinStreamingResult"];
+export type JellyfinLinkResult = Schemas["JellyfinLinkResult"];
 
 export interface TMDBMovie {
   id: number;

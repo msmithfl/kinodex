@@ -822,6 +822,68 @@
         }
       }
     },
+    "/api/jellyfin/movies/{id}/link": {
+      "post": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JellyfinLinkResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/jellyfin/shows/{id}/link": {
+      "post": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JellyfinLinkResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/jellyfin/streaming": {
       "post": {
         "tags": [
@@ -1017,6 +1079,20 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "JellyfinLinkResult": {
+        "required": [
+          "jellyfinItemId"
+        ],
+        "type": "object",
+        "properties": {
+          "jellyfinItemId": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

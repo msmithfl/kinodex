@@ -36,6 +36,9 @@ public static class JellyfinEndpoints
     public record JellyfinStreamingUpdate(List<StreamingChange> Movies, List<StreamingChange> Shows);
     public record JellyfinStreamingResult(int TurnedOn, int TurnedOff);
 
+    // Linking a title just added: the Jellyfin item it was linked to, or null when it isn't on Jellyfin
+    public record JellyfinLinkResult(string? JellyfinItemId);
+
     private const string KeyPurpose = "Kinodex.Jellyfin.ApiKey";
 
     public static void MapJellyfinEndpoints(this IEndpointRouteBuilder app)
@@ -189,7 +192,8 @@ public static class JellyfinEndpoints
             List<JellyfinClient.LibraryItem> items;
             try
             {
-                items = await ReadChosenLibrariesAsync(jellyfin, connection!, apiKey!);
+                items = await ReadChosenLibrariesAsync(jellyfin, connection!, apiKey!,
+                    libraryId => jellyfin.GetLibraryAsync(connection!.ServerUrl, apiKey!, libraryId));
             }
             catch (JellyfinClient.JellyfinException ex)
             {
@@ -205,16 +209,49 @@ public static class JellyfinEndpoints
                 .Select(s => new KinodexTitle(s.Id, s.Title, s.Year, s.TmdbId, s.IsStreaming, s.JellyfinItemId))
                 .ToListAsync();
 
-            JellyfinTitle[] OfType(string type) => items
-                .Where(i => i.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
-                .Select(i => new JellyfinTitle(i.Id, i.Title, i.Year, i.TmdbId))
-                .ToArray();
-
             return Results.Ok(new JellyfinComparison(
-                Compare(movies, OfType("Movie")),
-                Compare(shows, OfType("Series")),
+                Compare(movies, TitlesOfType(items, "Movie")),
+                Compare(shows, TitlesOfType(items, "Series")),
                 DateTime.UtcNow));
         }).Produces<JellyfinComparison>();
+
+        // POST link a title just added: finds it on Jellyfin (in the compared libraries) and, when
+        // it's there, links it and turns Streaming on, as Update Streaming would. When it isn't,
+        // nothing changes: Streaming is never turned off here (it may be streamed from somewhere
+        // else). The page calls this after adding, without waiting for it.
+        group.MapPost("/movies/{id:int}/link", async (
+            int id,
+            ClaimsPrincipal user,
+            MovieDbContext db,
+            JellyfinClient jellyfin,
+            IDataProtectionProvider protection) =>
+        {
+            var userId = UserId(user);
+            var movie = await db.Movies.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
+            if (movie is null) return Results.NotFound();
+            return await LinkAsync(new KinodexTitle(movie.Id, movie.Title, movie.Year, movie.TmdbId), "Movie", itemId =>
+            {
+                movie.JellyfinItemId = itemId;
+                movie.IsStreaming = true;
+            }, userId, db, jellyfin, protection);
+        }).Produces<JellyfinLinkResult>();
+
+        group.MapPost("/shows/{id:int}/link", async (
+            int id,
+            ClaimsPrincipal user,
+            MovieDbContext db,
+            JellyfinClient jellyfin,
+            IDataProtectionProvider protection) =>
+        {
+            var userId = UserId(user);
+            var show = await db.TvShows.FirstOrDefaultAsync(s => s.Id == id && s.UserId == userId);
+            if (show is null) return Results.NotFound();
+            return await LinkAsync(new KinodexTitle(show.Id, show.Title, show.Year, show.TmdbId), "Series", itemId =>
+            {
+                show.JellyfinItemId = itemId;
+                show.IsStreaming = true;
+            }, userId, db, jellyfin, protection);
+        }).Produces<JellyfinLinkResult>();
 
         // POST Update Streaming: the changes the user confirmed on the page, worked out there from
         // the comparison. Only the user's own titles change; unknown ids are ignored.
@@ -261,7 +298,46 @@ public static class JellyfinEndpoints
     // server, so nothing else is taken
     private static bool IsItemId(string id) => Guid.TryParseExact(id, "N", out _) || Guid.TryParseExact(id, "D", out _);
 
-    // Removes every Play link: they point at items on a server that's no longer the connected one
+    // Looks for one title on Jellyfin, by the comparison's rules, among the items that could be it
+    // (JellyfinClient.FindCandidatesAsync), and links it when found (link saves the item id)
+    private static async Task<IResult> LinkAsync(
+        KinodexTitle title,
+        string type,
+        Action<string> link,
+        string userId,
+        MovieDbContext db,
+        JellyfinClient jellyfin,
+        IDataProtectionProvider protection)
+    {
+        var (connection, apiKey, problem) = await OpenAsync(userId, db, protection);
+        if (problem is not null) return problem;
+
+        List<JellyfinClient.LibraryItem> candidates;
+        try
+        {
+            candidates = await ReadChosenLibrariesAsync(jellyfin, connection!, apiKey!,
+                libraryId => jellyfin.FindCandidatesAsync(connection!.ServerUrl, apiKey!, title.Title, title.Year, libraryId));
+        }
+        catch (JellyfinClient.JellyfinException ex)
+        {
+            return Results.Json(new { error = ex.Message }, statusCode: StatusCodes.Status502BadGateway);
+        }
+
+        var match = Compare([title], TitlesOfType(candidates, type)).InBoth.FirstOrDefault();
+        if (match is null || !IsItemId(match.Jellyfin.Id))
+            return Results.Ok(new JellyfinLinkResult(null));
+
+        link(match.Jellyfin.Id);
+        await db.SaveChangesAsync();
+        return Results.Ok(new JellyfinLinkResult(match.Jellyfin.Id));
+    }
+
+    private static JellyfinTitle[] TitlesOfType(List<JellyfinClient.LibraryItem> items, string type) => items
+        .Where(i => i.Type.Equals(type, StringComparison.OrdinalIgnoreCase))
+        .Select(i => new JellyfinTitle(i.Id, i.Title, i.Year, i.TmdbId))
+        .ToArray();
+
+    // Removes every Jellyfin link: they point at items on a server that's no longer the connected one
     private static async Task ForgetLinksAsync(MovieDbContext db, string userId)
     {
         await db.Movies.Where(m => m.UserId == userId && m.JellyfinItemId != null)
@@ -287,17 +363,19 @@ public static class JellyfinEndpoints
         }
     }
 
-    // Every library, or only the chosen ones (those still on the server)
+    // Reads (read: given a library id, or null for every library) across every library, or only the
+    // chosen ones (those still on the server)
     private static async Task<List<JellyfinClient.LibraryItem>> ReadChosenLibrariesAsync(
-        JellyfinClient jellyfin, JellyfinConnection connection, string apiKey)
+        JellyfinClient jellyfin, JellyfinConnection connection, string apiKey,
+        Func<string?, Task<List<JellyfinClient.LibraryItem>>> read)
     {
         if (connection.LibraryIds.Count == 0)
-            return await jellyfin.GetLibraryAsync(connection.ServerUrl, apiKey);
+            return await read(null);
 
         var onServer = (await jellyfin.GetLibrariesAsync(connection.ServerUrl, apiKey)).Select(l => l.Id).ToHashSet();
         var items = new List<JellyfinClient.LibraryItem>();
         foreach (var libraryId in connection.LibraryIds.Where(onServer.Contains))
-            items.AddRange(await jellyfin.GetLibraryAsync(connection.ServerUrl, apiKey, libraryId));
+            items.AddRange(await read(libraryId));
         return items.DistinctBy(i => i.Id).ToList();
     }
 

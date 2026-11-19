@@ -48,8 +48,25 @@ public class JellyfinClient(HttpClient http)
     // fixed order, until the server's own total is reached.
     private const int PageSize = 500;
 
-    // Every movie and series across the server's libraries, or in one of them (libraryId)
-    public async Task<List<LibraryItem>> GetLibraryAsync(string serverUrl, string apiKey, string? libraryId = null, CancellationToken ct = default)
+    // The movies and series that could be this title: those from its year, give or take one (as
+    // the matching allows), and those whose name contains its title. A small slice of the library
+    // instead of all of it; the matching (JellyfinCompare) decides between them.
+    public async Task<List<LibraryItem>> FindCandidatesAsync(
+        string serverUrl, string apiKey, string title, int year, string? libraryId = null, CancellationToken ct = default)
+    {
+        var found = new List<LibraryItem>();
+        if (year > 0)
+            found.AddRange(await GetLibraryAsync(serverUrl, apiKey, libraryId, $"&Years={year - 1},{year},{year + 1}", ct));
+        var searchTerm = LibraryTitle.WithoutArticle(title).Trim();
+        if (searchTerm.Length > 0)
+            found.AddRange(await GetLibraryAsync(serverUrl, apiKey, libraryId, $"&SearchTerm={Uri.EscapeDataString(searchTerm)}", ct));
+        return found.DistinctBy(i => i.Id).ToList();
+    }
+
+    // Every movie and series across the server's libraries, or in one of them (libraryId), or only
+    // those a filter picks out (more of the query, e.g. "&Years=1979")
+    public async Task<List<LibraryItem>> GetLibraryAsync(
+        string serverUrl, string apiKey, string? libraryId = null, string filter = "", CancellationToken ct = default)
     {
         var items = new Dictionary<string, LibraryItem>(); // By id, in case a page boundary repeats one
         var start = 0;
@@ -63,6 +80,7 @@ public class JellyfinClient(HttpClient http)
                         "&SortBy=SortName,ProductionYear,DateCreated&SortOrder=Ascending" +
                         $"&StartIndex={start}&Limit={PageSize}" +
                         (libraryId is null ? "" : $"&ParentId={Uri.EscapeDataString(libraryId)}") +
+                        filter +
                         "&EnableImages=false&EnableUserData=false&EnableTotalRecordCount=true";
             var result = await GetAsync<ItemsDto>(serverUrl, apiKey, query, ct);
             var batch = result.Items ?? [];

@@ -1,8 +1,10 @@
+import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useApi } from "../../utils/api";
 import type {
   JellyfinComparison,
   JellyfinLibrary,
+  JellyfinLinkResult,
   JellyfinStatus,
   JellyfinStreamingResult,
   JellyfinStreamingUpdate,
@@ -33,6 +35,35 @@ export function useJellyfinStatus(enabled = true) {
     queryFn: () => api.get<JellyfinStatus>("/jellyfin"),
     enabled,
   });
+}
+
+// For after a title is added: looks for it on Jellyfin and, when it's there, links it (Streaming
+// on, the Jellyfin logo in its drawer). Not awaited by the add: the lists refresh once it's linked.
+// Only with a server connected; a failure just leaves it unlinked (Update Streaming can link it).
+export function useLinkToJellyfin() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+  return useCallback(
+    async (kind: "movie" | "show", id: number) => {
+      try {
+        const status = await queryClient.ensureQueryData({
+          queryKey: jellyfinKeys.status,
+          queryFn: () => api.get<JellyfinStatus>("/jellyfin"),
+        });
+        if (!status.connected) return;
+        const path = kind === "movie" ? "movies" : "shows";
+        const { jellyfinItemId } = await api.post<JellyfinLinkResult>(`/jellyfin/${path}/${id}/link`);
+        if (jellyfinItemId) {
+          queryClient.invalidateQueries({ queryKey: kind === "movie" ? movieKeys.all : tvShowKeys.all });
+          // The comparison is out of date now too
+          queryClient.invalidateQueries({ queryKey: jellyfinKeys.compare });
+        }
+      } catch (error) {
+        console.warn("Couldn't look for the title on Jellyfin", error);
+      }
+    },
+    [api, queryClient],
+  );
 }
 
 // Checks the address and key against the server, then saves them

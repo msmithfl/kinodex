@@ -16,6 +16,7 @@ import TvShowForm from "./TvShowForm";
 import { BarcodeScanner } from "./lazyComponents";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 import { newPurchase } from "../utils/tvShowPurchases";
+import { useLinkToJellyfin } from "../features/jellyfin/api";
 
 const FORM_ID = "add-tv-show-form";
 
@@ -70,6 +71,7 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
   const { data: shows = [] } = useTvShows();
   // Adding refreshes every screen listing shows
   const createTvShow = useCreateTvShow();
+  const linkToJellyfin = useLinkToJellyfin();
   const saving = createTvShow.isPending;
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<TvShow>(() => ({
@@ -128,6 +130,8 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
     setSubmitError("");
     try {
       const created = await createTvShow.mutateAsync(formData);
+      // If it's already on Jellyfin, link it (in the background)
+      void linkToJellyfin("show", created.id!);
       onClose();
       navigate("/tv-shows");
       toast.success(`Added ${created.title}`, {
