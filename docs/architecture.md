@@ -307,7 +307,7 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 | `/api/movie-presets` | list, create, update, delete (names unique per user; every Add Movie field TMDB does not fill in, purchase date optional) | Owned | `features/movies/presets.ts`; Add Movie modal picks and saves them |
 | `/api/upc/lookup/{upc}` | product title + images | Shared cache (`UpcLookups`), not per user | Product image picker |
 | `/api/tmdb/v3/{path}` | TMDB's reply for the app's TMDB requests (searches, a title's images, a TV show's details); others are refused | Signed in; not per user | `utils/tmdbApi.ts` (`useTmdb`) |
-| `/api/jellyfin` | get (never the key), connect (checks address + key against the server first), disconnect; `/libraries` lists the server's libraries and saves which to compare (all by default); `/compare` matches the server's movies and series with the user's by TMDB id, then title + year; `/streaming` saves Update Streaming's changes (Streaming and the Jellyfin item, per title). Changing server or disconnecting forgets the titles' Jellyfin items | Owned; the key is encrypted (Data Protection, keys in `DataProtectionKeys`); production only connects to public `https` addresses (`PublicAddress`) | `features/jellyfin/api.ts`, `/jellyfin` page |
+| `/api/jellyfin` | get (never the key), connect (checks address + key against the server first), disconnect; `/libraries` lists the server's libraries and saves which to compare (all by default); `/compare` matches the server's movies and series with the user's by TMDB id, then title + year; `/streaming` saves Update Streaming's changes (Streaming and the Jellyfin item, per title); `/movies/{id}/link` and `/shows/{id}/link` look for a title just added on Jellyfin and link it if found (Streaming on, never off). Changing server or disconnecting forgets the titles' Jellyfin items | Owned; the key is encrypted (Data Protection, keys in `DataProtectionKeys`); production only connects to public `https` addresses (`PublicAddress`) | `features/jellyfin/api.ts`, `/jellyfin` page, the Add movie / Add TV show modals |
 | `/api/webhooks/clerk` | user created/updated/deleted | **No sign-in**; verified by Svix signature | Clerk |
 
 ### Data model
@@ -389,7 +389,8 @@ tests against a PostgreSQL container.
   has them):** the shelf pages (browsing by shelf, reordering/renaming/deleting sections), lending
   (customers and checkouts) and Match Movies (bulk TMDB matching). Their API endpoints were removed
   too (November 2026), and the customers and checkouts tables dropped (migration `RemoveLending`).
-- **Future, not built:** a lending ledger and watch log in the movie drawer (tabs hidden).
+- **Future, not built:** a lending ledger and watch log in the movie drawer (tabs hidden). Everything
+  planned or only an idea is in [roadmap.md](roadmap.md).
 
 ## Known loose ends
 

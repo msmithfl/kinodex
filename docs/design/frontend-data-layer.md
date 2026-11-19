@@ -320,12 +320,14 @@ server (400) are shown as-is; other failures show the status.
   Typing endpoint responses in the description (`TypedResults` instead of `IResult`) is a possible
   follow-up.
 - **Optimistic updates** for quick toggles (watched, ratings).
-- **Move TMDB calls behind the backend** (they currently use a token built into the frontend);
-  part of the self-hosting plan.
+- **Move TMDB calls behind the backend:** done (`/api/tmdb`, `useTmdb`); the frontend has no
+  TMDB token.
 
 ---
 
 ## Roadmap context
+
+Where each step stands is kept in the [roadmap](../roadmap.md#self-hosting-on-hold).
 
 The longer-term goal is for Kinodex to run in two modes from one codebase:
 
@@ -352,8 +354,11 @@ Related findings:
 - **UPCitemdb on Railway:** the free tier is 100 lookups/day *per IP*, and Railway's outgoing IPs
   are shared with other customers, so the pool is mostly drained by other apps (confirmed
   2026-10-25: 40 left minutes after the daily reset, while Kinodex had made 5 lookups). Results
-  are now cached per UPC (`UpcLookups` table). Self-hosted installs avoid the problem (home IP);
-  for hosted, an optional `UPCITEMDB_API_KEY` (paid plan) is the fix.
+  are now cached per UPC (`UpcLookups` table). Self-hosted installs avoid the problem (home IP).
+  Kinodex stays free ([roadmap.md → The rule](../roadmap.md#the-rule-for-everything-here)), so a
+  paid UPCitemdb plan can only be an option: an `UPCITEMDB_API_KEY` the person running Kinodex
+  adds if they want more lookups (not built). Without one, the free tier and the cache are used,
+  and adding by title (TMDB) always works.
 
 ## Open questions
 
