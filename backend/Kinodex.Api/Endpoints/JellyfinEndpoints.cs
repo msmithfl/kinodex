@@ -340,9 +340,8 @@ public static class JellyfinEndpoints
     // Removes every Jellyfin link: they point at items on a server that's no longer the connected one
     private static async Task ForgetLinksAsync(MovieDbContext db, string userId)
     {
-        await db.Movies.Where(m => m.UserId == userId && m.JellyfinItemId != null)
-            .ExecuteUpdateAsync(s => s.SetProperty(m => m.JellyfinItemId, (string?)null));
-        await db.TvShows.Where(s => s.UserId == userId && s.JellyfinItemId != null)
+        // Movies and shows alike (one Titles table)
+        await db.Titles.Where(t => t.UserId == userId && t.JellyfinItemId != null)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.JellyfinItemId, (string?)null));
     }
 

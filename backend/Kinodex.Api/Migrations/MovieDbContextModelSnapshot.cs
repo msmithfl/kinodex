@@ -23,6 +23,77 @@ namespace Kinodex.Api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Kinodex.Api.Models.CatalogTitle", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BackdropPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.PrimitiveCollection<List<string>>("Collections")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<List<string>>("Genres")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<bool>("HasWatched")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsStreaming")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("JellyfinItemId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("character varying(13)");
+
+                    b.Property<string>("PosterPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<float>("Rating")
+                        .HasColumnType("real");
+
+                    b.Property<string>("Review")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("TmdbId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Titles", (string)null);
+
+                    b.HasDiscriminator<string>("Kind").HasValue("CatalogTitle");
+
+                    b.UseTphMappingStrategy();
+                });
+
             modelBuilder.Entity("Kinodex.Api.Models.Collection", b =>
                 {
                     b.Property<int>("Id")
@@ -70,6 +141,10 @@ namespace Kinodex.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -89,6 +164,67 @@ namespace Kinodex.Api.Migrations
                     b.HasIndex("CollectionId");
 
                     b.ToTable("CollectionListItems");
+                });
+
+            modelBuilder.Entity("Kinodex.Api.Models.Copy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Condition")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<List<string>>("Formats")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<int>("HDDriveNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsGift")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("ProductPosterPath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("PurchasedAt")
+                        .HasColumnType("date");
+
+                    b.PrimitiveCollection<List<int>>("Seasons")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
+                    b.Property<int>("ShelfNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ShelfSection")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TitleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UpcNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TitleId");
+
+                    b.ToTable("Copies");
                 });
 
             modelBuilder.Entity("Kinodex.Api.Models.JellyfinConnection", b =>
@@ -122,103 +258,6 @@ namespace Kinodex.Api.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("JellyfinConnections");
-                });
-
-            modelBuilder.Entity("Kinodex.Api.Models.Movie", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BackdropPath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.PrimitiveCollection<List<string>>("Collections")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.Property<string>("Condition")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.PrimitiveCollection<List<string>>("Formats")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.PrimitiveCollection<List<string>>("Genres")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.Property<int>("HDDriveNumber")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("HasWatched")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsGift")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsStreaming")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("JellyfinItemId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PosterPath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ProductPosterPath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<float>("PurchasePrice")
-                        .HasColumnType("real");
-
-                    b.Property<DateOnly>("PurchasedAt")
-                        .HasColumnType("date");
-
-                    b.Property<float>("Rating")
-                        .HasColumnType("real");
-
-                    b.Property<string>("Review")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("ShelfNumber")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ShelfSection")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("TmdbId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("UpcNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Movies");
                 });
 
             modelBuilder.Entity("Kinodex.Api.Models.MoviePreset", b =>
@@ -327,115 +366,6 @@ namespace Kinodex.Api.Migrations
                     b.ToTable("ShelfSections");
                 });
 
-            modelBuilder.Entity("Kinodex.Api.Models.TvShow", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BackdropPath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.PrimitiveCollection<List<string>>("Genres")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.Property<bool>("HasWatched")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsStreaming")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("JellyfinItemId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PosterPath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<float>("Rating")
-                        .HasColumnType("real");
-
-                    b.Property<string>("Review")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("TmdbId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TotalSeasons")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TvShows");
-                });
-
-            modelBuilder.Entity("Kinodex.Api.Models.TvShowPurchase", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Condition")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.PrimitiveCollection<List<string>>("Formats")
-                        .IsRequired()
-                        .HasColumnType("text[]");
-
-                    b.Property<bool>("IsGift")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal>("Price")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("numeric(10,2)");
-
-                    b.Property<string>("ProductPosterPath")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateOnly>("PurchasedAt")
-                        .HasColumnType("date");
-
-                    b.PrimitiveCollection<List<int>>("Seasons")
-                        .IsRequired()
-                        .HasColumnType("integer[]");
-
-                    b.Property<int>("TvShowId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("UpcNumber")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TvShowId");
-
-                    b.ToTable("TvShowPurchases");
-                });
-
             modelBuilder.Entity("Kinodex.Api.Models.UpcLookup", b =>
                 {
                     b.Property<int>("Id")
@@ -529,6 +459,23 @@ namespace Kinodex.Api.Migrations
                     b.ToTable("DataProtectionKeys");
                 });
 
+            modelBuilder.Entity("Kinodex.Api.Models.Movie", b =>
+                {
+                    b.HasBaseType("Kinodex.Api.Models.CatalogTitle");
+
+                    b.HasDiscriminator().HasValue("movie");
+                });
+
+            modelBuilder.Entity("Kinodex.Api.Models.TvShow", b =>
+                {
+                    b.HasBaseType("Kinodex.Api.Models.CatalogTitle");
+
+                    b.Property<int>("TotalSeasons")
+                        .HasColumnType("integer");
+
+                    b.HasDiscriminator().HasValue("show");
+                });
+
             modelBuilder.Entity("Kinodex.Api.Models.CollectionListItem", b =>
                 {
                     b.HasOne("Kinodex.Api.Models.Collection", "Collection")
@@ -540,18 +487,18 @@ namespace Kinodex.Api.Migrations
                     b.Navigation("Collection");
                 });
 
-            modelBuilder.Entity("Kinodex.Api.Models.TvShowPurchase", b =>
+            modelBuilder.Entity("Kinodex.Api.Models.Copy", b =>
                 {
-                    b.HasOne("Kinodex.Api.Models.TvShow", null)
-                        .WithMany("Purchases")
-                        .HasForeignKey("TvShowId")
+                    b.HasOne("Kinodex.Api.Models.CatalogTitle", null)
+                        .WithMany("Copies")
+                        .HasForeignKey("TitleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Kinodex.Api.Models.TvShow", b =>
+            modelBuilder.Entity("Kinodex.Api.Models.CatalogTitle", b =>
                 {
-                    b.Navigation("Purchases");
+                    b.Navigation("Copies");
                 });
 #pragma warning restore 612, 618
         }

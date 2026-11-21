@@ -28,6 +28,24 @@ public class CollectionTests(KinodexApiFactory api)
     }
 
     [Fact]
+    public async Task Renaming_and_deleting_a_collection_also_updates_the_users_shows()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var collectionId = await owner.CreateCollectionAsync("David Lynch");
+        var created = await owner.PostAsJsonAsync("/api/tvshows",
+            new { title = "Twin Peaks", year = 1990, collections = new[] { "David Lynch" }, copies = Array.Empty<object>() });
+        var showId = (await created.ReadJsonAsync()).GetProperty("id").GetInt32();
+        Task<List<string>> ShowCollectionsAsync() =>
+            api.WithDbAsync(db => db.TvShows.Where(s => s.Id == showId).Select(s => s.Collections).SingleAsync());
+
+        await owner.PutAsJsonAsync($"/api/collections/{collectionId}", Update("Lynch"));
+        Assert.Equal(["Lynch"], await ShowCollectionsAsync());
+
+        await owner.DeleteAsync($"/api/collections/{collectionId}");
+        Assert.Empty(await ShowCollectionsAsync());
+    }
+
+    [Fact]
     public async Task Renaming_only_touches_the_owners_movies()
     {
         // Two users who happen to have a collection with the same name
@@ -85,5 +103,22 @@ public class CollectionTests(KinodexApiFactory api)
         var items = await owner.GetJsonAsync($"/api/collections/{collectionId}/items");
         Assert.Equal("Memento", Assert.Single(items.EnumerateArray()).GetProperty("title").GetString());
         Assert.Empty((await stranger.GetJsonAsync("/api/collections/items/all")).EnumerateObject());
+    }
+
+    [Fact]
+    public async Task A_checklist_item_is_a_movie_unless_it_says_its_a_show()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var collectionId = await owner.CreateCollectionAsync("David Lynch");
+        var url = $"/api/collections/{collectionId}/items";
+
+        (await owner.PostAsJsonAsync(url, new { title = "Eraserhead", year = 1977, tmdbId = 985 })).EnsureSuccessStatusCode();
+        (await owner.PostAsJsonAsync(url, new { title = "Twin Peaks", year = 1990, tmdbId = 1920, kind = "show" })).EnsureSuccessStatusCode();
+        var unknown = await owner.PostAsJsonAsync(url, new { title = "Dune", year = 1984, tmdbId = 841, kind = "book" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, unknown.StatusCode);
+        var kinds = (await owner.GetJsonAsync(url)).EnumerateArray()
+            .ToDictionary(i => i.GetProperty("title").GetString()!, i => i.GetProperty("kind").GetString());
+        Assert.Equal(new Dictionary<string, string?> { ["Eraserhead"] = "movie", ["Twin Peaks"] = "show" }, kinds);
     }
 }

@@ -1,5 +1,5 @@
 import type { Movie } from '../types';
-import { FORMATS } from './formats';
+import { copyFilterCategories } from './copyFilters';
 
 export interface FilterOption {
   label: string;
@@ -22,13 +22,9 @@ export function buildFilterCategories(
   shelfSections: string[],
   collections: string[]
 ): FilterCategory[] {
+  const copy = copyFilterCategories(movies.flatMap(m => m.copies), shelfSections);
   return [
-    {
-      id: 'format',
-      label: 'Format',
-      kind: 'list',
-      options: FORMATS.map(format => ({ label: format, value: format })),
-    },
+    copy.format,
     {
       // Every genre that appears in the collection
       id: 'genre',
@@ -38,26 +34,8 @@ export function buildFilterCategories(
         .sort()
         .map(genre => ({ label: genre, value: genre })),
     },
-    {
-      id: 'condition',
-      label: 'Condition',
-      kind: 'list',
-      options: Array.from(new Set(movies.map(m => m.condition)))
-        .sort()
-        .map(condition => ({ label: condition, value: condition })),
-    },
-    {
-      id: 'hdd',
-      label: 'HDD Number',
-      kind: 'list',
-      options: [
-        { label: 'No HDD', value: '0' },
-        ...Array.from(new Set(movies.map(m => m.hdDriveNumber)))
-          .filter(num => num > 0)
-          .sort((a, b) => a - b)
-          .map(num => ({ label: `HDD ${num}`, value: num.toString() })),
-      ],
-    },
+    copy.condition,
+    copy.hdd,
     {
       id: 'collection',
       label: 'Collection',
@@ -82,32 +60,8 @@ export function buildFilterCategories(
         { label: 'Not Watched', value: 'false' },
       ],
     },
-    {
-      id: 'gift',
-      label: 'Gift',
-      kind: 'toggle',
-      options: [
-        { label: 'Gift', value: 'true' },
-        { label: 'Not a gift', value: 'false' },
-      ],
-    },
-    {
-      id: 'shelfSection',
-      label: 'Shelf Section',
-      kind: 'list',
-      options: shelfSections.map(section => ({ label: section, value: section })),
-    },
-    {
-      id: 'shelfNumber',
-      label: 'Shelf Number',
-      kind: 'list',
-      options: [
-        { label: 'Unshelved', value: '0' },
-        ...Array.from(new Set(movies.map(m => m.shelfNumber)))
-          .filter(num => num > 0)
-          .sort((a, b) => a - b)
-          .map(num => ({ label: `Shelf ${num}`, value: num.toString() })),
-      ],
-    },
+    copy.gift,
+    copy.shelfSection,
+    copy.shelfNumber,
   ];
 }

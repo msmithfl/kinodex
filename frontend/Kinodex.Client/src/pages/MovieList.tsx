@@ -17,6 +17,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
@@ -36,7 +37,21 @@ import PosterCard from "../components/PosterCard";
 import { AddMovieModal } from "../components/AddMovieModal";
 import { buildFilterCategories } from "../utils/filterCategories";
 import EmptyState from "../components/EmptyState";
-import type { Movie, SortOption } from "../types";
+import type { Copy, Movie, SortOption } from "../types";
+import { allFormats, copyCount } from "../utils/copies";
+import { matchingCopies } from "../utils/copyFilters";
+import {
+  NO_SELECTION,
+  describeDelete,
+  describeEdit,
+  isEmpty,
+  pickedTitles,
+  selectCopy,
+  selectRows,
+  type CopySelection,
+  type TitleRow,
+} from "../utils/copySelection";
+import { useOpenCopies } from "../components/useOpenCopies";
 import { BulkEditModal } from "../components/BulkEditModal";
 import { applyFilters } from "../utils/applyFilters";
 import { getSortedMovies } from "../utils/getSortedMovies";
@@ -117,9 +132,10 @@ function MovieList() {
   const [selectedFilters, setSelectedFilters] = useState<
     Record<string, string[]>
   >({});
-  const [selectedMovieIds, setSelectedMovieIds] = useState<Set<number>>(
-    new Set(),
-  );
+  // What's ticked in the table: copies (a movie's checkbox ticks its copies)
+  const [selection, setSelection] = useState<CopySelection>(NO_SELECTION);
+  // Which movies show their copies as rows, and whether they start that way
+  const openCopies = useOpenCopies("movieListCopiesOpen");
   const [showBulkEditModal, setShowBulkEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [bulkEditData, setBulkEditData] = useState(EMPTY_BULK_EDIT);
@@ -133,7 +149,7 @@ function MovieList() {
   const filteredMovies = applyFilters(sortedMovies, selectedFilters).filter(
     (movie) =>
       !searchQuery.trim() ||
-      titleSearchScore(movie.title, movie.year, [movie.upcNumber], searchQuery) > 0,
+      titleSearchScore(movie.title, movie.year, movie.copies.map((c) => c.upcNumber), searchQuery) > 0,
   );
 
   // One page of the filtered movies at a time. Changing what's shown (search, filters, sort,
@@ -150,6 +166,14 @@ function MovieList() {
   // Deleting movies can leave fewer pages than the one being shown
   const page = Math.min(requestedPage, pageCount);
   const pageMovies = filteredMovies.slice((page - 1) * pageSize, page * pageSize);
+  // The table's rows: each movie with the copies the filters let through
+  const pageRows: TitleRow<Movie>[] = pageMovies.map((movie) => ({
+    title: movie,
+    copies: matchingCopies(movie.copies, selectedFilters),
+  }));
+  // The movies something is ticked in, with their ticked copies
+  const picked = pickedTitles(movies, selection);
+  const pickedCopies = picked.reduce((sum, p) => sum + p.copies.length, 0);
 
   // Table headers: a new column sorts ascending, the current one flips the direction
   const handleColumnClick = (column: SortOption) => {
@@ -182,56 +206,37 @@ function MovieList() {
   // Posters can't be selected, so leaving the table clears any selection
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
-    setSelectedMovieIds(new Set());
+    setSelection(NO_SELECTION);
   };
 
-  const handleCheckboxChange = (
-    movieId: number | undefined,
-    checked: boolean,
-  ) => {
-    if (movieId === undefined) return;
+  // A movie's checkbox (or the header's, for every row on the page) ticks the copies it shows
+  const handleSelectRows = (rows: TitleRow<Movie>[], checked: boolean) =>
+    setSelection((prev) => selectRows(prev, rows, checked));
 
-    setSelectedMovieIds((prev) => {
-      const newSet = new Set(prev);
-      if (checked) {
-        newSet.add(movieId);
-      } else {
-        newSet.delete(movieId);
-      }
-      return newSet;
-    });
-  };
+  const handleSelectCopy = (copyId: number, checked: boolean) =>
+    setSelection((prev) => selectCopy(prev, copyId, checked));
 
-  // The table's header checkbox: every movie on the page at once
-  const handleSelectAll = (movieIds: number[], checked: boolean) => {
-    setSelectedMovieIds((prev) => {
-      const next = new Set(prev);
-      for (const id of movieIds) {
-        if (checked) next.add(id);
-        else next.delete(id);
-      }
-      return next;
-    });
-  };
-
+  // Copy fields go to the ticked copies; title fields (streaming, watched) to the movies they're
+  // copies of
   const handleBulkEdit = async () => {
     try {
-      const updates: Partial<Movie> = {};
+      const updates: Partial<Copy> = {};
+      const movieUpdates: Partial<Movie> = {};
 
       if (bulkEditData.shelfNumber !== "") {
         updates.shelfNumber = parseInt(bulkEditData.shelfNumber);
       }
       if (bulkEditData.shelfSection !== "") {
-        updates.shelfSection = bulkEditData.shelfSection;
+        updates.shelfSection = bulkEditData.shelfSection === "Unshelved" ? "" : bulkEditData.shelfSection;
       }
       if (bulkEditData.hdDriveNumber !== "") {
         updates.hdDriveNumber = parseInt(bulkEditData.hdDriveNumber);
       }
       if (bulkEditData.isStreaming !== "") {
-        updates.isStreaming = bulkEditData.isStreaming === "true";
+        movieUpdates.isStreaming = bulkEditData.isStreaming === "true";
       }
       if (bulkEditData.hasWatched !== "") {
-        updates.hasWatched = bulkEditData.hasWatched === "true";
+        movieUpdates.hasWatched = bulkEditData.hasWatched === "true";
       }
       if (bulkEditData.isGift !== "") {
         updates.isGift = bulkEditData.isGift === "true";
@@ -240,7 +245,7 @@ function MovieList() {
         updates.condition = bulkEditData.condition;
       }
       if (bulkEditData.purchasePrice !== "") {
-        updates.purchasePrice = parseFloat(bulkEditData.purchasePrice);
+        updates.price = parseFloat(bulkEditData.purchasePrice);
       }
       if (bulkEditData.purchasedAt !== "") {
         updates.purchasedAt = bulkEditData.purchasedAt;
@@ -249,33 +254,45 @@ function MovieList() {
         updates.formats = [bulkEditData.formats];
       }
 
-      // Save each selected movie with the changes applied; the list refreshes itself
-      const updatedMovies = movies
-        .filter((movie) => movie.id !== undefined && selectedMovieIds.has(movie.id))
-        .map((movie) => ({ ...movie, ...updates }));
+      // Save each movie with the changes applied to it and its ticked copies; the list refreshes itself
+      const updatedMovies = picked.map(({ title, copies }) => ({
+        ...title,
+        ...movieUpdates,
+        copies: title.copies.map((c) => (copies.includes(c) ? { ...c, ...updates } : c)),
+      }));
       await updateMovies.mutateAsync(updatedMovies);
+      const changed = describeEdit(picked);
 
       // Reset state
       setShowBulkEditModal(false);
-      setSelectedMovieIds(new Set());
+      setSelection(NO_SELECTION);
       setBulkEditData(EMPTY_BULK_EDIT);
-      toast.success(`Updated ${plural(updatedMovies.length, "movie")}`);
+      toast.success(`Updated ${changed}`);
     } catch (error) {
       console.error("Error updating movies:", error);
       toast.error("Couldn't update the movies. Please try again.");
     }
   };
 
+  // Deletes the ticked copies: a movie with all its copies ticked goes too (as one with a single
+  // copy always did); one with only some ticked keeps the others
   const handleBulkDelete = async () => {
-    const count = selectedMovieIds.size;
+    const removed = describeDelete(picked);
+    const wholeIds = picked.filter((p) => p.whole).map((p) => p.title.id!);
+    const trimmed = picked
+      .filter((p) => !p.whole)
+      .map(({ title, copies }) => ({ ...title, copies: title.copies.filter((c) => !copies.includes(c)) }));
     try {
       // The list refreshes itself afterwards
-      await deleteMovies.mutateAsync(Array.from(selectedMovieIds));
+      await Promise.all([
+        wholeIds.length > 0 ? deleteMovies.mutateAsync(wholeIds) : null,
+        trimmed.length > 0 ? updateMovies.mutateAsync(trimmed) : null,
+      ]);
 
       // Reset state
       setShowDeleteConfirm(false);
-      setSelectedMovieIds(new Set());
-      toast.success(`Deleted ${plural(count, "movie")}`);
+      setSelection(NO_SELECTION);
+      toast.success(`Deleted ${removed}`);
     } catch (error) {
       console.error("Error deleting movies:", error);
       setShowDeleteConfirm(false);
@@ -394,6 +411,15 @@ function MovieList() {
                           {label}
                         </DropdownMenuCheckboxItem>
                       ))}
+                      <DropdownMenuSeparator />
+                      {/* Movies with several copies start open (a row for each) or closed */}
+                      <DropdownMenuCheckboxItem
+                        checked={openCopies.openByDefault}
+                        onCheckedChange={(checked) => openCopies.setOpenByDefault(checked === true)}
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        Open copies
+                      </DropdownMenuCheckboxItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
@@ -434,7 +460,7 @@ function MovieList() {
                         title={movie.title}
                         posterPath={movie.posterPath}
                         subtitle={movie.year ? String(movie.year) : undefined}
-                        formats={movie.formats}
+                        formats={allFormats(movie.copies)}
                         rating={movie.rating}
                         to={`/library?movie=${movie.id}`}
                         onOpen={() => openMovie(movie.id)}
@@ -448,21 +474,23 @@ function MovieList() {
           ) : (
             <MovieTable
               key={page} // A new page starts scrolled to the top
-              movies={pageMovies}
+              rows={pageRows}
               visibleColumns={visibleColumns}
               sortBy={sortBy}
               sortDirection={sortDirection}
               onSort={handleColumnClick}
-              selectedIds={selectedMovieIds}
-              onSelect={handleCheckboxChange}
-              onSelectAll={handleSelectAll}
+              selection={selection}
+              onSelectRows={handleSelectRows}
+              onSelectCopy={handleSelectCopy}
+              isOpen={openCopies.isOpen}
+              onOpenChange={openCopies.setOpen}
               onOpen={openMovie}
             />
           )}
 
           {/* Selected rows: a floating bar of bulk actions over the bottom of the list */}
           <AnimatePresence>
-            {selectedMovieIds.size > 0 && (
+            {!isEmpty(selection) && picked.length > 0 && (
               <div key="bulk-actions" className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-4">
                 <motion.div
                   initial={{ opacity: 0, y: 16 }}
@@ -474,7 +502,8 @@ function MovieList() {
                   className="pointer-events-auto flex items-center gap-1 rounded-xl border border-border bg-popover p-1.5 shadow-2xl"
                 >
                   <span className="px-2.5 text-sm font-medium whitespace-nowrap tabular-nums">
-                    {selectedMovieIds.size} selected
+                    {plural(picked.length, "movie")}
+                    {pickedCopies !== picked.length && ` · ${copyCount(pickedCopies)}`} selected
                   </span>
                   <Separator orientation="vertical" className="mx-1 h-5!" />
                   <Button variant="ghost" size="sm" onClick={() => setShowBulkEditModal(true)}>
@@ -492,7 +521,7 @@ function MovieList() {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    onClick={() => setSelectedMovieIds(new Set())}
+                    onClick={() => setSelection(NO_SELECTION)}
                     aria-label="Clear selection"
                     className="text-muted-foreground"
                   >
@@ -523,7 +552,8 @@ function MovieList() {
       {/* Bulk Edit Modal */}
       {showBulkEditModal && (
         <BulkEditModal
-          selectedMovieIds={selectedMovieIds}
+          movieCount={picked.length}
+          copyCount={pickedCopies}
           bulkEditData={bulkEditData}
           setBulkEditData={setBulkEditData}
           shelfSections={shelfSections}
@@ -536,8 +566,8 @@ function MovieList() {
       <DeleteConfirm
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
-        title={plural(selectedMovieIds.size, "movie")}
-        description="They're removed from your collection, with their purchase and shelf details. This can't be undone."
+        title={describeDelete(picked)}
+        description="A movie with every copy chosen goes from your collection; otherwise just the copies chosen go. This can't be undone."
         onConfirm={handleBulkDelete}
       />
     </>

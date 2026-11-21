@@ -71,6 +71,9 @@ public static class CollectionListItemEndpoints
                 if (collection == null || collection.UserId != userId)
                     return Results.NotFound("Collection not found");
 
+                if (!TitleKinds.IsKnown(item.Kind))
+                    return Results.BadRequest(new { error = "A checklist item is a movie or a show." });
+
                 item.CollectionId = collectionId;
                 item.UserId = userId;
                 item.CreatedAt = DateTime.UtcNow;

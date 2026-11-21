@@ -15,9 +15,9 @@ import {
 import { Star } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Movie, TvShow } from "../types";
+import type { Copy, Movie, TvShow } from "../types";
 import ChartBreakdown from "../components/ChartBreakdown";
-import { allFormats } from "../utils/tvShowPurchases";
+import { copyCount } from "../utils/copies";
 import { movieSpend, tvSpend } from "../utils/spending";
 import { FORMATS } from "../utils/formats";
 import {
@@ -58,8 +58,8 @@ interface StatItem {
   isStreaming: boolean;
   year: number;
   genres: string[];
-  formats: string[];
-  conditions: string[]; // A movie has one; a TV show has one per purchase
+  // Formats and conditions are counted per copy: two copies on DVD are two DVDs
+  copies: Copy[];
 }
 
 const movieItem = (m: Movie): StatItem => ({
@@ -69,8 +69,7 @@ const movieItem = (m: Movie): StatItem => ({
   isStreaming: m.isStreaming,
   year: m.year,
   genres: m.genres,
-  formats: m.formats,
-  conditions: m.condition ? [m.condition] : [],
+  copies: m.copies,
 });
 
 const tvItem = (s: TvShow): StatItem => ({
@@ -80,8 +79,7 @@ const tvItem = (s: TvShow): StatItem => ({
   isStreaming: s.isStreaming,
   year: s.year,
   genres: s.genres,
-  formats: allFormats(s.purchases),
-  conditions: s.purchases.map((p) => p.condition).filter(Boolean),
+  copies: s.copies,
 });
 
 // Stable empty lists while loading, so effects that watch the lists don't re-run every render
@@ -117,7 +115,7 @@ function Stats() {
   const formatData = (() => {
     const counts: Record<string, number> = {};
     items.forEach((m) => {
-      m.formats.forEach((fmt) => {
+      m.copies.flatMap((c) => c.formats).forEach((fmt) => {
         counts[fmt] = (counts[fmt] || 0) + 1;
       });
     });
@@ -141,7 +139,7 @@ function Stats() {
   const conditionData = (() => {
     const counts: Record<string, number> = {};
     items.forEach((m) => {
-      m.conditions.forEach((c) => {
+      m.copies.map((copy) => copy.condition).filter(Boolean).forEach((c) => {
         counts[c] = (counts[c] || 0) + 1;
       });
     });
@@ -176,6 +174,7 @@ function Stats() {
   }));
 
   const streamingCount = items.filter((m) => m.isStreaming).length;
+  const totalCopies = items.reduce((sum, m) => sum + m.copies.length, 0);
 
   // A small labelled figure in the lower half of a summary card
   const summaryStat = (label: string, value: string | number) => (
@@ -262,10 +261,14 @@ function Stats() {
                 </div>
               </div>
 
-              {/* Collection: the title count, the Movies / TV split, and how many are streaming */}
+              {/* Collection: the title count (and the copies of them), the Movies / TV split, and how
+                  many are streaming */}
               <div className="flex flex-col justify-center rounded-xl border border-border bg-card p-5">
                 <p className="mb-1 text-sm text-muted-foreground">Total titles</p>
-                <p className="text-4xl font-semibold tracking-tight">{items.length}</p>
+                <p className="text-4xl font-semibold tracking-tight">
+                  {items.length}
+                  <span className="ml-2 text-sm font-normal tracking-normal text-muted-foreground">{copyCount(totalCopies)}</span>
+                </p>
                 <div className="mt-3 grid grid-cols-3 divide-x divide-border border-t border-border pt-3">
                   {summaryStat("Movies", movies.length)}
                   {summaryStat("TV shows", shows.length)}

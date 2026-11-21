@@ -36,7 +36,8 @@ public class MigrationTests
                     (11, 1, ARRAY[1], 0, '', ARRAY[]::text[], '', '2026-01-15', false);
                 """);
 
-            await migrator.MigrateAsync();
+            // As far as purchases go: TitlesAndCopies turns them into copies
+            await migrator.MigrateAsync(BeforeCopies);
 
             var images = await db.Database
                 .SqlQueryRaw<PurchaseImage>("""SELECT "Id", "ProductPosterPath" FROM "TvShowPurchases" """)
@@ -101,6 +102,114 @@ public class MigrationTests
         {
             await db.Database.EnsureDeletedAsync();
         }
+    }
+
+    // The last migration before movies and shows became titles with copies
+    private const string BeforeCopies = "20261115025408_AddJellyfinItemIds";
+
+    [Fact]
+    public async Task Movies_and_shows_become_titles_with_their_details_as_copies_and_back_again()
+    {
+        await using var db = NewDatabase();
+        try
+        {
+            var migrator = db.GetService<IMigrator>();
+            await migrator.MigrateAsync(BeforeCopies);
+
+            // Ids given by hand, so the sequence hasn't moved: the shows' new ids must still not clash
+            await db.Database.ExecuteSqlRawAsync("""
+                INSERT INTO "Movies" ("Id", "UserId", "Title", "UpcNumber", "Formats", "Collections", "Condition",
+                    "PurchasePrice", "PurchasedAt", "HasWatched", "Rating", "Review", "Year", "Genres", "PosterPath",
+                    "BackdropPath", "ProductPosterPath", "TmdbId", "HDDriveNumber", "ShelfNumber", "ShelfSection",
+                    "IsStreaming", "JellyfinItemId", "IsGift", "CreatedAt")
+                VALUES
+                    (1, 'user', 'Die Hard', '111', ARRAY['VHS'], ARRAY['Action'], 'Good', 3.5, '1995-06-01', true, 4.5,
+                     'Yippee', 1988, ARRAY['Action'], '/p.jpg', '/b.jpg', 'https://example.com/vhs.jpg', 562, 2, 12, 'A',
+                     true, 'abc', false, '2024-01-01T00:00:00Z'),
+                    (2, 'user', 'Heat', '', ARRAY[]::text[], ARRAY[]::text[], '', 0, '2024-02-01', false, 0,
+                     '', 1995, ARRAY[]::text[], '', '', '', NULL, 0, 0, '', false, NULL, true, '2024-02-01T00:00:00Z');
+                INSERT INTO "TvShows" ("Id", "UserId", "Title", "HasWatched", "Rating", "Review", "Year", "Genres",
+                    "PosterPath", "BackdropPath", "TmdbId", "TotalSeasons", "IsStreaming", "JellyfinItemId", "CreatedAt")
+                VALUES
+                    (1, 'user', 'The Wire', true, 5, 'All in', 2002, ARRAY['Crime'], '/w.jpg', '', 1438, 5, false, NULL, '2024-03-01T00:00:00Z'),
+                    (2, 'user', 'Lost', false, 0, '', 2004, ARRAY[]::text[], '', '', 4607, 6, false, NULL, '2024-04-01T00:00:00Z');
+                INSERT INTO "TvShowPurchases" ("Id", "TvShowId", "Seasons", "Price", "UpcNumber", "Formats",
+                    "Condition", "PurchasedAt", "IsGift", "ProductPosterPath")
+                VALUES
+                    (10, 1, ARRAY[1,2], 19.99, '222', ARRAY['DVD'], 'Good', '2024-03-01', false, 'https://example.com/s12.jpg'),
+                    (11, 1, ARRAY[3], 0, '', ARRAY['Blu-ray'], 'New', '2024-05-01', true, '');
+                INSERT INTO "Collections" ("Id", "UserId", "Name", "IsDirectorCollection", "CreatedAt")
+                VALUES (1, 'user', 'Action', false, now());
+                INSERT INTO "CollectionListItems" ("Id", "UserId", "CollectionId", "Title", "Year", "TmdbId", "CreatedAt")
+                VALUES (1, 'user', 1, 'Die Hard', 1988, 562, now());
+                """);
+
+            await migrator.MigrateAsync();
+
+            var movies = await db.Movies.AsNoTracking().Include(m => m.Copies).OrderBy(m => m.Id).ToListAsync();
+            Assert.Equal([1, 2], movies.Select(m => m.Id)); // Movies keep their ids
+            var dieHard = movies[0];
+            Assert.Equal(("Die Hard", 562, true, 4.5f, "abc", true), (dieHard.Title, dieHard.TmdbId, dieHard.HasWatched, dieHard.Rating, dieHard.JellyfinItemId, dieHard.IsStreaming));
+            Assert.Equal(["Action"], dieHard.Collections);
+            var vhs = Assert.Single(dieHard.Copies);
+            Assert.Equal(("111", "Good", 3.5m, new DateOnly(1995, 6, 1), "https://example.com/vhs.jpg", "A", 12, 2),
+                (vhs.UpcNumber, vhs.Condition, vhs.Price, vhs.PurchasedAt, vhs.ProductPosterPath, vhs.ShelfSection, vhs.ShelfNumber, vhs.HDDriveNumber));
+            Assert.Equal(["VHS"], vhs.Formats);
+            Assert.Empty(vhs.Seasons);
+            Assert.Equal(dieHard.CreatedAt, vhs.CreatedAt);
+            Assert.True(Assert.Single(movies[1].Copies).IsGift);
+
+            var shows = await db.TvShows.AsNoTracking().Include(s => s.Copies.OrderBy(c => c.Id)).OrderBy(s => s.CreatedAt).ToListAsync();
+            Assert.Equal(["The Wire", "Lost"], shows.Select(s => s.Title));
+            Assert.All(shows, s => Assert.True(s.Id > 2)); // New ids, after the movies'
+            var wire = shows[0];
+            Assert.Equal((5, true, 5f, "All in", 1438), (wire.TotalSeasons, wire.HasWatched, wire.Rating, wire.Review, wire.TmdbId));
+            Assert.Empty(wire.Collections);
+            Assert.Equal([[1, 2], [3]], wire.Copies.Select(c => c.Seasons));
+            Assert.Equal((19.99m, "222", "https://example.com/s12.jpg", "", 0), (wire.Copies[0].Price, wire.Copies[0].UpcNumber, wire.Copies[0].ProductPosterPath, wire.Copies[0].ShelfSection, wire.Copies[0].HDDriveNumber));
+            Assert.True(wire.Copies[1].IsGift);
+            Assert.Empty(shows[1].Copies);
+
+            Assert.Equal("movie", (await db.CollectionListItems.AsNoTracking().SingleAsync()).Kind);
+
+            // New titles carry on numbering after them
+            db.Movies.Add(new Kinodex.Api.Models.Movie { UserId = "user", Title = "Aliens" });
+            await db.SaveChangesAsync();
+
+            // And back: each movie has its copy's details again, the shows and their purchases return
+            await migrator.MigrateAsync(BeforeCopies);
+
+            var movieRows = await db.Database
+                .SqlQueryRaw<OldMovieRow>("""SELECT "Id", "Title", "UpcNumber", "PurchasePrice", "HDDriveNumber" FROM "Movies" ORDER BY "Id" """)
+                .ToListAsync();
+            Assert.Equal(["Die Hard", "Heat", "Aliens"], movieRows.Select(m => m.Title));
+            Assert.Equal(("111", 3.5f, 2), (movieRows[0].UpcNumber, movieRows[0].PurchasePrice, movieRows[0].HDDriveNumber));
+            var purchaseSeasons = await db.Database
+                .SqlQueryRaw<OldPurchaseRow>("""SELECT p."Id", s."Title", p."Seasons" FROM "TvShowPurchases" p JOIN "TvShows" s ON s."Id" = p."TvShowId" ORDER BY p."Id" """)
+                .ToListAsync();
+            Assert.Equal(["The Wire", "The Wire"], purchaseSeasons.Select(p => p.Title));
+            Assert.Equal([[1, 2], [3]], purchaseSeasons.Select(p => p.Seasons));
+        }
+        finally
+        {
+            await db.Database.EnsureDeletedAsync();
+        }
+    }
+
+    private class OldMovieRow
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string UpcNumber { get; set; } = "";
+        public float PurchasePrice { get; set; }
+        public int HDDriveNumber { get; set; }
+    }
+
+    private class OldPurchaseRow
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public List<int> Seasons { get; set; } = [];
     }
 
     private class PurchaseImage

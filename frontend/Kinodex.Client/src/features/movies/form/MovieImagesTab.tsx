@@ -1,7 +1,8 @@
 import ImageUrlField from "../../../components/ImageUrlField";
+import CopyProductImages from "../../../components/CopyProductImages";
 import type { Movie } from "../../../types";
 
-// A picker's toggle button and the image grid it opens (from useImagePicker/useProductImagePicker)
+// A picker's toggle button and the image grid it opens (from useImagePicker)
 interface Picker {
   button: React.ReactNode;
   grid: React.ReactNode;
@@ -13,18 +14,16 @@ interface MovieImagesTabProps {
   // Kept by the form, so a picker's loaded images and open grid survive switching tabs
   posterPicker: Picker;
   backdropPicker: Picker;
-  productPicker: Picker;
 }
 
-// The movie form's Images tab: poster, backdrop and product image, each a URL with a preview and
-// a picker (TMDB's posters and backdrops; retailer images found by the UPC) whose grid opens
-// full width below its row
+// The movie form's Images tab: poster and backdrop, each a URL with a preview and a picker
+// (TMDB's posters and backdrops) whose grid opens full width below its row, then each copy's
+// product image (retailer images found by its UPC)
 function MovieImagesTab({
   formData,
   setFormData,
   posterPicker,
   backdropPicker,
-  productPicker,
 }: MovieImagesTabProps) {
   return (
     <div className="flex flex-col gap-4 pb-2">
@@ -54,18 +53,12 @@ function MovieImagesTab({
       />
       {backdropPicker.grid}
 
-      <ImageUrlField
-        id="productPosterPath"
-        label="Product Image URL"
-        value={formData.productPosterPath}
-        onChange={(productPosterPath) => setFormData({ ...formData, productPosterPath })}
-        placeholder="https://example.com/product-image.jpg"
-        shape="tall"
-        previewAlt="Product image preview"
-        emptyText="No image"
-        picker={productPicker.button}
+      <CopyProductImages
+        copies={formData.copies}
+        setCopies={(update) => setFormData((prev) => ({ ...prev, copies: update(prev.copies) }))}
+        // A movie with one copy: just "Product Image"
+        copyName={(_, index) => (formData.copies.length > 1 ? `Copy ${index + 1}` : null)}
       />
-      {productPicker.grid}
     </div>
   );
 }

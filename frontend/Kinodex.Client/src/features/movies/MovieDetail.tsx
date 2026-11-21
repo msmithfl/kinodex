@@ -32,7 +32,8 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showPosterLightbox, setShowPosterLightbox] = useState(false);
-  const [showProductLightbox, setShowProductLightbox] = useState(false);
+  // The product image being shown large (each copy has its own)
+  const [productLightboxSrc, setProductLightboxSrc] = useState<string | null>(null);
   // Which section shows under the header
   const [tab, setTab] = useState<DrawerTab>("details");
 
@@ -107,16 +108,16 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps) {
         </Tabs>
       )}
       {tab === "details" && (
-        <MovieDrawerDetails movie={movie} onEnlargeProductImage={() => setShowProductLightbox(true)} />
+        <MovieDrawerDetails movie={movie} onEnlargeProductImage={setProductLightboxSrc} />
       )}
 
       {showModal && <EditMovieModal movieId={movieId} onClose={() => setShowModal(false)} />}
 
-      {showProductLightbox && movie.productPosterPath && (
+      {productLightboxSrc && (
         <ImageLightbox
-          src={movie.productPosterPath}
+          src={productLightboxSrc}
           alt={`${movie.title} product`}
-          onClose={() => setShowProductLightbox(false)}
+          onClose={() => setProductLightboxSrc(null)}
         />
       )}
 
@@ -128,7 +129,7 @@ function MovieDetail({ movieId, onDeleted }: MovieDetailProps) {
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
         title={movie.title}
-        description="It's removed from your collection, with its purchase and shelf details. This can't be undone."
+        description="It's removed from your collection, with all its copies. This can't be undone."
         onConfirm={handleDeleteConfirm}
       />
     </div>

@@ -1,22 +1,18 @@
 import type { TvShow } from "../../types";
 import type { FilterCategory } from "../../utils/filterCategories";
-import { ownsEverySeason } from "../../utils/tvShowPurchases";
-import { FORMATS } from "../../utils/formats";
+import { ownsEverySeason } from "../../utils/copies";
+import { copyFilterCategories, titlePassesCopyFilters } from "../../utils/copyFilters";
 
-// The TV list's filter menu, like the movie list's. Format, condition and gift are per purchase,
-// so a show matches when any of its purchases does.
-export function buildTvShowFilterCategories(shows: TvShow[]): FilterCategory[] {
+// The TV list's filter menu, like the movie list's. Format, condition, gift, shelf and HDD are per
+// copy, so a show matches when any of its copies does (utils/copyFilters).
+export function buildTvShowFilterCategories(shows: TvShow[], shelfSections: string[]): FilterCategory[] {
   const yesNo = (yes: string, no: string) => [
     { label: yes, value: "true" },
     { label: no, value: "false" },
   ];
+  const copy = copyFilterCategories(shows.flatMap((s) => s.copies), shelfSections);
   return [
-    {
-      id: "format",
-      label: "Format",
-      kind: "list",
-      options: FORMATS.map((format) => ({ label: format, value: format })),
-    },
+    copy.format,
     {
       // Every genre that appears in the collection
       id: "genre",
@@ -26,26 +22,18 @@ export function buildTvShowFilterCategories(shows: TvShow[]): FilterCategory[] {
         .sort()
         .map((genre) => ({ label: genre, value: genre })),
     },
-    {
-      id: "condition",
-      label: "Condition",
-      kind: "list",
-      options: Array.from(new Set(shows.flatMap((s) => s.purchases.map((p) => p.condition))))
-        .filter(Boolean)
-        .sort()
-        .map((condition) => ({ label: condition, value: condition })),
-    },
+    copy.condition,
+    copy.hdd,
     { id: "complete", label: "Complete set", kind: "toggle", options: yesNo("Complete", "Incomplete") },
     { id: "streaming", label: "Streaming", kind: "toggle", options: yesNo("Streaming", "Not streaming") },
     { id: "hasWatched", label: "Has Watched", kind: "toggle", options: yesNo("Watched", "Not Watched") },
-    { id: "gift", label: "Gift", kind: "toggle", options: yesNo("Includes a gift", "No gifts") },
+    copy.gift,
+    copy.shelfSection,
+    copy.shelfNumber,
   ];
 }
 
-export function applyTvShowFilters<T extends TvShow>(
-  shows: T[],
-  selectedFilters: Record<string, string[]>,
-): T[] {
+export function applyTvShowFilters<T extends TvShow>(shows: T[], selectedFilters: Record<string, string[]>): T[] {
   // Each yes/no filter compares a flag against the chosen "true"/"false" values
   const flag = (id: string, value: (show: T) => boolean) => (show: T) =>
     !selectedFilters[id]?.length || selectedFilters[id].includes(value(show) ? "true" : "false");
@@ -53,11 +41,9 @@ export function applyTvShowFilters<T extends TvShow>(
     !selectedFilters[id]?.length || values(show).some((v) => selectedFilters[id].includes(v));
 
   return shows
-    .filter(any("format", (s) => s.purchases.flatMap((p) => p.formats)))
     .filter(any("genre", (s) => s.genres ?? []))
-    .filter(any("condition", (s) => s.purchases.map((p) => p.condition)))
     .filter(flag("complete", ownsEverySeason))
     .filter(flag("streaming", (s) => s.isStreaming))
     .filter(flag("hasWatched", (s) => s.hasWatched))
-    .filter(flag("gift", (s) => s.purchases.some((p) => p.isGift)));
+    .filter((s) => titlePassesCopyFilters(s.copies, selectedFilters));
 }

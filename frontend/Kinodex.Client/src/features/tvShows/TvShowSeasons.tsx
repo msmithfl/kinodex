@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
 import { formatSeasons } from "../../utils/formatSeasons";
-import { ownedSeasons, ownsEverySeason } from "../../utils/tvShowPurchases";
+import { ownedSeasons, ownsEverySeason } from "../../utils/copies";
 import type { TvShow } from "../../types";
 
 // The show's seasons as a grid of S1, S2, ... tiles, owned ones highlighted. Without a known
 // season count, it lists the owned seasons as text instead.
 function TvShowSeasons({ show }: { show: TvShow }) {
-  const owned = ownedSeasons(show.purchases);
+  const owned = ownedSeasons(show.copies);
   const allSeasons = Array.from({ length: show.totalSeasons }, (_, i) => i + 1);
 
   return (

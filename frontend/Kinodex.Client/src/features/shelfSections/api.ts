@@ -30,3 +30,15 @@ export function useCreateShelfSection() {
     },
   });
 }
+
+// The shelf section names for a copy's picker (alphabetical), and adding a new one (nothing
+// happens for a name that's already there)
+export function useShelfSectionChoices() {
+  const { data = [] } = useShelfSections();
+  const create = useCreateShelfSection();
+  const names = data.map((s) => s.name).sort((a, b) => a.localeCompare(b));
+  const add = async (name: string) => {
+    if (!names.includes(name)) await create.mutateAsync(name);
+  };
+  return { names, add };
+}

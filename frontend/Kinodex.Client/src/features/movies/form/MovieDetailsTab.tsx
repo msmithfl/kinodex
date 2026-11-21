@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChipSelect } from "../../../components/ChipSelect";
 import { Genres, type Movie } from "../../../types";
-import { FormField } from "../../../components/FormFields";
+import { FormField, SwitchField } from "../../../components/FormFields";
 
 const GENRE_OPTIONS = Object.values(Genres).map((genre) => ({ value: genre }));
 
@@ -23,8 +23,8 @@ interface MovieDetailsTabProps {
   addCollection: () => Promise<void>;
 }
 
-// The movie form's first tab: title, year, TMDB id, genres, collections (rating, watched and notes
-// are on the Review tab)
+// The movie form's first tab: title, year, TMDB id, genres, collections, streaming (rating, watched
+// and notes are on the Review tab; the discs themselves on the Copies tab)
 function MovieDetailsTab({
   formData,
   setFormData,
@@ -114,6 +114,15 @@ function MovieDetailsTab({
             </div>
           )}
         </div>
+      </FormField>
+
+      <FormField label="Streaming">
+        <SwitchField
+          id="isStreaming"
+          label="Available to stream"
+          checked={formData.isStreaming}
+          onCheckedChange={(isStreaming) => setFormData({ ...formData, isStreaming })}
+        />
       </FormField>
     </div>
   );

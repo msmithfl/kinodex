@@ -11,21 +11,26 @@ type ServerSet = "id" | "userId" | "createdAt";
 // T with the given fields made optional
 type Loosen<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
-export type Movie = Loosen<Schemas["Movie"], ServerSet>;
+// One physical item of a movie or show: a disc, a tape, a set (docs/design/titles-and-copies.md).
+// A TV show's copy covers some of its seasons (the same season may be in more than one copy, e.g. a
+// DVD later upgraded to Blu-ray); a movie's has none. purchasedAt is YYYY-MM-DD, a calendar date
+// with no time zone. A copy keeps its id when its title is saved.
+export type Copy = Loosen<Schemas["Copy"], "id" | "titleId" | "createdAt"> & {
+  clientKey?: string; // Form-only identity for copies not yet saved; the API ignores it
+};
 
-// One transaction: a complete set, a single season, or anything in between.
-// The same season may appear in more than one purchase (e.g. a DVD later upgraded to Blu-ray).
-// purchasedAt is YYYY-MM-DD, a calendar date with no time zone.
-export type TvShowPurchase = Loosen<Schemas["TvShowPurchase"], "id" | "tvShowId"> & {
-  clientKey?: string; // Form-only identity for purchases not yet saved; the API ignores it
+// Movies and TV shows are both titles, each holding its copies
+export type Movie = Loosen<Omit<Schemas["Movie"], "copies">, ServerSet> & {
+  copies: Copy[];
 };
 
 // year is the first air year; totalSeasons is TMDB's season count, 0 when unknown
-export type TvShow = Loosen<Omit<Schemas["TvShow"], "purchases">, ServerSet> & {
-  purchases: TvShowPurchase[];
+export type TvShow = Loosen<Omit<Schemas["TvShow"], "copies">, ServerSet> & {
+  copies: Copy[];
 };
 
-export type CollectionListItem = Loosen<Schemas["CollectionListItem"], ServerSet | "collection">;
+// "movie" or "show" (TMDB numbers them separately)
+export type CollectionListItem = Loosen<Schemas["CollectionListItem"], ServerSet | "collection" | "kind">;
 
 // imageUrl: cover chosen at creation (a movie poster or the director's photo); null uses a
 // movie's poster. backdropUrl: wide image behind the collection's details.

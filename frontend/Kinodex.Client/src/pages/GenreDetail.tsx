@@ -12,6 +12,7 @@ import MovieDetail from "../features/movies/MovieDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
 import { useStoredChoice } from "../utils/useStoredState";
 import { useMovies } from "../features/movies/api";
+import { allFormats } from "../utils/copies";
 
 function GenreDetail() {
   const { genreName } = useParams<{ genreName: string }>();
@@ -59,7 +60,7 @@ function GenreDetail() {
                   title={movie.title}
                   posterPath={movie.posterPath}
                   subtitle={movie.year ? String(movie.year) : undefined}
-                  formats={movie.formats}
+                  formats={allFormats(movie.copies)}
                   rating={movie.rating}
                   to={`/library?movie=${movie.id}`}
                   onOpen={() => openMovie(movie.id)}

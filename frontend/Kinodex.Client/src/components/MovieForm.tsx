@@ -1,20 +1,18 @@
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Movie } from "../types";
+import type { Copy, Movie } from "../types";
 import { useImagePicker } from "./useImagePicker";
-import { useProductImagePicker } from "./useProductImagePicker";
+import CopiesTab from "./CopiesTab";
 import MovieDetailsTab from "../features/movies/form/MovieDetailsTab";
-import MoviePhysicalTab from "../features/movies/form/MoviePhysicalTab";
-import MovieLocationTab from "../features/movies/form/MovieLocationTab";
 import MovieImagesTab from "../features/movies/form/MovieImagesTab";
 import MovieReviewTab from "../features/movies/form/MovieReviewTab";
+import { useShelfSectionChoices } from "../features/shelfSections/api";
 
-type Tab = "details" | "physical" | "location" | "poster" | "review";
+type Tab = "details" | "copies" | "poster" | "review";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "details", label: "Details" },
-  { id: "physical", label: "Physical" },
-  { id: "location", label: "Location" },
+  { id: "copies", label: "Copies" },
   { id: "poster", label: "Images" },
   { id: "review", label: "Review" },
 ];
@@ -23,22 +21,16 @@ interface MovieFormProps {
   formData: Movie;
   setFormData: React.Dispatch<React.SetStateAction<Movie>>;
   collections: { id: number; name: string }[];
-  shelfSections: { id: number; name: string }[];
   showCollectionInput: boolean;
   setShowCollectionInput: React.Dispatch<React.SetStateAction<boolean>>;
-  showShelfSectionInput: boolean;
-  setShowShelfSectionInput: React.Dispatch<React.SetStateAction<boolean>>;
   newCollection: string;
   setNewCollection: React.Dispatch<React.SetStateAction<string>>;
-  newShelfSection: string;
-  setNewShelfSection: React.Dispatch<React.SetStateAction<string>>;
   addCollection: () => Promise<void>;
-  addShelfSection: () => Promise<void>;
   onSubmit: (e: React.FormEvent) => Promise<void>;
   onCancel: () => void;
   submitButtonText?: string;
-  showScanButton?: boolean;
-  onScanClick?: () => void;
+  // Scanning a barcode into one copy's UPC
+  onScanClick?: (copyIndex: number) => void;
   // The form element's id, so buttons outside it (the modal footer) can submit it
   id?: string;
 }
@@ -47,24 +39,19 @@ function MovieForm({
   formData,
   setFormData,
   collections,
-  shelfSections,
   showCollectionInput,
   setShowCollectionInput,
-  showShelfSectionInput,
-  setShowShelfSectionInput,
   newCollection,
   setNewCollection,
-  newShelfSection,
-  setNewShelfSection,
   addCollection,
-  addShelfSection,
   onSubmit,
-  showScanButton = false,
   onScanClick,
   id,
 }: MovieFormProps) {
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [validationError, setValidationError] = useState<string>("");
+  // Shelf sections for each copy's "where it lives"
+  const shelfSections = useShelfSectionChoices();
   // TMDB poster and backdrop choosers for the Images tab
   const posterPicker = useImagePicker({
     kind: "movie",
@@ -80,58 +67,26 @@ function MovieForm({
     selected: formData.backdropPath,
     onSelect: (backdropPath) => setFormData((prev) => ({ ...prev, backdropPath })),
   });
-  // Product (box art) images found by the movie's UPC
-  const productPicker = useProductImagePicker({
-    upc: formData.upcNumber,
-    selected: formData.productPosterPath,
-    onSelect: (productPosterPath) => setFormData((prev) => ({ ...prev, productPosterPath })),
-  });
   const [yearInput, setYearInput] = useState<string>(formData.year.toString());
-  const [shelfInput, setShelfInput] = useState<string>(
-    formData.shelfNumber.toString(),
-  );
-  const [hddInput, setHddInput] = useState<string>(
-    formData.hdDriveNumber.toString(),
-  );
-  const [tmdbInput, setTmdbInput] = useState<string>(
-    formData.tmdbId?.toString() || "",
-  );
-  const [purchasePriceInput, setPurchasePriceInput] = useState<string>(
-    formData.purchasePrice.toString(),
-  );
+  const [tmdbInput, setTmdbInput] = useState<string>(formData.tmdbId?.toString() || "");
 
   // Keep the number text boxes in step when the movie data changes from outside them (it loads,
-  // a TMDB result or a preset fills it in). The price text is only rewritten when it no longer
-  // means the price, so typing "12." isn't rewritten to "12" mid-keystroke.
-  const syncKey = `${formData.year}|${formData.shelfNumber}|${formData.hdDriveNumber}|${formData.tmdbId ?? ""}|${formData.purchasePrice}`;
+  // or a TMDB result or a preset fills it in)
+  const syncKey = `${formData.year}|${formData.tmdbId ?? ""}`;
   const [syncedKey, setSyncedKey] = useState(syncKey);
   if (syncKey !== syncedKey) {
     setSyncedKey(syncKey);
     setYearInput(formData.year.toString());
-    setShelfInput(formData.shelfNumber.toString());
-    setHddInput(formData.hdDriveNumber.toString());
     setTmdbInput(formData.tmdbId?.toString() || "");
-    if (parseFloat(purchasePriceInput) !== formData.purchasePrice) {
-      setPurchasePriceInput(formData.purchasePrice.toString());
-    }
   }
+
+  const setCopies = (update: (copies: Copy[]) => Copy[]) =>
+    setFormData((prev) => ({ ...prev, copies: update(prev.copies) }));
 
   const handleYearChange = (value: string) => {
     setYearInput(value);
     const num = parseInt(value);
     if (!isNaN(num)) setFormData({ ...formData, year: num });
-  };
-
-  const handleShelfChange = (value: string) => {
-    setShelfInput(value);
-    const num = parseInt(value);
-    if (!isNaN(num)) setFormData({ ...formData, shelfNumber: num });
-  };
-
-  const handleHddChange = (value: string) => {
-    setHddInput(value);
-    const num = parseInt(value);
-    if (!isNaN(num)) setFormData({ ...formData, hdDriveNumber: num });
   };
 
   const handleTmdbChange = (value: string) => {
@@ -144,12 +99,6 @@ function MovieForm({
     }
   };
 
-  const handlePurchasePriceChange = (value: string) => {
-    setPurchasePriceInput(value);
-    const num = parseFloat(value);
-    if (!isNaN(num)) setFormData({ ...formData, purchasePrice: num });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError("");
@@ -160,36 +109,21 @@ function MovieForm({
       setActiveTab("details");
       return;
     }
-    if (isNaN(parseInt(shelfInput))) {
-      setValidationError("Shelf Number must be a valid number");
-      setActiveTab("location");
-      return;
-    }
-    if (isNaN(parseInt(hddInput))) {
-      setValidationError("HDD Number must be a valid number");
-      setActiveTab("location");
-      return;
-    }
-    if (isNaN(parseFloat(purchasePriceInput))) {
-      setValidationError("Purchase Price must be a valid number");
-      setActiveTab("physical");
-      return;
-    }
-    if (!formData.purchasedAt) {
-      setValidationError("Purchase Date is required");
-      setActiveTab("physical");
+    const invalidIndex = formData.copies.findIndex((c) => c.price < 0 || !c.purchasedAt);
+    if (invalidIndex !== -1) {
+      const copy = formData.copies[invalidIndex];
+      setValidationError(`Copy ${invalidIndex + 1}: ${copy.price < 0 ? "price can't be negative" : "set the purchase date"}`);
+      setActiveTab("copies");
       return;
     }
 
     await onSubmit(e);
   };
 
-
   return (
     <form id={id} onSubmit={handleSubmit} className="flex min-h-0 w-full flex-1 flex-col">
       <Tabs value={activeTab} onValueChange={(tab) => setActiveTab(tab as Tab)} className="flex min-h-0 flex-1 flex-col gap-0">
-        {/* A little closer together on phones, so all five fit across the smallest ones */}
-        <TabsList className="shrink-0 gap-4 sm:gap-5">
+        <TabsList className="shrink-0">
           {TABS.map((tab) => (
             <TabsTrigger key={tab.id} value={tab.id}>
               {tab.label}
@@ -222,31 +156,13 @@ function MovieForm({
           />
         )}
 
-        {activeTab === "physical" && (
-          <MoviePhysicalTab
-            formData={formData}
-            setFormData={setFormData}
-            showScanButton={showScanButton}
+        {activeTab === "copies" && (
+          <CopiesTab
+            copies={formData.copies}
+            setCopies={setCopies}
+            shelfSections={shelfSections.names}
+            onAddShelfSection={shelfSections.add}
             onScanClick={onScanClick}
-            purchasePriceInput={purchasePriceInput}
-            onPurchasePriceChange={handlePurchasePriceChange}
-          />
-        )}
-
-        {activeTab === "location" && (
-          <MovieLocationTab
-            formData={formData}
-            setFormData={setFormData}
-            shelfInput={shelfInput}
-            onShelfChange={handleShelfChange}
-            hddInput={hddInput}
-            onHddChange={handleHddChange}
-            shelfSections={shelfSections}
-            showShelfSectionInput={showShelfSectionInput}
-            setShowShelfSectionInput={setShowShelfSectionInput}
-            newShelfSection={newShelfSection}
-            setNewShelfSection={setNewShelfSection}
-            addShelfSection={addShelfSection}
           />
         )}
 
@@ -256,7 +172,6 @@ function MovieForm({
             setFormData={setFormData}
             posterPicker={posterPicker}
             backdropPicker={backdropPicker}
-            productPicker={productPicker}
           />
         )}
 
