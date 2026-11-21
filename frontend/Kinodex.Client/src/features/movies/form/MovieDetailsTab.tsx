@@ -1,7 +1,6 @@
-import { Minus, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChipSelect } from "../../../components/ChipSelect";
+import CollectionsField from "../../../components/CollectionsField";
 import { Genres, type Movie } from "../../../types";
 import { FormField, SwitchField } from "../../../components/FormFields";
 
@@ -15,12 +14,6 @@ interface MovieDetailsTabProps {
   onYearChange: (value: string) => void;
   tmdbInput: string;
   onTmdbChange: (value: string) => void;
-  collections: { id: number; name: string }[];
-  showCollectionInput: boolean;
-  setShowCollectionInput: React.Dispatch<React.SetStateAction<boolean>>;
-  newCollection: string;
-  setNewCollection: React.Dispatch<React.SetStateAction<string>>;
-  addCollection: () => Promise<void>;
 }
 
 // The movie form's first tab: title, year, TMDB id, genres, collections, streaming (rating, watched
@@ -32,12 +25,6 @@ function MovieDetailsTab({
   onYearChange,
   tmdbInput,
   onTmdbChange,
-  collections,
-  showCollectionInput,
-  setShowCollectionInput,
-  newCollection,
-  setNewCollection,
-  addCollection,
 }: MovieDetailsTabProps) {
   return (
     <div className="flex flex-col gap-4 pb-2">
@@ -80,41 +67,10 @@ function MovieDetailsTab({
         />
       </FormField>
 
-      {/* Collections: pick existing ones, or add a new one with + */}
-      <FormField label="Collections">
-        <div className="flex flex-wrap gap-2">
-          <ChipSelect
-            placeholder="Add to a collection"
-            values={formData.collections}
-            options={collections.map((col) => ({ value: col.name }))}
-            onChange={(selected) => setFormData({ ...formData, collections: selected })}
-            className="flex-1"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => setShowCollectionInput(!showCollectionInput)}
-            aria-label={showCollectionInput ? "Cancel new collection" : "New collection"}
-          >
-            {showCollectionInput ? <Minus /> : <Plus />}
-          </Button>
-          {showCollectionInput && (
-            <div className="flex basis-full gap-2">
-              <Input
-                value={newCollection}
-                onChange={(e) => setNewCollection(e.target.value)}
-                placeholder="New collection name"
-                aria-label="New collection name"
-                className="flex-1"
-              />
-              <Button type="button" variant="secondary" onClick={addCollection}>
-                Add
-              </Button>
-            </div>
-          )}
-        </div>
-      </FormField>
+      <CollectionsField
+        values={formData.collections}
+        onChange={(collections) => setFormData({ ...formData, collections })}
+      />
 
       <FormField label="Streaming">
         <SwitchField

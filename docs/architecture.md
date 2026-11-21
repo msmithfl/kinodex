@@ -126,10 +126,14 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   Skeleton while loading.
 - **TV drawer (redesigned):** the same `DetailHeader` (shared backdrop/poster/title/actions header,
   plus `DetailSkeleton`), then `TvShowDrawerDetails`: season tiles, the same `CopyCards` (each named
-  by its seasons), Watched | Streaming, notes. Both drawers' fields use `DetailField` / `YesNo` / `NotSet`.
+  by its seasons), Watched | Streaming, collections, notes. Both drawers' fields use `DetailField` / `YesNo` /
+  `NotSet`, and their collections are `CollectionLinks` (each opens the collection's drawer).
 - **Collection drawer (redesigned):** the shared `DetailBackdrop` and `DetailActions` (also parts of
-  `DetailHeader`), the name and movie count, then Movies and Checklist tabs. Movies has a
-  table/poster switch (`SimpleMovieTable` or `PosterCard`); Checklist is `CollectionChecklist`.
+  `DetailHeader`), the name and its movie and show counts, then Titles and Checklist tabs. Titles
+  has a table/poster switch (`SimpleMovieTable` or `PosterCard`), as one list, or a Movies and a TV
+  shows group when the collection has shows; a show opens in a TV drawer over it (`?show=`).
+  Checklist is `CollectionChecklist`: its search switches between movies and TV shows, and each
+  item is ticked off by a movie or show in the collection, by kind (`utils/checklist.ts`).
   The drawer itself never scrolls: the header and tabs stay put and only the open tab's content
   (table, posters or checklist) scrolls.
 - Escape closes only the topmost drawer or dialog (`role="dialog"` or `"alertdialog"`); swipe right
@@ -140,8 +144,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 | Component | Used for |
 |---|---|
 | `AddItemModal` | Chooser: add movie or TV show |
-| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; tabs: Details (with streaming), Copies (`CopiesTab`: a `CopyEditor` card per copy with UPC, formats, price, purchase date, condition, gift, shelf section/number, HDD; a new movie starts with one), Images (TMDB poster/backdrop pickers, each copy's product image by its own UPC, `CopyProductImages`), Review. `AddMovieModal` also has a preset picker (last choice remembered per device; presets fill the movie and its first copy), Save as preset, and Save & add another |
-| `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit, in the same redesigned window as movies (Add: Search › Details, preview beside the form, toast; Edit: Delete in the footer). Tabs in `features/tvShows/form/` (Details, Copies: total seasons, shortcuts, and the same `CopyEditor` cards with season tiles; Images: TMDB poster/backdrop pickers and each copy's product image; Review) |
+| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; tabs: Details (with streaming, and collections through `CollectionsField`, which loads and creates collections itself; TV uses it too), Copies (`CopiesTab`: a `CopyEditor` card per copy with UPC, formats, price, purchase date, condition, gift, shelf section/number, HDD; a new movie starts with one), Images (TMDB poster/backdrop pickers, each copy's product image by its own UPC, `CopyProductImages`), Review. `AddMovieModal` also has a preset picker (last choice remembered per device; presets fill the movie and its first copy), Save as preset, and Save & add another |
+| `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit, in the same redesigned window as movies (Add: Search › Details, preview beside the form, toast; Edit: Delete in the footer). Tabs in `features/tvShows/form/` (Details (with collections), Copies: total seasons, shortcuts, and the same `CopyEditor` cards with season tiles; Images: TMDB poster/backdrop pickers and each copy's product image; Review) |
 | `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop); saves via the collections hooks |
 | `BulkEditModal` | Bulk edit from the movie table: copy fields change the ticked copies, Streaming and Watched the movies they're copies of (`utils/copySelection.ts`) |
 | `ImageLightbox`, `BarcodeScanner` | Shared helpers |
@@ -189,7 +193,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   `utils/barcode.ts` (`createScanDetector`, scanner-speed typing) and `utils/useBarcodeScan.ts`
   (`useBarcodeScan`, `useScanInput`).
   Handing over between windows (search window to drawer or Add window, Add chooser to form, a
-  movie drawer's collection link to the collection drawer)
+  movie or TV drawer's collection link to the collection drawer)
   keeps the dark backdrop on screen: `utils/windowHandoff.ts`.
 - **Charts:** `ChartBreakdown` (Stats donut/table); colours and tooltip style in `utils/chartColors.ts`.
 - **Controls:** `SubNavigation` (phones), `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`

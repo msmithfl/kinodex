@@ -11,10 +11,12 @@ import { isChecklistItemOwned } from "../utils/checklist";
 import Drawer from "../components/Drawer";
 import CollectionDetail from "../features/collections/CollectionDetail";
 import MovieDetail from "../features/movies/MovieDetail";
+import TvShowDetail from "../features/tvShows/TvShowDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
 import { useAllChecklistItems, useCollections } from "../features/collections/api";
 import { useMovies } from "../features/movies/api";
-import type { Collection } from "../types";
+import { useTvShows } from "../features/tvShows/api";
+import type { Collection, Movie, TvShow } from "../types";
 
 function CollectionsView() {
   // "Show completion on collection posters" from the Settings page
@@ -22,12 +24,13 @@ function CollectionsView() {
   // Loaded once and shared with the collection drawer; saving anywhere refreshes them
   const { data: collections = [], isLoading: collectionsLoading } = useCollections();
   const { data: movies = [], isLoading: moviesLoading } = useMovies();
+  const { data: shows = [], isLoading: showsLoading } = useTvShows();
   const { data: collectionListItems = {} } = useAllChecklistItems();
-  const loading = collectionsLoading || moviesLoading;
+  const loading = collectionsLoading || moviesLoading || showsLoading;
   const [showCreateInput, setShowCreateInput] = useState(false);
 
-  // The collection open in a drawer (?collection=name), and a movie opened from it in a second
-  // drawer on top (?movie=id); Back closes the top one first
+  // The collection open in a drawer (?collection=name), and a movie or show opened from it in a
+  // second drawer on top (?movie=id, ?show=id); Back closes the top one first
   const {
     openId: openCollectionName,
     open: openCollection,
@@ -35,12 +38,17 @@ function CollectionsView() {
     replace: replaceCollection,
   } = useDrawerParam("collection");
   const { openId: openMovieId, open: openMovie, close: closeMovie } = useDrawerParam("movie");
+  const { openId: openShowId, open: openShow, close: closeShow } = useDrawerParam("show");
 
-  // Fallback cover for a collection created without one: the earliest-released movie in it with a poster
-  const getCoverPath = (collectionName: string) =>
-    movies
-      .filter((m) => m.posterPath && m.collections?.includes(collectionName))
-      .sort((a, b) => (a.year || 9999) - (b.year || 9999))[0]?.posterPath;
+  // Fallback cover for a collection created without one: the earliest-released movie in it with a
+  // poster, or show when none of its movies has one
+  const getCoverPath = (collectionName: string) => {
+    const earliest = (titles: (Movie | TvShow)[]) =>
+      titles
+        .filter((t) => t.posterPath && t.collections?.includes(collectionName))
+        .sort((a, b) => (a.year || 9999) - (b.year || 9999))[0]?.posterPath;
+    return earliest(movies) ?? earliest(shows);
+  };
 
   const getCompletionPercentage = (
     collectionId: number,
@@ -49,11 +57,12 @@ function CollectionsView() {
     const listItems = collectionListItems[collectionId] || [];
     if (listItems.length === 0) return null;
 
-    // Same check as the collection's own checklist: the movie must be in this collection
-    const inCollection = movies.filter((m) => m.collections?.includes(collectionName));
-    const ownedCount = listItems.filter((item) =>
-      isChecklistItemOwned(item, inCollection),
-    ).length;
+    // Same check as the collection's own checklist: the movie or show must be in this collection
+    const owned = {
+      movies: movies.filter((m) => m.collections?.includes(collectionName)),
+      shows: shows.filter((s) => s.collections?.includes(collectionName)),
+    };
+    const ownedCount = listItems.filter((item) => isChecklistItemOwned(item, owned)).length;
 
     return Math.round((ownedCount / listItems.length) * 100);
   };
@@ -120,6 +129,7 @@ function CollectionsView() {
             key={openCollectionName}
             collectionName={openCollectionName}
             onOpenMovie={openMovie}
+            onOpenShow={openShow}
             onSaved={(updated) => replaceCollection(updated.name)}
             onDeleted={closeCollection}
           />
@@ -134,9 +144,14 @@ function CollectionsView() {
           />
         </Drawer>
       )}
+      {openShowId && (
+        <Drawer label="TV show details" onClose={closeShow}>
+          <TvShowDetail key={openShowId} showId={openShowId} onDeleted={closeShow} />
+        </Drawer>
+      )}
       {showCreateInput && (
         <CollectionFormModal
-          movies={movies}
+          movies={[...movies, ...shows]}
           existingNames={collections.map((c) => c.name)}
           onClose={() => setShowCreateInput(false)}
           onSaved={() => setShowCreateInput(false)}

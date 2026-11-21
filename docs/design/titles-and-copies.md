@@ -1,6 +1,6 @@
 # Titles and copies
 
-Step 1 of 4 built (see [Order](#order)); the rest is still the plan. Movies and TV shows become one
+Steps 1 and 2 of 4 built (see [Order](#order)); the rest is still the plan. Movies and TV shows become one
 kind of entry, a title, and each title holds every physical copy of it:
 
 - Die Hard on VHS, DVD and Blu-ray is one title with three copies, not three movies.
@@ -167,8 +167,10 @@ Frontend:
 1. **Built.** The Titles and Copies tables and the migration (`TitlesAndCopies`), with the
    frontend reading and editing copies for both (forms, drawers, lists, filters, stats, search,
    copy rows in the tables, bulk edit and delete by copy). One PR, since the tables move.
-2. TV shows in collections (the TV form's picker, the collection drawer, the checklist, the
-   completion ring).
+2. **Built.** TV shows in collections: the TV form's picker, a show's collections in its drawer,
+   the collection drawer's Movies and TV shows groups (a show opens over it), the checklist
+   searching either kind, the completion ring and fallback cover counting shows, and a Collection
+   filter on the TV list.
 3. Adding a copy to a title already in the library (Add movie, Add TV show and scanning).
 4. Merge duplicates.
 

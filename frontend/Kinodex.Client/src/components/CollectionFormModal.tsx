@@ -11,13 +11,13 @@ import { useTmdb, type TMDBPerson } from "../utils/tmdbApi";
 import { ApiError } from "../utils/api";
 import { searchScore } from "../utils/textSearch";
 import { useCreateCollection, useUpdateCollection } from "../features/collections/api";
-import type { Collection, Movie, TMDBMovie } from "../types";
+import type { Collection, Movie, TMDBMovie, TvShow } from "../types";
 import { compareTitles } from "../utils/titleSort";
 
 interface CollectionFormModalProps {
   // The collection to edit; leave out to create a new one
   collection?: Collection;
-  movies: Movie[]; // The user's movies, to search for a cover poster
+  movies: (Movie | TvShow)[]; // The user's movies and shows, to search for a cover poster (ids never clash)
   existingNames: string[]; // Names already taken (the edited collection's own name is allowed)
   onClose: () => void;
   onSaved: (collection: Collection) => void;
@@ -25,7 +25,7 @@ interface CollectionFormModalProps {
 
 type CollectionKind = "collection" | "director";
 
-// How many matching posters to offer while searching movies
+// How many matching posters to offer while searching movies and shows
 const MAX_POSTER_RESULTS = 10;
 
 // A poster or backdrop to pick, and a search result row (a person or a movie)
@@ -106,7 +106,7 @@ function CollectionFormModal({
   const createCollection = useCreateCollection();
   const updateCollection = useUpdateCollection();
 
-  // Normal collection: movies with posters that match the search
+  // Normal collection: movies and shows with posters that match the search
   const posterMatches = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (kind !== "collection" || !q) return [];
@@ -276,13 +276,13 @@ function CollectionFormModal({
                   type="search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={kind === "director" ? "Search TMDB for the director" : "Search your movies"}
+                  placeholder={kind === "director" ? "Search TMDB for the director" : "Search your movies and shows"}
                 />
                 {!hasQuery ? (
                   <Hint>Optional: without one, a poster from the collection is used.</Hint>
                 ) : kind === "collection" ? (
                   posterMatches.length === 0 ? (
-                    <Message>No movies with posters match.</Message>
+                    <Message>No movies or shows with posters match.</Message>
                   ) : (
                     <div className="grid grid-cols-5 gap-2">
                       {posterMatches.map((movie) => (

@@ -26,6 +26,7 @@ export interface ChecklistItemInput {
   title: string;
   year: number;
   tmdbId?: number;
+  kind: "movie" | "show"; // TMDB numbers movies and shows separately
 }
 
 // ---- Loading

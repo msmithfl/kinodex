@@ -18,7 +18,6 @@ import TmdbSearch from "./TmdbSearch";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 import { useCreateMovie, useMovies } from "../features/movies/api";
 import { ApiError } from "../utils/api";
-import { useCollections, useCreateCollection } from "../features/collections/api";
 import { useLinkToJellyfin } from "../features/jellyfin/api";
 import { newCopy } from "../utils/copies";
 import { isMobile } from "../utils/isMobile";
@@ -43,8 +42,6 @@ interface AddMovieModalProps {
 const FORM_ID = "add-movie-form";
 // The preset Select's value for "no preset" (its items can't use an empty string)
 const DEFAULT_PRESET = "default";
-
-const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
 
 // A blank movie with one copy, the form's starting point
 const emptyMovie = (): Movie => ({
@@ -98,10 +95,8 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
   const { searchTMDB } = useTmdb();
   const navigate = useNavigate();
   const { data: movies = [] } = useMovies();
-  const { data: collectionList = [] } = useCollections();
   const createMovie = useCreateMovie();
   const linkToJellyfin = useLinkToJellyfin();
-  const createCollection = useCreateCollection();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Movie>(() => {
     const movie = emptyMovie();
@@ -133,11 +128,8 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
   const [presetName, setPresetName] = useState<string | null>(null);
   // Remounts the TMDB search so each new movie starts with an empty search
   const [searchKey, setSearchKey] = useState(0);
-  const collections = [...collectionList].sort(byName);
   // TMDB results already in the library get an "In library" badge
   const ownedTmdbIds = new Set(movies.flatMap((m) => (m.tmdbId ? [m.tmdbId] : [])));
-  const [showCollectionInput, setShowCollectionInput] = useState(false);
-  const [newCollection, setNewCollection] = useState("");
   const [submitError, setSubmitError] = useState("");
 
   // The copy a barcode is being scanned for
@@ -173,24 +165,6 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
   const changeMovie = () => {
     setShowForm(false);
     setSearchKey((key) => key + 1);
-  };
-
-  // Creates a collection from the form and adds this movie to it
-  const addCollection = async () => {
-    if (!newCollection || collections.find((c) => c.name === newCollection)) return;
-    try {
-      await createCollection.mutateAsync({
-        name: newCollection,
-        isDirectorCollection: false,
-        imageUrl: null,
-        backdropUrl: null,
-      });
-      setFormData((prev) => ({ ...prev, collections: [...prev.collections, newCollection] }));
-      setNewCollection("");
-      setShowCollectionInput(false);
-    } catch (error) {
-      console.error("Error adding collection:", error);
-    }
   };
 
   // Picking a preset fills its values; "Default" puts those fields back to the defaults
@@ -264,7 +238,6 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
           },
         });
         setFormData(preset ? withPresetFields(emptyMovie(), presetValues(preset)) : emptyMovie());
-        setShowCollectionInput(false);
         setShowForm(false);
         setSearchKey((key) => key + 1);
         return;
@@ -468,12 +441,6 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
                 id={FORM_ID}
                 formData={formData}
                 setFormData={setFormData}
-                collections={collections}
-                showCollectionInput={showCollectionInput}
-                setShowCollectionInput={setShowCollectionInput}
-                newCollection={newCollection}
-                setNewCollection={setNewCollection}
-                addCollection={addCollection}
                 onSubmit={handleSubmit}
                 onCancel={onClose}
                 submitButtonText="Add to Collection"

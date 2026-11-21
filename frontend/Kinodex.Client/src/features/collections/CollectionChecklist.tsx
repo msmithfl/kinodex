@@ -1,44 +1,73 @@
 import { useRef, useState } from "react";
 import { Circle, CircleCheck, Loader2, Search, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { useTmdb } from "../../utils/tmdbApi";
-import { isChecklistItemOwned } from "../../utils/checklist";
+import { isChecklistItemOwned, type ChecklistTitles } from "../../utils/checklist";
 import { useAddChecklistItem, useChecklistItems, useRemoveChecklistItem } from "./api";
-import type { Collection, CollectionListItem, Movie, TMDBMovie } from "../../types";
+import type { Collection, CollectionListItem } from "../../types";
+
+type Kind = "movie" | "show";
+
+// A TMDB search result, movie or show alike
+interface SearchResult {
+  id: number;
+  title: string;
+  year: number | null;
+  posterPath: string | null;
+}
+
+const yearOf = (date: string | undefined) => (date ? new Date(date).getFullYear() : null);
 
 interface CollectionChecklistProps {
   collection: Collection;
-  // The collection's movies, to tick off the checklist items the user owns
-  ownedMovies: Movie[];
+  // The collection's movies and shows, to tick off the checklist items the user owns
+  owned: ChecklistTitles;
 }
 
-// The collection drawer's Checklist tab: the movies that make up a collection (searched on TMDB),
-// each ticked when one of the collection's movies matches it
-function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistProps) {
+// The collection drawer's Checklist tab: the movies and shows that make up a collection (searched
+// on TMDB), each ticked when one of the collection's own movies or shows matches it
+function CollectionChecklist({ collection, owned }: CollectionChecklistProps) {
   // TMDB, through our API
-  const { searchTMDB } = useTmdb();
+  const { searchTMDB, searchTMDBTv } = useTmdb();
   const { data: listItems = [] } = useChecklistItems(collection.id);
   const addItem = useAddChecklistItem(collection.id);
   const removeItem = useRemoveChecklistItem(collection.id);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchYear, setSearchYear] = useState("");
-  const [searchResults, setSearchResults] = useState<TMDBMovie[]>([]);
+  // What the search looks for (TMDB searches movies and shows separately)
+  const [kind, setKind] = useState<Kind>("movie");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<number | null>(null);
   // The search boxes, which the results float under
   const searchRowRef = useRef<HTMLDivElement>(null);
 
   // Searches TMDB 300ms after the user stops typing
-  const scheduleSearch = (query: string, year: string) => {
+  const scheduleSearch = (query: string, year: string, searchKind: Kind = kind) => {
     if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     setIsSearching(true);
     searchTimeoutRef.current = window.setTimeout(async () => {
       try {
-        const results = await searchTMDB(query, year);
+        const results: SearchResult[] =
+          searchKind === "show"
+            ? (await searchTMDBTv(query, year)).map((s) => ({
+                id: s.id,
+                title: s.name,
+                year: yearOf(s.first_air_date),
+                posterPath: s.poster_path,
+              }))
+            : (await searchTMDB(query, year)).map((m) => ({
+                id: m.id,
+                title: m.title,
+                year: yearOf(m.release_date),
+                posterPath: m.poster_path,
+              }));
         setSearchResults(results.slice(0, 10)); // Show top 10 results
       } catch (error) {
         console.error("Error searching TMDB:", error);
@@ -59,16 +88,21 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
     scheduleSearch(value, searchYear);
   };
 
+  // Switching between movies and shows searches again for what's typed
+  const handleKindChange = (next: Kind) => {
+    setKind(next);
+    if (searchQuery.length >= 2) scheduleSearch(searchQuery, searchYear, next);
+  };
+
   const handleYearChange = (value: string) => {
     setSearchYear(value);
     // Re-search if there's already a search query
     if (searchQuery.length >= 2) scheduleSearch(searchQuery, value);
   };
 
-  const handleAddToList = (movie: TMDBMovie) => {
-    const year = movie.release_date ? new Date(movie.release_date).getFullYear() : 0;
+  const handleAddToList = (result: SearchResult) => {
     addItem.mutate(
-      { title: movie.title, year, tmdbId: movie.id },
+      { title: result.title, year: result.year ?? 0, tmdbId: result.id, kind },
       {
         onSuccess: () => {
           setSearchQuery("");
@@ -86,8 +120,10 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
     });
   };
 
-  // Whether a checklist item is one of this collection's movies (by TMDB id, else title and year)
-  const isOwned = (item: CollectionListItem) => isChecklistItemOwned(item, ownedMovies);
+  // Whether a checklist item is one of this collection's movies or shows (by TMDB id, else title
+  // and year)
+  const isOwned = (item: CollectionListItem) => isChecklistItemOwned(item, owned);
+  const itemKind = (item: CollectionListItem): Kind => (item.kind === "show" ? "show" : "movie");
   const ownedCount = listItems.filter(isOwned).length;
   const completionPercentage =
     listItems.length > 0 ? Math.round((ownedCount / listItems.length) * 100) : 0;
@@ -95,18 +131,27 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
   return (
     <section aria-label="Collection checklist" className="rounded-xl border border-border bg-card p-4">
         <div className="flex flex-col gap-4">
-          {/* Search to add movies, with the results floating under the boxes */}
+          {/* Search to add movies or shows, with the results floating under the boxes */}
           <Popover open={searchResults.length > 0} onOpenChange={(open) => !open && setSearchResults([])}>
             <PopoverAnchor asChild>
               <div ref={searchRowRef} className="flex flex-col gap-2 md:flex-row">
+                <Select value={kind} onValueChange={(next) => handleKindChange(next === "show" ? "show" : "movie")}>
+                  <SelectTrigger className="md:w-32" aria-label="Search for">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="movie">Movies</SelectItem>
+                    <SelectItem value="show">TV shows</SelectItem>
+                  </SelectContent>
+                </Select>
                 <div className="relative flex-1">
                   <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    placeholder="Search TMDB to add movies"
-                    aria-label="Search TMDB to add movies"
+                    placeholder={kind === "show" ? "Search TMDB to add shows" : "Search TMDB to add movies"}
+                    aria-label={kind === "show" ? "Search TMDB to add shows" : "Search TMDB to add movies"}
                     className="pr-9 pl-9"
                   />
                   {isSearching && (
@@ -138,24 +183,23 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
               }}
               className="max-h-[min(24rem,var(--radix-popover-content-available-height))] w-(--radix-popover-trigger-width) overflow-y-auto rounded-lg p-1"
             >
-              {searchResults.map((movie) => {
-                const year = movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A";
-                const alreadyInList = listItems.some((item) => item.tmdbId === movie.id);
+              {searchResults.map((result) => {
+                const alreadyInList = listItems.some((item) => itemKind(item) === kind && item.tmdbId === result.id);
 
                 return (
                   <button
-                    key={movie.id}
+                    key={result.id}
                     type="button"
-                    onClick={() => !alreadyInList && handleAddToList(movie)}
+                    onClick={() => !alreadyInList && handleAddToList(result)}
                     disabled={alreadyInList || addItem.isPending}
                     className={cn(
                       "flex w-full items-center gap-3 rounded-md p-2 text-left transition-colors",
                       alreadyInList ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-accent",
                     )}
                   >
-                    {movie.poster_path ? (
+                    {result.posterPath ? (
                       <img
-                        src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                        src={`https://image.tmdb.org/t/p/w92${result.posterPath}`}
                         alt=""
                         className="h-12 w-8 shrink-0 rounded-sm bg-muted object-cover"
                       />
@@ -163,8 +207,8 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
                       <span className="h-12 w-8 shrink-0 rounded-sm bg-muted" />
                     )}
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium">{movie.title}</span>
-                      <span className="block text-xs text-muted-foreground">{year}</span>
+                      <span className="block truncate text-sm font-medium">{result.title}</span>
+                      <span className="block text-xs text-muted-foreground">{result.year ?? "N/A"}</span>
                     </span>
                   </button>
                 );
@@ -209,6 +253,11 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
                           {item.title}
                           <span className="ml-2 text-muted-foreground tabular-nums">{item.year}</span>
                         </span>
+                        {itemKind(item) === "show" && (
+                          <Badge variant="outline" className="shrink-0 font-normal text-muted-foreground">
+                            TV
+                          </Badge>
+                        )}
                         <Button
                           type="button"
                           variant="ghost-destructive"
@@ -225,7 +274,7 @@ function CollectionChecklist({ collection, ownedMovies }: CollectionChecklistPro
             </div>
           ) : (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No items in checklist yet. Search above to add movies!
+              No items in checklist yet. Search above to add movies and shows!
             </p>
           )}
         </div>

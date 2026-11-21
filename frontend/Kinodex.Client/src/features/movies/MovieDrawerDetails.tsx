@@ -1,10 +1,9 @@
-import { Link } from "react-router-dom";
 import { Eye, EyeOff, MonitorOff, MonitorPlay } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Fact, { YesNo } from "../../components/DetailField";
 import CopyCards from "../../components/CopyCards";
+import CollectionLinks from "../../components/CollectionLinks";
 import type { Movie } from "../../types";
-import { handOverDrawer } from "../../utils/windowHandoff";
 interface MovieDrawerDetailsProps {
   movie: Movie;
   onEnlargeProductImage: (src: string) => void; // A copy's product image
@@ -29,27 +28,7 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
         </Fact>
       </dl>
 
-      {/* Collections, as links that open each one's drawer */}
-      <section className="flex flex-col gap-2 pt-2">
-        <h3 className="text-xs text-muted-foreground">Collections</h3>
-        {movie.collections.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {movie.collections.map((col) => (
-              <Link
-                key={col}
-                to={`/collections?collection=${encodeURIComponent(col)}`}
-                // The collection's drawer takes over this drawer's backdrop, so it doesn't flash
-                onClick={(e) => handOverDrawer(e.currentTarget)}
-                className="inline-flex h-7 items-center rounded-full border border-border bg-card px-3 text-xs transition-colors hover:bg-accent"
-              >
-                {col}
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">None</p>
-        )}
-      </section>
+      <CollectionLinks collections={movie.collections} />
 
       {/* Review / notes */}
       <section className={cn(card, "mt-1 flex flex-col gap-1.5 p-4")}>

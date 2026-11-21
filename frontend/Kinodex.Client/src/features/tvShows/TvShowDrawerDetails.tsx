@@ -2,6 +2,7 @@ import { Eye, EyeOff, MonitorOff, MonitorPlay } from "lucide-react";
 import DetailField, { YesNo } from "../../components/DetailField";
 import TvShowSeasons from "./TvShowSeasons";
 import CopyCards from "../../components/CopyCards";
+import CollectionLinks from "../../components/CollectionLinks";
 import type { TvShow } from "../../types";
 
 interface TvShowDrawerDetailsProps {
@@ -10,8 +11,8 @@ interface TvShowDrawerDetailsProps {
 }
 
 // The TV show drawer's details, laid out like the movie drawer's: seasons owned, each copy
-// (format, condition, price, date, gift, shelf, HDD, product image, barcode), watched and streaming, then
-// notes
+// (format, condition, price, date, gift, shelf, HDD, product image, barcode), watched and streaming,
+// collections, then notes
 function TvShowDrawerDetails({ show, onEnlargeProductImage }: TvShowDrawerDetailsProps) {
   return (
     <div className="flex flex-col gap-5 px-5 pt-6 pb-8 md:px-8">
@@ -26,6 +27,8 @@ function TvShowDrawerDetails({ show, onEnlargeProductImage }: TvShowDrawerDetail
           <YesNo yes={show.isStreaming} on={<MonitorPlay />} off={<MonitorOff />} />
         </DetailField>
       </dl>
+
+      <CollectionLinks collections={show.collections} />
 
       {/* Review / notes */}
       <section className="flex flex-col gap-1.5 rounded-xl border border-border bg-card p-4">
