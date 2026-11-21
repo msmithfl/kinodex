@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Film, Plus, Tv } from "lucide-react";
+import { CopyPlus, Film, Plus, Tv } from "lucide-react";
 import type { defaultFilter } from "cmdk";
 import {
   CommandDialog,
@@ -20,7 +20,7 @@ import { useBarcodeScan, useScanInput } from "../utils/useBarcodeScan";
 import { isMobile, isPhoneWidth } from "../utils/isMobile";
 import type { AddItemOptions } from "./AddItemModal";
 import type { Copy, Movie, TvShow } from "../types";
-import { lastAdded } from "../utils/copies";
+import { allFormats, lastAdded } from "../utils/copies";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -59,6 +59,14 @@ const movieKeywords = (m: Movie) => [m.title, String(m.year || ""), ...m.copies.
 const showValue = (s: TvShow) => `tv-${s.id}`;
 const showKeywords = (s: TvShow) =>
   [s.title, String(s.year || ""), ...s.copies.map((c) => c.upcNumber)].filter(Boolean);
+
+// For a barcode search: the copy it is, named by its format ("Blu-ray copy"), or null
+const scannedCopyLabel = (copies: Copy[], barcode: string) => {
+  const copy = copies.find((c) => upcMatches(c.upcNumber, barcode));
+  if (!copy) return null;
+  const formats = allFormats([copy]);
+  return formats.length > 0 ? `${formats.join(", ")} copy` : "A copy";
+};
 
 // A small poster beside each result; blank when there's none
 function Thumb({ src }: { src: string }) {
@@ -135,6 +143,19 @@ function CommandPalette({ open, onOpenChange, onAdd }: CommandPaletteProps) {
     movies.some((m) => paletteFilter(movieValue(m), search, movieKeywords(m)) > 0) ||
     shows.some((s) => paletteFilter(showValue(s), search, showKeywords(s)) > 0);
   const offerAdd = typing && !inCollection;
+  // A barcode already in the collection: offer another copy of each title it's a copy of (a second
+  // disc for lending, a replacement), straight into the Add window
+  const barcode = barcodeKey(search) !== null ? search.trim() : null;
+  const hasBarcode = (copies: Copy[]) => barcode !== null && copies.some((c) => upcMatches(c.upcNumber, barcode));
+  const copyOffers = [
+    ...movies.filter((m) => hasBarcode(m.copies)).map((m) => ({ kind: "movie" as const, id: m.id!, title: m.title })),
+    ...shows.filter((s) => hasBarcode(s.copies)).map((s) => ({ kind: "tv" as const, id: s.id!, title: s.title })),
+  ].slice(0, 3);
+  const addCopy = (kind: "movie" | "tv", id: number) => {
+    const upc = search.trim();
+    close();
+    onAdd({ kind, upc, copyOf: id });
+  };
   const addFromSearch = (kind: "movie" | "tv") => {
     const text = search.trim();
     const options = barcodeKey(text) !== null ? { kind, upc: text } : { kind, title: text };
@@ -176,7 +197,9 @@ function CommandPalette({ open, onOpenChange, onAdd }: CommandPaletteProps) {
               >
                 <Thumb src={movie.posterPath} />
                 <span className="truncate">{movie.title}</span>
-                <span className="ml-auto text-xs text-muted-foreground">{movie.year || ""}</span>
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {(barcode && scannedCopyLabel(movie.copies, barcode)) || movie.year || ""}
+                </span>
               </CommandItem>
             ))}
           </CommandGroup>
@@ -193,7 +216,26 @@ function CommandPalette({ open, onOpenChange, onAdd }: CommandPaletteProps) {
               >
                 <Thumb src={show.posterPath} />
                 <span className="truncate">{show.title}</span>
-                <span className="ml-auto text-xs text-muted-foreground">{show.year || ""}</span>
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {(barcode && scannedCopyLabel(show.copies, barcode)) || show.year || ""}
+                </span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+
+        {copyOffers.length > 0 && (
+          // forceMount: shown whatever the search, rather than filtered by it
+          <CommandGroup heading="Have another copy?" forceMount>
+            {copyOffers.map((offer) => (
+              <CommandItem
+                key={`add-copy-${offer.kind}-${offer.id}`}
+                value={`add-copy-${offer.kind}-${offer.id}`}
+                forceMount
+                onSelect={() => addCopy(offer.kind, offer.id)}
+              >
+                <CopyPlus />
+                <span className="truncate">Add another copy of {offer.title}</span>
               </CommandItem>
             ))}
           </CommandGroup>

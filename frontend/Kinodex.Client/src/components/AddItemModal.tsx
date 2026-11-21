@@ -6,11 +6,13 @@ import { AddTvShowModal } from "./AddTvShowModal";
 import { HANDOVER_BACKDROP_CLASS } from "../utils/windowHandoff";
 
 // What to open with: straight to the movie or TV form (skipping the choice), and a barcode or a
-// title to start with (the search window offers this for a search that isn't in the collection)
+// title to start with (the search window offers this for a search that isn't in the collection).
+// copyOf: a movie or show already in the library to add a copy to (a scanned barcode it has).
 export interface AddItemOptions {
   kind?: "movie" | "tv";
   upc?: string;
   title?: string;
+  copyOf?: number;
 }
 
 interface AddItemModalProps extends AddItemOptions {
@@ -24,11 +26,11 @@ const CHOICES = [
 
 // Entry point for the app's generic Add buttons: asks whether you're adding a movie or a
 // TV show, then opens that form in its place
-export function AddItemModal({ onClose, kind: startKind, upc, title }: AddItemModalProps) {
+export function AddItemModal({ onClose, kind: startKind, upc, title, copyOf }: AddItemModalProps) {
   const [kind, setKind] = useState<"movie" | "tv" | null>(startKind ?? null);
 
-  if (kind === "movie") return <AddMovieModal onClose={onClose} initialUpc={upc} initialSearch={title} />;
-  if (kind === "tv") return <AddTvShowModal onClose={onClose} initialUpc={upc} initialSearch={title} />;
+  if (kind === "movie") return <AddMovieModal onClose={onClose} initialUpc={upc} initialSearch={title} copyOfId={copyOf} />;
+  if (kind === "tv") return <AddTvShowModal onClose={onClose} initialUpc={upc} initialSearch={title} copyOfId={copyOf} />;
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>

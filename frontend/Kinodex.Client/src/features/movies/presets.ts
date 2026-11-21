@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApi } from "../../utils/api";
-import type { Movie, MoviePreset } from "../../types";
+import type { Copy, Movie, MoviePreset } from "../../types";
 import { todayDate } from "../../utils/dateUtils";
 import { newCopy } from "../../utils/copies";
 
@@ -57,6 +57,22 @@ export const presetFields = (movie: Movie): PresetFields => {
   };
 };
 
+// A copy filled in from preset fields (only the copy's own: format, price, shelf and so on). Used
+// for a copy added to a movie already in the library, whose own values stay as they are.
+export const withPresetCopyFields = (copy: Copy, fields: PresetFields): Copy => ({
+  ...copy,
+  upcNumber: fields.upcNumber,
+  formats: [...fields.formats],
+  condition: fields.condition,
+  price: fields.purchasePrice,
+  purchasedAt: fields.purchasedAt,
+  isGift: fields.isGift,
+  productPosterPath: fields.productPosterPath,
+  shelfSection: fields.shelfSection,
+  shelfNumber: fields.shelfNumber,
+  hdDriveNumber: fields.hdDriveNumber,
+});
+
 // A movie being added, filled in from preset fields: its own values, and its first copy's (one is
 // added when it has none)
 export const withPresetFields = (movie: Movie, fields: PresetFields): Movie => {
@@ -68,22 +84,7 @@ export const withPresetFields = (movie: Movie, fields: PresetFields): Movie => {
     rating: fields.rating,
     review: fields.review,
     isStreaming: fields.isStreaming,
-    copies: [
-      {
-        ...first,
-        upcNumber: fields.upcNumber,
-        formats: [...fields.formats],
-        condition: fields.condition,
-        price: fields.purchasePrice,
-        purchasedAt: fields.purchasedAt,
-        isGift: fields.isGift,
-        productPosterPath: fields.productPosterPath,
-        shelfSection: fields.shelfSection,
-        shelfNumber: fields.shelfNumber,
-        hdDriveNumber: fields.hdDriveNumber,
-      },
-      ...others,
-    ],
+    copies: [withPresetCopyFields(first, fields), ...others],
   };
 };
 

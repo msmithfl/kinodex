@@ -16,6 +16,8 @@ interface TvShowFormProps {
   setFormData: React.Dispatch<React.SetStateAction<TvShow>>;
   onSubmit: (e: React.FormEvent) => Promise<void>;
   onScanClick?: (copyIndex: number) => void;
+  // Opens on the Copies tab, scrolled to this copy (one being added to a show already owned)
+  focusCopyKey?: string;
 }
 
 type Tab = "details" | "copies" | "poster" | "review";
@@ -34,10 +36,11 @@ function TvShowForm({
   setFormData,
   onSubmit,
   onScanClick,
+  focusCopyKey,
 }: TvShowFormProps) {
   // Shelf sections for each copy's "where it lives"
   const shelfSections = useShelfSectionChoices();
-  const [activeTab, setActiveTab] = useState<Tab>("details");
+  const [activeTab, setActiveTab] = useState<Tab>(focusCopyKey ? "copies" : "details");
   const [validationError, setValidationError] = useState<string>("");
   // TMDB poster and backdrop choosers for the Images tab
   const posterPicker = useImagePicker({
@@ -200,6 +203,7 @@ function TvShowForm({
             shelfSections={shelfSections.names}
             onAddShelfSection={shelfSections.add}
             onScanClick={onScanClick}
+            focusCopyKey={focusCopyKey}
           />
         )}
 
