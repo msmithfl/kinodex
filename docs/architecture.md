@@ -144,7 +144,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 | Component | Used for |
 |---|---|
 | `AddItemModal` | Chooser: add movie or TV show |
-| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; tabs: Details (with streaming, and collections through `CollectionsField`, which loads and creates collections itself; TV uses it too), Copies (`CopiesTab`: a `CopyEditor` card per copy with UPC, formats, price, purchase date, condition, gift, shelf section/number, HDD; a new movie starts with one), Images (TMDB poster/backdrop pickers, each copy's product image by its own UPC, `CopyProductImages`), Review. `AddMovieModal` also has a preset picker (last choice remembered per device; presets fill the movie and its first copy), Save as preset, and Save & add another |
+| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. Picking a TMDB result already in the library asks first (`AlreadyOwned`): add a copy to it, which turns the window into that movie with a new copy at the end (opened on the Copies tab; a preset fills only that copy; Save updates the movie), or add it as a new movie. The TV window does the same. `MovieForm` holds the state and validation; tabs: Details (with streaming, and collections through `CollectionsField`, which loads and creates collections itself; TV uses it too), Copies (`CopiesTab`: a `CopyEditor` card per copy with UPC, formats, price, purchase date, condition, gift, shelf section/number, HDD; a new movie starts with one), Images (TMDB poster/backdrop pickers, each copy's product image by its own UPC, `CopyProductImages`), Review. `AddMovieModal` also has a preset picker (last choice remembered per device; presets fill the movie and its first copy), Save as preset, and Save & add another |
 | `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit, in the same redesigned window as movies (Add: Search › Details, preview beside the form, toast; Edit: Delete in the footer). Tabs in `features/tvShows/form/` (Details (with collections), Copies: total seasons, shortcuts, and the same `CopyEditor` cards with season tiles; Images: TMDB poster/backdrop pickers and each copy's product image; Review) |
 | `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop); saves via the collections hooks |
 | `BulkEditModal` | Bulk edit from the movie table: copy fields change the ticked copies, Streaming and Watched the movies they're copies of (`utils/copySelection.ts`) |
@@ -186,7 +186,10 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   keyboard. A scan while no field or window is in use opens the search window (`CommandPalette`,
   Ctrl/⌘K) with the code. When a search there finds no movie or TV show (a scanned code or typed
   text), it offers Add as a movie or TV show, starting with the code in the UPC field or the text
-  in the TMDB search (`AddItemModal`'s `kind`, `upc` and `title`). On phones a scan goes to the
+  in the TMDB search (`AddItemModal`'s `kind`, `upc` and `title`). When the code is already one of
+  your copies, each result says which copy (its format), and there's "Add another copy of …", which
+  opens the Add window adding a copy to that title (`AddItemModal`'s `copyOf`); the Search page does
+  the same. A copy card whose UPC is already in the library says so. On phones a scan goes to the
   Search page instead. A scan into the search window or the Search page box replaces the search;
   UPC fields ignore the Enter (`ignoreEnter`) so a scan doesn't save the form; and every UPC
   search matches a code however many leading zeros it came with (`upcMatches`). Detection is in

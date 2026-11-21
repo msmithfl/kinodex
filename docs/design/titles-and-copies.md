@@ -1,6 +1,6 @@
 # Titles and copies
 
-Steps 1 and 2 of 4 built (see [Order](#order)); the rest is still the plan. Movies and TV shows become one
+Steps 1 to 3 of 4 built (see [Order](#order)); the rest is still the plan. Movies and TV shows become one
 kind of entry, a title, and each title holds every physical copy of it:
 
 - Die Hard on VHS, DVD and Blu-ray is one title with three copies, not three movies.
@@ -171,7 +171,10 @@ Frontend:
    the collection drawer's Movies and TV shows groups (a show opens over it), the checklist
    searching either kind, the completion ring and fallback cover counting shows, and a Collection
    filter on the TV list.
-3. Adding a copy to a title already in the library (Add movie, Add TV show and scanning).
+3. **Built.** Adding a copy to a title already in the library: picking one in Add movie or Add TV
+   show asks "add a copy to it" or "add as new"; a scanned barcode already owned says which copy
+   it is and offers "Add another copy" (search window and Search page); a copy card says when its
+   UPC is already in the library.
 4. Merge duplicates.
 
 Later, if wanted: an edition per copy (Director's Cut, Steelbook), a box set flag, and for lending
