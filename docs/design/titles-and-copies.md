@@ -63,7 +63,13 @@ belongs to the Blu-ray.
   the completion ring counts both.
 - **Lists and posters:** one entry per title. Formats are every copy's formats together; Paid is
   the total (as TV shows already show).
-- **Filters:** a title matches when any of its copies does (say, Format: VHS).
+- **Table view (movies and TV):** a title with more than one copy has an arrow that opens it,
+  showing each copy as its own row underneath (format, condition, price, shelf, HDD). A title
+  with one copy is a single row, as now. "Open copies" in the Columns menu has every title open
+  or closed to start with (remembered in this browser, like the columns); with it on, every copy
+  is in view at once.
+- **Filters:** a title matches when any of its copies does (say, Format: VHS). In the table only
+  its matching copies show under it, so selecting all ticks only those.
 - **Adding a title already in the library** (the "In library" badge in the search): offers to
   add a copy to it instead of a second entry. Scanning a UPC already in the library says which
   title and copy it is, and still allows another copy (a store can stock several of one release).
@@ -103,13 +109,23 @@ belongs to the Blu-ray.
   title with several copies. Exports made before this (one row per movie) still import.
 - **Jellyfin** (compare, Update Streaming, linking on add) works on titles, not copies, and still
   reads movies and series separately.
+- **Bulk edit (movies) picks copies.** In the table, a title's checkbox ticks all its copies, and
+  ticking a title with several copies opens it, so copies can be unticked one by one (the title's
+  box shows a dash when only some are). The dialog always has both kinds of field: copy fields
+  (format, condition, price, purchase date, gift, shelf, HDD) change the ticked copies, and title
+  fields (watched, Streaming) change the titles those copies belong to. So:
+  - a title with one copy works as today (ticking it ticks its only copy);
+  - with some of a title's copies ticked, copy fields change only those, and title fields still
+    change the title (watched is about the film, not a disc);
+  - two ticked copies of one title change the title once;
+  - a title with no copies only takes title fields, and the dialog says so;
+  - select all ticks every matching copy, closed titles included.
 
-## Open question
-
-- **Bulk edit** (movies) with a selected movie that has more than one copy: the copy fields
-  (format, condition, price, shelf, HDD) can't be set the same on all of them (one HDD number on
-  both a VHS and a Blu-ray would be wrong). Proposal: skip those movies and list them, to edit in
-  the drawer.
+  The dialog says what it will change, e.g. "12 copies of 9 movies". So one HDD number only lands
+  on the copies chosen, never on both a VHS and a Blu-ray by accident.
+- **Bulk delete removes the ticked copies.** A title goes with them when all its copies are
+  ticked (as deleting a one-copy movie does today); with only some ticked, only those copies go.
+  The confirmation says which, e.g. "Delete 3 movies and 2 copies of Die Hard".
 
 ## Pieces
 
@@ -137,6 +153,9 @@ Frontend:
 - `copies.ts` in place of `tvShowPurchases.ts` (all formats, total paid, owned seasons).
 - One copy card for both drawers and one copy editor for both forms, in place of
   `TvShowPurchaseList` and `TvShowPurchaseEditor`.
+- The movie and TV tables: copy rows under each title, opened with an arrow, and "Open copies" in
+  the Columns menu. Bulk edit and bulk delete selecting copies (a title's checkbox ticks its
+  copies).
 - Movies: filters, filter options, sorting, table columns, poster formats, search and the command
   palette (every copy's UPC), Stats and spending, bulk edit. TV: the shelf and HDD filters.
 - Collections: the TV form's picker, shows in the collection drawer, the checklist (search and
