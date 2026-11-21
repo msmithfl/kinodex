@@ -60,9 +60,9 @@ function Paid({ amount, gift }: { amount: number; gift: boolean }) {
 }
 
 // The movie list's table: a checkbox per row (and select-all for the page), a small poster and
-// the title (opens the drawer), then the optional columns. A movie with several copies can open to
-// show a row for each, with its own checkbox; its own row adds them up. Rating stars save straight
-// away.
+// the title, then the optional columns. A whole row opens the drawer, as in the TV table. A movie
+// with several copies can open to show a row for each, with its own checkbox; its own row adds
+// them up. Rating stars save straight away.
 function MovieTable({
   rows,
   visibleColumns,
@@ -95,9 +95,11 @@ function MovieTable({
     return (
       <tr
         key={`${movie.id}-${copy.id ?? index}`}
-        className={cn("group transition-colors", selected ? "bg-primary-soft" : "bg-muted/25 hover:bg-accent/50")}
+        onClick={() => onOpen(movie.id)}
+        className={cn("group cursor-pointer transition-colors", selected ? "bg-primary-soft" : "bg-muted/25 hover:bg-accent/50")}
       >
-        <td className={cn(cellClass, "w-10 pr-0")}>
+        {/* The checkbox (and the space around it) ticks rather than opening the drawer */}
+        <td className={cn(cellClass, "w-10 cursor-default pr-0")} onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={selected}
             onCheckedChange={(checked) => copy.id !== undefined && onSelectCopy(copy.id, checked === true)}
@@ -171,9 +173,11 @@ function MovieTable({
               return [
                 <tr
                   key={movie.id}
-                  className={cn("group transition-colors", checked === true ? "bg-primary-soft" : "hover:bg-accent/50")}
+                  onClick={() => onOpen(movie.id)}
+                  className={cn("group cursor-pointer transition-colors", checked === true ? "bg-primary-soft" : "hover:bg-accent/50")}
                 >
-                  <td className={cn(cellClass, "w-10 pr-0")}>
+                  {/* The checkbox (and the space around it) ticks rather than opening the drawer */}
+                  <td className={cn(cellClass, "w-10 cursor-default pr-0")} onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={checked}
                       onCheckedChange={(value) => {
@@ -197,6 +201,7 @@ function MovieTable({
                       <Link
                         to={`/library?movie=${movie.id}`}
                         onClick={(e) => {
+                          e.stopPropagation(); // The row would open the drawer a second time
                           // Plain clicks open the drawer; ctrl/cmd-click opens the list with it in a drawer, in a new tab
                           if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
                           e.preventDefault();
