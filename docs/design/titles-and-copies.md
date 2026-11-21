@@ -1,7 +1,7 @@
 # Titles and copies
 
-Steps 1 to 3 of 4 built (see [Order](#order)); the rest is still the plan. Movies and TV shows become one
-kind of entry, a title, and each title holds every physical copy of it:
+Built (November 2026; see [Order](#order)). Movies and TV shows are one kind of entry, a title, and
+each title holds every physical copy of it:
 
 - Die Hard on VHS, DVD and Blu-ray is one title with three copies, not three movies.
 - Breaking Bad's Seasons 1–3 DVD set and Season 4 Blu-ray are one title with two copies (as TV
@@ -79,7 +79,7 @@ belongs to the Blu-ray.
   its purchases as its copies. Nothing looks different apart from TV's tab name and the new
   (empty) fields.
 - **Duplicates already in the library** (two entries with the same TMDB id): a Merge duplicates
-  preview lists them and what each would become; nothing changes until Apply.
+  preview lists them and what each would become; nothing changes until Merge.
 
 ## Decisions
 
@@ -175,7 +175,9 @@ Frontend:
    show asks "add a copy to it" or "add as new"; a scanned barcode already owned says which copy
    it is and offers "Add another copy" (search window and Search page); a copy card says when its
    UPC is already in the library.
-4. Merge duplicates.
+4. **Built.** Merge duplicates: Settings → Duplicates lists the movies and shows with more than one
+   entry (the same TMDB id), each ticked, with what it becomes; Merge folds them into the oldest
+   entry in one transaction (`POST /api/titles/merge`), every copy keeping its id.
 
 Later, if wanted: an edition per copy (Director's Cut, Steelbook), a box set flag, and for lending
 an item number and status per copy.

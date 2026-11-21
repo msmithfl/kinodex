@@ -15,11 +15,6 @@ key for it, and nothing works worse without one than it would without the option
 
 ## Agreed, not started
 
-- **Titles and copies** (steps 1 to 3 of 4 built): movies and TV shows in one Titles table (with a Kind), each title
-  holding every physical copy of it (VHS, DVD, Blu-ray) in one Copies table, replacing TV
-  purchases. Format, UPC, condition, price, shelf and HDD are on the copy; watched, rating,
-  collections and Jellyfin stay on the title. TV shows can be in collections too. Plan:
-  [titles-and-copies.md](design/titles-and-copies.md).
 - **Sign in with Jellyfin instead of an API key.** Quick Connect first (approve a code in a
   Jellyfin app), username and password as the fallback. Anyone with a Jellyfin account can
   connect, not just admins, and the saved credential only has that user's rights. Plan:
@@ -106,7 +101,7 @@ codebase as the hosted site. Plan:
 
 - **Watch log:** a tab in the movie drawer (the drawer's tab bar is there, hidden until a second
   tab exists).
-- **Lending:** a ledger of who has which disc, as another drawer tab, kept per copy (needs
+- **Lending:** a ledger of who has which disc, as another drawer tab, kept per copy (copies are built:
   [titles and copies](design/titles-and-copies.md)). The old customers and checkouts pages and
   tables were removed in November 2026, to rebuild on the new foundation.
 - **Shelf pages:** browsing by shelf, and reordering, renaming and deleting shelf sections.

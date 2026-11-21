@@ -50,6 +50,7 @@ Kinodex/
                           Images, Review tabs; Copies is the shared CopiesTab)
         tvShows/          TvShowDetail (drawer), TvShowDrawerDetails, TvShowSeasons, TvShowTable, form/ (Details, Copies, Images, Review tabs)
         collections/      CollectionDetail (drawer), CollectionChecklist
+        duplicates/       Merge duplicates: finding them and the preview (duplicates.ts, MergeDuplicatesDialog), its Settings row
         shelfSections/    (hooks only)
         jellyfin/         the Jellyfin connection and comparison hooks, Update Streaming (streaming.ts, UpdateStreamingDialog), the drawers' Jellyfin link (JellyfinLink)
       types/index.ts    shared TypeScript types, derived from the generated ones
@@ -96,7 +97,7 @@ the `useSettings()` hook (shared cache).
 | `/genres`, `/genres/:name` | `GenresView` (backdrop cards), `GenreDetail` (table/poster; movie drawer) | Core |
 | `/search` | `SearchPage`: movies + TV, debounced; below the results, the search window's Go to pages and Add action (`GO_TO_LINKS`), filtered by the search. On phones the box is in the top bar and isn't selected until tapped | Core |
 | `/stats` | `Stats`: charts and breakdowns | Core |
-| `/settings` | `Settings`: collection completion rings; Add Movie presets (rename, delete; `features/movies/MoviePresetSettings.tsx`) | Core |
+| `/settings` | `Settings`: collection completion rings; Add Movie presets (rename, delete; `features/movies/MoviePresetSettings.tsx`); Duplicates (movies or shows with the same TMDB id: a preview, every one ticked, then merged into the oldest entry; `features/duplicates`) | Core |
 | `/export` | `CsvExport`: CSV export/import, Letterboxd import | Core |
 | `/jellyfin` | `JellyfinPage`: connect a Jellyfin server (address + API key), then compare its movies and series with Kinodex (only on Jellyfin, only in Kinodex, in both). Update Streaming sets each title's Streaming from the comparison, after a preview, and links titles to their Jellyfin items (the Jellyfin logo beside TMDB's in the drawers). Reached from Settings for now (`docs/design/jellyfin-compare.md`) | New |
 | `/sign-in`, `/sign-up` | Clerk pages | Public |
@@ -314,6 +315,7 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 |---|---|---|---|
 | `/api/movies` | list, get/create/update/delete by id (copies nested; saving updates them in place by id, adds new ones and removes those left out), `export/csv` (a row per copy), `import/csv` (rows for one film become one movie with several copies), `import/letterboxd` | Owned; unknown fields are refused (`JsonUnmappedMemberHandling.Disallow`), so a page from before copies can't save a movie without them | Most pages |
 | `/api/tvshows` | list, get/create/update/delete by id (copies nested, saved the same way) | Owned; unknown fields refused, as for movies | TV pages, dashboard, stats, search |
+| `/api/titles` | `merge`: each group's titles fold into the kept one: every copy moves over with its id, watched, ratings, notes, collections and genres combine (`TitleMerge`, which the preview mirrors), the others are removed; all groups in one transaction | Owned; a movie and a show can't be merged | Settings → Merge duplicates |
 | `/api/collections` | list, create, update (name/director/cover/backdrop), delete | Owned; rename/delete also update every title's `collections` list (movies and shows) | Collections |
 | `/api/collections/{id}/items`, `/api/collections/items/all` | checklist items: list, add, delete; all items for rings | Owned | Collections |
 | `/api/shelfsections` | list, create | Owned (auth set per route) | Movie forms |
