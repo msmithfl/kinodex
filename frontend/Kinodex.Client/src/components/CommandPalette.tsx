@@ -19,7 +19,8 @@ import { HANDOVER_BACKDROP_CLASS } from "../utils/windowHandoff";
 import { useBarcodeScan, useScanInput } from "../utils/useBarcodeScan";
 import { isMobile, isPhoneWidth } from "../utils/isMobile";
 import type { AddItemOptions } from "./AddItemModal";
-import type { Movie, TvShow } from "../types";
+import type { Copy, Movie, TvShow } from "../types";
+import { lastAdded } from "../utils/copies";
 
 interface CommandPaletteProps {
   open: boolean;
@@ -31,12 +32,13 @@ interface CommandPaletteProps {
 interface Item {
   id?: number;
   createdAt?: string;
+  copies: Copy[];
 }
 
-// The newest few, for the list before anything is typed
+// The newest few (by their newest copy), for the list before anything is typed
 const newest = <T extends Item>(items: T[], count: number) =>
   [...items]
-    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
+    .sort((a, b) => lastAdded(b).localeCompare(lastAdded(a)))
     .slice(0, count);
 
 // Replaces cmdk's own matching, which counted any typed letters appearing in order anywhere ("sdfgsd"
@@ -53,10 +55,10 @@ const paletteFilter: typeof defaultFilter = (value, search, keywords) => {
 // Each movie and TV show's list item: an id (cmdk needs a unique value) and what it's found by,
 // title first. The list and the check for whether a search found anything both use these.
 const movieValue = (m: Movie) => `movie-${m.id}`;
-const movieKeywords = (m: Movie) => [m.title, String(m.year || ""), m.upcNumber].filter(Boolean);
+const movieKeywords = (m: Movie) => [m.title, String(m.year || ""), ...m.copies.map((c) => c.upcNumber)].filter(Boolean);
 const showValue = (s: TvShow) => `tv-${s.id}`;
 const showKeywords = (s: TvShow) =>
-  [s.title, String(s.year || ""), ...s.purchases.map((p) => p.upcNumber)].filter(Boolean);
+  [s.title, String(s.year || ""), ...s.copies.map((c) => c.upcNumber)].filter(Boolean);
 
 // A small poster beside each result; blank when there's none
 function Thumb({ src }: { src: string }) {

@@ -15,6 +15,7 @@ import CollectionChecklist from "./CollectionChecklist";
 import { useCollections, useDeleteCollection } from "./api";
 import { useMovies } from "../movies/api";
 import type { Collection } from "../../types";
+import { allFormats } from "../../utils/copies";
 
 interface CollectionDetailProps {
   collectionName: string;
@@ -123,7 +124,7 @@ function CollectionDetail({
                   title={movie.title}
                   posterPath={movie.posterPath}
                   subtitle={movie.year ? String(movie.year) : undefined}
-                  formats={movie.formats}
+                  formats={allFormats(movie.copies)}
                   rating={movie.rating}
                   to={`/library?movie=${movie.id}`}
                   onOpen={() => onOpenMovie(movie.id)}

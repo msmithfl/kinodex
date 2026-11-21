@@ -15,7 +15,7 @@ import TmdbSearch from "./TmdbSearch";
 import TvShowForm from "./TvShowForm";
 import { BarcodeScanner } from "./lazyComponents";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
-import { newPurchase } from "../utils/tvShowPurchases";
+import { newCopy } from "../utils/copies";
 import { useLinkToJellyfin } from "../features/jellyfin/api";
 
 const FORM_ID = "add-tv-show-form";
@@ -27,17 +27,18 @@ const emptyTvShow = (): TvShow => ({
   review: "",
   year: new Date().getFullYear(),
   genres: [],
+  collections: [],
   posterPath: "",
   backdropPath: "",
   tmdbId: undefined,
   totalSeasons: 0,
   isStreaming: false,
-  purchases: [],
+  copies: [],
 });
 
 interface AddTvShowModalProps {
   onClose: () => void;
-  // A barcode to start with (as the first purchase), e.g. one scanned that isn't in the collection yet
+  // A barcode to start with (as the first copy), e.g. one scanned that isn't in the collection yet
   initialUpc?: string;
   // A title to start the TMDB search with, e.g. what was typed in the search window
   initialSearch?: string;
@@ -63,7 +64,7 @@ function PreviewPoster({ show, className }: { show: TvShow; className?: string }
   );
 }
 
-// Add a TV show: search TMDB, then fill in the details and purchases. Same window as Add Movie.
+// Add a TV show: search TMDB, then fill in the details and copies. Same window as Add Movie.
 export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }: AddTvShowModalProps) {
   // TMDB, through our API
   const { getTMDBTvSeasonCount, searchTMDBTv } = useTmdb();
@@ -76,13 +77,13 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<TvShow>(() => ({
     ...emptyTvShow(),
-    purchases: initialUpc ? [newPurchase([], { upcNumber: initialUpc })] : [],
+    copies: initialUpc ? [newCopy({ upcNumber: initialUpc })] : [],
   }));
   const [submitError, setSubmitError] = useState("");
   // Remounts the TMDB search when going back to it
   const [searchKey, setSearchKey] = useState(0);
-  // Which purchase a barcode scan fills in; null when the scanner is closed
-  const [scanPurchaseIndex, setScanPurchaseIndex] = useState<number | null>(null);
+  // Which copy a barcode scan fills in; null when the scanner is closed
+  const [scanCopyIndex, setScanCopyIndex] = useState<number | null>(null);
   // TMDB results already in the library get an "In library" badge
   const ownedTmdbIds = new Set(shows.flatMap((s) => (s.tmdbId ? [s.tmdbId] : [])));
 
@@ -149,18 +150,18 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
     }
   };
 
-  const handleScanClick = (purchaseIndex: number) => {
-    setScanPurchaseIndex(purchaseIndex);
+  const handleScanClick = (copyIndex: number) => {
+    setScanCopyIndex(copyIndex);
   };
 
   const handleBarcodeDetected = (code: string) => {
     setFormData((prev) => ({
       ...prev,
-      purchases: prev.purchases.map((p, i) =>
-        i === scanPurchaseIndex ? { ...p, upcNumber: code } : p,
+      copies: prev.copies.map((p, i) =>
+        i === scanCopyIndex ? { ...p, upcNumber: code } : p,
       ),
     }));
-    setScanPurchaseIndex(null);
+    setScanCopyIndex(null);
   };
 
   const meta = [formData.year || null, formData.genres.slice(0, 2).join(", ") || null].filter(Boolean).join(" · ");
@@ -280,8 +281,8 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
           </div>
         </div>
 
-        {scanPurchaseIndex !== null && (
-          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setScanPurchaseIndex(null)} />
+        {scanCopyIndex !== null && (
+          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setScanCopyIndex(null)} />
         )}
       </DialogContent>
     </Dialog>

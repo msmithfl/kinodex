@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { QuickRating } from "./StarRating";
 import { useRateMovie } from "../features/movies/api";
 import type { Movie } from "../types";
+import { allFormats } from "../utils/copies";
 
 interface SimpleMovieTableProps {
   movies: Movie[]; // Shown in the order given
@@ -98,9 +99,9 @@ function SimpleMovieTable({
                 {movie.year || "–"}
               </td>
               <td className={cn(cellClass, !fitWidth && "whitespace-nowrap")}>
-                {movie.formats.length > 0 ? (
+                {allFormats(movie.copies).length > 0 ? (
                   <span className={cn("flex gap-1", fitWidth && "flex-wrap")}>
-                    {movie.formats.map((fmt) => (
+                    {allFormats(movie.copies).map((fmt) => (
                       <Badge key={fmt} variant="outline" className="font-normal text-foreground/85">
                         {fmt}
                       </Badge>

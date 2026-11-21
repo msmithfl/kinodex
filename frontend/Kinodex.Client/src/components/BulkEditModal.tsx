@@ -21,7 +21,9 @@ interface BulkEditData {
 }
 
 interface BulkEditModalProps {
-  selectedMovieIds: Set<number>;
+  // How many movies, and copies of them, the edit changes
+  movieCount: number;
+  copyCount: number;
   bulkEditData: BulkEditData;
   setBulkEditData: React.Dispatch<React.SetStateAction<BulkEditData>>;
   shelfSections: string[];
@@ -73,9 +75,11 @@ function BulkSelect({
   );
 }
 
-// Change the same fields on every selected movie; anything left alone keeps its current value
+// Change the same fields on every selected copy, and on the movies they're copies of (watched,
+// streaming); anything left alone keeps its current value
 export function BulkEditModal({
-  selectedMovieIds,
+  movieCount,
+  copyCount,
   bulkEditData,
   setBulkEditData,
   shelfSections,
@@ -86,8 +90,9 @@ export function BulkEditModal({
   const set = (field: keyof BulkEditData) => (value: string) =>
     setBulkEditData((prev) => ({ ...prev, [field]: value }));
 
-  const count = selectedMovieIds.size;
-  const movies = `${count} movie${count === 1 ? "" : "s"}`;
+  const movies = `${movieCount} movie${movieCount === 1 ? "" : "s"}`;
+  const copies = `${copyCount} cop${copyCount === 1 ? "y" : "ies"}`;
+  const heading = "col-span-2 text-xs font-medium text-muted-foreground";
 
   return (
     <Dialog open onOpenChange={(open) => !open && setShowBulkEditModal(false)}>
@@ -99,11 +104,13 @@ export function BulkEditModal({
         <div className="flex shrink-0 flex-col gap-1.5 border-b border-border px-5 py-4">
           <DialogTitle>Edit {movies}</DialogTitle>
           <DialogDescription className="text-xs">
+            The copy fields change the {copies} chosen, the movie fields the {movies} they're copies of.
             Anything left blank or set to “Don't change” keeps its current value.
           </DialogDescription>
         </div>
 
         <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-4 overflow-y-auto px-5 py-4 md:px-6">
+          <h3 className={heading}>Copies ({copyCount})</h3>
           <BulkSelect label="Format" value={bulkEditData.formats} options={FORMAT_OPTIONS} onChange={set("formats")} />
           <BulkSelect
             label="Condition"
@@ -137,9 +144,6 @@ export function BulkEditModal({
             />
           </FormField>
 
-          <BulkSelect label="Streaming" value={bulkEditData.isStreaming} options={YES_NO} onChange={set("isStreaming")} />
-          <BulkSelect label="Watched" value={bulkEditData.hasWatched} options={YES_NO} onChange={set("hasWatched")} />
-
           <BulkSelect label="Gift" value={bulkEditData.isGift} options={YES_NO} onChange={set("isGift")} />
           <FormField label="HDD number" htmlFor="bulk-hdd-number">
             <Input
@@ -166,6 +170,10 @@ export function BulkEditModal({
               className="font-mono"
             />
           </FormField>
+
+          <h3 className={cn(heading, "pt-2")}>Movies ({movieCount})</h3>
+          <BulkSelect label="Streaming" value={bulkEditData.isStreaming} options={YES_NO} onChange={set("isStreaming")} />
+          <BulkSelect label="Watched" value={bulkEditData.hasWatched} options={YES_NO} onChange={set("hasWatched")} />
         </div>
 
         <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-card px-5 py-3 max-md:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">

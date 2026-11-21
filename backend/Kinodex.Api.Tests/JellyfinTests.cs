@@ -515,7 +515,7 @@ public class JellyfinTests(KinodexApiFactory api)
 
     private static async Task<int> AddShowAsync(HttpClient client, string title, int year, int tmdbId)
     {
-        var response = await client.PostAsJsonAsync("/api/tvshows", new { title, year, tmdbId, purchases = Array.Empty<object>() });
+        var response = await client.PostAsJsonAsync("/api/tvshows", new { title, year, tmdbId, copies = Array.Empty<object>() });
         response.EnsureSuccessStatusCode();
         return (await response.ReadJsonAsync()).GetProperty("id").GetInt32();
     }

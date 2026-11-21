@@ -140,11 +140,10 @@ public static class WebhookEndpoints
                         await db.CollectionListItems.Where(c => c.UserId == userId).ExecuteDeleteAsync();
                         await db.Collections.Where(c => c.UserId == userId).ExecuteDeleteAsync();
                         await db.ShelfSections.Where(s => s.UserId == userId).ExecuteDeleteAsync();
-                        await db.Movies.Where(m => m.UserId == userId).ExecuteDeleteAsync();
+                        // Every movie and show; their copies go with them (cascade in the database)
+                        await db.Titles.Where(t => t.UserId == userId).ExecuteDeleteAsync();
                         await db.MoviePresets.Where(p => p.UserId == userId).ExecuteDeleteAsync();
 
-                        // Deleting a show also deletes its purchases (cascade in the database)
-                        await db.TvShows.Where(t => t.UserId == userId).ExecuteDeleteAsync();
                         await db.UserSettings.Where(s => s.UserId == userId).ExecuteDeleteAsync();
                         await db.JellyfinConnections.Where(j => j.UserId == userId).ExecuteDeleteAsync();
 

@@ -1,25 +1,29 @@
 import { describe, expect, it } from "vitest";
 import { monthKey, movieSpend, tvSpend } from "./spending";
-import { makeMovie, makePurchase, makeShow } from "../test/factories";
+import { makeCopy, makeMovie, makeShow, makeShowCopy } from "../test/factories";
 
 describe("spending", () => {
-  it("puts a movie's price in the month of its purchase date", () => {
-    expect(movieSpend([makeMovie({ purchasedAt: "2026-03-31", purchasePrice: 19.99 })])).toEqual([
+  it("puts each copy's price in the month of its purchase date", () => {
+    const movie = makeMovie({
+      copies: [makeCopy({ purchasedAt: "2026-03-31", price: 19.99 }), makeCopy({ purchasedAt: "2024-07-04", price: 3 })],
+    });
+    expect(movieSpend([movie])).toEqual([
       { month: "2026-03", amount: 19.99, kind: "movie" },
+      { month: "2024-07", amount: 3, kind: "movie" },
     ]);
   });
 
   it("counts a missing price as nothing", () => {
     // Older rows can come back without a price
-    const movie = makeMovie({ purchasePrice: undefined as unknown as number });
+    const movie = makeMovie({ copies: [makeCopy({ price: undefined as unknown as number })] });
     expect(movieSpend([movie])[0].amount).toBe(0);
   });
 
-  it("gives each TV purchase its own month", () => {
+  it("gives each TV copy its own month", () => {
     const show = makeShow({
-      purchases: [
-        makePurchase({ purchasedAt: "2025-12-24", price: 40 }),
-        makePurchase({ purchasedAt: "2026-01-02", price: 15 }),
+      copies: [
+        makeShowCopy({ purchasedAt: "2025-12-24", price: 40 }),
+        makeShowCopy({ purchasedAt: "2026-01-02", price: 15 }),
       ],
     });
     expect(tvSpend([show])).toEqual([

@@ -14,6 +14,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
@@ -21,7 +22,11 @@ import { titleSearchScore } from "../utils/textSearch";
 import { ApiError } from "../utils/api";
 import { useTvShows } from "../features/tvShows/api";
 import { applyTvShowFilters, buildTvShowFilterCategories } from "../features/tvShows/filters";
-import TvShowTable, { type TvShowRow } from "../features/tvShows/TvShowTable";
+import TvShowTable from "../features/tvShows/TvShowTable";
+import { useShelfSections } from "../features/shelfSections/api";
+import { useOpenCopies } from "../components/useOpenCopies";
+import { matchingCopies } from "../utils/copyFilters";
+import type { TitleRow } from "../utils/copySelection";
 import { COLUMNS, DEFAULT_COLUMNS, type VisibleColumns } from "../features/tvShows/tableColumns";
 import FilterPanel from "../components/FilterPanel";
 import FilterChips from "../components/FilterChips";
@@ -30,10 +35,10 @@ import PosterCard from "../components/PosterCard";
 import ListSkeleton from "../components/ListSkeleton";
 import EmptyState from "../components/EmptyState";
 import { AddTvShowModal } from "../components/AddTvShowModal";
-import type { SortOption } from "../types";
+import type { SortOption, TvShow } from "../types";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import { formatSeasons } from "../utils/formatSeasons";
-import { allFormats, ownedSeasons, totalPaid } from "../utils/tvShowPurchases";
+import { allFormats, ownedSeasons } from "../utils/copies";
 import Drawer from "../components/Drawer";
 import TvShowDetail from "../features/tvShows/TvShowDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
@@ -97,6 +102,9 @@ function TvShowList() {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
+  // Which shows show their copies as rows, and whether they start that way
+  const openCopies = useOpenCopies("tvShowListCopiesOpen");
+  const { data: shelfSectionList = [] } = useShelfSections();
   const [viewMode, setViewMode] = useStoredChoice<ViewMode>("tvShowListView", VIEW_MODES, "table");
   const [visibleColumns, setVisibleColumns] = useStoredState<VisibleColumns>("tvShowListColumns", DEFAULT_COLUMNS, {
     // Merge over the defaults so a column added later still has a value
@@ -121,26 +129,24 @@ function TvShowList() {
     setSelectedFilters((prev) => ({ ...prev, [categoryId]: values }));
   };
 
-  // Table rows carry the purchase-derived figures, so the shared sorter can sort by them
-  const rows: TvShowRow[] = shows.map((show) => ({
-    ...show,
-    formats: allFormats(show.purchases),
-    purchasePrice: totalPaid(show.purchases),
-    condition: "",
-    owned: ownedSeasons(show.purchases),
-    hasGift: show.purchases.some((p) => p.isGift),
-  }));
-
-  // Apply the filter menu, then the search (title words, year or any purchase's UPC)
+  // Apply the filter menu, then the search (title words, year or any copy's UPC)
   const filteredShows = applyTvShowFilters(
-    getSortedMovies(rows, sortBy, sortDirection),
+    getSortedMovies(shows, sortBy, sortDirection),
     selectedFilters,
   ).filter(
     (show) =>
       !searchQuery.trim() ||
-      titleSearchScore(show.title, show.year, show.purchases.map((p) => p.upcNumber), searchQuery) > 0,
+      titleSearchScore(show.title, show.year, show.copies.map((c) => c.upcNumber), searchQuery) > 0,
   );
-  const filterCategories = buildTvShowFilterCategories(shows);
+  const filterCategories = buildTvShowFilterCategories(
+    shows,
+    shelfSectionList.map((section) => section.name).sort(),
+  );
+  // The table's rows: each show with the copies the filters let through
+  const tableRows: TitleRow<TvShow>[] = filteredShows.map((show) => ({
+    title: show,
+    copies: matchingCopies(show.copies, selectedFilters),
+  }));
 
   if (loading) {
     return (
@@ -249,6 +255,15 @@ function TvShowList() {
                           {label}
                         </DropdownMenuCheckboxItem>
                       ))}
+                      <DropdownMenuSeparator />
+                      {/* Shows with several copies start open (a row for each) or closed */}
+                      <DropdownMenuCheckboxItem
+                        checked={openCopies.openByDefault}
+                        onCheckedChange={(checked) => openCopies.setOpenByDefault(checked === true)}
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        Open copies
+                      </DropdownMenuCheckboxItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 )}
@@ -279,7 +294,7 @@ function TvShowList() {
               <MotionConfig reducedMotion="user">
                 <div className={POSTER_GRID}>
                   {filteredShows.map((show, index) => {
-                    const seasons = formatSeasons(show.owned, show.totalSeasons);
+                    const seasons = formatSeasons(ownedSeasons(show.copies), show.totalSeasons);
                     return (
                       <motion.div
                         key={show.id}
@@ -292,7 +307,7 @@ function TvShowList() {
                           title={show.title}
                           posterPath={show.posterPath}
                           subtitle={[show.year || null, seasons === "-" ? null : seasons].filter(Boolean).join(" · ")}
-                          formats={show.formats}
+                          formats={allFormats(show.copies)}
                           rating={show.rating}
                           to={`/tv-shows?show=${show.id}`}
                           onOpen={() => openShow(show.id)}
@@ -306,11 +321,13 @@ function TvShowList() {
             </div>
           ) : (
             <TvShowTable
-              shows={filteredShows}
+              rows={tableRows}
               visibleColumns={visibleColumns}
               sortBy={sortBy}
               sortDirection={sortDirection}
               onSort={handleColumnClick}
+              isOpen={openCopies.isOpen}
+              onOpenChange={openCopies.setOpen}
               onOpen={openShow}
             />
           )}

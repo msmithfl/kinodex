@@ -33,7 +33,7 @@ export function getRelativeTimeString(dateString?: string): string {
   }
 }
 
-// Purchase dates (movies and TV purchases) are plain YYYY-MM-DD calendar dates with no time
+// Purchase dates (each copy's) are plain YYYY-MM-DD calendar dates with no time
 // zone. These helpers build and show them from the date's own parts so no time zone can shift them.
 
 const pad = (n: number) => String(n).padStart(2, "0");

@@ -12,12 +12,12 @@ public static class TvShowEndpoints
         // Every route is scoped to the signed-in user; the client never chooses the UserId
         var group = app.MapGroup("/api/tvshows").RequireAuthorization();
 
-        // GET all TV shows
+        // GET all TV shows, each with its copies
         group.MapGet("/", async (ClaimsPrincipal user, MovieDbContext db) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             return await db.TvShows
-                .Include(t => t.Purchases.OrderBy(p => p.PurchasedAt).ThenBy(p => p.Id))
+                .Include(t => t.Copies.OrderBy(c => c.PurchasedAt).ThenBy(c => c.Id))
                 .Where(t => t.UserId == userId)
                 .OrderByDescending(t => t.CreatedAt)
                 .ToListAsync();
@@ -28,12 +28,12 @@ public static class TvShowEndpoints
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             var show = await db.TvShows
-                .Include(t => t.Purchases.OrderBy(p => p.PurchasedAt).ThenBy(p => p.Id))
+                .Include(t => t.Copies.OrderBy(c => c.PurchasedAt).ThenBy(c => c.Id))
                 .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
             return show is not null ? Results.Ok(show) : Results.NotFound();
         });
 
-        // POST create TV show with its purchases
+        // POST create TV show with its copies
         group.MapPost("/", async (TvShow show, ClaimsPrincipal user, MovieDbContext db) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -46,19 +46,20 @@ public static class TvShowEndpoints
             show.UserId = userId;
             show.JellyfinItemId = null; // Linked only by Update Streaming
             show.CreatedAt = DateTime.UtcNow;
-            show.Purchases = PreparePurchases(show.Purchases);
+            show.Copies = CopyList.ForNewTitle(show.Copies, isShow: true);
 
             db.TvShows.Add(show);
             await db.SaveChangesAsync();
+            CopyList.Sort(show);
             return Results.Created($"/api/tvshows/{show.Id}", show);
         });
 
-        // PUT update TV show; the request's purchase list replaces the stored one
+        // PUT update TV show; the request's copies are what it has afterwards (CopyList)
         group.MapPut("/{id}", async (int id, TvShow updatedShow, ClaimsPrincipal user, MovieDbContext db) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             var show = await db.TvShows
-                .Include(t => t.Purchases)
+                .Include(t => t.Copies)
                 .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
             if (show is null) return Results.NotFound();
 
@@ -71,21 +72,20 @@ public static class TvShowEndpoints
             show.Review = updatedShow.Review;
             show.Year = updatedShow.Year;
             show.Genres = updatedShow.Genres;
+            show.Collections = updatedShow.Collections;
             show.PosterPath = updatedShow.PosterPath;
             show.BackdropPath = updatedShow.BackdropPath;
             show.TmdbId = updatedShow.TmdbId;
             show.TotalSeasons = updatedShow.TotalSeasons;
             show.IsStreaming = updatedShow.IsStreaming;
-
-            db.TvShowPurchases.RemoveRange(show.Purchases);
-            show.Purchases = PreparePurchases(updatedShow.Purchases);
+            CopyList.Update(show, updatedShow.Copies, isShow: true);
 
             await db.SaveChangesAsync();
-            show.Purchases = show.Purchases.OrderBy(p => p.PurchasedAt).ThenBy(p => p.Id).ToList();
+            CopyList.Sort(show);
             return Results.Ok(show);
         });
 
-        // DELETE TV show (its purchases are removed with it)
+        // DELETE TV show (its copies are removed with it)
         group.MapDelete("/{id}", async (int id, ClaimsPrincipal user, MovieDbContext db) =>
         {
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -98,40 +98,11 @@ public static class TvShowEndpoints
         });
     }
 
-    // Returns a message naming the show and purchase when the request can't be saved
+    // Returns a message naming the show and copy when the request can't be saved
     private static string? Validate(TvShow show)
     {
         if (string.IsNullOrWhiteSpace(show.Title)) return "Title is required.";
         if (show.TotalSeasons < 0) return $"{show.Title}: total seasons can't be negative.";
-
-        for (var i = 0; i < show.Purchases.Count; i++)
-        {
-            var purchase = show.Purchases[i];
-            var label = $"{show.Title}, purchase {i + 1}";
-
-            if (purchase.Seasons.Count == 0) return $"{label} doesn't cover any seasons.";
-            if (purchase.Seasons.Any(s => s < 1)) return $"{label} has a season number below 1.";
-            if (show.TotalSeasons > 0 && purchase.Seasons.Any(s => s > show.TotalSeasons))
-                return $"{label} includes a season past season {show.TotalSeasons}, the last season.";
-            if (purchase.Price < 0) return $"{label} has a negative price.";
-        }
-
-        return null;
+        return CopyList.Validate(show.Title, show.Copies, show.TotalSeasons);
     }
-
-    // New rows every time: ids from the client are ignored and seasons are tidied
-    private static List<TvShowPurchase> PreparePurchases(List<TvShowPurchase> purchases) =>
-        purchases.Select(p => new TvShowPurchase
-        {
-            Seasons = p.Seasons.Distinct().Order().ToList(),
-            Price = p.Price,
-            UpcNumber = p.UpcNumber,
-            Formats = p.Formats,
-            Condition = p.Condition,
-            PurchasedAt = p.PurchasedAt == default
-                ? DateOnly.FromDateTime(DateTime.UtcNow)
-                : p.PurchasedAt,
-            IsGift = p.IsGift,
-            ProductPosterPath = p.ProductPosterPath,
-        }).ToList();
 }

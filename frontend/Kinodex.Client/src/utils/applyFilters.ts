@@ -1,84 +1,21 @@
 import type { Movie } from '../types';
+import { titlePassesCopyFilters } from './copyFilters';
 
-export const applyFilters = (movies: Movie[], selectedFilters: Record<string, string[]>) => {
-    let filtered = [...movies];
-    
-    // Format filter
-    if (selectedFilters.format && selectedFilters.format.length > 0) {
-      filtered = filtered.filter(movie => 
-        movie.formats.some(format => selectedFilters.format.includes(format))
-      );
-    }
-    
-    // Genre filter: movies in any of the chosen genres
-    if (selectedFilters.genre && selectedFilters.genre.length > 0) {
-      filtered = filtered.filter(movie =>
-        (movie.genres ?? []).some(genre => selectedFilters.genre.includes(genre))
-      );
-    }
+// The movie list's filters. Genre, collection, streaming and watched are about the movie; format,
+// condition, gift, shelf and HDD are about its copies (utils/copyFilters).
+export const applyFilters = <T extends Movie>(movies: T[], selectedFilters: Record<string, string[]>): T[] => {
+  const chosen = (id: string) => selectedFilters[id]?.length ? selectedFilters[id] : null;
+  const yesNo = (value: boolean) => (value ? 'true' : 'false');
 
-    // HDD Number filter
-    if (selectedFilters.hdd && selectedFilters.hdd.length > 0) {
-      filtered = filtered.filter(movie => {
-        const hddValue = movie.hdDriveNumber.toString();
-        const hasNoHDD = movie.hdDriveNumber === 0;
-        return selectedFilters.hdd.includes(hddValue) || 
-               (selectedFilters.hdd.includes('0') && hasNoHDD);
-      });
-    }
-    
-    // Collection filter
-    if (selectedFilters.collection && selectedFilters.collection.length > 0) {
-      filtered = filtered.filter(movie => 
-        movie.collections.some(collection => selectedFilters.collection.includes(collection))
-      );
-    }
-    
-    // Streaming filter
-    if (selectedFilters.streaming && selectedFilters.streaming.length > 0) {
-      filtered = filtered.filter(movie => {
-        const isStreaming = movie.isStreaming ? 'true' : 'false';
-        return selectedFilters.streaming.includes(isStreaming);
-      });
-    }
-
-    // HasWatched filter
-    if (selectedFilters.hasWatched && selectedFilters.hasWatched.length > 0) {
-      filtered = filtered.filter(movie => {
-        const hasWatched = movie.hasWatched ? 'true' : 'false';
-        return selectedFilters.hasWatched.includes(hasWatched);
-      });
-    }
-    
-    // Gift filter
-    if (selectedFilters.gift && selectedFilters.gift.length > 0) {
-      filtered = filtered.filter(movie => {
-        const isGift = movie.isGift ? 'true' : 'false';
-        return selectedFilters.gift.includes(isGift);
-      });
-    }
-
-    // Shelf Section filter
-    if (selectedFilters.shelfSection && selectedFilters.shelfSection.length > 0) {
-      filtered = filtered.filter(movie => 
-        movie.shelfSection && selectedFilters.shelfSection.includes(movie.shelfSection)
-      );
-    }
-    
-    // Shelf Number filter
-    if (selectedFilters.shelfNumber && selectedFilters.shelfNumber.length > 0) {
-      filtered = filtered.filter(movie => {
-        const shelfValue = movie.shelfNumber.toString();
-        return selectedFilters.shelfNumber.includes(shelfValue);
-      });
-    }
-    
-    // Condition filter
-    if (selectedFilters.condition && selectedFilters.condition.length > 0) {
-      filtered = filtered.filter(movie => 
-        selectedFilters.condition.includes(movie.condition)
-      );
-    }
-    
-    return filtered;
-  };
+  return movies.filter(movie => {
+    const genre = chosen('genre');
+    if (genre && !(movie.genres ?? []).some(g => genre.includes(g))) return false;
+    const collection = chosen('collection');
+    if (collection && !movie.collections.some(c => collection.includes(c))) return false;
+    const streaming = chosen('streaming');
+    if (streaming && !streaming.includes(yesNo(movie.isStreaming))) return false;
+    const watched = chosen('hasWatched');
+    if (watched && !watched.includes(yesNo(movie.hasWatched))) return false;
+    return titlePassesCopyFilters(movie.copies, selectedFilters);
+  });
+};

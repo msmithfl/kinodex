@@ -43,16 +43,16 @@ public static class CollectionEndpoints
             collection.ImageUrl = request.ImageUrl;
             collection.BackdropUrl = request.BackdropUrl;
 
-            // Update all movies that have this collection
-            var moviesWithCollection = await db.Movies
+            // Update every title (movie or show) that has this collection
+            var titlesWithCollection = await db.Titles
                 .Where(m => m.UserId == userId && m.Collections.Contains(oldName))
                 .ToListAsync();
 
-            foreach (var movie in moviesWithCollection)
+            foreach (var title in titlesWithCollection)
             {
-                var index = movie.Collections.IndexOf(oldName);
+                var index = title.Collections.IndexOf(oldName);
                 if (index >= 0)
-                    movie.Collections[index] = newName;
+                    title.Collections[index] = newName;
             }
 
             await db.SaveChangesAsync();
@@ -67,13 +67,13 @@ public static class CollectionEndpoints
 
             var collectionName = collection.Name;
 
-            // Remove this collection from all movies that have it
-            var moviesWithCollection = await db.Movies
+            // Remove this collection from every title (movie or show) that has it
+            var titlesWithCollection = await db.Titles
                 .Where(m => m.UserId == userId && m.Collections.Contains(collectionName))
                 .ToListAsync();
 
-            foreach (var movie in moviesWithCollection)
-                movie.Collections.Remove(collectionName);
+            foreach (var title in titlesWithCollection)
+                title.Collections.Remove(collectionName);
 
             db.Collections.Remove(collection);
             await db.SaveChangesAsync();

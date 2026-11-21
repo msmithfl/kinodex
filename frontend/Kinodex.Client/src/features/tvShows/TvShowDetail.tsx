@@ -19,7 +19,7 @@ interface TvShowDetailProps {
 // A TV show's details, shown in the side drawer (the only detail view; the old full page is
 // retired and /tv-shows/:id redirects to the list with this drawer open). The backdrop across the
 // top, the poster overlapping it with the title, year, genres and rating beside it, then the
-// seasons, purchases and the rest.
+// seasons, copies and the rest.
 function TvShowDetail({ showId, onDeleted }: TvShowDetailProps) {
   // From the shared cache: opening from the list shows the list's copy straight away
   const { data: show, isLoading: loading, error } = useTvShow(showId);
@@ -27,7 +27,7 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPosterLightbox, setShowPosterLightbox] = useState(false);
-  // The product image being shown large (each purchase has its own)
+  // The product image being shown large (each copy has its own)
   const [productLightboxSrc, setProductLightboxSrc] = useState<string | null>(null);
 
   if (loading) {
@@ -122,7 +122,7 @@ function TvShowDetail({ showId, onDeleted }: TvShowDetailProps) {
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
         title={show.title}
-        description="It's removed from your collection, with all its purchases. This can't be undone."
+        description="It's removed from your collection, with all its copies. This can't be undone."
         onConfirm={handleDeleteConfirm}
       />
     </div>

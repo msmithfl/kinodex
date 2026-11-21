@@ -19,15 +19,15 @@ import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 import { useCreateMovie, useMovies } from "../features/movies/api";
 import { ApiError } from "../utils/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";
-import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
 import { useLinkToJellyfin } from "../features/jellyfin/api";
-import { todayDate } from "../utils/dateUtils";
+import { newCopy } from "../utils/copies";
 import { isMobile } from "../utils/isMobile";
 import {
   PRESET_EXCLUDED_LABEL,
   presetFields,
   presetValues,
   toPreset,
+  withPresetFields,
   useMoviePresets,
   useSaveMoviePreset,
 } from "../features/movies/presets";
@@ -46,16 +46,11 @@ const DEFAULT_PRESET = "default";
 
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
 
-// A blank movie, the form's starting point
+// A blank movie with one copy, the form's starting point
 const emptyMovie = (): Movie => ({
   userId: "",
   title: "",
-  upcNumber: "",
-  formats: [],
   collections: [],
-  condition: "Like New",
-  purchasePrice: 0,
-  purchasedAt: todayDate(),
   hasWatched: false,
   rating: 0,
   review: "",
@@ -63,13 +58,9 @@ const emptyMovie = (): Movie => ({
   genres: [],
   posterPath: "",
   backdropPath: "",
-  productPosterPath: "",
   tmdbId: undefined,
-  hdDriveNumber: 0,
-  shelfNumber: 1,
-  shelfSection: "",
   isStreaming: true,
-  isGift: false,
+  copies: [newCopy({ shelfNumber: 1 })],
 });
 
 
@@ -108,13 +99,14 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
   const navigate = useNavigate();
   const { data: movies = [] } = useMovies();
   const { data: collectionList = [] } = useCollections();
-  const { data: shelfSectionList = [] } = useShelfSections();
   const createMovie = useCreateMovie();
   const linkToJellyfin = useLinkToJellyfin();
   const createCollection = useCreateCollection();
-  const createShelfSection = useCreateShelfSection();
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState<Movie>(() => ({ ...emptyMovie(), upcNumber: initialUpc }));
+  const [formData, setFormData] = useState<Movie>(() => {
+    const movie = emptyMovie();
+    return { ...movie, copies: [{ ...movie.copies[0], upcNumber: initialUpc }] };
+  });
   // "Save & add another", for the Ctrl/⌘+Enter shortcut
   const addAnotherRef = useRef<HTMLButtonElement>(null);
 
@@ -134,7 +126,7 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
     // A UPC already in the form (scanned, or typed) stays unless the preset has one of its own
     setFormData((prev) => {
       const values = presetValues(preset);
-      return { ...prev, ...values, upcNumber: values.upcNumber || prev.upcNumber };
+      return withPresetFields(prev, { ...values, upcNumber: values.upcNumber || (prev.copies[0]?.upcNumber ?? "") });
     });
   }
   // Naming a new preset from the form's current values
@@ -142,16 +134,14 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
   // Remounts the TMDB search so each new movie starts with an empty search
   const [searchKey, setSearchKey] = useState(0);
   const collections = [...collectionList].sort(byName);
-  const shelfSections = [...shelfSectionList].sort(byName);
   // TMDB results already in the library get an "In library" badge
   const ownedTmdbIds = new Set(movies.flatMap((m) => (m.tmdbId ? [m.tmdbId] : [])));
   const [showCollectionInput, setShowCollectionInput] = useState(false);
-  const [showShelfSectionInput, setShowShelfSectionInput] = useState(false);
   const [newCollection, setNewCollection] = useState("");
-  const [newShelfSection, setNewShelfSection] = useState("");
   const [submitError, setSubmitError] = useState("");
 
-  const [showScanner, setShowScanner] = useState(false);
+  // The copy a barcode is being scanned for
+  const [scanIndex, setScanIndex] = useState<number | null>(null);
 
   // A TMDB result fills in the title, year, genres and images, then shows the form
   const handleMovieSelect = (movie: TMDBMovie) => {
@@ -203,25 +193,12 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
     }
   };
 
-  // Creates a shelf section from the form and puts this movie on it
-  const addShelfSection = async () => {
-    if (!newShelfSection || shelfSections.find((s) => s.name === newShelfSection)) return;
-    try {
-      await createShelfSection.mutateAsync(newShelfSection);
-      setFormData((prev) => ({ ...prev, shelfSection: newShelfSection }));
-      setNewShelfSection("");
-      setShowShelfSectionInput(false);
-    } catch (error) {
-      console.error("Error adding shelf section:", error);
-    }
-  };
-
   // Picking a preset fills its values; "Default" puts those fields back to the defaults
   const choosePreset = (id: number | null) => {
     setPresetId(id);
     if (!id) {
       setAppliedPresetId(null);
-      setFormData((prev) => ({ ...prev, ...presetFields(emptyMovie()) }));
+      setFormData((prev) => withPresetFields(prev, presetFields(emptyMovie())));
     }
   };
 
@@ -286,9 +263,8 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
             },
           },
         });
-        setFormData({ ...emptyMovie(), ...(preset ? presetValues(preset) : {}) });
+        setFormData(preset ? withPresetFields(emptyMovie(), presetValues(preset)) : emptyMovie());
         setShowCollectionInput(false);
-        setShowShelfSectionInput(false);
         setShowForm(false);
         setSearchKey((key) => key + 1);
         return;
@@ -306,13 +282,12 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
     }
   };
 
-  const handleScanClick = () => {
-    setShowScanner(true);
-  };
-
   const handleBarcodeDetected = (code: string) => {
-    setFormData((prev) => ({ ...prev, upcNumber: code }));
-    setShowScanner(false);
+    setFormData((prev) => ({
+      ...prev,
+      copies: prev.copies.map((c, i) => (i === scanIndex ? { ...c, upcNumber: code } : c)),
+    }));
+    setScanIndex(null);
   };
 
   const meta = [formData.year || null, formData.genres.slice(0, 2).join(", ") || null].filter(Boolean).join(" · ");
@@ -494,22 +469,15 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
                 formData={formData}
                 setFormData={setFormData}
                 collections={collections}
-                shelfSections={shelfSections}
                 showCollectionInput={showCollectionInput}
                 setShowCollectionInput={setShowCollectionInput}
-                showShelfSectionInput={showShelfSectionInput}
-                setShowShelfSectionInput={setShowShelfSectionInput}
                 newCollection={newCollection}
                 setNewCollection={setNewCollection}
-                newShelfSection={newShelfSection}
-                setNewShelfSection={setNewShelfSection}
                 addCollection={addCollection}
-                addShelfSection={addShelfSection}
                 onSubmit={handleSubmit}
                 onCancel={onClose}
                 submitButtonText="Add to Collection"
-                showScanButton={isMobile()}
-                onScanClick={handleScanClick}
+                onScanClick={isMobile() ? setScanIndex : undefined}
               />
             </div>
           </div>
@@ -554,8 +522,8 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
           </div>
         </div>
 
-        {showScanner && (
-          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setShowScanner(false)} />
+        {scanIndex !== null && (
+          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setScanIndex(null)} />
         )}
       </DialogContent>
     </Dialog>

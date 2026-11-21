@@ -50,7 +50,7 @@ export function useCreateTvShow() {
   });
 }
 
-// Saves a show and its purchases (the request's purchase list replaces the stored one)
+// Saves a show and its copies (the request's copies are what it has afterwards; each keeps its id)
 export function useUpdateTvShow() {
   const api = useApi();
   const queryClient = useQueryClient();
@@ -66,7 +66,7 @@ export function useUpdateTvShow() {
 
 // Sets one show's rating straight from the list (the table's stars). Every list shows the new
 // rating at once; if saving fails, the old rating is put back. Saves the show as loaded (with its
-// purchases), so pass just its id.
+// copies), so pass just its id.
 export function useRateTvShow() {
   const api = useApi();
   const queryClient = useQueryClient();

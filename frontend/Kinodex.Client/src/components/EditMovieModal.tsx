@@ -6,9 +6,9 @@ import MovieForm from "./MovieForm";
 import { BarcodeScanner } from "./lazyComponents";
 import { useMovie, useUpdateMovie } from "../features/movies/api";
 import { useCollections, useCreateCollection } from "../features/collections/api";
-import { useCreateShelfSection, useShelfSections } from "../features/shelfSections/api";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 import { isMobile } from "../utils/isMobile";
+import { withClientKeys } from "../utils/copies";
 
 const FORM_ID = "edit-movie-form";
 
@@ -21,12 +21,7 @@ interface EditMovieModalProps {
 const EMPTY_MOVIE: Movie = {
   userId: "",
   title: "",
-  upcNumber: "",
-  formats: [],
   collections: [],
-  condition: "Like New",
-  purchasePrice: 0,
-  purchasedAt: "",
   hasWatched: false,
   rating: 0,
   review: "",
@@ -34,13 +29,9 @@ const EMPTY_MOVIE: Movie = {
   genres: [],
   posterPath: "",
   backdropPath: "",
-  productPosterPath: "",
   tmdbId: undefined,
-  hdDriveNumber: 0,
-  shelfNumber: 1,
-  shelfSection: "",
   isStreaming: false,
-  isGift: false,
+  copies: [],
 };
 
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
@@ -50,28 +41,24 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
   // From the shared cache (the drawer or list has usually loaded it already)
   const { data: movie } = useMovie(movieId);
   const { data: collectionList = [] } = useCollections();
-  const { data: shelfSectionList = [] } = useShelfSections();
   const updateMovie = useUpdateMovie();
   const createCollection = useCreateCollection();
-  const createShelfSection = useCreateShelfSection();
 
-  const [formData, setFormData] = useState<Movie>(movie ?? EMPTY_MOVIE);
+  const [formData, setFormData] = useState<Movie>(movie ? withClientKeys(movie) : EMPTY_MOVIE);
   // Fill the form once, when the movie arrives (if it wasn't already cached when the modal opened)
   const [filledFrom, setFilledFrom] = useState(movie !== undefined);
   if (!filledFrom && movie) {
     setFilledFrom(true);
-    setFormData(movie);
+    setFormData(withClientKeys(movie));
   }
 
   const collections = [...collectionList].sort(byName);
-  const shelfSections = [...shelfSectionList].sort(byName);
   const [showCollectionInput, setShowCollectionInput] = useState(false);
-  const [showShelfSectionInput, setShowShelfSectionInput] = useState(false);
   const [newCollection, setNewCollection] = useState("");
-  const [newShelfSection, setNewShelfSection] = useState("");
   const [submitError, setSubmitError] = useState("");
 
-  const [showScanner, setShowScanner] = useState(false);
+  // The copy a barcode is being scanned for
+  const [scanIndex, setScanIndex] = useState<number | null>(null);
 
   // Creates a collection from the form and adds this movie to it
   const addCollection = async () => {
@@ -88,19 +75,6 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
       setShowCollectionInput(false);
     } catch (error) {
       console.error("Error adding collection:", error);
-    }
-  };
-
-  // Creates a shelf section from the form and puts this movie on it
-  const addShelfSection = async () => {
-    if (!newShelfSection || shelfSections.find((s) => s.name === newShelfSection)) return;
-    try {
-      await createShelfSection.mutateAsync(newShelfSection);
-      setFormData((prev) => ({ ...prev, shelfSection: newShelfSection }));
-      setNewShelfSection("");
-      setShowShelfSectionInput(false);
-    } catch (error) {
-      console.error("Error adding shelf section:", error);
     }
   };
 
@@ -121,13 +95,12 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
     }
   };
 
-  const handleScanClick = () => {
-    setShowScanner(true);
-  };
-
   const handleBarcodeDetected = (code: string) => {
-    setFormData({ ...formData, upcNumber: code });
-    setShowScanner(false);
+    setFormData((prev) => ({
+      ...prev,
+      copies: prev.copies.map((c, i) => (i === scanIndex ? { ...c, upcNumber: code } : c)),
+    }));
+    setScanIndex(null);
   };
 
   const meta = [formData.year || null, formData.genres.slice(0, 2).join(", ") || null].filter(Boolean).join(" · ");
@@ -160,22 +133,15 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
             formData={formData}
             setFormData={setFormData}
             collections={collections}
-            shelfSections={shelfSections}
             showCollectionInput={showCollectionInput}
             setShowCollectionInput={setShowCollectionInput}
-            showShelfSectionInput={showShelfSectionInput}
-            setShowShelfSectionInput={setShowShelfSectionInput}
             newCollection={newCollection}
             setNewCollection={setNewCollection}
-            newShelfSection={newShelfSection}
-            setNewShelfSection={setNewShelfSection}
             addCollection={addCollection}
-            addShelfSection={addShelfSection}
             onSubmit={handleSubmit}
             onCancel={onClose}
             submitButtonText="Save"
-            showScanButton={isMobile()}
-            onScanClick={handleScanClick}
+            onScanClick={isMobile() ? setScanIndex : undefined}
           />
         </div>
 
@@ -195,8 +161,8 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
           </div>
         </div>
 
-        {showScanner && (
-          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setShowScanner(false)} />
+        {scanIndex !== null && (
+          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setScanIndex(null)} />
         )}
       </DialogContent>
     </Dialog>

@@ -1,21 +1,22 @@
 import { Eye, EyeOff, MonitorOff, MonitorPlay } from "lucide-react";
 import DetailField, { YesNo } from "../../components/DetailField";
 import TvShowSeasons from "./TvShowSeasons";
-import TvShowPurchaseList from "./TvShowPurchaseList";import type { TvShow } from "../../types";
+import CopyCards from "../../components/CopyCards";
+import type { TvShow } from "../../types";
 
 interface TvShowDrawerDetailsProps {
   show: TvShow;
-  onEnlargeProductImage: (src: string) => void; // A purchase's product image
+  onEnlargeProductImage: (src: string) => void; // A copy's product image
 }
 
-// The TV show drawer's details, laid out like the movie drawer's: seasons owned, each purchase
-// (format, condition, price, date, gift, product image, barcode), watched and streaming, then
+// The TV show drawer's details, laid out like the movie drawer's: seasons owned, each copy
+// (format, condition, price, date, gift, shelf, HDD, product image, barcode), watched and streaming, then
 // notes
 function TvShowDrawerDetails({ show, onEnlargeProductImage }: TvShowDrawerDetailsProps) {
   return (
     <div className="flex flex-col gap-5 px-5 pt-6 pb-8 md:px-8">
       <TvShowSeasons show={show} />
-      <TvShowPurchaseList show={show} onEnlargeProductImage={onEnlargeProductImage} />
+      <CopyCards copies={show.copies} totalSeasons={show.totalSeasons} onEnlargeProductImage={onEnlargeProductImage} />
 
       <dl className="grid grid-cols-3 gap-x-4 gap-y-4 rounded-xl border border-border bg-card p-4">
         <DetailField label="Watched">

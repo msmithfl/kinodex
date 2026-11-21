@@ -7,7 +7,7 @@ import type { TvShow } from "../types";
 import { ApiError } from "../utils/api";
 import { useDeleteTvShow, useUpdateTvShow } from "../features/tvShows/api";
 import { isMobile } from "../utils/isMobile";
-import { withClientKeys } from "../utils/tvShowPurchases";
+import { withClientKeys } from "../utils/copies";
 import TvShowForm from "./TvShowForm";
 import { BarcodeScanner } from "./lazyComponents";
 import DeleteConfirm from "./DeleteConfirm";
@@ -32,8 +32,8 @@ export function EditTvShowModal({
   const [formData, setFormData] = useState<TvShow>(() => withClientKeys(show));
   const [submitError, setSubmitError] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  // Which purchase a barcode scan fills in; null when the scanner is closed
-  const [scanPurchaseIndex, setScanPurchaseIndex] = useState<number | null>(null);
+  // Which copy a barcode scan fills in; null when the scanner is closed
+  const [scanCopyIndex, setScanCopyIndex] = useState<number | null>(null);
   // Saving or deleting refreshes every screen showing the show
   const updateTvShow = useUpdateTvShow();
   const deleteTvShow = useDeleteTvShow();
@@ -70,18 +70,18 @@ export function EditTvShowModal({
     }
   };
 
-  const handleScanClick = (purchaseIndex: number) => {
-    setScanPurchaseIndex(purchaseIndex);
+  const handleScanClick = (copyIndex: number) => {
+    setScanCopyIndex(copyIndex);
   };
 
   const handleBarcodeDetected = (code: string) => {
     setFormData((prev) => ({
       ...prev,
-      purchases: prev.purchases.map((p, i) =>
-        i === scanPurchaseIndex ? { ...p, upcNumber: code } : p,
+      copies: prev.copies.map((p, i) =>
+        i === scanCopyIndex ? { ...p, upcNumber: code } : p,
       ),
     }));
-    setScanPurchaseIndex(null);
+    setScanCopyIndex(null);
   };
 
   const meta = [formData.year || null, formData.genres.slice(0, 2).join(", ") || null].filter(Boolean).join(" · ");
@@ -143,15 +143,15 @@ export function EditTvShowModal({
           </div>
         </div>
 
-        {scanPurchaseIndex !== null && (
-          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setScanPurchaseIndex(null)} />
+        {scanCopyIndex !== null && (
+          <BarcodeScanner onDetected={handleBarcodeDetected} onClose={() => setScanCopyIndex(null)} />
         )}
 
         <DeleteConfirm
           open={showDeleteConfirm}
           onOpenChange={setShowDeleteConfirm}
           title={show.title}
-          description="It's removed from your collection, with all its purchases. This can't be undone."
+          description="It's removed from your collection, with all its copies. This can't be undone."
           onConfirm={handleDeleteConfirm}
         />
       </DialogContent>

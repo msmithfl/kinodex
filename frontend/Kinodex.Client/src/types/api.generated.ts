@@ -1242,9 +1242,33 @@ export interface components {
             year: number;
             /** Format: int32 */
             tmdbId?: null | number;
+            kind: string;
             /** Format: date-time */
             createdAt: string;
             collection: null | components["schemas"]["Collection"];
+        };
+        Copy: {
+            /** Format: int32 */
+            id: number;
+            /** Format: int32 */
+            titleId: number;
+            seasons: number[];
+            upcNumber: string;
+            formats: string[];
+            condition: string;
+            /** Format: double */
+            price: number;
+            /** Format: date */
+            purchasedAt: string;
+            isGift: boolean;
+            productPosterPath: string;
+            shelfSection: string;
+            /** Format: int32 */
+            shelfNumber: number;
+            /** Format: int32 */
+            hdDriveNumber: number;
+            /** Format: date-time */
+            createdAt: string;
         };
         JellyfinComparison: {
             movies: components["schemas"]["LibraryComparison"];
@@ -1320,36 +1344,23 @@ export interface components {
             id: number;
             userId: string;
             title: string;
-            upcNumber: string;
-            formats: string[];
+            /** Format: int32 */
+            year: number;
+            genres: string[];
             collections: string[];
-            condition: string;
-            /** Format: float */
-            purchasePrice: number;
-            /** Format: date */
-            purchasedAt: string;
+            posterPath: string;
+            backdropPath: string;
+            /** Format: int32 */
+            tmdbId?: null | number;
             hasWatched: boolean;
             /** Format: float */
             rating: number;
             review: string;
-            /** Format: int32 */
-            year: number;
-            genres: string[];
-            posterPath: string;
-            backdropPath: string;
-            productPosterPath: string;
-            /** Format: int32 */
-            tmdbId?: null | number;
-            /** Format: int32 */
-            hdDriveNumber: number;
-            /** Format: int32 */
-            shelfNumber: number;
-            shelfSection: string;
             isStreaming: boolean;
             jellyfinItemId?: null | string;
-            isGift: boolean;
             /** Format: date-time */
             createdAt: string;
+            copies: components["schemas"]["Copy"][];
         };
         MoviePreset: {
             /** Format: int32 */
@@ -1401,43 +1412,28 @@ export interface components {
         };
         TvShow: {
             /** Format: int32 */
+            totalSeasons: number;
+            /** Format: int32 */
             id: number;
             userId: string;
             title: string;
-            hasWatched: boolean;
-            /** Format: float */
-            rating: number;
-            review: string;
             /** Format: int32 */
             year: number;
             genres: string[];
+            collections: string[];
             posterPath: string;
             backdropPath: string;
             /** Format: int32 */
             tmdbId?: null | number;
-            /** Format: int32 */
-            totalSeasons: number;
+            hasWatched: boolean;
+            /** Format: float */
+            rating: number;
+            review: string;
             isStreaming: boolean;
             jellyfinItemId?: null | string;
             /** Format: date-time */
             createdAt: string;
-            purchases: components["schemas"]["TvShowPurchase"][];
-        };
-        TvShowPurchase: {
-            /** Format: int32 */
-            id: number;
-            /** Format: int32 */
-            tvShowId: number;
-            seasons: number[];
-            /** Format: double */
-            price: number;
-            upcNumber: string;
-            formats: string[];
-            condition: string;
-            /** Format: date */
-            purchasedAt: string;
-            isGift: boolean;
-            productPosterPath: string;
+            copies: components["schemas"]["Copy"][];
         };
         UpdateCollectionRequest: {
             name: string;

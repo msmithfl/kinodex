@@ -15,6 +15,7 @@ import { ChartPie, ChevronLeft, ChevronRight, Download, Film, Plus, Settings } f
 import { Button } from "@/components/ui/button";
 import { AddItemModal } from "../components/lazyComponents";
 import AccountMenuButton from "../components/AccountMenuButton";
+import { lastAdded } from "../utils/copies";
 
 interface Stats {
   thisMonth: MonthSpend;
@@ -43,7 +44,7 @@ const quickActionClass =
 const quickActionIconClass = "mb-2 flex h-6 items-center justify-center text-muted-foreground md:mb-3 md:h-8 [&_svg]:size-5 md:[&_svg]:size-7";
 const quickActionLabelClass = "text-sm leading-tight font-medium md:text-base";
 
-// Total spent in the given calendar month, across movies and TV purchases
+// Total spent in the given calendar month, across every copy of movies and TV shows
 function getMonthSpend(entries: SpendEntry[], monthStart: Date): MonthSpend {
   const key = monthKey(monthStart);
   const inMonth = entries.filter((e) => e.month === key);
@@ -133,7 +134,7 @@ function Dashboard() {
   const loading = moviesLoading || showsLoading;
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Spending this month and last, across movies and TV purchases
+  // Spending this month and last, across every copy of movies and TV shows
   const now = new Date();
   const spend = [...movieSpend(movies), ...tvSpend(shows)];
   const stats: Stats = {
@@ -147,7 +148,7 @@ function Dashboard() {
       key: `movie-${m.id}`,
       title: m.title,
       posterPath: m.posterPath,
-      createdAt: m.createdAt,
+      createdAt: lastAdded(m), // Its newest copy: a new copy of an old movie is a recent addition
       to: `/library?movie=${m.id}`, // The movie list, with this movie open in its drawer
     })),
   );
@@ -156,7 +157,7 @@ function Dashboard() {
       key: `tv-${s.id}`,
       title: s.title,
       posterPath: s.posterPath,
-      createdAt: s.createdAt,
+      createdAt: lastAdded(s),
       to: `/tv-shows?show=${s.id}`, // The TV list, with this show open in its drawer
     })),
   );

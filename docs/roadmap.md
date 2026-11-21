@@ -15,7 +15,7 @@ key for it, and nothing works worse without one than it would without the option
 
 ## Agreed, not started
 
-- **Titles and copies:** movies and TV shows in one Titles table (with a Kind), each title
+- **Titles and copies** (step 1 of 4 built): movies and TV shows in one Titles table (with a Kind), each title
   holding every physical copy of it (VHS, DVD, Blu-ray) in one Copies table, replacing TV
   purchases. Format, UPC, condition, price, shelf and HDD are on the copy; watched, rating,
   collections and Jellyfin stay on the title. TV shows can be in collections too. Plan:
@@ -24,6 +24,16 @@ key for it, and nothing works worse without one than it would without the option
   Jellyfin app), username and password as the fallback. Anyone with a Jellyfin account can
   connect, not just admins, and the saved credential only has that user's rights. Plan:
   [jellyfin-compare.md → Planned: signing in with Jellyfin](design/jellyfin-compare.md#planned-signing-in-with-jellyfin-instead-of-an-api-key).
+
+## Before launch
+
+To do before Kinodex is opened up to other people:
+
+- **Change the production database password** (the Railway Postgres service). The current one has
+  been used outside Railway, for a manual backup with `pg_dump` (November 2026). Railway's docs
+  don't say where to regenerate it; look in the Postgres service (Database → Credentials, or its
+  variables). Afterwards check the API still connects: if its `DATABASE_URL` refers to the Postgres
+  service's variable it follows by itself; if it was pasted in, paste the new one and redeploy.
 
 ## Jellyfin
 

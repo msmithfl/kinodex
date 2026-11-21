@@ -964,6 +964,7 @@
           "userId",
           "collectionId",
           "year",
+          "kind",
           "createdAt",
           "collection"
         ],
@@ -994,6 +995,9 @@
             ],
             "format": "int32"
           },
+          "kind": {
+            "type": "string"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -1007,6 +1011,83 @@
                 "$ref": "#/components/schemas/Collection"
               }
             ]
+          }
+        }
+      },
+      "Copy": {
+        "required": [
+          "id",
+          "titleId",
+          "seasons",
+          "upcNumber",
+          "formats",
+          "condition",
+          "price",
+          "purchasedAt",
+          "isGift",
+          "productPosterPath",
+          "shelfSection",
+          "shelfNumber",
+          "hdDriveNumber",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "titleId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "seasons": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "upcNumber": {
+            "type": "string"
+          },
+          "formats": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "condition": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "purchasedAt": {
+            "type": "string",
+            "format": "date"
+          },
+          "isGift": {
+            "type": "boolean"
+          },
+          "productPosterPath": {
+            "type": "string"
+          },
+          "shelfSection": {
+            "type": "string"
+          },
+          "shelfNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hdDriveNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -1283,28 +1364,19 @@
       "Movie": {
         "required": [
           "title",
-          "upcNumber",
-          "condition",
           "id",
           "userId",
-          "formats",
+          "year",
+          "genres",
           "collections",
-          "purchasePrice",
-          "purchasedAt",
+          "posterPath",
+          "backdropPath",
           "hasWatched",
           "rating",
           "review",
-          "year",
-          "genres",
-          "posterPath",
-          "backdropPath",
-          "productPosterPath",
-          "hdDriveNumber",
-          "shelfNumber",
-          "shelfSection",
           "isStreaming",
-          "isGift",
-          "createdAt"
+          "createdAt",
+          "copies"
         ],
         "type": "object",
         "properties": {
@@ -1318,10 +1390,11 @@
           "title": {
             "type": "string"
           },
-          "upcNumber": {
-            "type": "string"
+          "year": {
+            "type": "integer",
+            "format": "int32"
           },
-          "formats": {
+          "genres": {
             "type": "array",
             "items": {
               "type": "string"
@@ -1333,16 +1406,18 @@
               "type": "string"
             }
           },
-          "condition": {
+          "posterPath": {
             "type": "string"
           },
-          "purchasePrice": {
-            "type": "number",
-            "format": "float"
+          "backdropPath": {
+            "type": "string"
           },
-          "purchasedAt": {
-            "type": "string",
-            "format": "date"
+          "tmdbId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           },
           "hasWatched": {
             "type": "boolean"
@@ -1354,43 +1429,6 @@
           "review": {
             "type": "string"
           },
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "genres": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "posterPath": {
-            "type": "string"
-          },
-          "backdropPath": {
-            "type": "string"
-          },
-          "productPosterPath": {
-            "type": "string"
-          },
-          "tmdbId": {
-            "type": [
-              "null",
-              "integer"
-            ],
-            "format": "int32"
-          },
-          "hdDriveNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "shelfNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "shelfSection": {
-            "type": "string"
-          },
           "isStreaming": {
             "type": "boolean"
           },
@@ -1400,14 +1438,18 @@
               "string"
             ]
           },
-          "isGift": {
-            "type": "boolean"
-          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "copies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Copy"
+            }
           }
-        }
+        },
+        "additionalProperties": false
       },
       "MoviePreset": {
         "required": [
@@ -1578,22 +1620,27 @@
       "TvShow": {
         "required": [
           "title",
+          "totalSeasons",
           "id",
           "userId",
+          "year",
+          "genres",
+          "collections",
+          "posterPath",
+          "backdropPath",
           "hasWatched",
           "rating",
           "review",
-          "year",
-          "genres",
-          "posterPath",
-          "backdropPath",
-          "totalSeasons",
           "isStreaming",
           "createdAt",
-          "purchases"
+          "copies"
         ],
         "type": "object",
         "properties": {
+          "totalSeasons": {
+            "type": "integer",
+            "format": "int32"
+          },
           "id": {
             "type": "integer",
             "format": "int32"
@@ -1604,21 +1651,17 @@
           "title": {
             "type": "string"
           },
-          "hasWatched": {
-            "type": "boolean"
-          },
-          "rating": {
-            "type": "number",
-            "format": "float"
-          },
-          "review": {
-            "type": "string"
-          },
           "year": {
             "type": "integer",
             "format": "int32"
           },
           "genres": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "collections": {
             "type": "array",
             "items": {
               "type": "string"
@@ -1637,9 +1680,15 @@
             ],
             "format": "int32"
           },
-          "totalSeasons": {
-            "type": "integer",
-            "format": "int32"
+          "hasWatched": {
+            "type": "boolean"
+          },
+          "rating": {
+            "type": "number",
+            "format": "float"
+          },
+          "review": {
+            "type": "string"
           },
           "isStreaming": {
             "type": "boolean"
@@ -1654,71 +1703,14 @@
             "type": "string",
             "format": "date-time"
           },
-          "purchases": {
+          "copies": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/TvShowPurchase"
+              "$ref": "#/components/schemas/Copy"
             }
           }
-        }
-      },
-      "TvShowPurchase": {
-        "required": [
-          "id",
-          "tvShowId",
-          "seasons",
-          "price",
-          "upcNumber",
-          "formats",
-          "condition",
-          "purchasedAt",
-          "isGift",
-          "productPosterPath"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "tvShowId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "seasons": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          "price": {
-            "type": "number",
-            "format": "double"
-          },
-          "upcNumber": {
-            "type": "string"
-          },
-          "formats": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "condition": {
-            "type": "string"
-          },
-          "purchasedAt": {
-            "type": "string",
-            "format": "date"
-          },
-          "isGift": {
-            "type": "boolean"
-          },
-          "productPosterPath": {
-            "type": "string"
-          }
-        }
+        },
+        "additionalProperties": false
       },
       "UpdateCollectionRequest": {
         "required": [

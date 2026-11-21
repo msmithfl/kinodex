@@ -12,7 +12,7 @@ import { GO_TO_LINKS } from "../components/navigation";
 import type { Movie, TvShow } from "../types";
 import { isMobile } from "../utils/isMobile";
 import { formatSeasons } from "../utils/formatSeasons";
-import { ownedSeasons } from "../utils/tvShowPurchases";
+import { allFormats, ownedSeasons } from "../utils/copies";
 import { searchScore, titleSearchScore } from "../utils/textSearch";
 import { useScanInput } from "../utils/useBarcodeScan";
 import { usePhoneTopBarSlot } from "../utils/topBar";
@@ -25,7 +25,7 @@ interface SearchItem {
   title: string;
   year: number;
   posterPath: string;
-  upcs: string[]; // A movie has one; a TV show has one per purchase
+  upcs: string[]; // One per copy
   subtitle: string;
   to: string;
 }
@@ -36,22 +36,22 @@ const movieItem = (m: Movie): SearchItem => ({
   title: m.title,
   year: m.year,
   posterPath: m.posterPath,
-  upcs: m.upcNumber ? [m.upcNumber] : [],
-  subtitle: [m.year || null, m.formats.length > 0 ? [...m.formats].sort().join(", ") : null]
+  upcs: m.copies.map((c) => c.upcNumber).filter(Boolean),
+  subtitle: [m.year || null, allFormats(m.copies).length > 0 ? allFormats(m.copies).join(", ") : null]
     .filter(Boolean)
     .join(" · "),
   to: `/library?movie=${m.id}`, // The movie list, with this movie open in its drawer
 });
 
 const tvItem = (s: TvShow): SearchItem => {
-  const seasons = formatSeasons(ownedSeasons(s.purchases), s.totalSeasons);
+  const seasons = formatSeasons(ownedSeasons(s.copies), s.totalSeasons);
   return {
     key: `tv-${s.id}`,
     kind: "tv",
     title: s.title,
     year: s.year,
     posterPath: s.posterPath,
-    upcs: s.purchases.map((p) => p.upcNumber).filter(Boolean),
+    upcs: s.copies.map((c) => c.upcNumber).filter(Boolean),
     subtitle: [s.year || null, seasons === "-" ? null : seasons]
       .filter(Boolean)
       .join(" · "),

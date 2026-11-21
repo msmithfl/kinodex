@@ -3,7 +3,8 @@ import type { TvShow } from "../types";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useImagePicker } from "./useImagePicker";
 import TvShowDetailsTab from "../features/tvShows/form/TvShowDetailsTab";
-import TvShowPurchasesTab from "../features/tvShows/form/TvShowPurchasesTab";
+import TvShowCopiesTab from "../features/tvShows/form/TvShowCopiesTab";
+import { useShelfSectionChoices } from "../features/shelfSections/api";
 import TvShowImagesTab from "../features/tvShows/form/TvShowImagesTab";
 import TvShowReviewTab from "../features/tvShows/form/TvShowReviewTab";
 
@@ -14,14 +15,14 @@ interface TvShowFormProps {
   formData: TvShow;
   setFormData: React.Dispatch<React.SetStateAction<TvShow>>;
   onSubmit: (e: React.FormEvent) => Promise<void>;
-  onScanClick?: (purchaseIndex: number) => void;
+  onScanClick?: (copyIndex: number) => void;
 }
 
-type Tab = "details" | "purchases" | "poster" | "review";
+type Tab = "details" | "copies" | "poster" | "review";
 
 const tabs: { id: Tab; label: string }[] = [
   { id: "details", label: "Details" },
-  { id: "purchases", label: "Purchases" },
+  { id: "copies", label: "Copies" },
   { id: "poster", label: "Images" },
   { id: "review", label: "Review" },
 ];
@@ -34,6 +35,8 @@ function TvShowForm({
   onSubmit,
   onScanClick,
 }: TvShowFormProps) {
+  // Shelf sections for each copy's "where it lives"
+  const shelfSections = useShelfSectionChoices();
   const [activeTab, setActiveTab] = useState<Tab>("details");
   const [validationError, setValidationError] = useState<string>("");
   // TMDB poster and backdrop choosers for the Images tab
@@ -90,17 +93,17 @@ function TvShowForm({
     setTotalSeasonsInput(value);
     const num = value === "" ? 0 : parseInt(value);
     if (isNaN(num) || num < 0 || num > MAX_SEASONS) return;
-    // Lowering the count drops seasons past the new last season from every purchase
+    // Lowering the count drops seasons past the new last season from every copy
     setFormData({
       ...formData,
       totalSeasons: num,
-      purchases:
+      copies:
         num > 0
-          ? formData.purchases.map((p) => ({
+          ? formData.copies.map((p) => ({
               ...p,
               seasons: p.seasons.filter((s) => s <= num),
             }))
-          : formData.purchases,
+          : formData.copies,
     });
   };
 
@@ -129,16 +132,16 @@ function TvShowForm({
       setValidationError(
         `Total Seasons must be a number between 0 and ${MAX_SEASONS}`,
       );
-      setActiveTab("purchases");
+      setActiveTab("copies");
       return;
     }
-    const invalidIndex = formData.purchases.findIndex(
+    const invalidIndex = formData.copies.findIndex(
       (p) => p.seasons.length === 0 || p.price < 0 || !p.purchasedAt,
     );
     if (invalidIndex !== -1) {
-      const p = formData.purchases[invalidIndex];
+      const p = formData.copies[invalidIndex];
       setValidationError(
-        `Purchase ${invalidIndex + 1}: ${
+        `Copy ${invalidIndex + 1}: ${
           p.seasons.length === 0
             ? "choose at least one season"
             : p.price < 0
@@ -146,7 +149,7 @@ function TvShowForm({
               : "set the purchase date"
         }`,
       );
-      setActiveTab("purchases");
+      setActiveTab("copies");
       return;
     }
 
@@ -188,12 +191,14 @@ function TvShowForm({
           />
         )}
 
-        {activeTab === "purchases" && (
-          <TvShowPurchasesTab
+        {activeTab === "copies" && (
+          <TvShowCopiesTab
             formData={formData}
             setFormData={setFormData}
             totalSeasonsInput={totalSeasonsInput}
             onTotalSeasonsChange={handleTotalSeasonsChange}
+            shelfSections={shelfSections.names}
+            onAddShelfSection={shelfSections.add}
             onScanClick={onScanClick}
           />
         )}

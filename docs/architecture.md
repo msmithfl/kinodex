@@ -47,8 +47,8 @@ Kinodex/
       settings/         useSettings() hook (shared cache) and the settings type/defaults
       features/         per feature: data hooks (api.ts) and the feature's own components
         movies/           MovieDetail (drawer), MovieTable, MovieDrawerDetails, form/ (Details,
-                          Physical, Location, Images, Review tabs)
-        tvShows/          TvShowDetail (drawer), TvShowDrawerDetails, TvShowSeasons, TvShowPurchaseList, form/ (Details, Purchases, Images, Review tabs)
+                          Images, Review tabs; Copies is the shared CopiesTab)
+        tvShows/          TvShowDetail (drawer), TvShowDrawerDetails, TvShowSeasons, TvShowTable, form/ (Details, Copies, Images, Review tabs)
         collections/      CollectionDetail (drawer), CollectionChecklist
         shelfSections/    (hooks only)
         jellyfin/         the Jellyfin connection and comparison hooks, Update Streaming (streaming.ts, UpdateStreamingDialog), the drawers' Jellyfin link (JellyfinLink)
@@ -120,14 +120,13 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Movie drawer tabs:** only Details for now, so the tab bar is hidden; the tab mechanism is kept for the planned Ledger and Log.
 - **Movie drawer (redesigned):** `Drawer` wherever a movie opens; the backdrop
   across the top fading into the panel, the poster overlapping it with title, year · genres,
-  stars and TMDB; then `MovieDrawerDetails` as cards in the agreed order (Format | Condition,
-  Paid | Purchased | Gift; product shot + UPC copy + eBay sold; Shelf | Shelf # | HDD #, Watched |
-  Streaming; collections; notes). Delete asks in `DeleteConfirm` (an `AlertDialog`), then toasts.
+  stars and TMDB; then `MovieDrawerDetails`: one card per copy (`CopyCards`: Format | Condition,
+  Paid | Purchased | Gift, Shelf | Shelf # | HDD #, product shot + UPC copy + eBay sold), then
+  Watched | Streaming; collections; notes. Delete asks in `DeleteConfirm` (an `AlertDialog`), then toasts.
   Skeleton while loading.
 - **TV drawer (redesigned):** the same `DetailHeader` (shared backdrop/poster/title/actions header,
-  plus `DetailSkeleton`), then `TvShowDrawerDetails`: season tiles, one card per purchase (Format |
-  Condition, Paid | Purchased | Gift, the purchase's product shot + UPC copy + eBay sold), Watched |
-  Streaming, notes. Both drawers' fields use `DetailField` / `YesNo` / `NotSet`.
+  plus `DetailSkeleton`), then `TvShowDrawerDetails`: season tiles, the same `CopyCards` (each named
+  by its seasons), Watched | Streaming, notes. Both drawers' fields use `DetailField` / `YesNo` / `NotSet`.
 - **Collection drawer (redesigned):** the shared `DetailBackdrop` and `DetailActions` (also parts of
   `DetailHeader`), the name and movie count, then Movies and Checklist tabs. Movies has a
   table/poster switch (`SimpleMovieTable` or `PosterCard`); Checklist is `CollectionChecklist`.
@@ -141,10 +140,10 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 | Component | Used for |
 |---|---|
 | `AddItemModal` | Chooser: add movie or TV show |
-| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; each tab is a component in `features/movies/form/` (Details; Physical: UPC, formats, price, purchase date, condition, gift; Location: shelf, HDD, streaming; Images: TMDB poster/backdrop pickers, product image lookup). `AddMovieModal` also has a preset picker (last choice remembered per device), Save as preset, and Save & add another |
-| `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit, in the same redesigned window as movies (Add: Search › Details, preview beside the form, toast; Edit: Delete in the footer). Tabs in `features/tvShows/form/` (Details, Purchases using `TvShowPurchaseEditor` cards with season tiles, Images: TMDB poster/backdrop pickers and each purchase's product image looked up by its own UPC, Review) |
+| `AddMovieModal` / `EditMovieModal` → `MovieForm` | Movie create/edit. `MovieForm` holds the state and validation; tabs: Details (with streaming), Copies (`CopiesTab`: a `CopyEditor` card per copy with UPC, formats, price, purchase date, condition, gift, shelf section/number, HDD; a new movie starts with one), Images (TMDB poster/backdrop pickers, each copy's product image by its own UPC, `CopyProductImages`), Review. `AddMovieModal` also has a preset picker (last choice remembered per device; presets fill the movie and its first copy), Save as preset, and Save & add another |
+| `AddTvShowModal` / `EditTvShowModal` → `TvShowForm` | TV create/edit, in the same redesigned window as movies (Add: Search › Details, preview beside the form, toast; Edit: Delete in the footer). Tabs in `features/tvShows/form/` (Details, Copies: total seasons, shortcuts, and the same `CopyEditor` cards with season tiles; Images: TMDB poster/backdrop pickers and each copy's product image; Review) |
 | `CollectionFormModal` | Create *and* edit collections (name, director toggle, cover, backdrop); saves via the collections hooks |
-| `BulkEditModal` | Bulk edit from the movie table |
+| `BulkEditModal` | Bulk edit from the movie table: copy fields change the ticked copies, Streaming and Watched the movies they're copies of (`utils/copySelection.ts`) |
 | `ImageLightbox`, `BarcodeScanner` | Shared helpers |
 | `useImagePicker` / `useProductImagePicker` | Hooks returning a button + grid: TMDB posters/backdrops; UPC product images |
 
@@ -194,7 +193,14 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   keeps the dark backdrop on screen: `utils/windowHandoff.ts`.
 - **Charts:** `ChartBreakdown` (Stats donut/table); colours and tooltip style in `utils/chartColors.ts`.
 - **Controls:** `SubNavigation` (phones), `EmptyState`, `LoadingSpinner`. Filtering logic: `utils/filterCategories.ts`
-  + `utils/applyFilters.ts` (movies), `features/tvShows/filters.ts` (TV).
+  + `utils/applyFilters.ts` (movies), `features/tvShows/filters.ts` (TV); the per-copy filters
+  (format, condition, gift, shelf, HDD) are shared in `utils/copyFilters.ts`: one copy has to match
+  them all, and the tables show only the matching copies under a title.
+- **Copy rows:** in the movie and TV tables a title with several copies has an arrow
+  (`CopyRowToggle`) that shows a row per copy; "Open copies" in the Columns menu sets whether they
+  start open (`useOpenCopies`, remembered per device). The movie table's checkboxes tick copies: a
+  title's ticks its copies, and ticking one with several opens it (`utils/copySelection.ts`). Bulk
+  delete removes the ticked copies, and a movie whose copies are all ticked.
 - **Data layer:** `utils/api.ts`, `utils/queryClient.ts`, `features/*/api.ts` (see below).
 - **Downloads:** pages load on demand (`React.lazy` in `App.tsx`); so do the barcode scanner and
   the Add window: import them from `components/lazyComponents.tsx`, never directly, or they land
@@ -203,7 +209,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Utilities:** `upc.ts` (eBay sold-listings link, copy-to-clipboard with a `Copied!` flash),
   `tmdbApi.ts` (`useTmdb`: TMDB through our API), `useUrlSearchQuery` (search in the URL),
   `useFillViewportHeight` (pages that fill the screen above the bottom nav), `getSortedMovies`,
-  `spending.ts` / `tvShowPurchases.ts` / `formatSeasons.ts` (money and season maths),
+  `copies.ts` (a title's copies: all formats, total paid, owned seasons, date last added) /
+  `spending.ts` / `formatSeasons.ts` (money and season maths),
   `checklist.ts` (collection checklist matching), `dateUtils.ts`, `isMobile.ts`.
 
 ### Redesign foundation (shadcn/ui, in progress on `feature/modernize-design`)
@@ -261,11 +268,11 @@ signed-in user changes (`components/ClearCacheOnUserChange.tsx`). The design is 
 **Computed in the browser, not the API:** stats, dashboard spending, genre lists (from each
 movie's `genres`), collection completion rings and checklist ownership, filters and sorting.
 
-**Spending is counted by purchase date** (`utils/spending.ts`): a movie's `purchasedAt` and each
-TV purchase's `purchasedAt`, both plain YYYY-MM-DD dates. They default to the day an item is
-added (movies and TV purchases that existed before got the UTC day they were added) and can be
-set earlier for things bought before they were logged: in the movie form's Physical tab, movie
-bulk edit, and each TV purchase. `createdAt` stays "date added" (Recently Added, the Date sort).
+**Spending is counted by purchase date** (`utils/spending.ts`): each copy's `purchasedAt`, a plain
+YYYY-MM-DD date. It defaults to the day a copy is added and can be set earlier for things bought
+before they were logged (each copy in the forms, and movie bulk edit). Each copy's `createdAt` is
+its "date added"; Recently Added and the Date sort use a title's newest copy (`lastAdded`), so a
+new copy of something already owned counts as recently added.
 
 ---
 
@@ -298,9 +305,9 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 
 | Group | Routes | Rules | Used by |
 |---|---|---|---|
-| `/api/movies` | list, get/create/update/delete by id, `export/csv`, `import/csv`, `import/letterboxd` | Owned | Most pages |
-| `/api/tvshows` | list, get/create/update/delete by id (purchases nested) | Owned | TV pages, dashboard, stats, search |
-| `/api/collections` | list, create, update (name/director/cover/backdrop), delete | Owned; rename/delete also update movies' `collections` lists | Collections |
+| `/api/movies` | list, get/create/update/delete by id (copies nested; saving updates them in place by id, adds new ones and removes those left out), `export/csv` (a row per copy), `import/csv` (rows for one film become one movie with several copies), `import/letterboxd` | Owned; unknown fields are refused (`JsonUnmappedMemberHandling.Disallow`), so a page from before copies can't save a movie without them | Most pages |
+| `/api/tvshows` | list, get/create/update/delete by id (copies nested, saved the same way) | Owned; unknown fields refused, as for movies | TV pages, dashboard, stats, search |
+| `/api/collections` | list, create, update (name/director/cover/backdrop), delete | Owned; rename/delete also update every title's `collections` list (movies and shows) | Collections |
 | `/api/collections/{id}/items`, `/api/collections/items/all` | checklist items: list, add, delete; all items for rings | Owned | Collections |
 | `/api/shelfsections` | list, create | Owned (auth set per route) | Movie forms |
 | `/api/settings` | get, update | Owned | `useSettings()` hook |
@@ -313,9 +320,9 @@ All groups require sign-in unless noted; "owned" means every query is filtered b
 ### Data model
 
 ```
-User (Clerk id) ─── owns (by UserId string) ──┬─ Movie
-                                               ├─ TvShow ── TvShowPurchase (seasons, price, date, gift, UPC, formats)
-                                               ├─ Collection ── CollectionListItem (checklist)
+User (Clerk id) ─── owns (by UserId string) ──┬─ Title: Movie or TvShow (one Titles table, Kind "movie"/"show")
+                                               │    └─ Copy (UPC, formats, condition, price, date, gift, image, shelf, HDD; seasons for a show)
+                                               ├─ Collection ── CollectionListItem (checklist; Kind "movie"/"show")
                                                ├─ ShelfSection
                                                ├─ UserSettings
                                                └─ JellyfinConnection (server address, encrypted API key)
@@ -324,17 +331,20 @@ Shared (not per user): UpcLookup (UPC → product images)
 
 **Important: several links are by name, not by id.**
 
-- `Movie.Collections` is a list of collection **names**; `Movie.ShelfSection` is a section
-  **name**; `Movie.Genres` / `TvShow.Genres` are names (genres have no table at all).
-- So renaming or deleting a collection has to update every affected movie
-  (the endpoints do this), and "genres" exist only as values found on movies.
+- A title's `Collections` is a list of collection **names**; `Copy.ShelfSection` is a section
+  **name**; `Genres` are names (genres have no table at all).
+- So renaming or deleting a collection has to update every affected title
+  (the endpoints do this), and "genres" exist only as values found on titles.
 - List fields (`Formats`, `Collections`, `Genres`, `Seasons`, `Images`) are Postgres arrays.
 
-Notable fields: movies and TV shows carry TMDB id, poster/backdrop image URLs, rating, review,
-watched, `IsStreaming`, `JellyfinItemId` (the title on the user's Jellyfin server, set by Update
-Streaming; null when not linked); movies also have UPC, product image, condition, price, shelf number,
-HDD number. A TV show's UPC, product image, condition and price are per purchase
-(`TvShowPurchase`), since each purchase is its own disc or set. Collections have `IsDirectorCollection`, `ImageUrl` (cover), `BackdropUrl`.
+Titles (docs/design/titles-and-copies.md): movies and TV shows share one table (`CatalogTitle`,
+mapped table-per-hierarchy, so `db.Movies` / `db.TvShows` each read one kind and the ids never
+clash). A title carries TMDB id, poster/backdrop image URLs, rating, review, watched, collections,
+`IsStreaming`, `JellyfinItemId` (the title on the user's Jellyfin server, set by Update Streaming;
+null when not linked); a show also has `TotalSeasons`. Everything physical is per copy (`Copy`):
+UPC, product image, formats, condition, price, purchase date, gift, shelf section and number, HDD
+number, and for a show the seasons it covers. A title can have no copies. Collections have
+`IsDirectorCollection`, `ImageUrl` (cover), `BackdropUrl`.
 
 ### Configuration
 
@@ -383,8 +393,8 @@ tests against a PostgreSQL container.
 
 - **Core (being stabilized):** movies, TV shows, collections (+ checklists, covers, backdrops),
   genres, search, dashboard, stats, settings, CSV import/export, drawers, product image lookup.
-- **Core shelf tracking:** each movie's shelf section and shelf number (forms, drawer, filters,
-  bulk edit), and creating a section from the movie form.
+- **Core shelf tracking:** each copy's shelf section and shelf number, movies and TV alike (forms,
+  drawers, filters, movie bulk edit), and creating a section from a copy's card.
 - **Removed from the frontend, to rebuild on the new foundation (November 2026; git history
   has them):** the shelf pages (browsing by shelf, reordering/renaming/deleting sections), lending
   (customers and checkouts) and Match Movies (bulk TMDB matching). Their API endpoints were removed
@@ -396,5 +406,7 @@ tests against a PostgreSQL container.
 
 Pointers for cleanup, roughly in the order they'd come up:
 
+- Before launch, change the production database password
+  ([roadmap.md → Before launch](roadmap.md#before-launch)).
 - Largest page is `Stats` (~420 lines); the other core pages are 350–490 lines.
 - Frontend tests cover the plain logic only (see Tests); no component tests yet.
