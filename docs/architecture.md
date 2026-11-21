@@ -406,5 +406,7 @@ tests against a PostgreSQL container.
 
 Pointers for cleanup, roughly in the order they'd come up:
 
+- Before launch, change the production database password
+  ([roadmap.md → Before launch](roadmap.md#before-launch)).
 - Largest page is `Stats` (~420 lines); the other core pages are 350–490 lines.
 - Frontend tests cover the plain logic only (see Tests); no component tests yet.
