@@ -468,6 +468,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/titles/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MergeRequest"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MergeResult"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -1338,6 +1377,18 @@ export interface components {
             jellyfinCount: number;
             /** Format: int32 */
             kinodexCount: number;
+        };
+        MergeGroup: {
+            /** Format: int32 */
+            keepId: number;
+            mergeIds: number[];
+        };
+        MergeRequest: {
+            groups: components["schemas"]["MergeGroup"][];
+        };
+        MergeResult: {
+            /** Format: int32 */
+            merged: number;
         };
         Movie: {
             /** Format: int32 */

@@ -171,6 +171,7 @@ if (!app.Environment.IsDevelopment())
 app.MapWebhookEndpoints();
 app.MapMovieEndpoints();
 app.MapTvShowEndpoints();
+app.MapTitleEndpoints();
 app.MapSettingsEndpoints();
 app.MapMoviePresetEndpoints();
 app.MapCollectionEndpoints();

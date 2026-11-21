@@ -321,6 +321,35 @@
         }
       }
     },
+    "/api/titles/merge": {
+      "post": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergeResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/settings": {
       "get": {
         "tags": [
@@ -1356,6 +1385,52 @@
             "format": "int32"
           },
           "kinodexCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MergeGroup": {
+        "required": [
+          "keepId",
+          "mergeIds"
+        ],
+        "type": "object",
+        "properties": {
+          "keepId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mergeIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        }
+      },
+      "MergeRequest": {
+        "required": [
+          "groups"
+        ],
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MergeGroup"
+            }
+          }
+        }
+      },
+      "MergeResult": {
+        "required": [
+          "merged"
+        ],
+        "type": "object",
+        "properties": {
+          "merged": {
             "type": "integer",
             "format": "int32"
           }

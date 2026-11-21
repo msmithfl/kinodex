@@ -94,3 +94,7 @@ export const Genres = {
 } as const;
 
 export type SortOption = 'date' | 'alphabetic' | 'format' | 'year' | 'condition' | 'rating' | 'purchasePrice';
+
+// Merging duplicates (features/duplicates); the result is how many titles were folded into others
+export type MergeRequest = Schemas["MergeRequest"];
+export type MergeResult = Schemas["MergeResult"];
