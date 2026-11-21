@@ -8,6 +8,7 @@ import { setThemeChoice, useThemeChoice, type ThemeChoice } from "../utils/theme
 import { useSettings } from "../settings/useSettings";
 import type { UserSettings } from "../settings/settings";
 import MoviePresetSettings from "../features/movies/MoviePresetSettings";
+import DuplicatesSettings from "../features/duplicates/DuplicatesSettings";
 import { Alert } from "@/components/ui/alert";
 import PageHeader from "../components/PageHeader";
 import PageShell from "../components/PageShell";
@@ -103,6 +104,11 @@ function Settings() {
         <section className="mt-4 rounded-xl border border-border bg-card px-5 py-2">
           <h2 className="pt-3 pb-1 text-base font-semibold">Add movie presets</h2>
           <MoviePresetSettings onError={setSaveError} />
+        </section>
+
+        <section className="mt-4 rounded-xl border border-border bg-card px-5 py-2">
+          <h2 className="pt-3 pb-1 text-base font-semibold">Duplicates</h2>
+          <DuplicatesSettings />
         </section>
 
         <section className="mt-4 rounded-xl border border-border bg-card px-5 py-2">
