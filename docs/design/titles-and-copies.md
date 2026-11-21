@@ -1,7 +1,7 @@
 # Titles and copies
 
-Plan, not built yet. Movies and TV shows become one kind of entry, a title, and each title holds
-every physical copy of it:
+Step 1 of 4 built (see [Order](#order)); the rest is still the plan. Movies and TV shows become one
+kind of entry, a title, and each title holds every physical copy of it:
 
 - Die Hard on VHS, DVD and Blu-ray is one title with three copies, not three movies.
 - Breaking Bad's Seasons 1–3 DVD set and Season 4 Blu-ray are one title with two copies (as TV
@@ -164,8 +164,9 @@ Frontend:
 
 ## Order
 
-1. The Titles and Copies tables and the migration, with the frontend reading and editing copies
-   for both (forms, drawers, lists, filters, stats, search). One PR, since the tables move.
+1. **Built.** The Titles and Copies tables and the migration (`TitlesAndCopies`), with the
+   frontend reading and editing copies for both (forms, drawers, lists, filters, stats, search,
+   copy rows in the tables, bulk edit and delete by copy). One PR, since the tables move.
 2. TV shows in collections (the TV form's picker, the collection drawer, the checklist, the
    completion ring).
 3. Adding a copy to a title already in the library (Add movie, Add TV show and scanning).
@@ -173,3 +174,24 @@ Frontend:
 
 Later, if wanted: an edition per copy (Director's Cut, Steelbook), a box set flag, and for lending
 an item number and status per copy.
+
+## Decided while building step 1
+
+- **In the database,** `CatalogTitle` is the base of `Movie` and `TvShow`, mapped
+  table-per-hierarchy to `Titles` (`Kind` is the discriminator), so `db.Movies` and `db.TvShows`
+  each read one kind and a movie's id is never a show's. Saving copies is `Endpoints/CopyList.cs`.
+- **Pages from before copies are refused, not trusted.** The frontend and the API deploy
+  separately, and an open tab or the home screen app can run the old code for a while. Its saves
+  would have no copies, which now means "remove them all", so movies and shows refuse fields the
+  API doesn't know (`JsonUnmappedMemberHandling.Disallow`): an old page gets an error until it's
+  reloaded, and nothing is lost.
+- **The migration** keeps movie ids (Movies is renamed Titles), gives every movie one copy from its
+  own columns, gives shows new ids with their purchases as copies, and marks every checklist item
+  a movie. Its Down puts it all back, each movie with its earliest copy's details.
+- **CSV:** a row with every copy column blank is a movie with no copies (how one is exported);
+  older files always have numbers there, so every old row is a copy. Prices are written with a dot
+  whatever the server's language.
+- **Letterboxd import** gives each movie one copy, condition Unknown, as every movie had before.
+- **Bulk edit's "Unshelved"** now clears the shelf section (it used to save the word "Unshelved").
+- **The table's title row** shows its shown copies added up: every format, each condition, the
+  total paid, a gift icon if any is a gift.

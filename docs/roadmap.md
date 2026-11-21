@@ -15,7 +15,7 @@ key for it, and nothing works worse without one than it would without the option
 
 ## Agreed, not started
 
-- **Titles and copies:** movies and TV shows in one Titles table (with a Kind), each title
+- **Titles and copies** (step 1 of 4 built): movies and TV shows in one Titles table (with a Kind), each title
   holding every physical copy of it (VHS, DVD, Blu-ray) in one Copies table, replacing TV
   purchases. Format, UPC, condition, price, shelf and HDD are on the copy; watched, rating,
   collections and Jellyfin stay on the title. TV shows can be in collections too. Plan:
