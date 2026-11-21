@@ -7,7 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FormField, PillToggles } from "./FormFields";
 import type { Copy } from "../types";
 import { formatSeasons } from "../utils/formatSeasons";
-import { allFormats } from "../utils/copies";
+import { allFormats, findUpcOwner } from "../utils/copies";
+import { useMovies } from "../features/movies/api";
+import { useTvShows } from "../features/tvShows/api";
 import { ignoreEnter } from "../utils/barcode";
 import { FORMATS } from "../utils/formats";
 
@@ -28,6 +30,8 @@ interface CopyEditorProps {
   onChange: (copy: Copy) => void;
   onRemove: () => void;
   onScanClick?: () => void;
+  // The card's element id, so the tab can scroll to it
+  domId?: string;
 }
 
 // Whole numbers only, so a shelf or drive number can't be half-typed into something invalid
@@ -47,8 +51,14 @@ function CopyEditor({
   onChange,
   onRemove,
   onScanClick,
+  domId,
 }: CopyEditorProps) {
   const isShow = totalSeasons !== undefined;
+  // Whether another copy in the library already has this UPC, to say which (a scanned release you
+  // already own: maybe a second copy, maybe a mistake)
+  const { data: movies = [] } = useMovies();
+  const { data: shows = [] } = useTvShows();
+  const upcOwner = findUpcOwner([...movies, ...shows], copy.upcNumber, copy.id);
   // Kept as text so partial input like "12." isn't reformatted while typing
   const [priceInput, setPriceInput] = useState(copy.price ? copy.price.toString() : "");
   const [shelfInput, setShelfInput] = useState(copy.shelfNumber ? copy.shelfNumber.toString() : "");
@@ -97,7 +107,7 @@ function CopyEditor({
     : allFormats([copy]).join(", ");
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
+    <div id={domId} className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
       <div className="flex items-center justify-between gap-2">
         <p className="min-w-0 truncate text-sm font-semibold">
           Copy {index + 1}
@@ -238,6 +248,12 @@ function CopyEditor({
             </Button>
           )}
         </div>
+        {upcOwner && (
+          <p className="text-xs text-muted-foreground">
+            Already in your library: {upcOwner.title.title}
+            {allFormats([upcOwner.copy]).length > 0 && ` (${allFormats([upcOwner.copy]).join(", ")})`}
+          </p>
+        )}
       </FormField>
 
       {/* Where it lives: pick a shelf section, or add a new one with + */}

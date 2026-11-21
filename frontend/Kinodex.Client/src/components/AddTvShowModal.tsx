@@ -1,21 +1,22 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Check, ChevronRight, PenLine } from "lucide-react";
+import { Check, ChevronRight, CopyPlus, PenLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ApiError } from "../utils/api";
-import { useCreateTvShow, useTvShows } from "../features/tvShows/api";
+import { useCreateTvShow, useTvShows, useUpdateTvShow } from "../features/tvShows/api";
 import type { TMDBTvShow, TvShow } from "../types";
 import { TV_GENRE_MAP, useTmdb } from "../utils/tmdbApi";
 import { isMobile } from "../utils/isMobile";
 import TmdbSearch from "./TmdbSearch";
+import AlreadyOwned from "./AlreadyOwned";
 import TvShowForm from "./TvShowForm";
 import { BarcodeScanner } from "./lazyComponents";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
-import { newCopy } from "../utils/copies";
+import { newCopy, withNewCopy } from "../utils/copies";
 import { useLinkToJellyfin } from "../features/jellyfin/api";
 
 const FORM_ID = "add-tv-show-form";
@@ -42,6 +43,9 @@ interface AddTvShowModalProps {
   initialUpc?: string;
   // A title to start the TMDB search with, e.g. what was typed in the search window
   initialSearch?: string;
+  // A show already in the library to add a copy to straight away (e.g. a scanned barcode it
+  // already has a copy of), with initialUpc on the new copy
+  copyOfId?: number;
 }
 
 // The show being added: its poster, or the title on a tile
@@ -65,15 +69,16 @@ function PreviewPoster({ show, className }: { show: TvShow; className?: string }
 }
 
 // Add a TV show: search TMDB, then fill in the details and copies. Same window as Add Movie.
-export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }: AddTvShowModalProps) {
+export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "", copyOfId }: AddTvShowModalProps) {
   // TMDB, through our API
   const { getTMDBTvSeasonCount, searchTMDBTv } = useTmdb();
   const navigate = useNavigate();
   const { data: shows = [] } = useTvShows();
   // Adding refreshes every screen listing shows
   const createTvShow = useCreateTvShow();
+  const updateTvShow = useUpdateTvShow();
   const linkToJellyfin = useLinkToJellyfin();
-  const saving = createTvShow.isPending;
+  const saving = createTvShow.isPending || updateTvShow.isPending;
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<TvShow>(() => ({
     ...emptyTvShow(),
@@ -87,7 +92,44 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
   // TMDB results already in the library get an "In library" badge
   const ownedTmdbIds = new Set(shows.flatMap((s) => (s.tmdbId ? [s.tmdbId] : [])));
 
-  const handleShowSelect = async (show: TMDBTvShow) => {
+  // A show already in the library this window is adding a copy to, rather than adding a new show
+  // (docs/design/titles-and-copies.md), and the new copy's form key; null when adding a show
+  const [copyOf, setCopyOf] = useState<TvShow | null>(null);
+  const [newCopyKey, setNewCopyKey] = useState<string | null>(null);
+  // A search result that's already in the library, waiting for "add a copy" or "add as new"
+  const [ownedPick, setOwnedPick] = useState<{ tmdb: TMDBTvShow; show: TvShow } | null>(null);
+
+  // Starts adding a copy to a show already owned: the form shows it with a new copy at the end
+  // (with the scanned UPC; its seasons still to pick), opening on that copy
+  const startCopy = (show: TvShow, upc: string) => {
+    const copy = newCopy({ upcNumber: upc });
+    setCopyOf(show);
+    setNewCopyKey(copy.clientKey ?? null);
+    setFormData(withNewCopy(show, copy));
+    setOwnedPick(null);
+    setShowForm(true);
+  };
+
+  // Handed a show to add a copy to (a scan of a barcode it already has): start straight away,
+  // once the shows have loaded
+  const [startedCopyOf, setStartedCopyOf] = useState(false);
+  if (copyOfId && !startedCopyOf) {
+    const show = shows.find((s) => s.id === copyOfId);
+    if (show) {
+      setStartedCopyOf(true);
+      startCopy(show, initialUpc);
+    }
+  }
+
+  // A TMDB result already in the library asks first: add a copy to it, or add it as a new show
+  const handleShowSelect = (show: TMDBTvShow) => {
+    const owned = shows.find((s) => s.tmdbId === show.id);
+    if (owned) setOwnedPick({ tmdb: show, show: owned });
+    else void fillFromTmdb(show);
+  };
+
+  // A TMDB result fills in the title, year, genres and images, then shows the form
+  const fillFromTmdb = async (show: TMDBTvShow) => {
     const genres = show.genre_ids
       .map((id) => TV_GENRE_MAP[id])
       .filter(Boolean);
@@ -124,11 +166,19 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
   const changeShow = () => {
     setShowForm(false);
     setSearchKey((key) => key + 1);
+    // Back to adding a new show, keeping what was filled in for the copy being added
+    if (copyOf) {
+      const copy = formData.copies.find((c) => c.clientKey === newCopyKey);
+      setFormData({ ...emptyTvShow(), copies: copy ? [copy] : [] });
+      setCopyOf(null);
+      setNewCopyKey(null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
+    if (copyOf) return saveCopy();
     try {
       const created = await createTvShow.mutateAsync(formData);
       // If it's already on Jellyfin, link it (in the background)
@@ -146,6 +196,27 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
           : error.status === 400
             ? error.message
             : `Failed to add TV show (${error.status}). Please try again.`,
+      );
+    }
+  };
+
+  // Saves a show already owned with its new copy
+  const saveCopy = async () => {
+    try {
+      const saved = await updateTvShow.mutateAsync({ ...formData, id: copyOf!.id });
+      onClose();
+      navigate("/tv-shows");
+      toast.success(`Added a copy of ${saved.title}`, {
+        action: { label: "Open", onClick: () => navigate(`/tv-shows?show=${saved.id}`) },
+      });
+    } catch (error) {
+      console.error("Error adding a copy:", error);
+      setSubmitError(
+        !(error instanceof ApiError)
+          ? "Could not reach the server. Please check your connection."
+          : error.status === 400
+            ? error.message
+            : `Failed to add the copy (${error.status}). Please try again.`,
       );
     }
   };
@@ -176,7 +247,7 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
       >
         <div className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-4">
           <div className="flex min-w-0 flex-col gap-1">
-            <DialogTitle>Add TV show</DialogTitle>
+            <DialogTitle>{copyOf ? "Add a copy" : "Add TV show"}</DialogTitle>
             <ol aria-label="Steps" className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <li className={cn("flex items-center gap-1", !showForm && "font-medium text-foreground")}>
                 {showForm ? (
@@ -200,9 +271,27 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
           </div>
         </div>
 
+        {!showForm && ownedPick && (
+          <AlreadyOwned
+            kind="show"
+            title={ownedPick.show.title}
+            year={ownedPick.show.year}
+            posterPath={ownedPick.show.posterPath}
+            copies={ownedPick.show.copies}
+            totalSeasons={ownedPick.show.totalSeasons}
+            onAddCopy={() => startCopy(ownedPick.show, formData.copies[0]?.upcNumber ?? "")}
+            onAddNew={() => {
+              void fillFromTmdb(ownedPick.tmdb);
+              setOwnedPick(null);
+            }}
+            onBack={() => setOwnedPick(null)}
+          />
+        )}
         {!showForm ? (
           <TmdbSearch
             key={searchKey}
+            // Kept (hidden) while asking about a pick already owned, so going back keeps the search
+            hidden={ownedPick !== null}
             // Only the first search starts with it, not ones after going back or "Save & add another"
             initialQuery={searchKey === 0 ? initialSearch : ""}
             search={searchTMDBTv}
@@ -246,12 +335,19 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
                   {meta && <span className="truncate text-xs text-muted-foreground">{meta}</span>}
                 </div>
               </div>
+              {copyOf && (
+                <div className="mb-3 flex shrink-0 items-center gap-2 rounded-md bg-primary-soft px-3 py-2 text-xs text-primary-text">
+                  <CopyPlus className="size-3.5 shrink-0" aria-hidden="true" />
+                  A new copy of {copyOf.title}, after the ones you have: pick its seasons
+                </div>
+              )}
               <TvShowForm
                 formId={FORM_ID}
                 formData={formData}
                 setFormData={setFormData}
                 onSubmit={handleSubmit}
                 onScanClick={isMobile() ? handleScanClick : undefined}
+                focusCopyKey={newCopyKey ?? undefined}
               />
             </div>
           </div>
@@ -273,7 +369,13 @@ export function AddTvShowModal({ onClose, initialUpc = "", initialSearch = "" }:
                 {saving ? "Saving…" : "Save"}
               </Button>
             ) : (
-              <Button variant="outline" onClick={() => setShowForm(true)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setOwnedPick(null);
+                  setShowForm(true);
+                }}
+              >
                 <PenLine />
                 Enter details manually
               </Button>

@@ -25,6 +25,8 @@ interface MovieFormProps {
   submitButtonText?: string;
   // Scanning a barcode into one copy's UPC
   onScanClick?: (copyIndex: number) => void;
+  // Opens on the Copies tab, scrolled to this copy (one being added to a movie already owned)
+  focusCopyKey?: string;
   // The form element's id, so buttons outside it (the modal footer) can submit it
   id?: string;
 }
@@ -35,8 +37,9 @@ function MovieForm({
   onSubmit,
   onScanClick,
   id,
+  focusCopyKey,
 }: MovieFormProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("details");
+  const [activeTab, setActiveTab] = useState<Tab>(focusCopyKey ? "copies" : "details");
   const [validationError, setValidationError] = useState<string>("");
   // Shelf sections for each copy's "where it lives"
   const shelfSections = useShelfSectionChoices();
@@ -144,6 +147,7 @@ function MovieForm({
             setCopies={setCopies}
             shelfSections={shelfSections.names}
             onAddShelfSection={shelfSections.add}
+            focusCopyKey={focusCopyKey}
             onScanClick={onScanClick}
           />
         )}

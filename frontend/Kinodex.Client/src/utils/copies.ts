@@ -61,3 +61,33 @@ export const lastAdded = (title: { createdAt?: string; copies: Copy[] }): string
 
 // "2 copies", "1 copy"
 export const copyCount = (count: number) => `${count} cop${count === 1 ? "y" : "ies"}`;
+
+// A title already in the library, ready for the form with one more copy at the end (the Add
+// window's "add a copy to it")
+export const withNewCopy = <T extends { copies: Copy[] }>(title: T, copy: Copy): T => {
+  const keyed = withClientKeys(title);
+  return { ...keyed, copies: [...keyed.copies, copy] };
+};
+
+// A title's copies in a few words: "1 copy: Blu-ray", "3 copies: DVD, VHS", "No copies"
+export const copiesSummary = (copies: Copy[]): string => {
+  if (copies.length === 0) return "No copies";
+  const formats = allFormats(copies);
+  return formats.length > 0 ? `${copyCount(copies.length)}: ${formats.join(", ")}` : copyCount(copies.length);
+};
+
+// The movie or show already in the library with a copy of this UPC (another copy than the one
+// given), and that copy: so the forms can say "already in your library"
+export function findUpcOwner<T extends { title: string; copies: Copy[] }>(
+  titles: T[],
+  upc: string,
+  exceptCopyId?: number,
+): { title: T; copy: Copy } | null {
+  const code = upc.trim();
+  if (code.length < 6) return null; // Too short to be a barcode
+  for (const title of titles) {
+    const copy = title.copies.find((c) => c.upcNumber.trim() === code && (exceptCopyId === undefined || c.id !== exceptCopyId));
+    if (copy) return { title, copy };
+  }
+  return null;
+}

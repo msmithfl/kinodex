@@ -3,13 +3,15 @@ import { createPortal } from "react-dom";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useMovies } from "../features/movies/api";
 import { useTvShows } from "../features/tvShows/api";
-import { Film, Plus, ScanBarcode, Search, Tv, X } from "lucide-react";
+import { CopyPlus, Film, Plus, ScanBarcode, Search, Tv, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageShell from "../components/PageShell";
 import { AddItemModal, BarcodeScanner } from "../components/lazyComponents";
 import { GO_TO_LINKS } from "../components/navigation";
-import type { Movie, TvShow } from "../types";
+import type { Copy, Movie, TvShow } from "../types";
+import type { AddItemOptions } from "../components/AddItemModal";
+import { barcodeKey, upcMatches } from "../utils/barcode";
 import { isMobile } from "../utils/isMobile";
 import { formatSeasons } from "../utils/formatSeasons";
 import { allFormats, ownedSeasons } from "../utils/copies";
@@ -22,10 +24,12 @@ import { compareTitles } from "../utils/titleSort";
 interface SearchItem {
   key: string;
   kind: "movie" | "tv";
+  id: number;
   title: string;
   year: number;
   posterPath: string;
   upcs: string[]; // One per copy
+  copies: Copy[];
   subtitle: string;
   to: string;
 }
@@ -33,10 +37,12 @@ interface SearchItem {
 const movieItem = (m: Movie): SearchItem => ({
   key: `movie-${m.id}`,
   kind: "movie",
+  id: m.id!,
   title: m.title,
   year: m.year,
   posterPath: m.posterPath,
   upcs: m.copies.map((c) => c.upcNumber).filter(Boolean),
+  copies: m.copies,
   subtitle: [m.year || null, allFormats(m.copies).length > 0 ? allFormats(m.copies).join(", ") : null]
     .filter(Boolean)
     .join(" · "),
@@ -48,10 +54,12 @@ const tvItem = (s: TvShow): SearchItem => {
   return {
     key: `tv-${s.id}`,
     kind: "tv",
+    id: s.id!,
     title: s.title,
     year: s.year,
     posterPath: s.posterPath,
     upcs: s.copies.map((c) => c.upcNumber).filter(Boolean),
+    copies: s.copies,
     subtitle: [s.year || null, seasons === "-" ? null : seasons]
       .filter(Boolean)
       .join(" · "),
@@ -98,7 +106,8 @@ function SearchPage() {
   const loading = moviesLoading || showsLoading;
   const items: SearchItem[] = [...movies.map(movieItem), ...shows.map(tvItem)];
   const [showScanner, setShowScanner] = useState(false);
-  const [adding, setAdding] = useState(false);
+  // The Add window, open with what to start with (a scanned barcode's title to add a copy to)
+  const [adding, setAdding] = useState<AddItemOptions | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Updates the URL in place, so typing doesn't stack up history entries
@@ -146,6 +155,11 @@ function SearchPage() {
   // search the same way (all of them before anything's typed)
   const goTo = GO_TO_LINKS.filter((link) => searchScore([link.label], query) > 0);
   const showAdd = searchScore([ADD_LABEL], query) > 0;
+
+  // A barcode search: which copy each result is (its format), and an offer to add another copy
+  const barcode = barcodeKey(query) !== null ? query.trim() : null;
+  const scannedCopy = (item: SearchItem) =>
+    barcode ? item.copies.find((c) => upcMatches(c.upcNumber, barcode)) : undefined;
 
   // Best matches first (see titleSearchScore), then alphabetical
   const searching = query.trim() !== "";
@@ -237,6 +251,11 @@ function SearchPage() {
                               {item.title}
                             </p>
                             {item.subtitle && <p className="truncate text-xs text-muted-foreground">{item.subtitle}</p>}
+                            {scannedCopy(item) && (
+                              <p className="truncate text-xs text-muted-foreground">
+                                This barcode: {allFormats([scannedCopy(item)!]).join(", ") || "a copy"}
+                              </p>
+                            )}
                           </div>
                           <KindIcon
                             className="size-4 shrink-0 text-muted-foreground"
@@ -267,6 +286,31 @@ function SearchPage() {
             </section>
           )}
 
+          {/* A barcode already in the collection: another copy of what it is (a second disc for
+              lending, a replacement) */}
+          {barcode && results.some((item) => scannedCopy(item)) && (
+            <section>
+              <h2 className={HEADING_CLASS}>Have another copy?</h2>
+              <ul className={LIST_CLASS}>
+                {results
+                  .filter((item) => scannedCopy(item))
+                  .slice(0, 3)
+                  .map((item) => (
+                    <li key={item.key}>
+                      <button
+                        type="button"
+                        onClick={() => setAdding({ kind: item.kind, upc: query.trim(), copyOf: item.id })}
+                        className={`${ROW_CLASS} w-full cursor-pointer text-left text-sm font-medium`}
+                      >
+                        <CopyPlus className="size-4 shrink-0 text-muted-foreground" />
+                        <span className="truncate">Add another copy of {item.title}</span>
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          )}
+
           {showAdd && (
             <section>
               <h2 className={HEADING_CLASS}>Actions</h2>
@@ -274,7 +318,7 @@ function SearchPage() {
                 <li>
                   <button
                     type="button"
-                    onClick={() => setAdding(true)}
+                    onClick={() => setAdding({})}
                     className={`${ROW_CLASS} w-full cursor-pointer text-left text-sm font-medium`}
                   >
                     <Plus className="size-4 shrink-0 text-muted-foreground" />
@@ -286,7 +330,7 @@ function SearchPage() {
           )}
         </div>
 
-        {adding && <AddItemModal onClose={() => setAdding(false)} />}
+        {adding && <AddItemModal {...adding} onClose={() => setAdding(null)} />}
         {showScanner && (
           <BarcodeScanner
             onDetected={handleBarcodeDetected}

@@ -4,7 +4,7 @@ import type { MoviePreset } from "../../types";
 
 // The hooks in presets.ts need sign-in; these tests only use its plain functions
 vi.mock("../../utils/api", () => ({ useApi: () => ({}) }));
-const { presetFields, presetValues, toPreset, withPresetFields } = await import("./presets");
+const { presetFields, presetValues, toPreset, withPresetCopyFields, withPresetFields } = await import("./presets");
 
 describe("movie presets", () => {
   beforeEach(() => {
@@ -50,6 +50,13 @@ describe("movie presets", () => {
     expect(filled.hasWatched).toBe(true);
     expect(filled.copies[0]).toMatchObject({ formats: ["VHS"], price: 2, shelfSection: "A" });
     expect(filled.copies[1]).toBe(second);
+  });
+
+  it("fills just a copy, for one added to a movie already owned", () => {
+    const fields = presetFields(makeMovie({ hasWatched: true, copies: [makeCopy({ formats: ["DVD"], price: 1, shelfSection: "Bargain" })] }));
+    const copy = withPresetCopyFields(makeCopy({ id: 5, formats: ["4K"] }), fields);
+    expect(copy).toMatchObject({ id: 5, formats: ["DVD"], price: 1, shelfSection: "Bargain" });
+    expect(copy).not.toHaveProperty("hasWatched");
   });
 
   it("gives a movie with no copies one to fill", () => {

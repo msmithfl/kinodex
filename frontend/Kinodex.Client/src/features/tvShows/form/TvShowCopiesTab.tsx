@@ -14,6 +14,8 @@ interface TvShowCopiesTabProps {
   shelfSections: string[];
   onAddShelfSection?: (name: string) => Promise<void>;
   onScanClick?: (copyIndex: number) => void;
+  // Scrolled to when the tab opens (a copy being added to a show already owned)
+  focusCopyKey?: string;
 }
 
 // One of the "how was it bought?" shortcuts shown before any copy is added
@@ -52,6 +54,7 @@ function TvShowCopiesTab({
   shelfSections,
   onAddShelfSection,
   onScanClick,
+  focusCopyKey,
 }: TvShowCopiesTabProps) {
   const setCopies = (update: (copies: Copy[]) => Copy[]) =>
     setFormData((prev) => ({ ...prev, copies: update(prev.copies) }));
@@ -122,6 +125,7 @@ function TvShowCopiesTab({
       header={header}
       shelfSections={shelfSections}
       onAddShelfSection={onAddShelfSection}
+      focusCopyKey={focusCopyKey}
       onScanClick={onScanClick}
     />
   );

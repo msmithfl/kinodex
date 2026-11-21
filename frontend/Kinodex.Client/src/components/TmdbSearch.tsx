@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Command as CommandPrimitive } from "cmdk";
 import { Loader2, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { CommandItem, CommandList } from "@/components/ui/command";
@@ -22,6 +23,8 @@ interface TmdbSearchProps<T> {
   placeholder: string; // e.g. "Search TMDB for a movie…"
   // Text to start with, searched straight away (e.g. what was typed in the search window)
   initialQuery?: string;
+  // Out of sight but kept (its search and results), e.g. while the Add window asks about a pick
+  hidden?: boolean;
 }
 
 // The add windows' first step: search TMDB by title (and optionally year), then pick a result with
@@ -33,6 +36,7 @@ function TmdbSearch<T>({
   ownedTmdbIds,
   placeholder,
   initialQuery = "",
+  hidden = false,
 }: TmdbSearchProps<T>) {
   const [query, setQuery] = useState(initialQuery);
   const [year, setYear] = useState("");
@@ -86,7 +90,7 @@ function TmdbSearch<T>({
       loop
       value={highlighted}
       onValueChange={setHighlighted}
-      className="flex min-h-0 flex-1 flex-col"
+      className={cn("flex min-h-0 flex-1 flex-col", hidden && "hidden")}
     >
       <div className="flex shrink-0 gap-2 px-5 pt-4 pb-3">
         <label className="relative flex-1">

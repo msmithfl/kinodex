@@ -1,7 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Bookmark, BookmarkPlus, Check, ChevronRight, PenLine, X } from "lucide-react";
+import { Bookmark, BookmarkPlus, Check, ChevronRight, CopyPlus, PenLine, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStoredState } from "@/utils/useStoredState";
 import { Badge } from "@/components/ui/badge";
@@ -15,18 +15,21 @@ import MovieForm from "./MovieForm";
 import { BarcodeScanner } from "./lazyComponents";
 import { MOD_KEY } from "./navigation";
 import TmdbSearch from "./TmdbSearch";
+import AlreadyOwned from "./AlreadyOwned";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
-import { useCreateMovie, useMovies } from "../features/movies/api";
+import { useCreateMovie, useMovies, useUpdateMovie } from "../features/movies/api";
 import { ApiError } from "../utils/api";
 import { useLinkToJellyfin } from "../features/jellyfin/api";
-import { newCopy } from "../utils/copies";
+import { newCopy, withNewCopy } from "../utils/copies";
 import { isMobile } from "../utils/isMobile";
 import {
   PRESET_EXCLUDED_LABEL,
   presetFields,
   presetValues,
   toPreset,
+  withPresetCopyFields,
   withPresetFields,
+  type PresetFields,
   useMoviePresets,
   useSaveMoviePreset,
 } from "../features/movies/presets";
@@ -37,6 +40,9 @@ interface AddMovieModalProps {
   initialUpc?: string;
   // A title to start the TMDB search with, e.g. what was typed in the search window
   initialSearch?: string;
+  // A movie already in the library to add a copy to straight away (e.g. a scanned barcode it
+  // already has a copy of), with initialUpc on the new copy
+  copyOfId?: number;
 }
 
 const FORM_ID = "add-movie-form";
@@ -90,12 +96,14 @@ function PreviewPoster({ movie, className }: { movie: Movie; className?: string 
   );
 }
 
-export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: AddMovieModalProps) {
+export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "", copyOfId }: AddMovieModalProps) {
   // TMDB, through our API
   const { searchTMDB } = useTmdb();
   const navigate = useNavigate();
   const { data: movies = [] } = useMovies();
   const createMovie = useCreateMovie();
+  const updateMovie = useUpdateMovie();
+  const saving = createMovie.isPending || updateMovie.isPending;
   const linkToJellyfin = useLinkToJellyfin();
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<Movie>(() => {
@@ -104,6 +112,28 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
   });
   // "Save & add another", for the Ctrl/⌘+Enter shortcut
   const addAnotherRef = useRef<HTMLButtonElement>(null);
+
+  // A movie already in the library this window is adding a copy to, rather than adding a new movie
+  // (docs/design/titles-and-copies.md), and the new copy's form key; null when adding a movie
+  const [copyOf, setCopyOf] = useState<Movie | null>(null);
+  const [newCopyKey, setNewCopyKey] = useState<string | null>(null);
+  // A search result that's already in the library, waiting for "add a copy" or "add as new"
+  const [ownedPick, setOwnedPick] = useState<{ tmdb: TMDBMovie; movie: Movie } | null>(null);
+
+  // Fills the form from preset values. A new movie gets all of them; a copy being added to a movie
+  // already owned only the copy's (the movie's own stay as they are). A UPC already in the form
+  // (scanned, or typed) stays unless the preset has one of its own.
+  const applyPreset = (movie: Movie, values: PresetFields): Movie => {
+    if (newCopyKey) {
+      return {
+        ...movie,
+        copies: movie.copies.map((c) =>
+          c.clientKey === newCopyKey ? withPresetCopyFields(c, { ...values, upcNumber: values.upcNumber || c.upcNumber }) : c,
+        ),
+      };
+    }
+    return withPresetFields(movie, { ...values, upcNumber: values.upcNumber || (movie.copies[0]?.upcNumber ?? "") });
+  };
 
   // Presets fill the repeating fields (format, price, watched, ...) for batches of similar movies
   const { data: presets = [] } = useMoviePresets();
@@ -118,11 +148,7 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
   const [appliedPresetId, setAppliedPresetId] = useState<number | null>(null);
   if (preset?.id && appliedPresetId !== preset.id) {
     setAppliedPresetId(preset.id);
-    // A UPC already in the form (scanned, or typed) stays unless the preset has one of its own
-    setFormData((prev) => {
-      const values = presetValues(preset);
-      return withPresetFields(prev, { ...values, upcNumber: values.upcNumber || (prev.copies[0]?.upcNumber ?? "") });
-    });
+    setFormData((prev) => applyPreset(prev, presetValues(preset)));
   }
   // Naming a new preset from the form's current values
   const [presetName, setPresetName] = useState<string | null>(null);
@@ -135,8 +161,50 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
   // The copy a barcode is being scanned for
   const [scanIndex, setScanIndex] = useState<number | null>(null);
 
-  // A TMDB result fills in the title, year, genres and images, then shows the form
+  // A new movie, ready for the form: blank, or the preset's values
+  const freshMovie = () => (preset ? withPresetFields(emptyMovie(), presetValues(preset)) : emptyMovie());
+
+  // Starts adding a copy to a movie already owned: the form shows it with a new copy at the end
+  // (filled from the preset, and with the scanned UPC), opening on that copy
+  const startCopy = (movie: Movie, upc: string) => {
+    const blank = newCopy({ shelfNumber: 1, upcNumber: upc });
+    const copy = preset ? withPresetCopyFields(blank, { ...presetValues(preset), upcNumber: presetValues(preset).upcNumber || upc }) : blank;
+    setCopyOf(movie);
+    setNewCopyKey(copy.clientKey ?? null);
+    setFormData(withNewCopy(movie, copy));
+    setOwnedPick(null);
+    setShowForm(true);
+  };
+
+  // Back to adding a new movie, keeping what was filled in for the copy being added
+  const stopCopy = () => {
+    const copy = formData.copies.find((c) => c.clientKey === newCopyKey);
+    const fresh = freshMovie();
+    setFormData(copy ? { ...fresh, copies: [copy] } : fresh);
+    setCopyOf(null);
+    setNewCopyKey(null);
+  };
+
+  // Handed a movie to add a copy to (a scan of a barcode it already has): start straight away,
+  // once the movies have loaded
+  const [startedCopyOf, setStartedCopyOf] = useState(false);
+  if (copyOfId && !startedCopyOf) {
+    const movie = movies.find((m) => m.id === copyOfId);
+    if (movie) {
+      setStartedCopyOf(true);
+      startCopy(movie, initialUpc);
+    }
+  }
+
+  // A TMDB result already in the library asks first: add a copy to it, or add it as a new movie
   const handleMovieSelect = (movie: TMDBMovie) => {
+    const owned = movies.find((m) => m.tmdbId === movie.id);
+    if (owned) setOwnedPick({ tmdb: movie, movie: owned });
+    else fillFromTmdb(movie);
+  };
+
+  // A TMDB result fills in the title, year, genres and images, then shows the form
+  const fillFromTmdb = (movie: TMDBMovie) => {
     const genres = movie.genre_ids.map((id) => GENRE_MAP[id]).filter(Boolean);
     const year = movie.release_date
       ? parseInt(movie.release_date.split("-")[0])
@@ -163,6 +231,7 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
   // Back to the search to pick a different TMDB match (the Search step under the title); the other
   // fields are kept
   const changeMovie = () => {
+    if (copyOf) stopCopy();
     setShowForm(false);
     setSearchKey((key) => key + 1);
   };
@@ -172,7 +241,7 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
     setPresetId(id);
     if (!id) {
       setAppliedPresetId(null);
-      setFormData((prev) => withPresetFields(prev, presetFields(emptyMovie())));
+      setFormData((prev) => applyPreset(prev, presetFields(emptyMovie())));
     }
   };
 
@@ -183,8 +252,10 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
     const existing = presets.find((p) => p.name.toLowerCase() === name.toLowerCase());
     setSubmitError("");
     try {
+      // While adding a copy, the preset is made from that copy, not the ones already owned
+      const source = newCopyKey ? { ...formData, copies: formData.copies.filter((c) => c.clientKey === newCopyKey) } : formData;
       const saved = await saveMoviePreset.mutateAsync({
-        ...toPreset(formData),
+        ...toPreset(source),
         id: existing?.id,
         name: existing?.name ?? name,
       } as MoviePreset);
@@ -212,14 +283,16 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
     return saveMovie(submitter?.dataset.mode === "another");
   };
 
-  // Saves the movie, then closes and shows the list, or with addAnother starts the next movie
-  // (back to the TMDB search, with the preset's values filled in again)
+  // Saves the movie (or the copy added to one already owned), then closes and shows the list, or
+  // with addAnother starts the next movie (back to the TMDB search, with the preset's values filled
+  // in again)
   const saveMovie = async (addAnother: boolean) => {
     if (!formData.title.trim()) {
       setSubmitError("Movie title is required.");
       return;
     }
     setSubmitError("");
+    if (copyOf) return saveCopy(addAnother);
     try {
       // The server makes it the signed-in user's movie; every movie list refreshes itself
       const created = await createMovie.mutateAsync(formData);
@@ -237,7 +310,7 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
             },
           },
         });
-        setFormData(preset ? withPresetFields(emptyMovie(), presetValues(preset)) : emptyMovie());
+        setFormData(freshMovie());
         setShowForm(false);
         setSearchKey((key) => key + 1);
         return;
@@ -250,6 +323,41 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
       setSubmitError(
         error instanceof ApiError
           ? `Failed to add movie (${error.status}). Please try again.`
+          : "Could not reach the server. Please check your connection.",
+      );
+    }
+  };
+
+  // Saves a movie already owned with its new copy
+  const saveCopy = async (addAnother: boolean) => {
+    try {
+      const saved = await updateMovie.mutateAsync({ ...formData, id: copyOf!.id });
+      const openIt = () => navigate(`/library?movie=${saved.id}`);
+      toast.success(`Added a copy of ${saved.title}`, {
+        description: addAnother ? "Ready for the next movie" : undefined,
+        action: {
+          label: "Open",
+          onClick: () => {
+            onClose();
+            openIt();
+          },
+        },
+      });
+      if (addAnother) {
+        setCopyOf(null);
+        setNewCopyKey(null);
+        setFormData(freshMovie());
+        setShowForm(false);
+        setSearchKey((key) => key + 1);
+        return;
+      }
+      onClose();
+      navigate("/library");
+    } catch (error) {
+      console.error("Error adding a copy:", error);
+      setSubmitError(
+        error instanceof ApiError
+          ? `Failed to add the copy (${error.status}). Please try again.`
           : "Could not reach the server. Please check your connection.",
       );
     }
@@ -284,7 +392,7 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
         {/* Title and steps, then the preset */}
         <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border px-5 py-4">
           <div className="mr-auto flex min-w-0 flex-col gap-1">
-            <DialogTitle>Add movie</DialogTitle>
+            <DialogTitle>{copyOf ? "Add a copy" : "Add movie"}</DialogTitle>
             <ol aria-label="Steps" className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <li className={cn("flex items-center gap-1", !showForm && "font-medium text-foreground")}>
                 {showForm ? (
@@ -390,9 +498,26 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
           </div>
         )}
 
+        {!showForm && ownedPick && (
+          <AlreadyOwned
+            kind="movie"
+            title={ownedPick.movie.title}
+            year={ownedPick.movie.year}
+            posterPath={ownedPick.movie.posterPath}
+            copies={ownedPick.movie.copies}
+            onAddCopy={() => startCopy(ownedPick.movie, formData.copies[0]?.upcNumber ?? "")}
+            onAddNew={() => {
+              fillFromTmdb(ownedPick.tmdb);
+              setOwnedPick(null);
+            }}
+            onBack={() => setOwnedPick(null)}
+          />
+        )}
         {!showForm ? (
           <TmdbSearch
             key={searchKey}
+            // Kept (hidden) while asking about a pick already owned, so going back keeps the search
+            hidden={ownedPick !== null}
             // Only the first search starts with it, not ones after going back or "Save & add another"
             initialQuery={searchKey === 0 ? initialSearch : ""}
             search={searchTMDB}
@@ -431,7 +556,13 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
                   {meta && <span className="truncate text-xs text-muted-foreground">{meta}</span>}
                 </div>
               </div>
-              {preset && (
+              {copyOf && (
+                <div className="mb-3 flex shrink-0 items-center gap-2 rounded-md bg-primary-soft px-3 py-2 text-xs text-primary-text">
+                  <CopyPlus className="size-3.5 shrink-0" aria-hidden="true" />
+                  A new copy of {copyOf.title}, after the ones you have{preset ? `, filled from the ${preset.name} preset` : ""}
+                </div>
+              )}
+              {preset && !copyOf && (
                 <div className="mb-3 flex shrink-0 items-center gap-2 rounded-md bg-primary-soft px-3 py-2 text-xs text-primary-text">
                   <Bookmark className="size-3.5 shrink-0" aria-hidden="true" />
                   Filled from the {preset.name} preset
@@ -445,6 +576,7 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
                 onCancel={onClose}
                 submitButtonText="Add to Collection"
                 onScanClick={isMobile() ? setScanIndex : undefined}
+                focusCopyKey={newCopyKey ?? undefined}
               />
             </div>
           </div>
@@ -463,7 +595,7 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
             {showForm ? (
               <>
                 {/* Save comes first in the page so Enter in a field picks it; it's shown last */}
-                <Button type="submit" form={FORM_ID} data-mode="save" disabled={createMovie.isPending} className="order-last">
+                <Button type="submit" form={FORM_ID} data-mode="save" disabled={saving} className="order-last">
                   Save
                   <Kbd className="border-white/30 text-white/80">↵</Kbd>
                 </Button>
@@ -473,7 +605,7 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
                   form={FORM_ID}
                   data-mode="another"
                   variant="outline"
-                  disabled={createMovie.isPending}
+                  disabled={saving}
                 >
                   <span className="sm:hidden">Save &amp; new</span>
                   <span className="hidden sm:inline">Save &amp; add another</span>
@@ -481,7 +613,13 @@ export function AddMovieModal({ onClose, initialUpc = "", initialSearch = "" }: 
                 </Button>
               </>
             ) : (
-              <Button variant="outline" onClick={() => setShowForm(true)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setOwnedPick(null);
+                  setShowForm(true);
+                }}
+              >
                 <PenLine />
                 Enter details manually
               </Button>
