@@ -158,7 +158,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   `GenreCard`, `SimpleMovieTable` (collection/genre table view),
   `features/movies/MovieTable` (the movie list's table).
 - **Shared bits:** `StarRating` (`Stars` display, `StarRatingInput` picker), `TmdbLink`,
-  `ChipSelect` (chip dropdown for genres and collections), `ImageUrlField` (preview + URL + picker
+  `ChipSelect` (chip dropdown for genres and collections; typing in it narrows the list, `utils/matchOptions.ts`, with ↑ ↓ and Enter to pick), `ImageUrlField` (preview + URL + picker
   row), `FormFields` (`FormField`, `SwitchField`, `PillToggles`), `formModal.ts` (the add/edit
   windows' size and Escape rule), `TmdbSearch` (keyboard-driven TMDB search, movies and TV),
   `DetailHeader`, `DetailField`, `DeleteConfirm`.
