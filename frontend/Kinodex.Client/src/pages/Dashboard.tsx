@@ -39,10 +39,11 @@ interface RecentItem {
 }
 
 // On mobile each card is 26% of the row, so three fit with part of the fourth peeking in
-// to show the row scrolls; from tablet up the cards share the row
+// to show the row scrolls; on tablets the cards share the row; on desktop they're 2x2 beside the
+// spending card, each with its icon beside its label, filling the card's height
 const quickActionClass =
-  "shrink-0 w-[26%] cursor-pointer rounded-xl border border-border bg-card p-3 text-center shadow-xs outline-none transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:bg-accent focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:w-auto md:flex-1 md:p-6";
-const quickActionIconClass = "mb-2 flex h-6 items-center justify-center text-muted-foreground md:mb-3 md:h-8 [&_svg]:size-5 md:[&_svg]:size-7";
+  "shrink-0 w-[26%] cursor-pointer rounded-xl border border-border bg-card p-3 text-center shadow-xs outline-none transition-all duration-200 hover:-translate-y-0.5 hover:border-primary hover:bg-accent focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:w-auto md:flex-1 md:p-6 lg:flex lg:items-center lg:justify-center lg:gap-3 lg:p-4";
+const quickActionIconClass = "mb-2 flex h-6 items-center justify-center text-muted-foreground md:mb-3 md:h-8 [&_svg]:size-5 md:[&_svg]:size-7 lg:mb-0 lg:h-auto lg:[&_svg]:size-6";
 const quickActionLabelClass = "text-sm leading-tight font-medium md:text-base";
 
 // Total spent in the given calendar month, across every copy of movies and TV shows
@@ -75,9 +76,9 @@ function RecentCarousel({ title, items }: { title: string; items: RecentItem[] }
 
   if (items.length === 0) return null;
   return (
-    // Below desktop the row shares the height left on screen and the posters size to fit it, so
-    // the page needs no scrolling; on desktop the posters have a fixed width
-    <section className="flex-1 min-h-32 flex flex-col lg:flex-none lg:min-h-0">
+    // The rows share the height left on screen and the posters size to fit it, so the page needs
+    // no scrolling and a big screen gets bigger posters rather than empty space
+    <section className="flex-1 min-h-32 flex flex-col">
       <div className="shrink-0 flex items-center justify-between mb-2 md:mb-3">
         <h2 className="text-base font-semibold tracking-tight md:text-lg">{title}</h2>
         <div className="hidden md:flex gap-2">
@@ -97,10 +98,10 @@ function RecentCarousel({ title, items }: { title: string; items: RecentItem[] }
       </div>
       <div
         ref={rowRef}
-        className="flex-1 min-h-0 lg:flex-none flex gap-3 md:gap-4 -mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto overflow-y-hidden overscroll-x-contain no-scrollbar"
+        className="flex-1 min-h-0 flex gap-3 md:gap-4 -mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto overflow-y-hidden overscroll-x-contain no-scrollbar"
       >
         {items.map((item) => (
-          <div key={item.key} className="shrink-0 h-full aspect-2/3 lg:h-auto lg:w-28">
+          <div key={item.key} className="shrink-0 h-full aspect-2/3">
             {/* Poster only; the title shows on hover (tooltip) and in the drawer it opens */}
             <Link
               to={item.to}
@@ -163,23 +164,22 @@ function Dashboard() {
   );
 
   return (
-    // Sized to the screen so the columns scroll instead of running off it
+    // Sized to the screen, so the poster rows can take the height that's left
     <PageShell className="flex-row pt-2">
       {/* Same content width as the Stats page */}
       <div className="flex-1 flex flex-col min-h-0 w-full px-4 md:px-20">
         {loading ? (
           <LoadingSpinner />
         ) : (
-          // Mobile: one column; Recently Added under the quick actions. Its page padding is moved onto
-          // this box (-mx-4 px-4) so the carousels can reach the screen edges without being clipped.
-          // Desktop: two columns; collection data on the left, the Recently Added rows on the right.
+          // One column: the account, spending and quick actions, then the Recently Added rows across
+          // the full width, filling the rest of the screen. Its page padding is moved onto this box
+          // (-mx-4 px-4) on phones so the carousels can reach the screen edges without being clipped.
           // Its top margin and the shell's pt-2 match the bottom padding below the poster rows
           // (16px on phones, 32px from tablet up).
-          <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 overflow-y-auto overflow-x-hidden -mx-4 px-4 md:mx-0 md:px-0 lg:overflow-hidden lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] lg:gap-8 mt-2 md:mt-6">
-            {/* Left column. On phones its gap (spending card to quick actions) is the page's own
-                16px edge, like the space around everything else */}
-            {/* lg:px-2/-mx-2 makes room for the quick actions' -m-2 hover margin, so the column never scrolls sideways */}
-            <div className="shrink-0 flex flex-col gap-4 md:gap-6 lg:min-h-0 lg:overflow-y-auto lg:overflow-x-hidden lg:px-2 lg:-mx-2 lg:pb-8">
+          <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 overflow-y-auto overflow-x-hidden -mx-4 px-4 md:mx-0 md:px-0 mt-2 md:mt-6">
+            {/* The top: account, spending, quick actions. On phones its gap (spending card to quick
+                actions) is the page's own 16px edge, like the space around everything else */}
+            <div className="shrink-0 flex flex-col gap-4 md:gap-6">
               {/* Who's signed in, tablet up (on phones the top bar shows it): account badge (opens the
                   Clerk account menu), name and Collecting since, Settings on the right */}
               <div className="hidden items-center justify-between gap-4 md:flex">
@@ -208,65 +208,68 @@ function Dashboard() {
                 </Button>
               </div>
 
-              {/* Spending This Month and Last Month; first on phones, across the full width */}
-              <div className="rounded-xl border border-border bg-card p-3 md:p-6">
-                <div className="grid grid-cols-2 divide-x divide-border">
-                  {[
-                    { title: "This month", month: stats.thisMonth },
-                    { title: "Last month", month: stats.lastMonth },
-                  ].map(({ title, month }, idx) => (
-                    <div key={idx} className={idx === 0 ? "pr-3 md:pr-6" : "pl-3 md:pl-6"}>
-                      <p className="text-sm font-medium md:text-base">{title}</p>
-                      <p className="text-xs text-muted-foreground md:text-sm">{month.label}</p>
-                      <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums md:mt-2 md:text-4xl text-success-text">
-                        ${month.spend.toFixed(2)}
-                      </p>
-                    </div>
-                  ))}
+              {/* Spending, then the quick actions; side by side on desktop */}
+              <div className="flex flex-col gap-4 md:gap-6 lg:grid lg:grid-cols-2">
+                {/* Spending This Month and Last Month; first on phones, across the full width */}
+                <div className="rounded-xl border border-border bg-card p-3 md:p-6">
+                  <div className="grid grid-cols-2 divide-x divide-border">
+                    {[
+                      { title: "This month", month: stats.thisMonth },
+                      { title: "Last month", month: stats.lastMonth },
+                    ].map(({ title, month }, idx) => (
+                      <div key={idx} className={idx === 0 ? "pr-3 md:pr-6" : "pl-3 md:pl-6"}>
+                        <p className="text-sm font-medium md:text-base">{title}</p>
+                        <p className="text-xs text-muted-foreground md:text-sm">{month.label}</p>
+                        <p className="mt-1 text-2xl font-semibold tracking-tight tabular-nums md:mt-2 md:text-4xl text-success-text">
+                          ${month.spend.toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
 
-              {/* Quick Actions */}
-              {/* Mobile: three cards fit across and the rest scroll. Tablet: four in a row. Desktop: a 2x2 grid in the left column. Padding leaves room for the hover lift and focus ring; on mobile the row runs to the screen edges, like the carousels. */}
-              <div className="flex lg:grid lg:grid-cols-2 gap-3 md:gap-4 overflow-x-auto md:overflow-x-visible no-scrollbar -my-2 py-2 -mx-4 px-4 md:-m-2 md:p-2">
-                <Link to="/library" data-slot="quick-action" className={quickActionClass}>
-                  <div className={quickActionIconClass}>
-                    <Film />
-                  </div>
-                  <h3 className={quickActionLabelClass}>Library</h3>
-                </Link>
+                {/* Quick Actions */}
+                {/* Mobile: three cards fit across and the rest scroll. Tablet: four in a row. Desktop: a 2x2 grid beside the spending card, as tall as it. Padding leaves room for the hover lift and focus ring; on mobile the row runs to the screen edges, like the carousels. */}
+                <div className="flex lg:grid lg:grid-cols-2 gap-3 md:gap-4 overflow-x-auto md:overflow-x-visible no-scrollbar -my-2 py-2 -mx-4 px-4 md:-m-2 md:p-2">
+                  <Link to="/library" data-slot="quick-action" className={quickActionClass}>
+                    <div className={quickActionIconClass}>
+                      <Film />
+                    </div>
+                    <h3 className={quickActionLabelClass}>Library</h3>
+                  </Link>
 
-                <button
-                  type="button"
-                  data-slot="quick-action"
-                  onClick={() => setShowAddModal(true)}
-                  className={quickActionClass}
-                >
-                  <div className={quickActionIconClass}>
-                    <Plus />
-                  </div>
-                  <h3 className={quickActionLabelClass}>Add</h3>
-                </button>
+                  <button
+                    type="button"
+                    data-slot="quick-action"
+                    onClick={() => setShowAddModal(true)}
+                    className={quickActionClass}
+                  >
+                    <div className={quickActionIconClass}>
+                      <Plus />
+                    </div>
+                    <h3 className={quickActionLabelClass}>Add</h3>
+                  </button>
 
-                <Link to="/stats" data-slot="quick-action" className={quickActionClass}>
-                  <div className={quickActionIconClass}>
-                    <ChartPie />
-                  </div>
-                  <h3 className={quickActionLabelClass}>Stats</h3>
-                </Link>
-                <Link to="/export" data-slot="quick-action" className={quickActionClass}>
-                  <div className={quickActionIconClass}>
-                    <Download />
-                  </div>
-                  <h3 className={quickActionLabelClass}>CSV</h3>
-                </Link>
+                  <Link to="/stats" data-slot="quick-action" className={quickActionClass}>
+                    <div className={quickActionIconClass}>
+                      <ChartPie />
+                    </div>
+                    <h3 className={quickActionLabelClass}>Stats</h3>
+                  </Link>
+                  <Link to="/export" data-slot="quick-action" className={quickActionClass}>
+                    <div className={quickActionIconClass}>
+                      <Download />
+                    </div>
+                    <h3 className={quickActionLabelClass}>CSV</h3>
+                  </Link>
+                </div>
               </div>
             </div>
 
-            {/* Right column: Recently Added movies, then TV shows */}
+            {/* Recently Added movies, then TV shows */}
             {(recentMovies.length > 0 || recentShows.length > 0) && (
-              <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 lg:flex-none lg:overflow-y-auto lg:overflow-x-hidden pb-4 md:pb-8">
+              <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 pb-4 md:pb-8">
                 <RecentCarousel title="Recently Added Movies" items={recentMovies} />
                 <RecentCarousel title="Recently Added TV Shows" items={recentShows} />
               </div>

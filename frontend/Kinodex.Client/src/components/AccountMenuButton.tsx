@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { UserButton, useUser } from "@clerk/clerk-react";
+import { sizedImageUrl } from "../utils/clerkImage";
 
 interface AccountMenuButtonProps {
   size?: number; // Avatar size in px
@@ -77,7 +78,12 @@ function AccountMenuButton({ size = 56, placement = "below" }: AccountMenuButton
         className="shrink-0 rounded-full overflow-hidden cursor-pointer ring-0 hover:ring-2 hover:ring-foreground/30 transition"
         style={{ width: size, height: size }}
       >
-        <img src={user.imageUrl} alt="" className="w-full h-full object-cover" />
+        {/* At the size it's drawn (see utils/clerkImage) */}
+        <img
+          src={sizedImageUrl(user.imageUrl, size, window.devicePixelRatio)}
+          alt=""
+          className="w-full h-full object-cover"
+        />
       </button>
 
       {open &&
