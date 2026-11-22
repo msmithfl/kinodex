@@ -1,14 +1,10 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Copy } from "../types";
 
-// The left padding of a copy row's title cell, so its label lines up under the title's poster
-// (the cell's own padding, the toggle and the gap after it)
-export const COPY_TOGGLE_SPACE = "pl-13";
-
-// The arrow before a title in the movie and TV tables that shows or hides its copies as rows
-// underneath. A title with one copy (count 0) gets an empty space the same size, so every title
-// lines up and nothing moves.
+// After a title in the movie and TV tables, when it has several copies: a small chip with how many
+// and an arrow, which shows or hides them as rows underneath. Nothing at all for a title with one
+// copy (count 0), so no row keeps space for it.
 function CopyRowToggle({
   count,
   open,
@@ -20,7 +16,7 @@ function CopyRowToggle({
   title: string;
   onToggle: () => void;
 }) {
-  if (count === 0) return <span className="size-6 shrink-0" aria-hidden="true" />;
+  if (count === 0) return null;
   return (
     <button
       type="button"
@@ -31,9 +27,10 @@ function CopyRowToggle({
       aria-expanded={open}
       aria-label={`${open ? "Hide" : "Show"} the ${count} copies of ${title}`}
       title={`${count} copies`}
-      className="grid size-6 shrink-0 cursor-pointer place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      className="inline-flex h-5 shrink-0 cursor-pointer items-center gap-0.5 rounded-full border border-border pr-1 pl-1.5 text-xs text-muted-foreground tabular-nums transition-colors hover:bg-accent hover:text-foreground"
     >
-      <ChevronRight className={cn("size-4 transition-transform", open && "rotate-90")} />
+      {count}
+      <ChevronDown className={cn("size-3 transition-transform", open && "rotate-180")} />
     </button>
   );
 }

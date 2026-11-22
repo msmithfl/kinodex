@@ -12,3 +12,6 @@ export const isMobile = () =>
 // and no sidebar. This is about the window, on any device.
 export const PHONE_WIDTH_QUERY = "(max-width: 47.99rem)";
 export const isPhoneWidth = () => window.matchMedia(PHONE_WIDTH_QUERY).matches;
+
+// A mouse or trackpad that can hover (so a hover can reveal controls); false on touch screens
+export const canHover = () => window.matchMedia("(hover: hover)").matches;

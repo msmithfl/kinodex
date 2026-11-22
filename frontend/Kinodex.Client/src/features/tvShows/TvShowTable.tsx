@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import SortHeader from "../../components/SortHeader";
 import { QuickRating } from "../../components/StarRating";
-import CopyRowToggle, { CopyRowLabel, COPY_TOGGLE_SPACE } from "../../components/CopyRowToggle";
+import CopyRowToggle, { CopyRowLabel } from "../../components/CopyRowToggle";
 import { useRateTvShow } from "./api";
 import { getRelativeTimeString } from "../../utils/dateUtils";
 import { formatSeasons } from "../../utils/formatSeasons";
@@ -17,6 +17,8 @@ interface TvShowTableProps {
   // Already filtered, searched and sorted; each with the copies the filters let through
   rows: TitleRow<TvShow>[];
   visibleColumns: VisibleColumns;
+  // A small poster before each title (the Display menu's Poster thumbnails)
+  showPosters: boolean;
   sortBy: SortOption;
   sortDirection: "asc" | "desc";
   onSort: (sortKey: SortOption) => void;
@@ -30,6 +32,8 @@ const headClass = "border-b border-border px-4 py-2.5 text-left text-xs font-med
 const cellClass = "border-b border-border/60 px-4 py-2 align-middle";
 // The title column is a fixed width; longer titles are cut short with "…"
 const TITLE_WIDTH = "w-56 max-w-56 md:w-96 md:max-w-96";
+// Where a title starts with Poster thumbnails on: the cell's padding, the poster and the gap after it
+const TITLE_INDENT = "pl-14";
 
 function Formats({ formats }: { formats: string[] }) {
   return formats.length > 0 ? (
@@ -55,10 +59,11 @@ function Paid({ amount, gift }: { amount: number; gift: boolean }) {
   );
 }
 
-// The TV list's table: a small poster and the title (opens the drawer), then the optional
-// columns. A show with several copies can open to show a row for each; its own row adds them up.
-// A whole row opens the drawer; rating stars save straight away.
-function TvShowTable({ rows, visibleColumns, sortBy, sortDirection, onSort, isOpen, onOpenChange, onOpen }: TvShowTableProps) {
+// The TV list's table: a small poster and the title (opens the drawer, with a chip to open a show's
+// copies when it has several), then the optional columns. A show's copies open as a row each, their
+// names under the show's title; its own row adds them up. A whole row opens the drawer; rating
+// stars save straight away.
+function TvShowTable({ rows, visibleColumns, showPosters, sortBy, sortDirection, onSort, isOpen, onOpenChange, onOpen }: TvShowTableProps) {
   const rateTvShow = useRateTvShow();
   const sortProps = { sortBy, sortDirection, onSort };
 
@@ -69,8 +74,19 @@ function TvShowTable({ rows, visibleColumns, sortBy, sortDirection, onSort, isOp
       onClick={() => onOpen(show.id)}
       className="cursor-pointer bg-muted/25 transition-colors hover:bg-accent/50"
     >
-      <td className={cn(cellClass, TITLE_WIDTH, COPY_TOGGLE_SPACE)}>
-        <CopyRowLabel copy={copy} index={index} name={seasonsTitle(copy, show.totalSeasons)} />
+      <td className={cn(cellClass, TITLE_WIDTH, showPosters && copy.productPosterPath ? undefined : showPosters ? TITLE_INDENT : "pl-8")}>
+        {/* Its product image under the show's poster, when it has one; its name under the title */}
+        <div className="flex min-w-0 items-center gap-3">
+          {showPosters && copy.productPosterPath && (
+            <img
+              src={copy.productPosterPath}
+              alt=""
+              loading="lazy"
+              className="h-10 w-7 shrink-0 rounded-sm border border-border bg-muted object-cover"
+            />
+          )}
+          <CopyRowLabel copy={copy} index={index} name={seasonsTitle(copy, show.totalSeasons)} />
+        </div>
       </td>
       {visibleColumns.seasons && (
         <td className={cn(cellClass, "whitespace-nowrap text-foreground/85")}>
@@ -107,7 +123,7 @@ function TvShowTable({ rows, visibleColumns, sortBy, sortDirection, onSort, isOp
         <table className="w-full border-separate border-spacing-0 text-sm">
           <thead className="sticky top-0 z-10 bg-card">
             <tr>
-              <SortHeader label="Title" sortKey="alphabetic" {...sortProps} className={TITLE_WIDTH} />
+              <SortHeader label="Title" sortKey="alphabetic" {...sortProps} className={cn(TITLE_WIDTH, showPosters && TITLE_INDENT)} />
               {COLUMNS.filter(({ key }) => visibleColumns[key]).map(({ key, label, sortKey }) =>
                 sortKey ? (
                   <SortHeader
@@ -137,25 +153,8 @@ function TvShowTable({ rows, visibleColumns, sortBy, sortDirection, onSort, isOp
                 >
                   <td className={cn(cellClass, TITLE_WIDTH)}>
                     <div className="flex min-w-0 items-center gap-3">
-                      <CopyRowToggle
-                        count={several ? copies.length : 0}
-                        open={open}
-                        title={show.title}
-                        onToggle={() => onOpenChange(show.id, !open)}
-                      />
-                      <Link
-                        to={`/tv-shows?show=${show.id}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // Plain clicks open the drawer; ctrl/cmd-click opens the list with it in a drawer, in a new tab
-                          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-                          e.preventDefault();
-                          onOpen(show.id);
-                        }}
-                        className="flex min-w-0 items-center gap-3 hover:underline"
-                        title={show.title}
-                      >
-                        {show.posterPath ? (
+                      {showPosters &&
+                        (show.posterPath ? (
                           <img
                             src={show.posterPath}
                             alt=""
@@ -164,9 +163,29 @@ function TvShowTable({ rows, visibleColumns, sortBy, sortDirection, onSort, isOp
                           />
                         ) : (
                           <span className="h-10 w-7 shrink-0 rounded-sm bg-muted" />
-                        )}
-                        <span className="truncate font-medium">{show.title}</span>
-                      </Link>
+                        ))}
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Link
+                          to={`/tv-shows?show=${show.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Plain clicks open the drawer; ctrl/cmd-click opens the list with it in a drawer, in a new tab
+                            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                            e.preventDefault();
+                            onOpen(show.id);
+                          }}
+                          className="truncate font-medium hover:underline"
+                          title={show.title}
+                        >
+                          {show.title}
+                        </Link>
+                        <CopyRowToggle
+                          count={several ? copies.length : 0}
+                          open={open}
+                          title={show.title}
+                          onToggle={() => onOpenChange(show.id, !open)}
+                        />
+                      </div>
                     </div>
                   </td>
                   {visibleColumns.seasons && (

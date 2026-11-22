@@ -43,3 +43,11 @@ export function useStoredChoice<T extends string>(key: string, choices: readonly
     serialize: (value) => value,
   });
 }
+
+// An on/off choice (a switch in a menu), saved as "true" or "false"; anything else falls back
+export function useStoredFlag(key: string, fallback: boolean) {
+  return useStoredState<boolean>(key, fallback, {
+    parse: (saved) => (saved === "true" ? true : saved === "false" ? false : undefined),
+    serialize: String,
+  });
+}

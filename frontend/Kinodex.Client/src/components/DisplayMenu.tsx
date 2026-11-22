@@ -1,6 +1,5 @@
 import { useId, useState } from "react";
 import { ChevronLeft, ChevronRight, LayoutGrid, Table2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -19,12 +18,36 @@ interface DisplayMenuProps<K extends string> {
   // Titles with several copies start open (a row for each copy) or closed
   openCopies: boolean;
   onOpenCopiesChange: (open: boolean) => void;
+  // A small poster before each title in the table
+  showPosters: boolean;
+  onShowPostersChange: (show: boolean) => void;
+  // The title and year under each poster in poster view
+  showTitles: boolean;
+  onShowTitlesChange: (show: boolean) => void;
 }
 
-// The toolbar's Display menu, beside Sort: Table or Posters, and for the table, a Columns row
-// that opens the column checklist (like the Filter panel's lists) and whether titles with several
-// copies start open. The table's options stay in place (greyed out) in poster view. The button's
-// icon shows the current view.
+// An on/off option in the menu: its name, the switch at the right
+function SwitchRow({ id, label, checked, onCheckedChange }: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex h-9 items-center justify-between gap-4 px-4">
+      <label htmlFor={id} className="min-w-0 flex-1 cursor-pointer text-sm">
+        {label}
+      </label>
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  );
+}
+
+// The toolbar's Display menu, beside Sort: Table or Posters, then the options for the view
+// that's showing. The table's: a Columns row that opens the column checklist (like the Filter
+// panel's lists), a small poster beside each title, and whether titles with several copies start
+// open. The posters': whether each has its title and year underneath. The button's icon shows the
+// current view.
 function DisplayMenu<K extends string>({
   viewMode,
   onViewModeChange,
@@ -33,6 +56,10 @@ function DisplayMenu<K extends string>({
   onToggleColumn,
   openCopies,
   onOpenCopiesChange,
+  showPosters,
+  onShowPostersChange,
+  showTitles,
+  onShowTitlesChange,
 }: DisplayMenuProps<K>) {
   const id = useId();
   // Showing the column checklist rather than the main page
@@ -98,33 +125,46 @@ function DisplayMenu<K extends string>({
             </div>
 
             <Separator />
-            {/* The table's options; greyed out, but still taking their space, in poster view */}
-            <fieldset disabled={!table} className={cn("flex flex-col", !table && "opacity-50")}>
-              <legend className="sr-only">Table</legend>
-              <div className="p-1">
-                <button
-                  type="button"
-                  onClick={() => setChoosingColumns(true)}
-                  className={cn(
-                    "flex h-9 w-full items-center gap-2 rounded-md px-3 text-left text-sm",
-                    table && "cursor-pointer hover:bg-accent",
-                  )}
-                >
-                  <span className="flex-1">Columns</span>
-                  <span className="text-xs text-muted-foreground">{table ? columnSummary : "Table only"}</span>
-                  <ChevronRight className="size-4 text-muted-foreground" />
-                </button>
+            {/* The options for the view that's showing */}
+            {table ? (
+              <>
+                <div className="p-1">
+                  <button
+                    type="button"
+                    onClick={() => setChoosingColumns(true)}
+                    className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-md px-3 text-left text-sm hover:bg-accent"
+                  >
+                    <span className="flex-1">Columns</span>
+                    <span className="text-xs text-muted-foreground">{columnSummary}</span>
+                    <ChevronRight className="size-4 text-muted-foreground" />
+                  </button>
+                </div>
+                <Separator />
+                <div className="py-1.5">
+                  <SwitchRow
+                    id={`${id}-posters`}
+                    label="Poster thumbnails"
+                    checked={showPosters}
+                    onCheckedChange={onShowPostersChange}
+                  />
+                  <SwitchRow
+                    id={`${id}-open-copies`}
+                    label="Open copies"
+                    checked={openCopies}
+                    onCheckedChange={onOpenCopiesChange}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="py-1.5">
+                <SwitchRow
+                  id={`${id}-titles`}
+                  label="Show titles"
+                  checked={showTitles}
+                  onCheckedChange={onShowTitlesChange}
+                />
               </div>
-
-              <Separator />
-              <div className="flex items-center justify-between gap-4 px-4 py-3">
-                <label htmlFor={`${id}-open-copies`} className={cn("min-w-0", table && "cursor-pointer")}>
-                  <span className="block text-sm">Open copies</span>
-                  <span className="block text-xs text-muted-foreground">A row for each copy, to start with</span>
-                </label>
-                <Switch id={`${id}-open-copies`} checked={openCopies} onCheckedChange={onOpenCopiesChange} />
-              </div>
-            </fieldset>
+            )}
           </div>
         )}
       </PopoverContent>

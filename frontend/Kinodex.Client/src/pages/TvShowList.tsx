@@ -8,8 +8,9 @@ import PageShell from "../components/PageShell";
 import PageHeader from "../components/PageHeader";
 import { VIEW_MODES, type ViewMode } from "../components/ViewModeToggle";
 import DisplayMenu from "../components/DisplayMenu";
-import { POSTER_GRID } from "../components/posterGrid";
-import { useStoredChoice, useStoredState } from "../utils/useStoredState";
+import { POSTER_GRID, POSTER_GRID_CAPTIONED } from "../components/posterGrid";
+import { useStoredChoice, useStoredFlag, useStoredState } from "../utils/useStoredState";
+import { isPhoneWidth } from "../utils/isMobile";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
 import { useUrlSort } from "../utils/useUrlSort";
 import { titleSearchScore } from "../utils/textSearch";
@@ -104,6 +105,11 @@ function TvShowList() {
   const { data: shelfSectionList = [] } = useShelfSections();
   const { data: collectionList = [] } = useCollections();
   const [viewMode, setViewMode] = useStoredChoice<ViewMode>("tvShowListView", VIEW_MODES, "table");
+  // The small poster before each title in the table
+  const [showPosters, setShowPosters] = useStoredFlag("tvShowListPosters", true);
+  // The title and year under each poster in poster view; at first as before, shown from tablet up
+  // and not on phones, where the posters are smaller
+  const [showTitles, setShowTitles] = useStoredFlag("tvShowListPosterTitles", !isPhoneWidth());
   const [visibleColumns, setVisibleColumns] = useStoredState<VisibleColumns>("tvShowListColumns", DEFAULT_COLUMNS, {
     // Merge over the defaults so a column added later still has a value
     parse: (saved) => ({ ...DEFAULT_COLUMNS, ...JSON.parse(saved) }),
@@ -238,6 +244,10 @@ function TvShowList() {
                 onToggleColumn={toggleColumn}
                 openCopies={openCopies.openByDefault}
                 onOpenCopiesChange={openCopies.setOpenByDefault}
+                showPosters={showPosters}
+                onShowPostersChange={setShowPosters}
+                showTitles={showTitles}
+                onShowTitlesChange={setShowTitles}
               />
               {/* Add, just the icon; tablet up (phones add from the bottom bar) */}
               <Button size="icon" onClick={() => setShowAddModal(true)} className="hidden md:inline-flex" aria-label="Add TV show">
@@ -270,7 +280,7 @@ function TvShowList() {
             // The small inset keeps the hover ring and lift inside the scroll area
             <div className="-mx-2 h-full overflow-y-auto px-2 pt-2 pb-6">
               <MotionConfig reducedMotion="user">
-                <div className={POSTER_GRID}>
+                <div className={showTitles ? POSTER_GRID_CAPTIONED : POSTER_GRID}>
                   {filteredShows.map((show, index) => {
                     const seasons = formatSeasons(ownedSeasons(show.copies), show.totalSeasons);
                     return (
@@ -289,7 +299,7 @@ function TvShowList() {
                           rating={show.rating}
                           to={`/tv-shows?show=${show.id}`}
                           onOpen={() => openShow(show.id)}
-                          hideCaptionOnMobile
+                          hideCaption={!showTitles}
                         />
                       </motion.div>
                     );
@@ -301,6 +311,7 @@ function TvShowList() {
             <TvShowTable
               rows={tableRows}
               visibleColumns={visibleColumns}
+              showPosters={showPosters}
               sortBy={sortBy}
               sortDirection={sortDirection}
               onSort={handleColumnClick}
