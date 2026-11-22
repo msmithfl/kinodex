@@ -87,7 +87,7 @@ the `useSettings()` hook (shared cache).
 
 | Route | Page | Status |
 |---|---|---|
-| `/` | `Dashboard`: account row (badge, name, and "Collecting since" a year: the one chosen in Settings, else the sign-up year from Clerk; `AccountName`; in the top bar on phones), spending (full width, first on phones), quick actions, recently added movies and TV shows (two sideways-scrolling poster rows, right column on desktop) | Core |
+| `/` | `Dashboard`: account row (badge, name, and "Collecting since" a year: the one chosen in Settings, else the sign-up year from Clerk; `AccountName`; in the top bar on phones), spending (full width, first on phones), quick actions, recently added movies and TV shows (two sideways-scrolling poster rows across the full width, the posters sized to fill the height left; on desktop the spending card and a 2x2 of quick actions sit side by side above them) | Core |
 | `/library` | `MovieList` (redesigned): title and count, table/poster views, search, filter panel and chips, sort, columns, floating bulk edit/delete bar, paged in the browser (`Pagination`, 100 per page) | Core |
 | `/movie/:id` | Redirects to `/library?movie=:id` (the full page is retired) | Core |
 | `/tv-shows` | `TvShowList` (redesigned, like `MovieList` without selection or paging): title and count, Add TV show, search, filter panel and chips (`features/tvShows/filters.ts`), sort, columns; `features/tvShows/TvShowTable` | Core |
