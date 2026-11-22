@@ -3,22 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChipSelect } from "./ChipSelect";
+import CollectionsField from "./CollectionsField";
 import { FormField } from "./FormFields";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 import { FORMATS } from "../utils/formats";
-
-interface BulkEditData {
-  shelfNumber: string;
-  shelfSection: string;
-  hdDriveNumber: string;
-  purchasePrice: string;
-  purchasedAt: string;
-  isStreaming: string;
-  hasWatched: string;
-  isGift: string;
-  condition: string;
-  formats: string;
-}
+import { EMPTY_BULK_EDIT, type BulkEditData } from "./bulkEditData";
 
 interface BulkEditModalProps {
   // How many movies, and copies of them, the edit changes
@@ -27,6 +17,8 @@ interface BulkEditModalProps {
   bulkEditData: BulkEditData;
   setBulkEditData: React.Dispatch<React.SetStateAction<BulkEditData>>;
   shelfSections: string[];
+  // The collections any of the chosen movies is in, for "Remove from collections"
+  pickedCollections: string[];
   setShowBulkEditModal: (open: boolean) => void;
   handleBulkEdit: () => void;
   saving: boolean;
@@ -76,19 +68,26 @@ function BulkSelect({
 }
 
 // Change the same fields on every selected copy, and on the movies they're copies of (watched,
-// streaming); anything left alone keeps its current value
+// streaming, collections added or removed); anything left alone keeps its current value
 export function BulkEditModal({
   movieCount,
   copyCount,
   bulkEditData,
   setBulkEditData,
   shelfSections,
+  pickedCollections,
   setShowBulkEditModal,
   handleBulkEdit,
   saving,
 }: BulkEditModalProps) {
   const set = (field: keyof BulkEditData) => (value: string) =>
     setBulkEditData((prev) => ({ ...prev, [field]: value }));
+  // A collection is either added or removed: picking it in one list takes it out of the other
+  const setCollections = (field: "addCollections" | "removeCollections") => (names: string[]) =>
+    setBulkEditData((prev) => {
+      const other = field === "addCollections" ? "removeCollections" : "addCollections";
+      return { ...prev, [field]: names, [other]: prev[other].filter((name) => !names.includes(name)) };
+    });
 
   const movies = `${movieCount} movie${movieCount === 1 ? "" : "s"}`;
   const copies = `${copyCount} cop${copyCount === 1 ? "y" : "ies"}`;
@@ -174,6 +173,21 @@ export function BulkEditModal({
           <h3 className={cn(heading, "pt-2")}>Movies ({movieCount})</h3>
           <BulkSelect label="Streaming" value={bulkEditData.isStreaming} options={YES_NO} onChange={set("isStreaming")} />
           <BulkSelect label="Watched" value={bulkEditData.hasWatched} options={YES_NO} onChange={set("hasWatched")} />
+
+          <CollectionsField
+            label="Add to collections"
+            values={bulkEditData.addCollections}
+            onChange={setCollections("addCollections")}
+            className="col-span-2"
+          />
+          <FormField label="Remove from collections" className="col-span-2">
+            <ChipSelect
+              placeholder={pickedCollections.length > 0 ? "Take out of a collection" : "None of them is in a collection"}
+              values={bulkEditData.removeCollections}
+              options={pickedCollections.map((value) => ({ value }))}
+              onChange={setCollections("removeCollections")}
+            />
+          </FormField>
         </div>
 
         <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-card px-5 py-3 max-md:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
@@ -181,7 +195,7 @@ export function BulkEditModal({
             variant="ghost"
             onClick={() => {
               setShowBulkEditModal(false);
-              setBulkEditData({ shelfNumber: "", shelfSection: "", hdDriveNumber: "", purchasePrice: "", purchasedAt: "", isStreaming: "", hasWatched: "", isGift: "", condition: "", formats: "" });
+              setBulkEditData(EMPTY_BULK_EDIT);
             }}
           >
             Cancel

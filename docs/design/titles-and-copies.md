@@ -114,7 +114,8 @@ belongs to the Blu-ray.
   ticking a title with several copies opens it, so copies can be unticked one by one (the title's
   box shows a dash when only some are). The dialog always has both kinds of field: copy fields
   (format, condition, price, purchase date, gift, shelf, HDD) change the ticked copies, and title
-  fields (watched, Streaming) change the titles those copies belong to. So:
+  fields (watched, Streaming, and collections to add them to or take them out of) change the
+  titles those copies belong to. So:
   - a title with one copy works as today (ticking it ticks its only copy);
   - with some of a title's copies ticked, copy fields change only those, and title fields still
     change the title (watched is about the film, not a disc);

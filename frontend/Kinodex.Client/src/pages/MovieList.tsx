@@ -53,25 +53,13 @@ import {
 } from "../utils/copySelection";
 import { useOpenCopies } from "../components/useOpenCopies";
 import { BulkEditModal } from "../components/BulkEditModal";
+import { EMPTY_BULK_EDIT, editCollections } from "../components/bulkEditData";
 import { applyFilters } from "../utils/applyFilters";
 import { getSortedMovies } from "../utils/getSortedMovies";
 import Pagination from "../components/Pagination";
 import { titleSearchScore } from "../utils/textSearch";
 
 const PAGE_SIZE = 100;
-
-const EMPTY_BULK_EDIT = {
-  shelfNumber: "",
-  shelfSection: "",
-  hdDriveNumber: "",
-  purchasePrice: "",
-  purchasedAt: "",
-  isStreaming: "",
-  hasWatched: "",
-  isGift: "",
-  condition: "",
-  formats: "",
-};
 
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
@@ -216,8 +204,8 @@ function MovieList() {
   const handleSelectCopy = (copyId: number, checked: boolean) =>
     setSelection((prev) => selectCopy(prev, copyId, checked));
 
-  // Copy fields go to the ticked copies; title fields (streaming, watched) to the movies they're
-  // copies of
+  // Copy fields go to the ticked copies; title fields (streaming, watched, collections added or
+  // removed) to the movies they're copies of
   const handleBulkEdit = async () => {
     try {
       const updates: Partial<Copy> = {};
@@ -258,6 +246,7 @@ function MovieList() {
       const updatedMovies = picked.map(({ title, copies }) => ({
         ...title,
         ...movieUpdates,
+        collections: editCollections(title.collections, bulkEditData),
         copies: title.copies.map((c) => (copies.includes(c) ? { ...c, ...updates } : c)),
       }));
       await updateMovies.mutateAsync(updatedMovies);
@@ -557,6 +546,7 @@ function MovieList() {
           bulkEditData={bulkEditData}
           setBulkEditData={setBulkEditData}
           shelfSections={shelfSections}
+          pickedCollections={[...new Set(picked.flatMap((p) => p.title.collections))].sort((a, b) => a.localeCompare(b))}
           setShowBulkEditModal={setShowBulkEditModal}
           handleBulkEdit={handleBulkEdit}
           saving={updateMovies.isPending}

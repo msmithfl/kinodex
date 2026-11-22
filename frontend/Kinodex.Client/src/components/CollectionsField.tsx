@@ -10,11 +10,14 @@ interface CollectionsFieldProps {
   // The collections the movie or show is in, by name
   values: string[];
   onChange: (collections: string[]) => void;
+  // Bulk edit's "Add to collections" names it differently
+  label?: string;
+  className?: string;
 }
 
 // The movie and TV forms' Collections: pick existing ones, or add a new one with + (which also puts
-// the title in it)
-function CollectionsField({ values, onChange }: CollectionsFieldProps) {
+// the title in it). Bulk edit uses it for the collections to add the chosen movies to.
+function CollectionsField({ values, onChange, label = "Collections", className }: CollectionsFieldProps) {
   const { data: collections = [] } = useCollections();
   const createCollection = useCreateCollection();
   const [adding, setAdding] = useState(false);
@@ -36,7 +39,7 @@ function CollectionsField({ values, onChange }: CollectionsFieldProps) {
   };
 
   return (
-    <FormField label="Collections">
+    <FormField label={label} className={className}>
       <div className="flex flex-wrap gap-2">
         <ChipSelect
           placeholder="Add to a collection"
