@@ -22,10 +22,24 @@ describe("copies", () => {
   });
 
   it("finds the title that already has a UPC, but not the copy being edited", () => {
-    expect(findUpcOwner([dieHard], " 012345678905 ")?.copy).toBe(vhs);
-    expect(findUpcOwner([dieHard], "012345678905", 11)).toBeNull();
-    expect(findUpcOwner([dieHard], "123")).toBeNull(); // Too short to be a barcode
-    expect(findUpcOwner([dieHard], "111111111111")).toBeNull();
+    expect(findUpcOwner([dieHard], " 012345678905 ", dieHard)?.copy).toBe(vhs);
+    expect(findUpcOwner([dieHard], "012345678905", dieHard, 11)).toBeNull();
+    expect(findUpcOwner([dieHard], "123", dieHard)).toBeNull(); // Too short to be a barcode
+    expect(findUpcOwner([dieHard], "111111111111", dieHard)).toBeNull();
+  });
+
+  it("only counts the same film, so a box set's films can share its UPC", () => {
+    const setUpc = "5039036044776";
+    const alien = makeMovie({ id: 2, title: "Alien", tmdbId: 348, copies: [makeCopy({ id: 21, upcNumber: setUpc })] });
+    const alien3 = makeMovie({ id: 3, title: "Alien³", tmdbId: 8077, copies: [makeCopy({ id: 31, upcNumber: setUpc })] });
+    const library = [alien, alien3];
+
+    // Another film in the set isn't a duplicate
+    expect(findUpcOwner(library, setUpc, { title: "Alien", tmdbId: 348 }, 21)).toBeNull();
+    // A second entry for the same film (by TMDB id, whatever it's called) is
+    expect(findUpcOwner(library, setUpc, { title: "Alien (1979)", tmdbId: 348 })?.title).toBe(alien);
+    // Without a TMDB id, the name decides
+    expect(findUpcOwner(library, setUpc, { title: " alien³ ", tmdbId: null })?.title).toBe(alien3);
   });
 
   it("dates a title by its newest copy", () => {

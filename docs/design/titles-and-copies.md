@@ -174,7 +174,8 @@ Frontend:
 3. **Built.** Adding a copy to a title already in the library: picking one in Add movie or Add TV
    show asks "add a copy to it" or "add as new"; a scanned barcode already owned says which copy
    it is and offers "Add another copy" (search window and Search page); a copy card says when its
-   UPC is already in the library.
+   UPC is already on a copy of the same movie or show (by TMDB id, or name without one), so a box
+   set's other films, which share its UPC, don't count.
 4. **Built.** Merge duplicates: Settings → Duplicates lists the movies and shows with more than one
    entry (the same TMDB id), each ticked, with what it becomes; Merge folds them into the oldest
    entry in one transaction (`POST /api/titles/merge`), every copy keeping its id.
