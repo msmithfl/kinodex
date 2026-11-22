@@ -76,7 +76,7 @@ Text is written in sentence case ("Add movie", not "Add Movie"), and in plain wo
 - **Empty:** `EmptyState` with one short sentence.
 - **Remembered choices** (view mode, tab, sort): `useStoredState` / `useStoredChoice`, never
   `localStorage` directly.
-- **Table or posters:** `ViewModeToggle`.
+- **Table or posters:** `DisplayMenu` in a list's toolbar (with its columns), `ViewModeToggle` on its own elsewhere.
 - **Data:** through the hooks in `features/*/api.ts` (React Query), so every screen sees the same
   data; see [frontend-data-layer.md](frontend-data-layer.md).
 
