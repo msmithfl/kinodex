@@ -186,9 +186,12 @@ function Dashboard() {
           // One column: the account, spending and quick actions, then the Recently Added rows across
           // the full width, filling the rest of the screen. Its page padding is moved onto this box
           // (-mx-4 px-4) on phones so the carousels can reach the screen edges without being clipped.
-          // Its top margin and the shell's pt-2 match the bottom padding below the poster rows
-          // (16px on phones, 32px from tablet up).
-          <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 overflow-y-auto overflow-x-hidden -mx-4 px-4 md:mx-0 md:px-0 mt-2 md:mt-6">
+          // From tablet up it has 8px of padding all round the top (-mx-2 px-2, pt-2 in place of
+          // 8px of the top margin), so the avatar's hover ring and the quick actions' hover lift
+          // and focus ring aren't cut off by this box's edges, and nothing moves.
+          // Its top margin and padding and the shell's pt-2 match the bottom padding below the
+          // poster rows (16px on phones, 32px from tablet up).
+          <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 overflow-y-auto overflow-x-hidden -mx-4 px-4 md:-mx-2 md:px-2 mt-2 md:mt-4 md:pt-2">
             {/* The top: account, spending, quick actions. On phones its gap (spending card to quick
                 actions) is the page's own 16px edge, like the space around everything else */}
             <div className="shrink-0 flex flex-col gap-4 md:gap-6">
