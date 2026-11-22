@@ -1538,6 +1538,8 @@ export interface components {
         UserSettings: {
             userId: string;
             showCollectionCompletion: boolean;
+            /** Format: int32 */
+            collectingSince?: null | number;
         };
     };
     responses: never;

@@ -22,6 +22,32 @@ public class SettingsAndLookupTests(KinodexApiFactory api)
         Assert.True((await bob.GetJsonAsync("/api/settings")).GetProperty("showCollectionCompletion").GetBoolean());
     }
 
+    [Fact]
+    public async Task Collecting_since_is_unset_until_chosen_and_must_be_a_sensible_year()
+    {
+        var client = api.ClientFor(KinodexApiFactory.NewUserId());
+
+        // Unset: the dashboard falls back to the sign-up year
+        Assert.Equal(System.Text.Json.JsonValueKind.Null,
+            (await client.GetJsonAsync("/api/settings")).GetProperty("collectingSince").ValueKind);
+
+        var saved = await client.PutAsJsonAsync("/api/settings", new { showCollectionCompletion = true, collectingSince = 2012 });
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        Assert.Equal(2012, (await client.GetJsonAsync("/api/settings")).GetProperty("collectingSince").GetInt32());
+
+        foreach (var year in new[] { 1949, DateTime.UtcNow.Year + 2 })
+        {
+            var rejected = await client.PutAsJsonAsync("/api/settings", new { showCollectionCompletion = true, collectingSince = year });
+            Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+        }
+        Assert.Equal(2012, (await client.GetJsonAsync("/api/settings")).GetProperty("collectingSince").GetInt32());
+
+        // Back to the sign-up year
+        await client.PutAsJsonAsync("/api/settings", new { showCollectionCompletion = true, collectingSince = (int?)null });
+        Assert.Equal(System.Text.Json.JsonValueKind.Null,
+            (await client.GetJsonAsync("/api/settings")).GetProperty("collectingSince").ValueKind);
+    }
+
     [Theory]
     [InlineData("abc")]
     [InlineData("1234567")]          // too short

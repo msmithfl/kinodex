@@ -79,7 +79,7 @@ the `useSettings()` hook (shared cache).
 |---|---|
 | `Sidebar` (tablet up, redesigned) | Logo + collapse toggle (icon rail with tooltips, remembered in localStorage) · Search (opens `CommandPalette`) · Add (opens `AddItemModal`) · **Library:** Movies, TV Shows (with counts), Collections, Genres · **Insights:** Dashboard, Stats, CSV Export · Settings · account (`AccountMenuButton`, menu opens upward). Links are defined in `components/navigation.ts` |
 | `CommandPalette` (Ctrl/⌘K anywhere, or the sidebar's Search) | Every movie and TV show (title, year, UPC; opens its list with the drawer), once something is typed the collections (by name, with cover and title count; opens the Collections page with its drawer), the pages, and Add. Before typing it shows the newest few movies and shows |
-| `Header` (phones only, the top bar; taller where a title sits over tabs or a search box) | Depends on the page: on Movies, TV Shows, Collections, Genres and a genre, "Library" over the tabs between them (`SubNavigation`); on Search, "Search" over the search box (the Search page puts it there through `utils/topBar.ts`); on Dashboard and Stats, the logo and the page name, and Settings at the right; on Settings, the logo and "Settings"; elsewhere the logo |
+| `Header` (phones only, the top bar; taller where a title sits over tabs or a search box) | Depends on the page: on Movies, TV Shows, Collections, Genres and a genre, "Library" over the tabs between them (`SubNavigation`); on Search, "Search" over the search box (the Search page puts it there through `utils/topBar.ts`); on Dashboard, the account badge, name and Collecting since (`AccountName`), and Settings at the right; on Stats, the logo and the page name, and Settings at the right; on Settings, the logo and "Settings"; elsewhere the logo |
 | `BottomNav` (phones) | Library, Search, Add (opens `AddItemModal`: movie or TV), Scan, Dashboard |
 | `AccountMenuButton` | Clerk account menu, below or above the avatar |
 
@@ -87,7 +87,7 @@ the `useSettings()` hook (shared cache).
 
 | Route | Page | Status |
 |---|---|---|
-| `/` | `Dashboard`: account row, spending, quick actions, recently added movies and TV shows (two sideways-scrolling poster rows, right column on desktop) | Core |
+| `/` | `Dashboard`: account row (badge, name, and "Collecting since" a year: the one chosen in Settings, else the sign-up year from Clerk; `AccountName`; in the top bar on phones), spending (full width, first on phones), quick actions, recently added movies and TV shows (two sideways-scrolling poster rows, right column on desktop) | Core |
 | `/library` | `MovieList` (redesigned): title and count, table/poster views, search, filter panel and chips, sort, columns, floating bulk edit/delete bar, paged in the browser (`Pagination`, 100 per page) | Core |
 | `/movie/:id` | Redirects to `/library?movie=:id` (the full page is retired) | Core |
 | `/tv-shows` | `TvShowList` (redesigned, like `MovieList` without selection or paging): title and count, Add TV show, search, filter panel and chips (`features/tvShows/filters.ts`), sort, columns; `features/tvShows/TvShowTable` | Core |
@@ -97,7 +97,7 @@ the `useSettings()` hook (shared cache).
 | `/genres`, `/genres/:name` | `GenresView` (backdrop cards), `GenreDetail` (table/poster; movie drawer) | Core |
 | `/search` | `SearchPage`: movies + TV, debounced; below the results, matching collections (by name, cover from `utils/collectionCover.ts`, opening the collection drawer), then the search window's Go to pages and Add action (`GO_TO_LINKS`), filtered by the search. On phones the box is in the top bar and isn't selected until tapped | Core |
 | `/stats` | `Stats`: charts and breakdowns | Core |
-| `/settings` | `Settings`: collection completion rings; Add Movie presets (rename, delete; `features/movies/MoviePresetSettings.tsx`); Duplicates (movies or shows with the same TMDB id: a preview, every one ticked, then merged into the oldest entry; or marked Not a duplicate, which lists it under Kept separate with Undo and leaves it out of the count; `features/duplicates`) | Core |
+| `/settings` | `Settings`: Dashboard (Collecting since: the year you joined, or one from 1950 on); collection completion rings; Add Movie presets (rename, delete; `features/movies/MoviePresetSettings.tsx`); Duplicates (movies or shows with the same TMDB id: a preview, every one ticked, then merged into the oldest entry; or marked Not a duplicate, which lists it under Kept separate with Undo and leaves it out of the count; `features/duplicates`) | Core |
 | `/export` | `CsvExport`: the library CSV (movies and TV shows, one file) export/import, Letterboxd import (movies) | Core |
 | `/jellyfin` | `JellyfinPage`: connect a Jellyfin server (address + API key), then compare its movies and series with Kinodex (only on Jellyfin, only in Kinodex, in both). Update Streaming sets each title's Streaming from the comparison, after a preview, and links titles to their Jellyfin items (the Jellyfin logo beside TMDB's in the drawers). Reached from Settings for now (`docs/design/jellyfin-compare.md`) | New |
 | `/sign-in`, `/sign-up` | Clerk pages | Public |

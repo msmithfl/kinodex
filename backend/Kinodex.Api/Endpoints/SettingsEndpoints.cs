@@ -28,6 +28,17 @@ public static class SettingsEndpoints
             var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
 
+            // A year from the earliest allowed up to this one (or next, for anyone already into it
+            // in a timezone ahead of UTC)
+            if (updated.CollectingSince is int year
+                && (year < UserSettings.EarliestCollectingSince || year > DateTime.UtcNow.Year + 1))
+            {
+                return Results.BadRequest(new
+                {
+                    error = $"Collecting since is a year from {UserSettings.EarliestCollectingSince} to this year.",
+                });
+            }
+
             var settings = await db.UserSettings.FindAsync(userId);
             if (settings is null)
             {
@@ -36,6 +47,7 @@ public static class SettingsEndpoints
             }
 
             settings.ShowCollectionCompletion = updated.ShowCollectionCompletion;
+            settings.CollectingSince = updated.CollectingSince;
 
             await db.SaveChangesAsync();
             return Results.Ok(settings);

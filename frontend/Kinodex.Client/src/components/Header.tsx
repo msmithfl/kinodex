@@ -1,4 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
+import { UserButton } from "@clerk/clerk-react";
+import AccountName from "./AccountName";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import SubNavigation from "./SubNavigation";
@@ -9,7 +11,6 @@ const TITLE_CLASS = "text-2xl font-semibold tracking-tight";
 
 // Pages whose name follows the logo
 const BESIDE_LOGO_TITLES: Record<string, string> = {
-  "/": "Dashboard",
   "/stats": "Stats",
   "/settings": "Settings",
   "/jellyfin": "Jellyfin",
@@ -19,7 +20,8 @@ const BESIDE_LOGO_TITLES: Record<string, string> = {
 // has the logo, the pages, Add and the account):
 // - Movies, TV Shows, Collections, Genres (and a genre): "Library" over the tabs between them
 // - Search: "Search" over the search box, which the Search page puts in the slot below
-// - Dashboard and Stats: the logo and the page's name, and Settings at the right
+// - Dashboard: the account badge, the user's name and Collecting since, and Settings at the right
+// - Stats: the logo and the page's name, and Settings at the right
 // - Settings and Jellyfin: the logo and the page's name
 // - anywhere else: the logo
 // Two heights: taller with a title over the tabs or search box, shorter with the logo row. The
@@ -28,7 +30,8 @@ function Header() {
   const { pathname } = useLocation();
   const inLibrary = LIBRARY_LINKS.some((link) => isActivePath(pathname, link.path));
   const onSearch = pathname === "/search";
-  const showSettings = pathname === "/" || pathname === "/stats";
+  const onDashboard = pathname === "/";
+  const showSettings = onDashboard || pathname === "/stats";
   const title = BESIDE_LOGO_TITLES[pathname];
   const SettingsIcon = SETTINGS_LINK.icon;
   const stacked = inLibrary || onSearch;
@@ -46,10 +49,25 @@ function Header() {
         <p className={`${TITLE_CLASS} pt-2 text-center`}>{inLibrary ? "Library" : "Search"}</p>
       ) : (
         <div className="flex items-center gap-3">
-          <Link to="/" className="flex shrink-0 items-center">
-            <img src="/kinodex-logo.png" alt="Kinodex" className="size-10" />
-          </Link>
-          {title && <p className={TITLE_CLASS}>{title}</p>}
+          {onDashboard ? (
+            <>
+              {/* Clerk's own button (opens the account menu), at 40px like the logo. A style object
+                  rather than Tailwind classes: Tailwind v4's layered utilities lose to Clerk's own
+                  unlayered styles. The box keeps its size from the first frame, before Clerk draws
+                  the button, so the name beside it doesn't move. */}
+              <div className="flex size-10 shrink-0">
+                <UserButton appearance={{ elements: { avatarBox: { width: "2.5rem", height: "2.5rem" } } }} />
+              </div>
+              <AccountName />
+            </>
+          ) : (
+            <>
+              <Link to="/" className="flex shrink-0 items-center">
+                <img src="/kinodex-logo.png" alt="Kinodex" className="size-10" />
+              </Link>
+              {title && <p className={TITLE_CLASS}>{title}</p>}
+            </>
+          )}
           {showSettings && (
             <Button asChild variant="ghost" size="icon" className="ml-auto">
               <Link to={SETTINGS_LINK.path} aria-label={SETTINGS_LINK.label}>
