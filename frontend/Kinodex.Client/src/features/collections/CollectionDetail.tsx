@@ -17,6 +17,7 @@ import { useMovies } from "../movies/api";
 import { useTvShows } from "../tvShows/api";
 import type { Collection, Movie, TvShow } from "../../types";
 import { allFormats } from "../../utils/copies";
+import { collectionCover } from "../../utils/collectionCover";
 
 interface CollectionDetailProps {
   collectionName: string;
@@ -65,6 +66,8 @@ function CollectionDetail({
     collection?.backdropUrl ||
     movies.find((m) => m.backdropPath)?.backdropPath ||
     shows.find((s) => s.backdropPath)?.backdropPath;
+  // Its cover, as on the Collections page: the one chosen, or the earliest movie's (or show's) poster
+  const cover = collectionCover(collection ?? { name: collectionName }, allMovies, allShows);
   const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
   // The movies or shows as a table or posters; a group of each when the collection has shows
@@ -130,14 +133,28 @@ function CollectionDetail({
       <Tabs
         value={tab}
         onValueChange={(next) => setTab(next === "checklist" ? "checklist" : "movies")}
-        className="relative -mt-12 min-h-0 flex-1 gap-4 px-5 pb-5 md:px-8 md:pb-8"
+        className="relative -mt-24 min-h-0 flex-1 gap-4 px-5 pb-5 md:-mt-28 md:px-8 md:pb-8"
       >
-        <div className="min-w-0 shrink-0">
-          <h1 className="text-2xl font-semibold tracking-tight text-balance md:text-3xl">{collectionName}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {count(movies.length, "movie", "movies")}
-            {shows.length > 0 && ` · ${count(shows.length, "TV show", "TV shows")}`}
-          </p>
+        {/* The cover overlapping the backdrop, with the name beside it, as in the movie drawer */}
+        <div className="flex min-w-0 shrink-0 items-end gap-4 md:gap-6">
+          {cover ? (
+            <img
+              src={cover}
+              alt={`${collectionName} cover`}
+              className="aspect-2/3 w-28 shrink-0 rounded-lg border border-border bg-muted object-cover shadow-2xl md:w-36"
+            />
+          ) : (
+            <div className="flex aspect-2/3 w-28 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-xs text-muted-foreground md:w-36">
+              No cover
+            </div>
+          )}
+          <div className="min-w-0 flex-1 pb-1">
+            <h1 className="text-2xl font-semibold tracking-tight text-balance md:text-3xl">{collectionName}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {count(movies.length, "movie", "movies")}
+              {shows.length > 0 && ` · ${count(shows.length, "TV show", "TV shows")}`}
+            </p>
+          </div>
         </div>
 
         {/* The tabs, with the Table/Posters switch at the right while Titles is open */}
