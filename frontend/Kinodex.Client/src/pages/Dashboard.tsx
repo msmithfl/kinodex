@@ -17,6 +17,7 @@ import { AddItemModal } from "../components/lazyComponents";
 import AccountMenuButton from "../components/AccountMenuButton";
 import { lastAdded } from "../utils/copies";
 import AccountName from "../components/AccountName";
+import { sortedListPath } from "../utils/useUrlSort";
 
 interface Stats {
   thisMonth: MonthSpend;
@@ -66,8 +67,9 @@ const newestFirst = (items: RecentItem[]) =>
     })
     .slice(0, 20);
 
-// A titled row of posters that scrolls sideways (swipe, trackpad, or the arrows from tablet up)
-function RecentCarousel({ title, items }: { title: string; items: RecentItem[] }) {
+// A titled row of posters that scrolls sideways (swipe, trackpad, or the arrows from tablet up).
+// The title opens the whole list, newest first.
+function RecentCarousel({ title, listTo, items }: { title: string; listTo: string; items: RecentItem[] }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const scroll = (direction: 1 | -1) => {
     const row = rowRef.current;
@@ -80,7 +82,17 @@ function RecentCarousel({ title, items }: { title: string; items: RecentItem[] }
     // no scrolling and a big screen gets bigger posters rather than empty space
     <section className="flex-1 min-h-32 flex flex-col">
       <div className="shrink-0 flex items-center justify-between mb-2 md:mb-3">
-        <h2 className="text-base font-semibold tracking-tight md:text-lg">{title}</h2>
+        {/* Phones: across the row, the arrow at the right edge (there are no scroll buttons);
+            tablet up: the arrow just after the title, the scroll buttons at the right */}
+        <h2 className="min-w-0 flex-1 text-base font-semibold tracking-tight md:flex-none md:text-lg">
+          <Link
+            to={listTo}
+            className="group flex items-center justify-between gap-1 rounded-sm md:inline-flex md:justify-start outline-none transition-colors hover:text-primary-text focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          >
+            {title}
+            <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary-text md:size-5" />
+          </Link>
+        </h2>
         <div className="hidden md:flex gap-2">
           {([-1, 1] as const).map((direction) => (
             <Button
@@ -270,8 +282,8 @@ function Dashboard() {
             {/* Recently Added movies, then TV shows */}
             {(recentMovies.length > 0 || recentShows.length > 0) && (
               <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 pb-4 md:pb-8">
-                <RecentCarousel title="Recently Added Movies" items={recentMovies} />
-                <RecentCarousel title="Recently Added TV Shows" items={recentShows} />
+                <RecentCarousel title="Recently Added Movies" listTo={sortedListPath("/library", "date", "desc")} items={recentMovies} />
+                <RecentCarousel title="Recently Added TV Shows" listTo={sortedListPath("/tv-shows", "date", "desc")} items={recentShows} />
               </div>
             )}
           </div>

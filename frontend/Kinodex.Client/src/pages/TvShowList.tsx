@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
+import { useUrlSort } from "../utils/useUrlSort";
 import { titleSearchScore } from "../utils/textSearch";
 import { ApiError } from "../utils/api";
 import { useTvShows } from "../features/tvShows/api";
@@ -76,6 +77,8 @@ function TvShowList() {
     setQuery: setSearchQuery,
     focusSearch,
   } = useUrlSearchQuery();
+  // The dashboard's Recently Added headings open this list newest first (?sort=date&dir=desc)
+  useUrlSort(TV_SORT_OPTIONS, setSortBy, setSortDirection);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const location = useLocation();
 

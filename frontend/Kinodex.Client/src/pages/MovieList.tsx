@@ -21,6 +21,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
+import { useUrlSort } from "../utils/useUrlSort";
+import { MOVIE_SORT_OPTIONS } from "../components/sortOptions";
 import Drawer from "../components/Drawer";
 import MovieDetail from "../features/movies/MovieDetail";
 import { useDrawerParam } from "../utils/useDrawerParam";
@@ -82,6 +84,8 @@ function MovieList() {
     setQuery: setSearchQuery,
     focusSearch,
   } = useUrlSearchQuery();
+  // The dashboard's Recently Added headings open this list newest first (?sort=date&dir=desc)
+  useUrlSort(MOVIE_SORT_OPTIONS, setSortBy, setSortDirection);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const location = useLocation();
 
