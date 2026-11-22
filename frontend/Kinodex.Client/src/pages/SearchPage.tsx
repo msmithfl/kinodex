@@ -3,7 +3,8 @@ import { createPortal } from "react-dom";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useMovies } from "../features/movies/api";
 import { useTvShows } from "../features/tvShows/api";
-import { CopyPlus, Film, Plus, ScanBarcode, Search, Tv, X } from "lucide-react";
+import { useCollections } from "../features/collections/api";
+import { CopyPlus, Film, LayoutGrid, Plus, ScanBarcode, Search, Tv, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageShell from "../components/PageShell";
@@ -19,6 +20,7 @@ import { searchScore, titleSearchScore } from "../utils/textSearch";
 import { useScanInput } from "../utils/useBarcodeScan";
 import { usePhoneTopBarSlot } from "../utils/topBar";
 import { compareTitles } from "../utils/titleSort";
+import { collectionCover, titlesIn } from "../utils/collectionCover";
 
 // A movie or TV show in the results, with everything a row shows and searches
 interface SearchItem {
@@ -74,7 +76,8 @@ const LIST_CLASS = "divide-y divide-border overflow-hidden rounded-xl border bor
 const ROW_CLASS = "flex items-center gap-3 p-3 transition-colors hover:bg-accent/50";
 const HEADING_CLASS = "mb-3 text-sm text-muted-foreground";
 
-// One place to search the whole collection, movies and TV shows, by title or UPC.
+// One place to search the whole collection: movies and TV shows by title or UPC, and collections
+// by name.
 // The search text lives in the URL (?q=) so coming back from a result keeps it.
 const SEARCH_DEBOUNCE_MS = 250;
 
@@ -103,6 +106,7 @@ function SearchPage() {
   // Separate queries, so one failing still shows the other
   const { data: movies = [], isLoading: moviesLoading } = useMovies();
   const { data: shows = [], isLoading: showsLoading } = useTvShows();
+  const { data: collections = [] } = useCollections();
   const loading = moviesLoading || showsLoading;
   const items: SearchItem[] = [...movies.map(movieItem), ...shows.map(tvItem)];
   const [showScanner, setShowScanner] = useState(false);
@@ -170,6 +174,15 @@ function SearchPage() {
         .sort((a, b) => b.score - a.score || compareTitles(a.item.title, b.item.title))
         .map(({ item }) => item)
     : [];
+  // Collections whose name matches, best first (a barcode matches none)
+  const collectionResults =
+    searching && barcode === null
+      ? collections
+          .map((collection) => ({ collection, score: searchScore([collection.name], query) }))
+          .filter(({ score }) => score > 0)
+          .sort((a, b) => b.score - a.score || compareTitles(a.collection.name, b.collection.name))
+          .map(({ collection }) => collection)
+      : [];
 
   // The search box, and scan where the camera opens. On phones it's in the top bar, without scan:
   // the bottom bar's scan is just below.
@@ -180,9 +193,9 @@ function SearchPage() {
         <Input
           ref={inputRef}
           type="search"
-          placeholder="Search by title or UPC"
+          placeholder="Search titles, collections or UPC"
           onKeyDown={handleSearchKeyDown}
-          aria-label="Search movies and TV shows by title or UPC"
+          aria-label="Search movies and TV shows by title or UPC, and collections by name"
           value={text}
           onChange={(e) => setText(e.target.value)}
           className="h-11 pr-10 pl-9 [&::-webkit-search-cancel-button]:hidden"
@@ -232,7 +245,9 @@ function SearchPage() {
               </p>
               {results.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
-                  Nothing in your collection matches "{query.trim()}".
+                  {collectionResults.length > 0
+                    ? `No movies or TV shows match "${query.trim()}".`
+                    : `Nothing in your collection matches "${query.trim()}".`}
                 </p>
               ) : (
                 <ul className={LIST_CLASS}>
@@ -267,6 +282,39 @@ function SearchPage() {
                   })}
                 </ul>
               )}
+            </section>
+          )}
+
+          {/* Collections by name, each opening its drawer on the Collections page */}
+          {collectionResults.length > 0 && !loading && (
+            <section>
+              <h2 className={HEADING_CLASS}>Collections</h2>
+              <ul className={LIST_CLASS}>
+                {collectionResults.map((collection) => {
+                  const cover = collectionCover(collection, movies, shows);
+                  const count = titlesIn(collection.name, [...movies, ...shows]).length;
+                  return (
+                    <li key={collection.id}>
+                      <Link to={`/collections?collection=${encodeURIComponent(collection.name)}`} className={ROW_CLASS}>
+                        <div className="aspect-2/3 w-10 shrink-0 overflow-hidden rounded-sm border border-border bg-muted">
+                          {cover && <img src={cover} alt="" className="h-full w-full object-cover" loading="lazy" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium" title={collection.name}>
+                            {collection.name}
+                          </p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {[collection.isDirectorCollection ? "Director" : null, `${count} title${count === 1 ? "" : "s"}`]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                        </div>
+                        <LayoutGrid className="size-4 shrink-0 text-muted-foreground" aria-label="Collection" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
             </section>
           )}
 

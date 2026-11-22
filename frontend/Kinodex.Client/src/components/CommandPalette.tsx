@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/command";
 import { useMovies } from "@/features/movies/api";
 import { useTvShows } from "@/features/tvShows/api";
+import { useCollections } from "@/features/collections/api";
+import { collectionCover, titlesIn } from "../utils/collectionCover";
 import { GO_TO_LINKS } from "./navigation";
 import { barcodeKey, upcMatches } from "../utils/barcode";
 import { searchScore } from "../utils/textSearch";
@@ -60,6 +62,8 @@ const showValue = (s: TvShow) => `tv-${s.id}`;
 const showKeywords = (s: TvShow) =>
   [s.title, String(s.year || ""), ...s.copies.map((c) => c.upcNumber)].filter(Boolean);
 
+const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
+
 // For a barcode search: the copy it is, named by its format ("Blu-ray copy"), or null
 const scannedCopyLabel = (copies: Copy[], barcode: string) => {
   const copy = copies.find((c) => upcMatches(c.upcNumber, barcode));
@@ -77,12 +81,14 @@ function Thumb({ src }: { src: string }) {
   );
 }
 
-// Ctrl/⌘K search over every movie, TV show and page. Picking a movie or show opens its list with
-// its drawer open. It's also where a desktop barcode scanner's scans go.
+// Ctrl/⌘K search over every movie, TV show, collection and page. Picking a movie, show or
+// collection opens its page with its drawer open. It's also where a desktop barcode scanner's
+// scans go.
 function CommandPalette({ open, onOpenChange, onAdd }: CommandPaletteProps) {
   const navigate = useNavigate();
   const { data: movies = [] } = useMovies();
   const { data: shows = [] } = useTvShows();
+  const { data: collections = [] } = useCollections();
   const [search, setSearch] = useState("");
 
   // A barcode scanned with nothing in use opens this with the code, to show whether it's in the
@@ -168,7 +174,7 @@ function CommandPalette({ open, onOpenChange, onAdd }: CommandPaletteProps) {
       open={open}
       onOpenChange={(next) => (next ? onOpenChange(true) : close())}
       title="Search"
-      description="Find a movie, TV show or page"
+      description="Find a movie, TV show, collection or page"
       showCloseButton={false}
       // Panel and backdrop disappear at once when closed (no fade-out), and what opens next takes
       // over the backdrop already dark (see utils/windowHandoff)
@@ -177,7 +183,7 @@ function CommandPalette({ open, onOpenChange, onAdd }: CommandPaletteProps) {
       filter={paletteFilter}
     >
       <CommandInput
-        placeholder="Search movies, TV shows and pages…"
+        placeholder="Search movies, TV shows, collections and pages…"
         value={search}
         onValueChange={setSearch}
         onKeyDown={handleSearchKeyDown}
@@ -218,6 +224,26 @@ function CommandPalette({ open, onOpenChange, onAdd }: CommandPaletteProps) {
                 <span className="truncate">{show.title}</span>
                 <span className="ml-auto text-xs text-muted-foreground">
                   {(barcode && scannedCopyLabel(show.copies, barcode)) || show.year || ""}
+                </span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+
+        {/* Only once something's typed: matched by name, opening the collection's drawer */}
+        {typing && collections.length > 0 && (
+          <CommandGroup heading="Collections">
+            {collections.map((collection) => (
+              <CommandItem
+                key={`collection-${collection.id}`}
+                value={`collection-${collection.id}`}
+                keywords={[collection.name]}
+                onSelect={() => go(`/collections?collection=${encodeURIComponent(collection.name)}`)}
+              >
+                <Thumb src={collectionCover(collection, movies, shows) ?? ""} />
+                <span className="truncate">{collection.name}</span>
+                <span className="ml-auto text-xs text-muted-foreground">
+                  {plural(titlesIn(collection.name, [...movies, ...shows]).length, "title")}
                 </span>
               </CommandItem>
             ))}

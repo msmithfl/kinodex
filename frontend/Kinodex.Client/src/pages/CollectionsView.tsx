@@ -16,7 +16,8 @@ import { useDrawerParam } from "../utils/useDrawerParam";
 import { useAllChecklistItems, useCollections } from "../features/collections/api";
 import { useMovies } from "../features/movies/api";
 import { useTvShows } from "../features/tvShows/api";
-import type { Collection, Movie, TvShow } from "../types";
+import { collectionCover } from "../utils/collectionCover";
+import type { Collection } from "../types";
 
 function CollectionsView() {
   // "Show completion on collection posters" from the Settings page
@@ -39,16 +40,6 @@ function CollectionsView() {
   } = useDrawerParam("collection");
   const { openId: openMovieId, open: openMovie, close: closeMovie } = useDrawerParam("movie");
   const { openId: openShowId, open: openShow, close: closeShow } = useDrawerParam("show");
-
-  // Fallback cover for a collection created without one: the earliest-released movie in it with a
-  // poster, or show when none of its movies has one
-  const getCoverPath = (collectionName: string) => {
-    const earliest = (titles: (Movie | TvShow)[]) =>
-      titles
-        .filter((t) => t.posterPath && t.collections?.includes(collectionName))
-        .sort((a, b) => (a.year || 9999) - (b.year || 9999))[0]?.posterPath;
-    return earliest(movies) ?? earliest(shows);
-  };
 
   const getCompletionPercentage = (
     collectionId: number,
@@ -82,7 +73,8 @@ function CollectionsView() {
       completionPercentage={
         settings.showCollectionCompletion ? getCompletionPercentage(collection.id, collection.name) : null
       }
-      coverPath={collection.imageUrl || getCoverPath(collection.name)}
+      // The chosen cover, or the earliest movie's (or show's) poster
+      coverPath={collectionCover(collection, movies, shows)}
       onOpen={() => openCollection(collection.name)}
     />
   );
