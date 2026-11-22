@@ -20,12 +20,6 @@ const TABS: { id: Tab; label: string }[] = [
 interface MovieFormProps {
   formData: Movie;
   setFormData: React.Dispatch<React.SetStateAction<Movie>>;
-  collections: { id: number; name: string }[];
-  showCollectionInput: boolean;
-  setShowCollectionInput: React.Dispatch<React.SetStateAction<boolean>>;
-  newCollection: string;
-  setNewCollection: React.Dispatch<React.SetStateAction<string>>;
-  addCollection: () => Promise<void>;
   onSubmit: (e: React.FormEvent) => Promise<void>;
   onCancel: () => void;
   submitButtonText?: string;
@@ -38,12 +32,6 @@ interface MovieFormProps {
 function MovieForm({
   formData,
   setFormData,
-  collections,
-  showCollectionInput,
-  setShowCollectionInput,
-  newCollection,
-  setNewCollection,
-  addCollection,
   onSubmit,
   onScanClick,
   id,
@@ -147,12 +135,6 @@ function MovieForm({
             onYearChange={handleYearChange}
             tmdbInput={tmdbInput}
             onTmdbChange={handleTmdbChange}
-            collections={collections}
-            showCollectionInput={showCollectionInput}
-            setShowCollectionInput={setShowCollectionInput}
-            newCollection={newCollection}
-            setNewCollection={setNewCollection}
-            addCollection={addCollection}
           />
         )}
 

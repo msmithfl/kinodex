@@ -24,6 +24,7 @@ import { useTvShows } from "../features/tvShows/api";
 import { applyTvShowFilters, buildTvShowFilterCategories } from "../features/tvShows/filters";
 import TvShowTable from "../features/tvShows/TvShowTable";
 import { useShelfSections } from "../features/shelfSections/api";
+import { useCollections } from "../features/collections/api";
 import { useOpenCopies } from "../components/useOpenCopies";
 import { matchingCopies } from "../utils/copyFilters";
 import type { TitleRow } from "../utils/copySelection";
@@ -105,6 +106,7 @@ function TvShowList() {
   // Which shows show their copies as rows, and whether they start that way
   const openCopies = useOpenCopies("tvShowListCopiesOpen");
   const { data: shelfSectionList = [] } = useShelfSections();
+  const { data: collectionList = [] } = useCollections();
   const [viewMode, setViewMode] = useStoredChoice<ViewMode>("tvShowListView", VIEW_MODES, "table");
   const [visibleColumns, setVisibleColumns] = useStoredState<VisibleColumns>("tvShowListColumns", DEFAULT_COLUMNS, {
     // Merge over the defaults so a column added later still has a value
@@ -141,6 +143,7 @@ function TvShowList() {
   const filterCategories = buildTvShowFilterCategories(
     shows,
     shelfSectionList.map((section) => section.name).sort(),
+    collectionList.map((collection) => collection.name).sort(),
   );
   // The table's rows: each show with the copies the filters let through
   const tableRows: TitleRow<TvShow>[] = filteredShows.map((show) => ({

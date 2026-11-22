@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { ChipSelect } from "../../../components/ChipSelect";
+import CollectionsField from "../../../components/CollectionsField";
 import { FormField, SwitchField } from "../../../components/FormFields";
 import { TV_GENRE_MAP } from "../../../utils/tmdbApi";
 import type { TvShow } from "../../../types";
@@ -19,8 +20,8 @@ interface TvShowDetailsTabProps {
   onTmdbChange: (value: string) => void;
 }
 
-// The TV show form's first tab: title, year, TMDB id, genres, streaming (rating, watched and notes
-// are on the Review tab)
+// The TV show form's first tab: title, year, TMDB id, genres, collections, streaming (rating,
+// watched and notes are on the Review tab)
 function TvShowDetailsTab({
   formData,
   setFormData,
@@ -69,6 +70,11 @@ function TvShowDetailsTab({
           onChange={(genres) => setFormData({ ...formData, genres })}
         />
       </FormField>
+
+      <CollectionsField
+        values={formData.collections}
+        onChange={(collections) => setFormData({ ...formData, collections })}
+      />
 
       <FormField label="Streaming">
         <SwitchField

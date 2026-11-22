@@ -5,7 +5,11 @@ import { copyFilterCategories, titlePassesCopyFilters } from "../../utils/copyFi
 
 // The TV list's filter menu, like the movie list's. Format, condition, gift, shelf and HDD are per
 // copy, so a show matches when any of its copies does (utils/copyFilters).
-export function buildTvShowFilterCategories(shows: TvShow[], shelfSections: string[]): FilterCategory[] {
+export function buildTvShowFilterCategories(
+  shows: TvShow[],
+  shelfSections: string[],
+  collections: string[],
+): FilterCategory[] {
   const yesNo = (yes: string, no: string) => [
     { label: yes, value: "true" },
     { label: no, value: "false" },
@@ -24,6 +28,12 @@ export function buildTvShowFilterCategories(shows: TvShow[], shelfSections: stri
     },
     copy.condition,
     copy.hdd,
+    {
+      id: "collection",
+      label: "Collection",
+      kind: "list",
+      options: collections.map((collection) => ({ label: collection, value: collection })),
+    },
     { id: "complete", label: "Complete set", kind: "toggle", options: yesNo("Complete", "Incomplete") },
     { id: "streaming", label: "Streaming", kind: "toggle", options: yesNo("Streaming", "Not streaming") },
     { id: "hasWatched", label: "Has Watched", kind: "toggle", options: yesNo("Watched", "Not Watched") },
@@ -42,6 +52,7 @@ export function applyTvShowFilters<T extends TvShow>(shows: T[], selectedFilters
 
   return shows
     .filter(any("genre", (s) => s.genres ?? []))
+    .filter(any("collection", (s) => s.collections))
     .filter(flag("complete", ownsEverySeason))
     .filter(flag("streaming", (s) => s.isStreaming))
     .filter(flag("hasWatched", (s) => s.hasWatched))

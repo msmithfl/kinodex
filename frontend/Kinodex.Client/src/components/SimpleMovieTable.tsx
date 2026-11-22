@@ -3,14 +3,16 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { QuickRating } from "./StarRating";
 import { useRateMovie } from "../features/movies/api";
-import type { Movie } from "../types";
+import type { Movie, TvShow } from "../types";
 import { allFormats } from "../utils/copies";
 
 interface SimpleMovieTableProps {
-  movies: Movie[]; // Shown in the order given
-  // A row was clicked: open the movie (e.g. in a drawer)
+  movies: Movie[] | TvShow[]; // Shown in the order given
+  // Movies (the default) or TV shows: which list a title links to
+  kind?: "movie" | "show";
+  // A row was clicked: open the movie or show (e.g. in a drawer)
   onOpen: (movieId?: number) => void;
-  // The Rating column; collections leave it out
+  // The Rating column (movies only); collections leave it out
   showRating?: boolean;
   // Never wider than its container: fixed column widths, the title truncates and formats wrap
   // (e.g. in a drawer). Otherwise columns size to their content and the table scrolls sideways.
@@ -19,17 +21,20 @@ interface SimpleMovieTableProps {
   className?: string;
 }
 
-// A compact table of movies (title, year, format, rating) styled like the Movies and TV Shows
-// tables, for collection and genre pages. Scrolls sideways on narrow screens unless fitWidth is set.
+// A compact table of movies or shows (title, year, format, rating) styled like the Movies and TV
+// Shows tables, for collection and genre pages. Scrolls sideways on narrow screens unless fitWidth is set.
 function SimpleMovieTable({
   movies,
+  kind = "movie",
   onOpen,
-  showRating = true,
+  showRating: showRatingProp = true,
   fitWidth = false,
   className,
 }: SimpleMovieTableProps) {
   // The Rating column's stars save straight away
   const rateMovie = useRateMovie();
+  const showRating = showRatingProp && kind === "movie";
+  const linkTo = (id?: number) => (kind === "show" ? `/tv-shows?show=${id}` : `/library?movie=${id}`);
   const headings = ["Title", "Year", "Format", ...(showRating ? ["Rating"] : [])];
   const cellClass = "border-b border-border/60 px-3 py-2 align-middle md:px-4";
   return (
@@ -71,7 +76,7 @@ function SimpleMovieTable({
             >
               <td className={cn(cellClass, !fitWidth && "max-w-56 md:max-w-80")}>
                 <Link
-                  to={`/library?movie=${movie.id}`}
+                  to={linkTo(movie.id)}
                   onClick={(e) => {
                     e.stopPropagation();
                     // Plain clicks open the drawer; ctrl/cmd-click opens the list with it in a drawer, in a new tab
@@ -116,7 +121,7 @@ function SimpleMovieTable({
                   {/* Click to rate; clicks don't open the row's drawer */}
                   <QuickRating
                     rating={movie.rating}
-                    onRate={(rating) => rateMovie.mutate({ movie, rating })}
+                    onRate={(rating) => rateMovie.mutate({ movie: movie as Movie, rating })}
                     label={`Rate ${movie.title}`}
                   />
                 </td>

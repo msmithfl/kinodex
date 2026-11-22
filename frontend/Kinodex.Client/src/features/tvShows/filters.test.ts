@@ -41,6 +41,11 @@ describe("applyTvShowFilters", () => {
     expect(titles(applyTvShowFilters(shows, { hdd: ["3"] }))).toEqual(["The Wire"]);
   });
 
+  it("matches a show in any of the chosen collections", () => {
+    const inLynch = [...shows, makeShow({ id: 4, title: "Twin Peaks", collections: ["David Lynch"] })];
+    expect(titles(applyTvShowFilters(inLynch, { collection: ["David Lynch"] }))).toEqual(["Twin Peaks"]);
+  });
+
   it("is complete only when every season is owned, and never with an unknown season count", () => {
     expect(titles(applyTvShowFilters(shows, { complete: ["true"] }))).toEqual(["Fleabag"]);
     expect(titles(applyTvShowFilters(shows, { complete: ["false"] }))).toEqual(["The Wire", "Unknown"]);
@@ -54,6 +59,7 @@ describe("buildTvShowFilterCategories", () => {
         makeShow({ genres: ["Drama", "Comedy"], copies: [makeShowCopy({ condition: "Good" })] }),
         makeShow({ genres: ["Drama"], copies: [makeShowCopy({ condition: "" }), makeShowCopy({ condition: "Like New" })] }),
       ],
+      [],
       [],
     );
     const values = (id: string) => categories.find((c) => c.id === id)?.options.map((o) => o.value);

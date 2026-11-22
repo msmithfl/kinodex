@@ -5,7 +5,6 @@ import type { Movie } from "../types";
 import MovieForm from "./MovieForm";
 import { BarcodeScanner } from "./lazyComponents";
 import { useMovie, useUpdateMovie } from "../features/movies/api";
-import { useCollections, useCreateCollection } from "../features/collections/api";
 import { FORM_MODAL_CLASS, keepOpenWhileTyping } from "./formModal";
 import { isMobile } from "../utils/isMobile";
 import { withClientKeys } from "../utils/copies";
@@ -34,15 +33,11 @@ const EMPTY_MOVIE: Movie = {
   copies: [],
 };
 
-const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
-
 // Edit a movie: the same form as Add Movie, in the same window
 export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
   // From the shared cache (the drawer or list has usually loaded it already)
   const { data: movie } = useMovie(movieId);
-  const { data: collectionList = [] } = useCollections();
   const updateMovie = useUpdateMovie();
-  const createCollection = useCreateCollection();
 
   const [formData, setFormData] = useState<Movie>(movie ? withClientKeys(movie) : EMPTY_MOVIE);
   // Fill the form once, when the movie arrives (if it wasn't already cached when the modal opened)
@@ -52,31 +47,10 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
     setFormData(withClientKeys(movie));
   }
 
-  const collections = [...collectionList].sort(byName);
-  const [showCollectionInput, setShowCollectionInput] = useState(false);
-  const [newCollection, setNewCollection] = useState("");
   const [submitError, setSubmitError] = useState("");
 
   // The copy a barcode is being scanned for
   const [scanIndex, setScanIndex] = useState<number | null>(null);
-
-  // Creates a collection from the form and adds this movie to it
-  const addCollection = async () => {
-    if (!newCollection || collections.find((c) => c.name === newCollection)) return;
-    try {
-      await createCollection.mutateAsync({
-        name: newCollection,
-        isDirectorCollection: false,
-        imageUrl: null,
-        backdropUrl: null,
-      });
-      setFormData((prev) => ({ ...prev, collections: [...prev.collections, newCollection] }));
-      setNewCollection("");
-      setShowCollectionInput(false);
-    } catch (error) {
-      console.error("Error adding collection:", error);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,12 +106,6 @@ export function EditMovieModal({ onClose, movieId }: EditMovieModalProps) {
             id={FORM_ID}
             formData={formData}
             setFormData={setFormData}
-            collections={collections}
-            showCollectionInput={showCollectionInput}
-            setShowCollectionInput={setShowCollectionInput}
-            newCollection={newCollection}
-            setNewCollection={setNewCollection}
-            addCollection={addCollection}
             onSubmit={handleSubmit}
             onCancel={onClose}
             submitButtonText="Save"
