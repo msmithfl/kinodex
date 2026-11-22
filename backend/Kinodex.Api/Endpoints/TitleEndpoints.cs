@@ -14,6 +14,8 @@ public static class TitleEndpoints
     public record MergeRequest(List<MergeGroup> Groups);
     // How many titles were folded into others (and removed)
     public record MergeResult(int Merged);
+    // Entries to mark (or unmark) "Not a duplicate"
+    public record NotDuplicateRequest(List<int> Ids, bool NotDuplicate);
 
     public static void MapTitleEndpoints(this IEndpointRouteBuilder app)
     {
@@ -59,6 +61,22 @@ public static class TitleEndpoints
 
             return Results.Ok(new MergeResult(request.Groups.Sum(g => g.MergeIds.Count)));
         }).Produces<MergeResult>();
+
+        // PUT mark entries "Not a duplicate" (separate on purpose, though they share a TMDB id), or
+        // unmark them so Settings → Duplicates lists them again. Only the user's own titles.
+        group.MapPut("/not-duplicate", async (NotDuplicateRequest request, ClaimsPrincipal user, MovieDbContext db) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (request.Ids is not { Count: > 0 })
+                return Results.BadRequest(new { error = "Choose the entries to mark." });
+
+            var ids = request.Ids.Distinct().ToList();
+            var titles = db.Titles.Where(t => t.UserId == userId && ids.Contains(t.Id));
+            if (await titles.CountAsync() != ids.Count) return Results.NotFound(); // Missing, or someone else's
+
+            await titles.ExecuteUpdateAsync(s => s.SetProperty(t => t.NotDuplicate, request.NotDuplicate));
+            return Results.NoContent();
+        });
     }
 }
 

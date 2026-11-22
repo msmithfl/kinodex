@@ -60,6 +60,9 @@ namespace Kinodex.Api.Migrations
                         .HasMaxLength(13)
                         .HasColumnType("character varying(13)");
 
+                    b.Property<bool>("NotDuplicate")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("PosterPath")
                         .IsRequired()
                         .HasColumnType("text");

@@ -168,31 +168,7 @@
         }
       }
     },
-    "/api/movies/export/csv": {
-      "get": {
-        "tags": [
-          "Kinodex.Api"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/movies/import/letterboxd": {
-      "post": {
-        "tags": [
-          "Kinodex.Api"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/movies/import/csv": {
       "post": {
         "tags": [
           "Kinodex.Api"
@@ -346,6 +322,52 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/titles/not-duplicate": {
+      "put": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotDuplicateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/titles/export/csv": {
+      "get": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/titles/import/csv": {
+      "post": {
+        "tags": [
+          "Kinodex.Api"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -1450,6 +1472,7 @@
           "rating",
           "review",
           "isStreaming",
+          "notDuplicate",
           "createdAt",
           "copies"
         ],
@@ -1512,6 +1535,9 @@
               "null",
               "string"
             ]
+          },
+          "notDuplicate": {
+            "type": "boolean"
           },
           "createdAt": {
             "type": "string",
@@ -1624,6 +1650,25 @@
           }
         }
       },
+      "NotDuplicateRequest": {
+        "required": [
+          "ids",
+          "notDuplicate"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "notDuplicate": {
+            "type": "boolean"
+          }
+        }
+      },
       "ShelfSection": {
         "required": [
           "name",
@@ -1707,6 +1752,7 @@
           "rating",
           "review",
           "isStreaming",
+          "notDuplicate",
           "createdAt",
           "copies"
         ],
@@ -1773,6 +1819,9 @@
               "null",
               "string"
             ]
+          },
+          "notDuplicate": {
+            "type": "boolean"
           },
           "createdAt": {
             "type": "string",

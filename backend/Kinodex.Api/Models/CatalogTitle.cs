@@ -31,6 +31,11 @@ public abstract class CatalogTitle
     // added (for the drawer's Jellyfin link); null when not linked. Cleared when Jellyfin is
     // disconnected or the server changes.
     public string? JellyfinItemId { get; set; }
+    // Marked "Not a duplicate" in Settings → Duplicates: a separate entry on purpose, although
+    // another has the same TMDB id (say, one for a rental copy). Entries with the same TMDB id are
+    // only listed as duplicates while one of them isn't marked. Set only by PUT
+    // /api/titles/not-duplicate, never by saving the title.
+    public bool NotDuplicate { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // The discs, tapes and sets the user has of it; format, price, shelf and so on are per copy

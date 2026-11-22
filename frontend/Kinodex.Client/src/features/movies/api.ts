@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useApi } from "../../utils/api";
 import type { Movie } from "../../types";
+import { tvShowKeys } from "../tvShows/api";
 
 // Cache names for movie data. Invalidating movieKeys.all refreshes the list and every single
 // movie ("movies" is a prefix of ["movies", id]).
@@ -126,15 +127,18 @@ export interface ImportResult {
   errors: string[];
 }
 
-// Imports movies from a file: Kinodex's own CSV export, or a Letterboxd export. Every screen
-// showing movies refreshes afterwards.
+// Imports a file: Kinodex's own CSV export (movies and TV shows), or a Letterboxd export (movies).
+// Every screen showing movies, or shows, refreshes afterwards.
 export function useImportMovies() {
   const api = useApi();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ source, file }: { source: "csv" | "letterboxd"; file: File }) =>
-      api.upload<ImportResult>(`/movies/import/${source}`, file),
-    onSuccess: () => refreshMovies(queryClient),
+      api.upload<ImportResult>(source === "csv" ? "/titles/import/csv" : "/movies/import/letterboxd", file),
+    onSuccess: (_result, { source }) => {
+      refreshMovies(queryClient);
+      if (source === "csv") queryClient.invalidateQueries({ queryKey: tvShowKeys.all });
+    },
   });
 }
 
