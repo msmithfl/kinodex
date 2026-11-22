@@ -143,6 +143,7 @@ function MovieForm({
 
         {activeTab === "copies" && (
           <CopiesTab
+            owner={formData}
             copies={formData.copies}
             setCopies={setCopies}
             shelfSections={shelfSections.names}

@@ -15,10 +15,10 @@ interface CopyCardsProps {
   onEnlargeProductImage: (src: string) => void;
 }
 
-// A movie's or show's copies in its drawer, one card each: (a show's) seasons, then Format |
-// Condition, Paid | Purchased | Gift, Shelf | Shelf # | HDD #, and the disc: its product image
-// (click to enlarge), the UPC (click to copy) and an eBay sold-listings search. With more than
-// one copy (or any for a show), the total paid sits in the header.
+// A movie's or show's copies in its drawer, one card each: (a show's) seasons, the disc (its
+// product image (click to enlarge), the UPC (click to copy) and an eBay sold-listings search),
+// then Format | Condition, Paid | Purchased | Gift, Shelf | Shelf # | HDD #. With more than one
+// copy (or any for a show), the total paid sits in the header.
 function CopyCards({ copies, totalSeasons, onEnlargeProductImage }: CopyCardsProps) {
   const isShow = totalSeasons !== undefined;
   // Which copy's UPC was just copied, for the tick
@@ -50,46 +50,9 @@ function CopyCards({ copies, totalSeasons, onEnlargeProductImage }: CopyCardsPro
               <div key={key} className="rounded-xl border border-border bg-card">
                 {name && <p className="px-4 pt-3 text-sm font-medium">{name}</p>}
 
-                <dl className={`grid grid-cols-3 gap-x-4 gap-y-4 px-4 pb-4 ${name ? "pt-3" : "pt-4"}`}>
-                  <DetailField label="Format">
-                    {copy.formats.length > 0 ? (
-                      <span className="flex gap-1">
-                        {[...copy.formats].sort().map((fmt) => (
-                          <Badge key={fmt} variant="outline" className="font-normal">
-                            {fmt}
-                          </Badge>
-                        ))}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">None</span>
-                    )}
-                  </DetailField>
-                  <DetailField label="Condition">{copy.condition || <NotSet />}</DetailField>
-
-                  <DetailField label="Paid" rowStart>
-                    {copy.price > 0 ? <span className="font-mono tabular-nums">${copy.price.toFixed(2)}</span> : <NotSet />}
-                  </DetailField>
-                  <DetailField label="Purchased">
-                    {copy.purchasedAt ? formatPurchaseDate(copy.purchasedAt) : <NotSet />}
-                  </DetailField>
-                  <DetailField label="Gift">
-                    <YesNo yes={copy.isGift} on={<Gift />} off={<Gift />} />
-                  </DetailField>
-
-                  <DetailField label="Shelf" rowStart>
-                    {copy.shelfSection || "Unshelved"}
-                  </DetailField>
-                  <DetailField label="Shelf #">
-                    {copy.shelfNumber > 0 ? <span className="font-mono tabular-nums">{copy.shelfNumber}</span> : <NotSet />}
-                  </DetailField>
-                  <DetailField label="HDD #">
-                    {copy.hdDriveNumber > 0 ? <span className="font-mono tabular-nums">{copy.hdDriveNumber}</span> : <NotSet />}
-                  </DetailField>
-                </dl>
-
                 {/* The disc: product image (click to enlarge), barcode (click to copy) and an eBay
                     sold-listings search */}
-                <div className="flex items-center gap-3 border-t border-border px-3 py-2.5">
+                <div className={`flex items-center gap-3 border-b border-border px-3 ${name ? "pt-1.5 pb-2.5" : "py-2.5"}`}>
                   {copy.productPosterPath && (
                     <button
                       type="button"
@@ -134,6 +97,43 @@ function CopyCards({ copies, totalSeasons, onEnlargeProductImage }: CopyCardsPro
                     </Button>
                   )}
                 </div>
+
+                <dl className="grid grid-cols-3 gap-x-4 gap-y-4 p-4">
+                  <DetailField label="Format">
+                    {copy.formats.length > 0 ? (
+                      <span className="flex gap-1">
+                        {[...copy.formats].sort().map((fmt) => (
+                          <Badge key={fmt} variant="outline" className="font-normal">
+                            {fmt}
+                          </Badge>
+                        ))}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">None</span>
+                    )}
+                  </DetailField>
+                  <DetailField label="Condition">{copy.condition || <NotSet />}</DetailField>
+
+                  <DetailField label="Paid" rowStart>
+                    {copy.price > 0 ? <span className="font-mono tabular-nums">${copy.price.toFixed(2)}</span> : <NotSet />}
+                  </DetailField>
+                  <DetailField label="Purchased">
+                    {copy.purchasedAt ? formatPurchaseDate(copy.purchasedAt) : <NotSet />}
+                  </DetailField>
+                  <DetailField label="Gift">
+                    <YesNo yes={copy.isGift} on={<Gift />} off={<Gift />} />
+                  </DetailField>
+
+                  <DetailField label="Shelf" rowStart>
+                    {copy.shelfSection || "Unshelved"}
+                  </DetailField>
+                  <DetailField label="Shelf #">
+                    {copy.shelfNumber > 0 ? <span className="font-mono tabular-nums">{copy.shelfNumber}</span> : <NotSet />}
+                  </DetailField>
+                  <DetailField label="HDD #">
+                    {copy.hdDriveNumber > 0 ? <span className="font-mono tabular-nums">{copy.hdDriveNumber}</span> : <NotSet />}
+                  </DetailField>
+                </dl>
               </div>
             );
           })}

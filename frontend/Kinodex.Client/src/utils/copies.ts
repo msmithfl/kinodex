@@ -76,16 +76,30 @@ export const copiesSummary = (copies: Copy[]): string => {
   return formats.length > 0 ? `${copyCount(copies.length)}: ${formats.join(", ")}` : copyCount(copies.length);
 };
 
-// The movie or show already in the library with a copy of this UPC (another copy than the one
-// given), and that copy: so the forms can say "already in your library"
-export function findUpcOwner<T extends { title: string; copies: Copy[] }>(
+// What says which movie or show an entry is: its TMDB id, or its name when it has none
+export interface TitleIdentity {
+  title: string;
+  tmdbId?: number | null;
+}
+
+// Whether two entries are the same movie or show (one entry or two duplicates of it): by TMDB id
+// when both have one, otherwise by name
+export const isSameTitle = (a: TitleIdentity, b: TitleIdentity) =>
+  a.tmdbId && b.tmdbId ? a.tmdbId === b.tmdbId : a.title.trim().toLowerCase() === b.title.trim().toLowerCase();
+
+// The entry for this same movie or show already in the library with a copy of this UPC (another
+// copy than the one given), and that copy: so the forms can say "already in your library". Other
+// titles with the UPC don't count: a box set's films each have a copy with the set's UPC.
+export function findUpcOwner<T extends TitleIdentity & { copies: Copy[] }>(
   titles: T[],
   upc: string,
+  sameAs: TitleIdentity,
   exceptCopyId?: number,
 ): { title: T; copy: Copy } | null {
   const code = upc.trim();
   if (code.length < 6) return null; // Too short to be a barcode
   for (const title of titles) {
+    if (!isSameTitle(title, sameAs)) continue;
     const copy = title.copies.find((c) => c.upcNumber.trim() === code && (exceptCopyId === undefined || c.id !== exceptCopyId));
     if (copy) return { title, copy };
   }

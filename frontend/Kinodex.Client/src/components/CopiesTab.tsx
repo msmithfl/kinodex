@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { Plus } from "lucide-react";
 import CopyEditor from "./CopyEditor";
-import { copyCount, copyKey, newCopy, totalPaid } from "../utils/copies";
+import { copyCount, copyKey, newCopy, totalPaid, type TitleIdentity } from "../utils/copies";
 import type { Copy } from "../types";
 
 interface CopiesTabProps {
+  // The movie or show being edited, so a UPC is only "already in your library" on the same one
+  owner: TitleIdentity;
   copies: Copy[];
   setCopies: (update: (copies: Copy[]) => Copy[]) => void;
   // A show's season count (its copies get season tiles); left out for a movie
@@ -21,6 +23,7 @@ interface CopiesTabProps {
 // The movie and TV forms' Copies tab: a card for each copy (CopyEditor), and Add copy. A title can
 // have none (say, a disc sold, its rating kept).
 function CopiesTab({
+  owner,
   copies,
   setCopies,
   totalSeasons,
@@ -54,6 +57,7 @@ function CopiesTab({
             key={copyKey(copy, index)}
             copy={copy}
             index={index}
+            owner={owner}
             totalSeasons={totalSeasons}
             shelfSections={shelfSections}
             onAddShelfSection={onAddShelfSection}

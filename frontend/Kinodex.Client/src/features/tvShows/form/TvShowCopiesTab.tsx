@@ -119,6 +119,7 @@ function TvShowCopiesTab({
 
   return (
     <CopiesTab
+      owner={formData}
       copies={formData.copies}
       setCopies={setCopies}
       totalSeasons={formData.totalSeasons}
