@@ -130,7 +130,8 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   by its seasons), Watched | Streaming, notes. Both drawers' fields use `DetailField` / `YesNo` /
   `NotSet`, and their collections are `CollectionLinks` (each opens the collection's drawer).
 - **Collection drawer (redesigned):** the shared `DetailBackdrop` and `DetailActions` (also parts of
-  `DetailHeader`), the name and its movie and show counts, then Titles and Checklist tabs. Titles
+  `DetailHeader`), the cover overlapping the backdrop as a movie's poster does (`collectionCover`: the chosen one, or the
+  earliest title's poster) with the name and its movie and show counts beside it, then Titles and Checklist tabs. Titles
   has a table/poster switch (`SimpleMovieTable` or `PosterCard`), as one list, or a Movies and a TV
   shows group when the collection has shows; a show opens in a TV drawer over it (`?show=`).
   Checklist is `CollectionChecklist`: its search switches between movies and TV shows, and each
