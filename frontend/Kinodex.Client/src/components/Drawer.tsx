@@ -134,7 +134,9 @@ function Drawer({ label, onClose, children }: DrawerProps) {
         // touch-pan-y: the browser keeps vertical scrolling; horizontal moves are the swipe's
         className={cn(
           closing ? "animate-drawer-out" : "animate-drawer-in",
-          "touch-pan-y absolute inset-y-0 right-0 w-full md:w-[42rem] lg:w-[48rem] shadow-2xl border-l bg-background border-border",
+          // The left border only from tablet up, where the panel sits beside the page; on phones it
+          // fills the screen
+          "touch-pan-y absolute inset-y-0 right-0 w-full md:w-[42rem] lg:w-[48rem] shadow-2xl md:border-l bg-background border-border",
           // No top padding: the content's backdrop runs up behind the status bar in the home screen
           // app (DetailBackdrop is taller by the status bar's height, and the buttons over it sit
           // below the clock)

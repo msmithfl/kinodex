@@ -11,11 +11,12 @@ interface MovieDrawerDetailsProps {
 
 const card = "rounded-xl border border-border bg-card";
 
-// The movie drawer's details: its copies (format, condition, the purchase, where it lives, the disc
-// with its product shot, barcode and eBay), watched and streaming, then collections and notes
+// The movie drawer's details: its collections, its copies (the disc with its product shot, barcode
+// and eBay, then format, condition, the purchase, where it lives), watched and streaming, then notes
 function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetailsProps) {
   return (
     <div className="flex flex-col gap-3 px-5 pt-6 pb-8 md:px-8">
+      <CollectionLinks collections={movie.collections} />
       <CopyCards copies={movie.copies} onEnlargeProductImage={onEnlargeProductImage} />
 
       {/* Watched and streaming */}
@@ -27,8 +28,6 @@ function MovieDrawerDetails({ movie, onEnlargeProductImage }: MovieDrawerDetails
           <YesNo yes={movie.isStreaming} on={<MonitorPlay />} off={<MonitorOff />} />
         </Fact>
       </dl>
-
-      <CollectionLinks collections={movie.collections} />
 
       {/* Review / notes */}
       <section className={cn(card, "mt-1 flex flex-col gap-1.5 p-4")}>

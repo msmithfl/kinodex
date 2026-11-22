@@ -121,13 +121,13 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
 - **Movie drawer tabs:** only Details for now, so the tab bar is hidden; the tab mechanism is kept for the planned Ledger and Log.
 - **Movie drawer (redesigned):** `Drawer` wherever a movie opens; the backdrop
   across the top fading into the panel, the poster overlapping it with title, year · genres,
-  stars and TMDB; then `MovieDrawerDetails`: one card per copy (`CopyCards`: product shot + UPC copy + eBay
+  stars and TMDB; then `MovieDrawerDetails`: its collections as pills under a heading (nothing when none), one card per copy (`CopyCards`: product shot + UPC copy + eBay
   sold at the top, then Format | Condition, Paid | Purchased | Gift, Shelf | Shelf # | HDD #), then
-  Watched | Streaming; collections; notes. Delete asks in `DeleteConfirm` (an `AlertDialog`), then toasts.
+  Watched | Streaming; notes. Delete asks in `DeleteConfirm` (an `AlertDialog`), then toasts.
   Skeleton while loading.
 - **TV drawer (redesigned):** the same `DetailHeader` (shared backdrop/poster/title/actions header,
-  plus `DetailSkeleton`), then `TvShowDrawerDetails`: season tiles, the same `CopyCards` (each named
-  by its seasons), Watched | Streaming, collections, notes. Both drawers' fields use `DetailField` / `YesNo` /
+  plus `DetailSkeleton`), then `TvShowDrawerDetails`: collections (the same, if any), season tiles, the same `CopyCards` (each named
+  by its seasons), Watched | Streaming, notes. Both drawers' fields use `DetailField` / `YesNo` /
   `NotSet`, and their collections are `CollectionLinks` (each opens the collection's drawer).
 - **Collection drawer (redesigned):** the shared `DetailBackdrop` and `DetailActions` (also parts of
   `DetailHeader`), the name and its movie and show counts, then Titles and Checklist tabs. Titles
