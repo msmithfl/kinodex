@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { useUser, UserButton } from "@clerk/clerk-react";
+import { UserButton } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useMovies } from "../features/movies/api";
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { AddItemModal } from "../components/lazyComponents";
 import AccountMenuButton from "../components/AccountMenuButton";
 import { lastAdded } from "../utils/copies";
+import AccountName from "../components/AccountName";
 
 interface Stats {
   thisMonth: MonthSpend;
@@ -127,7 +128,6 @@ function RecentCarousel({ title, items }: { title: string; items: RecentItem[] }
 }
 
 function Dashboard() {
-  const { user } = useUser();
   // Separate queries, so one failing still shows the other
   const { data: movies = [], isLoading: moviesLoading } = useMovies();
   const { data: shows = [], isLoading: showsLoading } = useTvShows();
@@ -173,20 +173,23 @@ function Dashboard() {
           // Mobile: one column; Recently Added under the quick actions. Its page padding is moved onto
           // this box (-mx-4 px-4) so the carousels can reach the screen edges without being clipped.
           // Desktop: two columns; collection data on the left, the Recently Added rows on the right.
-          <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 overflow-y-auto overflow-x-hidden -mx-4 px-4 md:mx-0 md:px-0 lg:overflow-hidden lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] lg:gap-8 mt-4 md:mt-6">
-            {/* Left column */}
+          // Its top margin and the shell's pt-2 match the bottom padding below the poster rows
+          // (16px on phones, 32px from tablet up).
+          <div className="flex-1 min-h-0 flex flex-col gap-4 md:gap-6 overflow-y-auto overflow-x-hidden -mx-4 px-4 md:mx-0 md:px-0 lg:overflow-hidden lg:grid lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)] lg:gap-8 mt-2 md:mt-6">
+            {/* Left column. On phones its gap (spending card to quick actions) is the page's own
+                16px edge, like the space around everything else */}
             {/* lg:px-2/-mx-2 makes room for the quick actions' -m-2 hover margin, so the column never scrolls sideways */}
-            <div className="shrink-0 flex flex-col gap-3 md:gap-6 lg:min-h-0 lg:overflow-y-auto lg:overflow-x-hidden lg:px-2 lg:-mx-2 lg:pb-8">
-              {/* Who's signed in: account badge (opens the Clerk account menu) and name, Settings on the right (tablet up).
-                  mb-2 on phones adds to the column's 12px gap so the row has room to breathe */}
-              <div className="flex items-center justify-between gap-4 mb-2 md:mb-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Mobile and tablet: Clerk's own button, at double its default 28px. A style object
-                      rather than Tailwind classes: Tailwind v4's layered utilities lose to Clerk's
-                      own unlayered styles. The box keeps the avatar's size (size-14, 3.5rem) from the
-                      first frame: Clerk draws the button a moment after the page, and the row growing
-                      then would shrink the poster rows below, which size to the height left. */}
-                  <div className="lg:hidden flex size-14 shrink-0">
+            <div className="shrink-0 flex flex-col gap-4 md:gap-6 lg:min-h-0 lg:overflow-y-auto lg:overflow-x-hidden lg:px-2 lg:-mx-2 lg:pb-8">
+              {/* Who's signed in, tablet up (on phones the top bar shows it): account badge (opens the
+                  Clerk account menu), name and Collecting since, Settings on the right */}
+              <div className="hidden items-center justify-between gap-4 md:flex">
+                <div className="flex min-w-0 items-center gap-3">
+                  {/* Tablet: Clerk's own button, at double its default 28px. A style object rather
+                      than Tailwind classes: Tailwind v4's layered utilities lose to Clerk's own
+                      unlayered styles. The box keeps the avatar's size (size-14, 3.5rem) from the
+                      first frame: Clerk draws the button a moment after the page, and the row
+                      growing then would move everything below it. */}
+                  <div className="flex size-14 shrink-0 lg:hidden">
                     <UserButton
                       appearance={{ elements: { avatarBox: { width: "3.5rem", height: "3.5rem" } } }}
                     />
@@ -195,12 +198,9 @@ function Dashboard() {
                   <div className="hidden lg:flex">
                     <AccountMenuButton size={56} />
                   </div>
-                  <p className="truncate text-lg font-semibold tracking-tight">
-                    {user?.username || user?.firstName || "Welcome"}
-                  </p>
+                  <AccountName />
                 </div>
-                {/* Tablet up; phones have Settings in the top bar */}
-                <Button asChild variant="outline" size="sm" className="hidden md:inline-flex">
+                <Button asChild variant="outline" size="sm">
                   <Link to="/settings">
                     <Settings />
                     Settings
@@ -208,7 +208,7 @@ function Dashboard() {
                 </Button>
               </div>
 
-              {/* Spending This Month and Last Month */}
+              {/* Spending This Month and Last Month; first on phones, across the full width */}
               <div className="rounded-xl border border-border bg-card p-3 md:p-6">
                 <div className="grid grid-cols-2 divide-x divide-border">
                   {[

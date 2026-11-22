@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { setThemeChoice, useThemeChoice, type ThemeChoice } from "../utils/theme";
+import { useUser } from "@clerk/clerk-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSettings } from "../settings/useSettings";
-import type { UserSettings } from "../settings/settings";
+import { EARLIEST_COLLECTING_SINCE, type UserSettings } from "../settings/settings";
 import MoviePresetSettings from "../features/movies/MoviePresetSettings";
 import DuplicatesSettings from "../features/duplicates/DuplicatesSettings";
 import { Alert } from "@/components/ui/alert";
@@ -40,10 +42,22 @@ const THEME_OPTIONS = [
   { value: "dark", label: "Dark", icon: Moon },
 ] as const;
 
+// The Collecting since choice that follows the sign-up year (Select values can't be empty)
+const SIGN_UP_YEAR = "sign-up";
+
 function Settings() {
   const { settings, loaded, updateSettings } = useSettings();
   const [saveError, setSaveError] = useState("");
   const themeChoice = useThemeChoice();
+  const { user } = useUser();
+  const signedUpYear = user?.createdAt?.getFullYear();
+  // Collecting since: this year back to the earliest allowed, newest first (and a saved year past
+  // this one, which the API allows for anyone already into next year ahead of UTC)
+  const latestYear = Math.max(new Date().getFullYear(), settings.collectingSince ?? 0);
+  const years = Array.from(
+    { length: latestYear - EARLIEST_COLLECTING_SINCE + 1 },
+    (_, i) => latestYear - i,
+  );
 
   const update = async (changes: Partial<UserSettings>) => {
     setSaveError("");
@@ -87,6 +101,35 @@ function Settings() {
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>
+          </div>
+        </section>
+
+        <section className="mt-4 rounded-xl border border-border bg-card px-5 py-2">
+          <h2 className="pt-3 pb-1 text-base font-semibold">Dashboard</h2>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 py-3">
+            <div className="min-w-0">
+              <p className="text-sm font-medium">Collecting since</p>
+              <p className="text-sm text-muted-foreground">The year under your name on the dashboard.</p>
+            </div>
+            <Select
+              value={settings.collectingSince ? String(settings.collectingSince) : SIGN_UP_YEAR}
+              onValueChange={(value) => update({ collectingSince: value === SIGN_UP_YEAR ? null : Number(value) })}
+              disabled={!loaded}
+            >
+              <SelectTrigger className="w-52" aria-label="Collecting since">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={SIGN_UP_YEAR}>
+                  Year you joined{signedUpYear ? ` (${signedUpYear})` : ""}
+                </SelectItem>
+                {years.map((year) => (
+                  <SelectItem key={year} value={String(year)}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </section>
 

@@ -1877,6 +1877,13 @@
           },
           "showCollectionCompletion": {
             "type": "boolean"
+          },
+          "collectingSince": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       }

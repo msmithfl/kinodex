@@ -435,6 +435,9 @@ namespace Kinodex.Api.Migrations
                     b.Property<string>("UserId")
                         .HasColumnType("text");
 
+                    b.Property<int?>("CollectingSince")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("ShowCollectionCompletion")
                         .HasColumnType("boolean");
 
