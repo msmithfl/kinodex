@@ -114,7 +114,8 @@ export function ChipSelect({ values, options, onChange, className, placeholder }
                 setOpen(true);
               }}
               onKeyDown={onKeyDown}
-              className="h-7 min-w-24 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              // 16px text on phones, as in the other inputs: iOS zooms in on smaller text on focus
+              className="h-7 min-w-24 flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
             />
           </div>
         </div>
