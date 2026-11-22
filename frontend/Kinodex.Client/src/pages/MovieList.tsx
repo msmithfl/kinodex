@@ -11,8 +11,9 @@ import PageShell from "../components/PageShell";
 import PageHeader from "../components/PageHeader";
 import { VIEW_MODES, type ViewMode } from "../components/ViewModeToggle";
 import DisplayMenu from "../components/DisplayMenu";
-import { POSTER_GRID } from "../components/posterGrid";
-import { useStoredChoice, useStoredState } from "../utils/useStoredState";
+import { POSTER_GRID, POSTER_GRID_CAPTIONED } from "../components/posterGrid";
+import { useStoredChoice, useStoredFlag, useStoredState } from "../utils/useStoredState";
+import { isPhoneWidth } from "../utils/isMobile";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
 import { useUrlSort } from "../utils/useUrlSort";
 import { MOVIE_SORT_OPTIONS } from "../components/sortOptions";
@@ -110,6 +111,11 @@ function MovieList() {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [viewMode, setViewMode] = useStoredChoice<ViewMode>("movieListView", VIEW_MODES, "table");
+  // The small poster before each title in the table
+  const [showPosters, setShowPosters] = useStoredFlag("movieListPosters", true);
+  // The title and year under each poster in poster view; at first as before, shown from tablet up
+  // and not on phones, where the posters are smaller
+  const [showTitles, setShowTitles] = useStoredFlag("movieListPosterTitles", !isPhoneWidth());
   const [visibleColumns, setVisibleColumns] = useStoredState<VisibleColumns>("movieListColumns", DEFAULT_COLUMNS, {
     // Merge over the defaults so a column added later still has a value
     parse: (saved) => ({ ...DEFAULT_COLUMNS, ...JSON.parse(saved) }),
@@ -381,6 +387,10 @@ function MovieList() {
                 onToggleColumn={toggleColumn}
                 openCopies={openCopies.openByDefault}
                 onOpenCopiesChange={openCopies.setOpenByDefault}
+                showPosters={showPosters}
+                onShowPostersChange={setShowPosters}
+                showTitles={showTitles}
+                onShowTitlesChange={setShowTitles}
               />
               {/* Add, just the icon; tablet up (phones add from the bottom bar) */}
               <Button size="icon" onClick={() => setShowAddModal(true)} className="hidden md:inline-flex" aria-label="Add movie">
@@ -412,7 +422,7 @@ function MovieList() {
             // hover ring and lift inside the scroll area.
             <div key={page} className="-mx-2 h-full overflow-y-auto px-2 pt-2 pb-6">
               <MotionConfig reducedMotion="user">
-                <div className={POSTER_GRID}>
+                <div className={showTitles ? POSTER_GRID_CAPTIONED : POSTER_GRID}>
                   {pageMovies.map((movie, index) => (
                     <motion.div
                       key={movie.id}
@@ -429,7 +439,7 @@ function MovieList() {
                         rating={movie.rating}
                         to={`/library?movie=${movie.id}`}
                         onOpen={() => openMovie(movie.id)}
-                        hideCaptionOnMobile
+                        hideCaption={!showTitles}
                       />
                     </motion.div>
                   ))}
@@ -441,6 +451,7 @@ function MovieList() {
               key={page} // A new page starts scrolled to the top
               rows={pageRows}
               visibleColumns={visibleColumns}
+              showPosters={showPosters}
               sortBy={sortBy}
               sortDirection={sortDirection}
               onSort={handleColumnClick}

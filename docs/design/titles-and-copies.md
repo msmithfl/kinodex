@@ -63,7 +63,7 @@ belongs to the Blu-ray.
   the completion ring counts both.
 - **Lists and posters:** one entry per title. Formats are every copy's formats together; Paid is
   the total (as TV shows already show).
-- **Table view (movies and TV):** a title with more than one copy has an arrow that opens it,
+- **Table view (movies and TV):** a title with more than one copy has a chip after its name that opens it,
   showing each copy as its own row underneath (format, condition, price, shelf, HDD). A title
   with one copy is a single row, as now. "Open copies" in the Display menu has every title open
   or closed to start with (remembered in this browser, like the columns); with it on, every copy
@@ -155,7 +155,7 @@ Frontend:
 - `copies.ts` in place of `tvShowPurchases.ts` (all formats, total paid, owned seasons).
 - One copy card for both drawers and one copy editor for both forms, in place of
   `TvShowPurchaseList` and `TvShowPurchaseEditor`.
-- The movie and TV tables: copy rows under each title, opened with an arrow, and "Open copies" in
+- The movie and TV tables: copy rows under each title, opened with a chip after its name, and "Open copies" in
   the Display menu. Bulk edit and bulk delete selecting copies (a title's checkbox ticks its
   copies).
 - Movies: filters, filter options, sorting, table columns, poster formats, search and the command

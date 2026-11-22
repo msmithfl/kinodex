@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import { Stars } from "./StarRating";
 
 interface PosterCardProps {
@@ -12,7 +11,7 @@ interface PosterCardProps {
   to: string;
   // Runs on a plain click (e.g. to open a drawer); ctrl/cmd/shift-clicks still follow the link
   onOpen?: () => void;
-  hideCaptionOnMobile?: boolean; // Phones show just the posters
+  hideCaption?: boolean; // Just the poster, no title and subtitle underneath
   badge?: React.ReactNode; // Over the poster's top-right corner, e.g. a collection's completion ring
   fallback?: React.ReactNode; // Shown when there's no poster, instead of the title
 }
@@ -22,7 +21,7 @@ const isPlainClick = (e: React.MouseEvent) =>
 
 // A redesigned poster grid card: the poster lifts and gets an accent ring on hover, with the
 // formats and rating over it; the title and subtitle sit underneath.
-function PosterCard({ title, posterPath, subtitle, formats = [], rating = 0, to, onOpen, hideCaptionOnMobile, badge, fallback }: PosterCardProps) {
+function PosterCard({ title, posterPath, subtitle, formats = [], rating = 0, to, onOpen, hideCaption, badge, fallback }: PosterCardProps) {
   // A poster that fails to load falls back to the title on a plain tile
   const [broken, setBroken] = useState(false);
   const showOverlay = formats.length > 0 || rating > 0;
@@ -73,10 +72,12 @@ function PosterCard({ title, posterPath, subtitle, formats = [], rating = 0, to,
           </div>
         )}
       </div>
-      <div className={cn("min-w-0", hideCaptionOnMobile && "hidden md:block")}>
-        <p className="truncate text-sm font-medium">{title}</p>
-        {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
-      </div>
+      {!hideCaption && (
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{title}</p>
+          {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
+        </div>
+      )}
     </Link>
   );
 }

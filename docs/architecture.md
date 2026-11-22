@@ -207,9 +207,16 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   + `utils/applyFilters.ts` (movies), `features/tvShows/filters.ts` (TV); the per-copy filters
   (format, condition, gift, shelf, HDD) are shared in `utils/copyFilters.ts`: one copy has to match
   them all, and the tables show only the matching copies under a title.
-- **Copy rows:** in the movie and TV tables a title with several copies has an arrow
-  (`CopyRowToggle`) that shows a row per copy; "Open copies" in the Display menu sets whether they
-  start open (`useOpenCopies`, remembered per device). The movie table's checkboxes tick copies: a
+- **Copy rows:** in the movie and TV tables a title with several copies has a small chip after
+  its name (how many, and an arrow; `CopyRowToggle`) that shows a row per copy, its name under the
+  title; titles with one copy keep no space for it. "Open copies" in the Display menu sets whether
+  they start open (`useOpenCopies`, remembered per device).
+- **Ticking rows (movie table):** no checkbox column: a row's checkbox sits over its poster
+  thumbnail (a copy row's under it), showing on hovering the poster with a mouse, and on every row
+  while anything is ticked; select-all is over the posters in the header.
+  On touch screens a long press on a row ticks it (`utils/useLongPress.ts`). While
+  anything is ticked, a click or tap on a row ticks it instead of opening the drawer. With Poster
+  thumbnails off the checkboxes go back to a column of their own. The checkboxes tick copies: a
   title's ticks its copies, and ticking one with several opens it (`utils/copySelection.ts`). Bulk
   delete removes the ticked copies, and a movie whose copies are all ticked.
 - **Data layer:** `utils/api.ts`, `utils/queryClient.ts`, `features/*/api.ts` (see below).
@@ -242,19 +249,19 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   custom ones like `PosterCard`) draw their own; `index.css` gives everything else an outline.
 - **Page building blocks:** `PageShell` (fills the screen down to the phone bottom bar; `column`
   layout scrolls its parts, `scroll` scrolls the page), `PageHeader` (title, count line, actions),
-  `ViewModeToggle` (Table/Posters, on the genre page and in the collection drawer), `components/posterGrid.ts` (`POSTER_GRID` for the lists,
+  `ViewModeToggle` (Table/Posters, on the genre page and in the collection drawer), `components/posterGrid.ts` (`POSTER_GRID` for the lists' posters without titles,
   `POSTER_GRID_CAPTIONED` for captioned grids, `POSTER_GRID_DRAWER`), `ui/alert.tsx` (message
   banners), and `utils/useStoredState.ts` (`useStoredState` / `useStoredChoice`: state remembered
   in localStorage; every remembered choice uses it). New pages should start from these.
 - **Redesigned building blocks:** `FilterPanel` (Filter button + popover: Any/Yes/No switches,
   then rows that open a checklist, format included; drawn from each category's `kind` in
-  `utils/filterCategories.ts`), `FilterChips` (active filters as removable chips), `DisplayMenu` (the movie and TV lists' Display button + popover beside Sort: Table or Posters, a Columns row that opens the column checklist like the Filter panel's lists, and Open copies; the table's options stay in place greyed out in poster view), `SortMenu`
+  `utils/filterCategories.ts`), `FilterChips` (active filters as removable chips), `DisplayMenu` (the movie and TV lists' Display button + popover beside Sort: Table or Posters, then only that view's options: for the table, a Columns row that opens the column checklist like the Filter panel's lists, Poster thumbnails (the small poster before each title) and Open copies; for posters, Show titles (title and year under each poster; the captioned grid when on, posters only when off; at first on from tablet up, off on phones). Each remembered per list), `SortMenu`
   (sort-by and direction dropdown), `PosterCard` (poster grid card with hover lift, formats and
   rating), `SortHeader` (a table's sortable column header), `ListSkeleton` (loading placeholder for
   the movie and TV lists), `Pagination`.
 - **Redesigned screens:** every page in the app. The sidebar and search palette; the movie list (`MovieList`:
-  title and count, toolbar with search (`/` focuses it), filter, sort, display (Table/Posters,
-  columns, Open copies) and a + button beside it to add (in the header, labelled, only while the list is empty); filter chips; `MovieTable` with poster thumbnails, checkboxes and a select-all; a
+  title and count, toolbar with search (`/` focuses it), filter, sort, display (Table/Posters, poster thumbnails, poster titles,
+  columns, Open copies) and a + button beside it to add (in the header, labelled, only while the list is empty); filter chips; `MovieTable` with poster thumbnails (each with its checkbox over it) and a select-all; a
   floating bulk-action bar; staggered poster fade-in; skeletons while loading; toasts after bulk
   edit/delete); the Add and Edit Movie windows (Radix `Dialog`, a bottom sheet on phones, sized
   by `components/formModal.ts`; Add has Search › Details steps, `TmdbSearch` (cmdk: arrow keys +

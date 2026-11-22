@@ -5,18 +5,22 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import SortHeader from "../../components/SortHeader";
 import { QuickRating } from "../../components/StarRating";
-import CopyRowToggle, { CopyRowLabel, COPY_TOGGLE_SPACE } from "../../components/CopyRowToggle";
+import CopyRowToggle, { CopyRowLabel } from "../../components/CopyRowToggle";
 import { useRateMovie } from "./api";
 import { getRelativeTimeString } from "../../utils/dateUtils";
 import { allConditions, allFormats, lastAdded, totalPaid } from "../../utils/copies";
 import { isEmpty, rowChecked, type CopySelection, type TitleRow } from "../../utils/copySelection";
 import type { Copy, Movie, SortOption } from "../../types";
 import { COLUMNS, type VisibleColumns } from "./tableColumns";
+import { canHover } from "../../utils/isMobile";
+import { useLongPress } from "../../utils/useLongPress";
 
 interface MovieTableProps {
   // Already filtered, searched, sorted and paged; each with the copies the filters let through
   rows: TitleRow<Movie>[];
   visibleColumns: VisibleColumns;
+  // A small poster before each title (the Display menu's Poster thumbnails)
+  showPosters: boolean;
   sortBy: SortOption;
   sortDirection: "asc" | "desc";
   onSort: (sortKey: SortOption) => void;
@@ -59,13 +63,65 @@ function Paid({ amount, gift }: { amount: number; gift: boolean }) {
   );
 }
 
-// The movie list's table: a checkbox per row (and select-all for the page), a small poster and
-// the title, then the optional columns. A whole row opens the drawer, as in the TV table. A movie
-// with several copies can open to show a row for each, with its own checkbox; its own row adds
-// them up. Rating stars save straight away.
+// A title's (or a copy's) checkbox, over its poster's place at the start of the title cell, so
+// no row keeps a column for it. It shows while anything is ticked, when this one is, and (with a
+// mouse) on hovering the poster, which is then the checkbox's bigger target. On touch screens a
+// tap on the poster opens the drawer until something is ticked (a long press on a row starts).
+function PosterCheckbox({
+  checked,
+  selecting,
+  label,
+  onChange,
+  children,
+}: {
+  checked: boolean | "indeterminate";
+  selecting: boolean;
+  label: string;
+  onChange: (on: boolean) => void;
+  children?: React.ReactNode; // The poster; none on a copy's row
+}) {
+  const showing = selecting || checked !== false;
+  return (
+    <div
+      className="group/check relative h-10 w-7 shrink-0"
+      onClick={(e) => {
+        if (!selecting && !canHover()) return; // A tap opens the drawer, as the row does
+        e.stopPropagation();
+        onChange(checked !== true);
+      }}
+    >
+      {children}
+      <div
+        className={cn(
+          "absolute inset-0 grid place-items-center rounded-sm transition-opacity",
+          children && "bg-black/50",
+          showing
+            ? "opacity-100"
+            : "pointer-events-none opacity-0 group-hover/check:pointer-events-auto group-hover/check:opacity-100 has-focus-visible:opacity-100",
+        )}
+      >
+        <Checkbox
+          checked={checked}
+          onCheckedChange={(value) => onChange(value === true)}
+          onClick={(e) => e.stopPropagation()}
+          aria-label={label}
+          className="bg-card"
+        />
+      </div>
+    </div>
+  );
+}
+
+// The movie list's table: a small poster and the title (with a chip to open a movie's copies when
+// it has several), then the optional columns. A whole row opens the drawer, as in the TV table.
+// Rows are ticked with a checkbox over the poster (or, with Poster thumbnails off, in a column of
+// their own); on touch screens a long press on a row ticks it. While anything is ticked, a click
+// or tap on a row ticks it instead of opening it. A movie with several copies can open to show a
+// row for each, with its own checkbox; its own row adds them up. Rating stars save straight away.
 function MovieTable({
   rows,
   visibleColumns,
+  showPosters,
   sortBy,
   sortDirection,
   onSort,
@@ -78,7 +134,7 @@ function MovieTable({
 }: MovieTableProps) {
   const rateMovie = useRateMovie();
   const sortProps = { sortBy, sortDirection, onSort };
-  const anySelected = !isEmpty(selection);
+  const selecting = !isEmpty(selection);
   const pageStates = rows.map((row) => rowChecked(row, selection));
   const pageChecked = pageStates.length > 0 && pageStates.every((s) => s === true)
     ? true
@@ -86,29 +142,70 @@ function MovieTable({
       ? "indeterminate"
       : false;
 
+  // Ticks or unticks a movie; ticking one with several copies opens it, to show which are ticked
+  const selectRow = (row: TitleRow<Movie>, on: boolean) => {
+    onSelectRows([row], on);
+    if (on && row.copies.length > 1) onOpenChange(row.title.id, true);
+  };
+  // A long press (touch screens) ticks a movie's row, or a copy's
+  const longPress = useLongPress<{ row: TitleRow<Movie>; copy?: Copy }>(({ row, copy }) => {
+    if (copy?.id !== undefined) onSelectCopy(copy.id, true);
+    else selectRow(row, true);
+  });
+  // Rows can be long-pressed without the phone selecting their text or offering its link menu
+  const rowClass = "group cursor-pointer transition-colors pointer-coarse:select-none [-webkit-touch-callout:none]";
+
+  // With Poster thumbnails off, the checkboxes have a column of their own (faint until hovered)
+  const checkboxColumn = !showPosters;
   const checkboxClass = (checked: boolean | "indeterminate") =>
-    cn("align-middle transition-opacity", !checked && !anySelected && "opacity-40 group-hover:opacity-100");
+    cn("align-middle transition-opacity", !checked && !selecting && "opacity-40 group-hover:opacity-100");
 
   // A copy's own row, under its movie: its format, condition, price and date added
-  const copyRow = (movie: Movie, copy: Copy, index: number) => {
+  const copyRow = (row: TitleRow<Movie>, copy: Copy, index: number) => {
+    const movie = row.title;
     const selected = copy.id !== undefined && selection.copyIds.has(copy.id);
+    const select = (on: boolean) => {
+      if (copy.id !== undefined) onSelectCopy(copy.id, on);
+    };
+    const label = `Select copy ${index + 1} of ${movie.title}`;
     return (
       <tr
         key={`${movie.id}-${copy.id ?? index}`}
-        onClick={() => onOpen(movie.id)}
-        className={cn("group cursor-pointer transition-colors", selected ? "bg-primary-soft" : "bg-muted/25 hover:bg-accent/50")}
+        {...longPress({ row, copy })}
+        onClick={() => (selecting ? select(!selected) : onOpen(movie.id))}
+        className={cn(rowClass, selected ? "bg-primary-soft" : "bg-muted/25 hover:bg-accent/50")}
       >
-        {/* The checkbox (and the space around it) ticks rather than opening the drawer */}
-        <td className={cn(cellClass, "w-10 cursor-default pr-0")} onClick={(e) => e.stopPropagation()}>
-          <Checkbox
-            checked={selected}
-            onCheckedChange={(checked) => copy.id !== undefined && onSelectCopy(copy.id, checked === true)}
-            aria-label={`Select copy ${index + 1} of ${movie.title}`}
-            className={checkboxClass(selected)}
-          />
-        </td>
-        <td className={cn(cellClass, TITLE_WIDTH, COPY_TOGGLE_SPACE)}>
-          <CopyRowLabel copy={copy} index={index} />
+        {checkboxColumn && (
+          // The checkbox (and the space around it) ticks rather than opening the drawer
+          <td className={cn(cellClass, "w-10 cursor-default pr-0")} onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={selected}
+              onCheckedChange={(checked) => select(checked === true)}
+              aria-label={label}
+              className={checkboxClass(selected)}
+            />
+          </td>
+        )}
+        <td className={cn(cellClass, TITLE_WIDTH, checkboxColumn && "pl-8")}>
+          {checkboxColumn ? (
+            <CopyRowLabel copy={copy} index={index} />
+          ) : (
+            // Its checkbox under the movie's poster (over its product image, when it has one), and
+            // its name under the movie's title
+            <div className="flex min-w-0 items-center gap-3">
+              <PosterCheckbox checked={selected} selecting={selecting} label={label} onChange={select}>
+                {copy.productPosterPath && (
+                  <img
+                    src={copy.productPosterPath}
+                    alt=""
+                    loading="lazy"
+                    className="h-10 w-7 shrink-0 rounded-sm border border-border bg-muted object-cover"
+                  />
+                )}
+              </PosterCheckbox>
+              <CopyRowLabel copy={copy} index={index} />
+            </div>
+          )}
         </td>
         {visibleColumns.year && <td className={cellClass} />}
         {visibleColumns.format && (
@@ -134,6 +231,15 @@ function MovieTable({
     );
   };
 
+  const selectAll = (
+    <Checkbox
+      checked={pageChecked}
+      onCheckedChange={(checked) => onSelectRows(rows, checked === true)}
+      aria-label="Select every movie on this page"
+      className="align-middle"
+    />
+  );
+
   return (
     <div className="h-full overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-xl border border-border bg-card">
       {/* Two scroll areas so a swipe moves the table one way at a time: the outer one only
@@ -144,15 +250,21 @@ function MovieTable({
         <table className="w-full border-separate border-spacing-0 text-sm">
           <thead className="sticky top-0 z-10 bg-card">
             <tr>
-              <th className={cn(headClass, "w-10 pr-0")}>
-                <Checkbox
-                  checked={pageChecked}
-                  onCheckedChange={(checked) => onSelectRows(rows, checked === true)}
-                  aria-label="Select every movie on this page"
-                  className="align-middle"
-                />
-              </th>
-              <SortHeader label="Title" sortKey="alphabetic" {...sortProps} className={TITLE_WIDTH} />
+              {checkboxColumn && <th className={cn(headClass, "w-10 pr-0")}>{selectAll}</th>}
+              <SortHeader
+                label="Title"
+                sortKey="alphabetic"
+                {...sortProps}
+                className={TITLE_WIDTH}
+                // Select-all over the posters, the label over the titles
+                before={
+                  !checkboxColumn && (
+                    <span className="grid w-7 shrink-0 place-items-center">
+                      {selectAll}
+                    </span>
+                  )
+                }
+              />
               {COLUMNS.filter(({ key }) => visibleColumns[key]).map(({ key, label, sortKey }) => (
                 <SortHeader
                   key={key}
@@ -170,58 +282,65 @@ function MovieTable({
               const checked = pageStates[rowIndex];
               const several = copies.length > 1;
               const open = several && isOpen(movie.id);
+              const label = `Select ${movie.title}`;
               return [
                 <tr
                   key={movie.id}
-                  onClick={() => onOpen(movie.id)}
-                  className={cn("group cursor-pointer transition-colors", checked === true ? "bg-primary-soft" : "hover:bg-accent/50")}
+                  {...longPress({ row })}
+                  onClick={() => (selecting ? selectRow(row, checked !== true) : onOpen(movie.id))}
+                  className={cn(rowClass, checked === true ? "bg-primary-soft" : "hover:bg-accent/50")}
                 >
-                  {/* The checkbox (and the space around it) ticks rather than opening the drawer */}
-                  <td className={cn(cellClass, "w-10 cursor-default pr-0")} onClick={(e) => e.stopPropagation()}>
-                    <Checkbox
-                      checked={checked}
-                      onCheckedChange={(value) => {
-                        const on = value === true;
-                        onSelectRows([row], on);
-                        // Ticking a movie with several copies opens it, to show which are ticked
-                        if (on && several) onOpenChange(movie.id, true);
-                      }}
-                      aria-label={`Select ${movie.title}`}
-                      className={checkboxClass(checked)}
-                    />
-                  </td>
+                  {checkboxColumn && (
+                    // The checkbox (and the space around it) ticks rather than opening the drawer
+                    <td className={cn(cellClass, "w-10 cursor-default pr-0")} onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(value) => selectRow(row, value === true)}
+                        aria-label={label}
+                        className={checkboxClass(checked)}
+                      />
+                    </td>
+                  )}
                   <td className={cn(cellClass, TITLE_WIDTH)}>
                     <div className="flex min-w-0 items-center gap-3">
-                      <CopyRowToggle
-                        count={several ? copies.length : 0}
-                        open={open}
-                        title={movie.title}
-                        onToggle={() => onOpenChange(movie.id, !open)}
-                      />
-                      <Link
-                        to={`/library?movie=${movie.id}`}
-                        onClick={(e) => {
-                          e.stopPropagation(); // The row would open the drawer a second time
-                          // Plain clicks open the drawer; ctrl/cmd-click opens the list with it in a drawer, in a new tab
-                          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-                          e.preventDefault();
-                          onOpen(movie.id);
-                        }}
-                        className="flex min-w-0 items-center gap-3 hover:underline"
-                        title={movie.title}
-                      >
-                        {movie.posterPath ? (
-                          <img
-                            src={movie.posterPath}
-                            alt=""
-                            loading="lazy"
-                            className="h-10 w-7 shrink-0 rounded-sm border border-border bg-muted object-cover"
-                          />
-                        ) : (
-                          <span className="h-10 w-7 shrink-0 rounded-sm bg-muted" />
-                        )}
-                        <span className="truncate font-medium">{movie.title}</span>
-                      </Link>
+                      {showPosters && (
+                        <PosterCheckbox checked={checked} selecting={selecting} label={label} onChange={(on) => selectRow(row, on)}>
+                          {movie.posterPath ? (
+                            <img
+                              src={movie.posterPath}
+                              alt=""
+                              loading="lazy"
+                              className="h-10 w-7 rounded-sm border border-border bg-muted object-cover"
+                            />
+                          ) : (
+                            <span className="block h-10 w-7 rounded-sm bg-muted" />
+                          )}
+                        </PosterCheckbox>
+                      )}
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Link
+                          to={`/library?movie=${movie.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation(); // The row would act on the click a second time
+                            // Plain clicks open the drawer (or tick, while selecting); ctrl/cmd-click
+                            // opens the list with it in a drawer, in a new tab
+                            if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                            e.preventDefault();
+                            if (selecting) selectRow(row, checked !== true);
+                            else onOpen(movie.id);
+                          }}
+                          className="truncate font-medium hover:underline"
+                          title={movie.title}
+                        >
+                          {movie.title}
+                        </Link>
+                        <CopyRowToggle
+                          count={several ? copies.length : 0}
+                          open={open}
+                          title={movie.title}
+                          onToggle={() => onOpenChange(movie.id, !open)}
+                        />
+                      </div>
                     </div>
                   </td>
                   {visibleColumns.year && (
@@ -259,7 +378,7 @@ function MovieTable({
                     </td>
                   )}
                 </tr>,
-                ...(open ? copies.map((copy) => copyRow(movie, copy, movie.copies.indexOf(copy))) : []),
+                ...(open ? copies.map((copy) => copyRow(row, copy, movie.copies.indexOf(copy))) : []),
               ];
             })}
           </tbody>
