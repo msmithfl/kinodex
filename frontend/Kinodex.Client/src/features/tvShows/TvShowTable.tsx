@@ -164,7 +164,7 @@ function TvShowTable({ rows, visibleColumns, showPosters, sortBy, sortDirection,
                         ) : (
                           <span className="h-10 w-7 shrink-0 rounded-sm bg-muted" />
                         ))}
-                      <div className="flex min-w-0 items-center gap-2">
+                      <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
                         <Link
                           to={`/tv-shows?show=${show.id}`}
                           onClick={(e) => {
