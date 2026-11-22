@@ -1,22 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { MotionConfig, motion } from "motion/react";
-import { Columns3, Plus, Search, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageShell from "../components/PageShell";
 import PageHeader from "../components/PageHeader";
-import ViewModeToggle, { VIEW_MODES, type ViewMode } from "../components/ViewModeToggle";
+import { VIEW_MODES, type ViewMode } from "../components/ViewModeToggle";
+import DisplayMenu from "../components/DisplayMenu";
 import { POSTER_GRID } from "../components/posterGrid";
 import { useStoredChoice, useStoredState } from "../utils/useStoredState";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useUrlSearchQuery } from "../utils/useUrlSearchQuery";
 import { useUrlSort } from "../utils/useUrlSort";
 import { titleSearchScore } from "../utils/textSearch";
@@ -182,13 +175,14 @@ function TvShowList() {
             className="hidden md:flex"
             subtitle={`${shows.length} in your collection${narrowed ? ` · ${filteredShows.length} shown` : ""}`}
             actions={
-              // Phones add from the bottom bar
-              <div className="hidden gap-2 md:flex">
+              // Only while the list is empty, when there's no toolbar to hold it; phones add from
+              // the bottom bar
+              shows.length === 0 && (
                 <Button onClick={() => setShowAddModal(true)}>
                   <Plus />
                   Add TV show
                 </Button>
-              </div>
+              )
             }
           />
 
@@ -235,46 +229,24 @@ function TvShowList() {
                 onDirectionChange={setSortDirection}
                 options={TV_SORT_OPTIONS}
               />
-              {/* Phones: the count, as the page header is hidden there */}
-              <p className="text-sm whitespace-nowrap text-muted-foreground tabular-nums md:hidden">
+              {/* Table or posters, and the table's columns */}
+              <DisplayMenu
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                columns={COLUMNS}
+                visibleColumns={visibleColumns}
+                onToggleColumn={toggleColumn}
+                openCopies={openCopies.openByDefault}
+                onOpenCopiesChange={openCopies.setOpenByDefault}
+              />
+              {/* Add, just the icon; tablet up (phones add from the bottom bar) */}
+              <Button size="icon" onClick={() => setShowAddModal(true)} className="hidden md:inline-flex" aria-label="Add TV show">
+                <Plus />
+              </Button>
+              {/* Phones: the count at the right, as the page header is hidden there */}
+              <p className="ml-auto text-sm whitespace-nowrap text-muted-foreground tabular-nums md:hidden">
                 {plural(filteredShows.length, "show")}
               </p>
-              <div className="ml-auto flex items-center gap-2">
-                {/* Columns (table view only) sits left of the view toggle, so the toggle stays put */}
-                {viewMode === "table" && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" aria-label="Choose columns">
-                        <Columns3 />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      <DropdownMenuLabel>Columns</DropdownMenuLabel>
-                      {COLUMNS.map(({ key, label }) => (
-                        <DropdownMenuCheckboxItem
-                          key={key}
-                          checked={visibleColumns[key]}
-                          onCheckedChange={() => toggleColumn(key)}
-                          // Stay open, so several columns can be switched in one go
-                          onSelect={(e) => e.preventDefault()}
-                        >
-                          {label}
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                      <DropdownMenuSeparator />
-                      {/* Shows with several copies start open (a row for each) or closed */}
-                      <DropdownMenuCheckboxItem
-                        checked={openCopies.openByDefault}
-                        onCheckedChange={(checked) => openCopies.setOpenByDefault(checked === true)}
-                        onSelect={(e) => e.preventDefault()}
-                      >
-                        Open copies
-                      </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-                <ViewModeToggle value={viewMode} onChange={setViewMode} showLabels />
-              </div>
             </div>
           )}
 

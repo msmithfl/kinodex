@@ -208,7 +208,7 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   (format, condition, gift, shelf, HDD) are shared in `utils/copyFilters.ts`: one copy has to match
   them all, and the tables show only the matching copies under a title.
 - **Copy rows:** in the movie and TV tables a title with several copies has an arrow
-  (`CopyRowToggle`) that shows a row per copy; "Open copies" in the Columns menu sets whether they
+  (`CopyRowToggle`) that shows a row per copy; "Open copies" in the Display menu sets whether they
   start open (`useOpenCopies`, remembered per device). The movie table's checkboxes tick copies: a
   title's ticks its copies, and ticking one with several opens it (`utils/copySelection.ts`). Bulk
   delete removes the ticked copies, and a movie whose copies are all ticked.
@@ -242,19 +242,19 @@ A right-side panel (`components/Drawer.tsx`) that shows details over a list with
   custom ones like `PosterCard`) draw their own; `index.css` gives everything else an outline.
 - **Page building blocks:** `PageShell` (fills the screen down to the phone bottom bar; `column`
   layout scrolls its parts, `scroll` scrolls the page), `PageHeader` (title, count line, actions),
-  `ViewModeToggle` (Table/Posters), `components/posterGrid.ts` (`POSTER_GRID` for the lists,
+  `ViewModeToggle` (Table/Posters, on the genre page and in the collection drawer), `components/posterGrid.ts` (`POSTER_GRID` for the lists,
   `POSTER_GRID_CAPTIONED` for captioned grids, `POSTER_GRID_DRAWER`), `ui/alert.tsx` (message
   banners), and `utils/useStoredState.ts` (`useStoredState` / `useStoredChoice`: state remembered
   in localStorage; every remembered choice uses it). New pages should start from these.
 - **Redesigned building blocks:** `FilterPanel` (Filter button + popover: Any/Yes/No switches,
   then rows that open a checklist, format included; drawn from each category's `kind` in
-  `utils/filterCategories.ts`), `FilterChips` (active filters as removable chips), `SortMenu`
+  `utils/filterCategories.ts`), `FilterChips` (active filters as removable chips), `DisplayMenu` (the movie and TV lists' Display button + popover beside Sort: Table or Posters, a Columns row that opens the column checklist like the Filter panel's lists, and Open copies; the table's options stay in place greyed out in poster view), `SortMenu`
   (sort-by and direction dropdown), `PosterCard` (poster grid card with hover lift, formats and
   rating), `SortHeader` (a table's sortable column header), `ListSkeleton` (loading placeholder for
   the movie and TV lists), `Pagination`.
 - **Redesigned screens:** every page in the app. The sidebar and search palette; the movie list (`MovieList`:
-  title and count, Add, toolbar with search (`/` focuses it), filter, sort, Table/Posters,
-  columns; filter chips; `MovieTable` with poster thumbnails, checkboxes and a select-all; a
+  title and count, toolbar with search (`/` focuses it), filter, sort, display (Table/Posters,
+  columns, Open copies) and a + button beside it to add (in the header, labelled, only while the list is empty); filter chips; `MovieTable` with poster thumbnails, checkboxes and a select-all; a
   floating bulk-action bar; staggered poster fade-in; skeletons while loading; toasts after bulk
   edit/delete); the Add and Edit Movie windows (Radix `Dialog`, a bottom sheet on phones, sized
   by `components/formModal.ts`; Add has Search › Details steps, `TmdbSearch` (cmdk: arrow keys +

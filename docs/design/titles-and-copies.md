@@ -65,7 +65,7 @@ belongs to the Blu-ray.
   the total (as TV shows already show).
 - **Table view (movies and TV):** a title with more than one copy has an arrow that opens it,
   showing each copy as its own row underneath (format, condition, price, shelf, HDD). A title
-  with one copy is a single row, as now. "Open copies" in the Columns menu has every title open
+  with one copy is a single row, as now. "Open copies" in the Display menu has every title open
   or closed to start with (remembered in this browser, like the columns); with it on, every copy
   is in view at once.
 - **Filters:** a title matches when any of its copies does (say, Format: VHS). In the table only
@@ -156,7 +156,7 @@ Frontend:
 - One copy card for both drawers and one copy editor for both forms, in place of
   `TvShowPurchaseList` and `TvShowPurchaseEditor`.
 - The movie and TV tables: copy rows under each title, opened with an arrow, and "Open copies" in
-  the Columns menu. Bulk edit and bulk delete selecting copies (a title's checkbox ticks its
+  the Display menu. Bulk edit and bulk delete selecting copies (a title's checkbox ticks its
   copies).
 - Movies: filters, filter options, sorting, table columns, poster formats, search and the command
   palette (every copy's UPC), Stats and spending, bulk edit. TV: the shelf and HDD filters.
