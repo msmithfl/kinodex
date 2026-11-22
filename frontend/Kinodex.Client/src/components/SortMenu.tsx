@@ -9,22 +9,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { SortOption } from "@/types";
+import { MOVIE_SORT_OPTIONS, type SortMenuOption } from "./sortOptions";
 
-export interface SortMenuOption {
-  value: SortOption;
-  label: string;
-}
-
-// Movie sort options; other lists pass their own
-const MOVIE_SORT_OPTIONS: SortMenuOption[] = [
-  { value: "alphabetic", label: "Title" },
-  { value: "year", label: "Year" },
-  { value: "format", label: "Format" },
-  { value: "condition", label: "Condition" },
-  { value: "rating", label: "Rating" },
-  { value: "purchasePrice", label: "Purchase price" },
-  { value: "date", label: "Date added" },
-];
+export type { SortMenuOption };
 
 interface SortMenuProps {
   sortBy: SortOption;
