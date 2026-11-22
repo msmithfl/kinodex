@@ -2,7 +2,9 @@ import type { Copy, Movie, TvShow } from "../../types";
 
 // Duplicates: two or more movies (or shows) with the same TMDB id, from before a title could hold
 // several copies (docs/design/titles-and-copies.md, step 4). Merging keeps the oldest and folds
-// the others into it.
+// the others into it. Entries can instead be marked "Not a duplicate" (separate on purpose, say
+// one for a rental copy); a group stays apart while every entry in it is marked, and comes back
+// when a new, unmarked one joins it.
 
 type Title = Movie | TvShow;
 
@@ -11,7 +13,11 @@ export interface DuplicateGroup<T extends Title = Title> {
   keep: T; // The oldest, so links to it keep working
   others: T[]; // Oldest first
   merged: T; // What the kept one becomes (the same rules as the API's TitleMerge)
+  separate: boolean; // Every entry is marked "Not a duplicate"
 }
+
+// Every entry of a group, oldest first (the ones a "Not a duplicate" mark goes on)
+export const entriesOf = (group: DuplicateGroup) => [group.keep, ...group.others];
 
 const oldestFirst = (a: Title, b: Title) =>
   (a.createdAt ?? "").localeCompare(b.createdAt ?? "") || (a.id ?? 0) - (b.id ?? 0);
@@ -55,12 +61,12 @@ function groupsOf<T extends Title>(titles: T[], kind: "movie" | "show"): Duplica
     .filter((group) => group.length > 1)
     .map((group) => {
       const [keep, ...others] = [...group].sort(oldestFirst);
-      return { kind, keep, others, merged: combine(keep, others) };
+      return { kind, keep, others, merged: combine(keep, others), separate: group.every((t) => t.notDuplicate) };
     })
     .sort((a, b) => a.keep.title.localeCompare(b.keep.title));
 }
 
-// Every set of duplicates: movies, then shows, each by title
+// Every set of duplicates, kept separate or not: movies, then shows, each by title
 export const findDuplicates = (movies: Movie[], shows: TvShow[]): DuplicateGroup[] => [
   ...groupsOf(movies, "movie"),
   ...groupsOf(shows, "show"),

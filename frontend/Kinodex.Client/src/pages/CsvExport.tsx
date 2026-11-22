@@ -24,7 +24,7 @@ function RowErrors({ errors }: { errors: string[] }) {
 
 function CsvExport() {
   const api = useApi();
-  // Imports refresh every screen showing movies
+  // Imports refresh every screen showing movies and shows
   const importMovies = useImportMovies();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -44,7 +44,7 @@ function CsvExport() {
     setImportResult(null);
 
     try {
-      const blob = await api.download("/movies/export/csv");
+      const blob = await api.download("/titles/export/csv");
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -61,10 +61,11 @@ function CsvExport() {
     }
   };
 
-  // "Imported 3 movies (from Letterboxd) · 2 skipped (already in collection)."
-  const describeImport = (result: ImportResult, fromWhere: string) => {
-    const parts = [`Imported ${result.imported} movie${result.imported !== 1 ? "s" : ""}${fromWhere}`];
-    if (result.skipped > 0) parts.push(`${result.skipped} skipped (already in collection)`);
+  // "Imported 12 rows · 2 skipped (already in your library)." A Kinodex CSV has a row per copy;
+  // Letterboxd's a row per movie ("Imported 3 movies from Letterboxd").
+  const describeImport = (result: ImportResult, noun: string, fromWhere = "") => {
+    const parts = [`Imported ${result.imported} ${noun}${result.imported !== 1 ? "s" : ""}${fromWhere}`];
+    if (result.skipped > 0) parts.push(`${result.skipped} skipped (already in your library)`);
     return parts.join(" · ") + ".";
   };
 
@@ -80,7 +81,7 @@ function CsvExport() {
     try {
       const result = await importMovies.mutateAsync({ source: "csv", file });
       setImportResult(result);
-      setSuccess(describeImport(result, ""));
+      setSuccess(describeImport(result, "row"));
     } catch (err) {
       setError(err instanceof Error ? `Import failed: ${err.message}` : "Import failed. Please try again.");
     } finally {
@@ -101,7 +102,7 @@ function CsvExport() {
     try {
       const result = await importMovies.mutateAsync({ source: "letterboxd", file });
       setLetterboxdResult(result);
-      setSuccess(describeImport(result, " from Letterboxd"));
+      setSuccess(describeImport(result, "movie", " from Letterboxd"));
     } catch (err) {
       setError(err instanceof Error ? `Import failed: ${err.message}` : "Import failed. Please try again.");
     } finally {
@@ -122,7 +123,9 @@ function CsvExport() {
         <section className="flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-5">
           <div>
             <h2 className="text-base font-semibold">Export</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Download your entire collection with all fields.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Download your whole library, movies and TV shows, as one CSV file: a row for each copy.
+            </p>
           </div>
           <Button onClick={handleExport} disabled={loading}>
             <Download />
@@ -135,7 +138,8 @@ function CsvExport() {
           <div>
             <h2 className="text-base font-semibold">Import</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Upload a Kinodex CSV file to import movies into your collection.
+              Upload a Kinodex CSV file to add its movies and TV shows to your library. Copies already there are
+              skipped, so importing the same file twice doesn't double anything.
             </p>
           </div>
           <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={handleImport} />

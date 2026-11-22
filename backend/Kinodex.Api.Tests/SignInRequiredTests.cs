@@ -11,7 +11,7 @@ public class SignInRequiredTests(KinodexApiFactory api)
     [InlineData("GET", "/api/movies")]
     [InlineData("GET", "/api/movies/1")]
     [InlineData("DELETE", "/api/movies/1")]
-    [InlineData("GET", "/api/movies/export/csv")]
+    [InlineData("GET", "/api/titles/export/csv")]
     [InlineData("GET", "/api/tvshows")]
     [InlineData("GET", "/api/tvshows/1")]
     [InlineData("GET", "/api/collections")]

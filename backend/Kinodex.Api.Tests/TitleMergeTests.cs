@@ -123,4 +123,49 @@ public class TitleMergeTests(KinodexApiFactory api)
         Assert.Equal(4, await api.WithDbAsync(db => db.Titles.CountAsync(t => t.Id == a || t.Id == b || t.Id == c || t.Id == showId)));
         Assert.True(await api.WithDbAsync(db => db.Movies.AnyAsync(m => m.Id == strangers)));
     }
+
+    private static Task<HttpResponseMessage> MarkNotDuplicateAsync(HttpClient client, bool notDuplicate, params int[] ids) =>
+        client.PutAsJsonAsync("/api/titles/not-duplicate", new { ids, notDuplicate });
+
+    private static async Task<bool> IsNotDuplicateAsync(HttpClient client, int id) =>
+        (await client.GetJsonAsync($"/api/movies/{id}")).GetProperty("notDuplicate").GetBoolean();
+
+    [Fact]
+    public async Task Entries_can_be_marked_not_a_duplicate_and_unmarked()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var a = (await AddMovieAsync(owner, _ => { })).GetProperty("id").GetInt32();
+        var b = (await AddMovieAsync(owner, _ => { })).GetProperty("id").GetInt32();
+
+        Assert.Equal(HttpStatusCode.NoContent, (await MarkNotDuplicateAsync(owner, true, a, b)).StatusCode);
+        Assert.True(await IsNotDuplicateAsync(owner, a));
+        Assert.True(await IsNotDuplicateAsync(owner, b));
+
+        // Saving the movie leaves the mark alone, whatever the request says
+        var movie = await owner.GetJsonAsync($"/api/movies/{a}");
+        var body = JsonSerializer.Deserialize<Dictionary<string, object>>(movie.GetRawText())!;
+        body["notDuplicate"] = false;
+        (await owner.PutAsJsonAsync($"/api/movies/{a}", body)).EnsureSuccessStatusCode();
+        Assert.True(await IsNotDuplicateAsync(owner, a));
+
+        Assert.Equal(HttpStatusCode.NoContent, (await MarkNotDuplicateAsync(owner, false, a, b)).StatusCode);
+        Assert.False(await IsNotDuplicateAsync(owner, a));
+        Assert.False(await IsNotDuplicateAsync(owner, b));
+    }
+
+    [Fact]
+    public async Task Only_the_users_own_titles_can_be_marked_and_a_new_one_starts_unmarked()
+    {
+        var owner = api.ClientFor(KinodexApiFactory.NewUserId());
+        var mine = (await AddMovieAsync(owner, m => m["notDuplicate"] = true)).GetProperty("id").GetInt32();
+        var strangers = (await AddMovieAsync(api.ClientFor(KinodexApiFactory.NewUserId()), _ => { })).GetProperty("id").GetInt32();
+
+        Assert.False(await IsNotDuplicateAsync(owner, mine)); // Only Settings → Duplicates marks one
+        Assert.Equal(HttpStatusCode.NotFound, (await MarkNotDuplicateAsync(owner, true, mine, strangers)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await MarkNotDuplicateAsync(owner, true)).StatusCode);
+
+        // Nothing was marked, not even the user's own
+        Assert.False(await IsNotDuplicateAsync(owner, mine));
+        Assert.False(await api.WithDbAsync(db => db.Titles.Where(t => t.Id == strangers).Select(t => t.NotDuplicate).SingleAsync()));
+    }
 }

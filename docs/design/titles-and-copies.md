@@ -44,8 +44,8 @@ belongs to the Blu-ray.
   and saving titles of its kind). The frontend keeps a `Movie` and a `TvShow` type, each a title
   of its kind with its copies.
 - **TMDB and Jellyfin calls**, which differ for movies and series.
-- **Features only movies have today** (presets, bulk edit, CSV export and import, Letterboxd
-  import): adding them for TV is separate work, if wanted.
+- **Features only movies have today** (presets, bulk edit, Letterboxd import): adding them for TV
+  is separate work, if wanted. (CSV export and import cover both: see below.)
 - **Physical music**, if it's ever added, would be its own table: artists and track lists are too
   different from films and shows.
 
@@ -105,8 +105,9 @@ belongs to the Blu-ray.
   kept from whichever has them. The preview shows the result.
 - **Presets** stay as they are: they fill a new copy's fields (and, for a new movie, its watched,
   rating, review and collections).
-- **CSV:** the movie export writes one row per copy; import puts rows for the same film into one
-  title with several copies. Exports made before this (one row per movie) still import.
+- **CSV:** the export writes one row per copy; import puts rows for the same film into one
+  title with several copies. Exports made before this (one row per movie) still import. (Since
+  extended to the whole library: see [After building](#after-building).)
 - **Jellyfin** (compare, Update Streaming, linking on add) works on titles, not copies, and still
   reads movies and series separately.
 - **Bulk edit (movies) picks copies.** In the table, a title's checkbox ticks all its copies, and
@@ -202,3 +203,18 @@ an item number and status per copy.
 - **Bulk edit's "Unshelved"** now clears the shelf section (it used to save the word "Unshelved").
 - **The table's title row** shows its shown copies added up: every format, each condition, the
   total paid, a gift icon if any is a gift.
+
+## After building
+
+- **One CSV for the whole library** (`/api/titles/export/csv`, `/api/titles/import/csv`): movies
+  then shows, a row per copy, with three columns added at the end: Kind (movie or show), Total
+  Seasons and Seasons (the copy's, e.g. `1|2|3`). A file without Kind (every export before this)
+  is all movies. Import matches rows to titles by Kind with the TMDB id (or name and year without
+  one), and skips a row only when that same title already has a copy with its UPC, so a box set's
+  films, which share the set's UPC, all come in. A show row whose seasons go past its last season
+  is reported and left out.
+- **Not a duplicate:** in Settings → Duplicates a movie or show with more than one entry can be
+  marked Not a duplicate instead of merged (separate entries on purpose, say one for a rental
+  copy). The mark is on each entry (`NotDuplicate`), set only by `PUT /api/titles/not-duplicate`;
+  a group is left out of the count while every entry in it is marked, listed under Kept separate
+  with Undo, and comes back if a new unmarked entry for it is added.

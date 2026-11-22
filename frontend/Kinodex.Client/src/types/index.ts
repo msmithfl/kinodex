@@ -19,13 +19,16 @@ export type Copy = Loosen<Schemas["Copy"], "id" | "titleId" | "createdAt"> & {
   clientKey?: string; // Form-only identity for copies not yet saved; the API ignores it
 };
 
+// A title's fields the server fills in itself; notDuplicate is set only in Settings → Duplicates
+type TitleServerSet = ServerSet | "notDuplicate";
+
 // Movies and TV shows are both titles, each holding its copies
-export type Movie = Loosen<Omit<Schemas["Movie"], "copies">, ServerSet> & {
+export type Movie = Loosen<Omit<Schemas["Movie"], "copies">, TitleServerSet> & {
   copies: Copy[];
 };
 
 // year is the first air year; totalSeasons is TMDB's season count, 0 when unknown
-export type TvShow = Loosen<Omit<Schemas["TvShow"], "copies">, ServerSet> & {
+export type TvShow = Loosen<Omit<Schemas["TvShow"], "copies">, TitleServerSet> & {
   copies: Copy[];
 };
 
@@ -98,3 +101,5 @@ export type SortOption = 'date' | 'alphabetic' | 'format' | 'year' | 'condition'
 // Merging duplicates (features/duplicates); the result is how many titles were folded into others
 export type MergeRequest = Schemas["MergeRequest"];
 export type MergeResult = Schemas["MergeResult"];
+// Marking entries "Not a duplicate" (or unmarking them)
+export type NotDuplicateRequest = Schemas["NotDuplicateRequest"];

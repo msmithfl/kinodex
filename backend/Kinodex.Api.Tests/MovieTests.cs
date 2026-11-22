@@ -242,7 +242,7 @@ public class MovieTests(KinodexApiFactory api)
         Assert.Equal("2024-03-10", copies["Without Date"].GetProperty("purchasedAt").GetString());
         Assert.False(copies["Without Date"].GetProperty("isGift").GetBoolean());
 
-        var exported = await (await owner.GetAsync("/api/movies/export/csv")).Content.ReadAsStringAsync();
+        var exported = await (await owner.GetAsync("/api/titles/export/csv")).Content.ReadAsStringAsync();
         Assert.Contains(",2024-03-10,2015-07-01,True", exported);
     }
 
@@ -258,7 +258,7 @@ public class MovieTests(KinodexApiFactory api)
         noCopies["copies"] = Array.Empty<object>();
         (await owner.PostAsJsonAsync("/api/movies", noCopies)).EnsureSuccessStatusCode();
 
-        var exported = await (await owner.GetAsync("/api/movies/export/csv")).Content.ReadAsStringAsync();
+        var exported = await (await owner.GetAsync("/api/titles/export/csv")).Content.ReadAsStringAsync();
         var rows = exported.Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1).ToList();
         Assert.Equal(2, rows.Count(r => r.StartsWith("\"Die Hard\"")));
         Assert.Single(rows, r => r.StartsWith("\"Heat\""));
@@ -292,7 +292,7 @@ public class MovieTests(KinodexApiFactory api)
     private static async Task ImportCsvAsync(HttpClient client, string csv)
     {
         using var form = new MultipartFormDataContent { { new StringContent(csv), "file", "movies.csv" } };
-        (await client.PostAsync("/api/movies/import/csv", form)).EnsureSuccessStatusCode();
+        (await client.PostAsync("/api/titles/import/csv", form)).EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -303,7 +303,7 @@ public class MovieTests(KinodexApiFactory api)
         await alice.CreateMovieAsync("Alice Export Title");
         await bob.CreateMovieAsync("Bob Export Title");
 
-        var csv = await (await alice.GetAsync("/api/movies/export/csv")).Content.ReadAsStringAsync();
+        var csv = await (await alice.GetAsync("/api/titles/export/csv")).Content.ReadAsStringAsync();
 
         Assert.Contains("Alice Export Title", csv);
         Assert.DoesNotContain("Bob Export Title", csv);
@@ -316,7 +316,7 @@ public class MovieTests(KinodexApiFactory api)
         foreach (var title in new[] { "The Thing", "A Clockwork Orange", "Theater Camp", "Blade Runner", "An Education" })
             await owner.CreateMovieAsync(title);
 
-        var csv = await (await owner.GetAsync("/api/movies/export/csv")).Content.ReadAsStringAsync();
+        var csv = await (await owner.GetAsync("/api/titles/export/csv")).Content.ReadAsStringAsync();
         var titles = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries).Skip(1)
             .Select(line => line[1..line.IndexOf("\",", StringComparison.Ordinal)]);
 
@@ -334,7 +334,7 @@ public class MovieTests(KinodexApiFactory api)
             "\"Paris, Texas\",,1984,\"\",\"\",\"\",\"Good\",5,0,False,False,0,\"\",0,,\"\",\"\",\"\",2024-03-10,2024-03-10,False\n";
 
         using var form = new MultipartFormDataContent { { new StringContent(csv), "file", "movies.csv" } };
-        (await owner.PostAsync("/api/movies/import/csv", form)).EnsureSuccessStatusCode();
+        (await owner.PostAsync("/api/titles/import/csv", form)).EnsureSuccessStatusCode();
 
         var titles = (await owner.GetJsonAsync("/api/movies")).EnumerateArray()
             .Select(m => m.GetProperty("title").GetString()).Order();

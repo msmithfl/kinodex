@@ -104,6 +104,10 @@ codebase as the hosted site. Plan:
 - **Lending:** a ledger of who has which disc, as another drawer tab, kept per copy (copies are built:
   [titles and copies](design/titles-and-copies.md)). The old customers and checkouts pages and
   tables were removed in November 2026, to rebuild on the new foundation.
+- **Copies, later:** an edition per copy (Director's Cut, Steelbook, Criterion), on hold. Splitting
+  a box into copies in one go: scan the set's UPC once and get a copy for each film, or for a show
+  each season, sharing the UPC, image and shelf, with the price split. Mostly for rental stores,
+  which lend one season at a time; collectors tend to keep a box as one copy.
 - **Shelf pages:** browsing by shelf, and reordering, renaming and deleting shelf sections.
   Removed with lending; each movie's shelf section and number stay.
 - **Match Movies:** matching many movies to TMDB at once. Also removed then.

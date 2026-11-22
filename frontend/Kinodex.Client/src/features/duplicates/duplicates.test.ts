@@ -36,6 +36,17 @@ describe("finding duplicates", () => {
     expect(combine(rated, [bluRay]).rating).toBe(3);
   });
 
+  it("keeps a group apart while every entry is marked not a duplicate", () => {
+    const marked = (m: typeof vhs) => ({ ...m, notDuplicate: true });
+    expect(findDuplicates([marked(vhs), bluRay], [])[0].separate).toBe(false);
+    expect(findDuplicates([marked(vhs), marked(bluRay)], [])[0].separate).toBe(true);
+    // A new entry for the same film brings the group back
+    const third = makeMovie({ id: 6, title: "Die Hard", tmdbId: 562, createdAt: "2025-01-01T00:00:00Z" });
+    const group = findDuplicates([marked(vhs), marked(bluRay), third], [])[0];
+    expect(group.separate).toBe(false);
+    expect(group.others.map((m) => m.id)).toEqual([2, 6]);
+  });
+
   it("finds shows too, and never mixes a movie with a show", () => {
     const show = (id: number, totalSeasons: number, seasons: number[]) =>
       makeShow({ id, tmdbId: 562, totalSeasons, copies: [makeShowCopy({ seasons })] });
